@@ -1,0 +1,16 @@
+{
+  "name": "wayfinding",
+  "description": "A wayfinding layer over mattpocock/skills: triage the map by reversibility, resolve only the one-way doors, then clear fog by shipping thin slices.",
+  "author": {
+    "name": "Wim Suenens",
+    "url": "https://wim.suenens.me"
+  },
+  "license": "MIT",
+  "keywords": [
+    "wayfinding",
+    "planning",
+    "reversibility",
+    "slices",
+    "engineering"
+  ]
+}

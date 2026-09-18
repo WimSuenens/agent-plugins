@@ -1,0 +1,78 @@
+{
+ "_purpose": "Exercises every element type the builder supports, so a change to draw.py or build_deck.py is caught before it reaches a real job.",
+ "deck": {
+  "output": "smoke.pptx",
+  "slide_w_in": 13.3333,
+  "slide_h_in": 7.5,
+  "theme": {"accent1": "0B2240", "accent2": "DDA92F", "major_font": "Arimo", "minor_font": "Arimo"},
+  "fonts": {"dir": "fonts", "embed": true,
+            "families": {"Arimo": {"regular": "Arimo-Regular.ttf", "bold": "Arimo-Bold.ttf"}}}
+ },
+ "defaults": {"px_per_in": 115.2, "font": "Arimo", "color": "0B2240", "pt": 14},
+ "slides": [
+  {
+   "name": "Element smoke test",
+   "background": "FFFFFF",
+   "elements": [
+    {"type": "text", "name": "heading", "left_px": 60, "width_px": 1400, "baseline_px": 70,
+     "align": "l", "runs": [{"t": "Every element type", "pt": 30, "b": true}]},
+    {"type": "line", "name": "rule", "from_px": [60, 90], "to_px": [1476, 90],
+     "color": "DDA92F", "width_pt": 1.5},
+
+    {"type": "rect", "name": "plain rect", "box_px": [60, 120, 300, 260],
+     "fill": "0B2240", "radius_px": 16, "shadow": true},
+    {"type": "rect", "name": "outlined rect", "box_px": [320, 120, 560, 260],
+     "fill": "FCFCFD", "line": "DDA92F", "line_pt": 1.0, "radius_px": 16},
+    {"type": "rect", "name": "gradient rect", "box_px": [580, 120, 820, 260],
+     "gradient": ["16355A", "0B2240"], "radius_px": 16},
+    {"type": "ellipse", "name": "ellipse", "box_px": [840, 120, 1000, 260],
+     "fill": "DDA92F"},
+    {"type": "ellipse", "name": "ring", "box_px": [1020, 120, 1180, 260],
+     "line": "0B2240", "line_pt": 2.0},
+
+    {"type": "textbox", "name": "wrapped copy", "box_px": [60, 290, 700, 470],
+     "align": "j", "line_spacing_pt": 20, "space_after_pt": 8,
+     "paragraphs": [
+      [{"t": "A wrapped block, placed by its box rather than a baseline, which is what body copy on a document page needs.", "pt": 13}],
+      [{"t": "A second paragraph, with ", "pt": 13},
+       {"t": "bold", "pt": 13, "b": true},
+       {"t": " and ", "pt": 13},
+       {"t": "italic", "pt": 13, "i": true},
+       {"t": " runs in it.", "pt": 13}]
+     ]},
+
+    {"type": "table", "name": "table", "box_px": [740, 290, 1476, 470],
+     "rows": [["Region", "Stores", "Revenue"],
+              ["Region A", "90", "€200M"],
+              ["Region B", "40", "€80M"],
+              ["Region C", "30", "€60M"]],
+     "pt": 12, "header_fill": "0B2240", "header_color": "FFFFFF", "body_fill": "F4F5F7"},
+
+    {"type": "bullets", "name": "bullets", "left_px": 60, "width_px": 640,
+     "first_baseline_px": 530, "spacing_px": 38, "pt": 14,
+     "color": "0B2240",
+     "bullet": {"char": "ü", "font": "Wingdings", "color": "DDA92F", "size_pct": 120, "offset_px": 38},
+     "items": ["Reflowing bullet list", "Second item", "Third item"]},
+
+    {"type": "group", "name": "icon row", "children": [
+     {"type": "icon", "icon": "store", "center_x_px": 800, "top_px": 500, "height_px": 56, "color": "0B2240"},
+     {"type": "icon", "icon": "growth", "center_x_px": 890, "top_px": 500, "height_px": 56, "color": "0B2240"},
+     {"type": "icon", "icon": "target", "center_x_px": 980, "top_px": 500, "height_px": 56, "color": "DDA92F"},
+     {"type": "icon", "icon": "partnership", "center_x_px": 1070, "top_px": 500, "height_px": 56, "color": "0B2240"},
+     {"type": "icon", "icon": "chart_pie", "center_x_px": 1160, "top_px": 500, "height_px": 56, "color": "0B2240"},
+     {"type": "icon", "icon": "gear", "center_x_px": 1250, "top_px": 500, "height_px": 56, "color": "0B2240"},
+     {"type": "icon", "icon": "arrow_up", "center_x_px": 1340, "top_px": 500, "height_px": 56, "color": "DDA92F"},
+     {"type": "icon", "icon": "star", "center_x_px": 1430, "top_px": 500, "height_px": 56, "color": "DDA92F"}
+    ]},
+
+    {"type": "freeform", "name": "inline freeform", "box_px": [60, 660, 200, 760],
+     "d": "M0,40 C0,18 18,0 40,0 L100,0 C122,0 140,18 140,40 L140,60 C140,82 122,100 100,100 L40,100 C18,100 0,82 0,60 Z",
+     "keep_aspect": "left", "fill": "DDA92F"},
+
+    {"type": "text", "name": "footer", "left_px": 60, "width_in": 3.0,
+     "baseline_in": 7.15, "align": "l",
+     "runs": [{"t": "smoke test", "pt": 10, "c": "9E9EA0"}]}
+   ]
+  }
+ ]
+}

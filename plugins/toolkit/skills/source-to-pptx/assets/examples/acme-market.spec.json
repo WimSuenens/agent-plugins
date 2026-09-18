@@ -1,0 +1,624 @@
+{
+ "_example": "A worked spec for a dense 3:2 KPI slide rebuilt at 16:9. Five cards with icons, a photo, a filled panel and an outlined one, a two-colour traced logo, a traced map, two bullet lists, three bands. Copy the shape, not the numbers: every coordinate here was measured on one specific 1536x1024 page.",
+ "_source": "input.png, 1536x1024. Measured with probe.py; type sized with fittype.py.",
+ "deck": {
+  "output": "deck.pptx",
+  "slide_w_in": 13.3333,
+  "slide_h_in": 7.5,
+  "traced": "traced.json",
+  "theme": {
+   "accent1": "0B2240",
+   "accent2": "DDA92F",
+   "major_font": "Barlow",
+   "minor_font": "Barlow Semi Condensed"
+  },
+  "fonts": {
+   "dir": "fonts",
+   "embed": true,
+   "families": {
+    "Barlow": {
+     "regular": "Barlow-SemiBold.ttf",
+     "bold": "Barlow-Bold.ttf"
+    },
+    "Barlow SemiBold": {
+     "regular": "Barlow-SemiBold.ttf"
+    },
+    "Barlow Semi Condensed": {
+     "regular": "BarlowSemiCondensed-Regular.ttf",
+     "bold": "BarlowSemiCondensed-Bold.ttf"
+    },
+    "Barlow Semi Condensed Medium": {
+     "regular": "BarlowSemiCondensed-Medium.ttf"
+    },
+    "Barlow Semi Condensed SemiBold": {
+     "regular": "BarlowSemiCondensed-SemiBold.ttf"
+    }
+   }
+  }
+ },
+ "defaults": {
+  "px_per_in": 115.2,
+  "font": "Barlow Semi Condensed",
+  "color": "0B2240",
+  "pt": 18
+ },
+ "slides": [
+  {
+   "name": "ACME-MARKET",
+   "source": "page-01.png",
+   "px_per_in": 115.2,
+   "background": "F9FAFB",
+   "_bands": "The source is 3:2 and the slide is 16:9, so block heights scale by ~0.88 and the gaps between blocks take up the rest. x is never scaled.",
+   "bands": {
+    "top": {
+     "src0": 30,
+     "origin_in": 0.26,
+     "scale": 0.88
+    },
+    "cards": {
+     "src0": 266,
+     "origin_in": 1.89,
+     "scale": 0.8732
+    },
+    "panels": {
+     "src0": 647,
+     "origin_in": 4.67,
+     "scale": 0.8881
+    }
+   },
+   "elements": [
+    {
+     "type": "text",
+     "name": "Title",
+     "band": "top",
+     "left_px": 62,
+     "width_px": 700,
+     "baseline_px": 169,
+     "align": "l",
+     "runs": [
+      {
+       "t": "ACME-MARKET",
+       "pt": 41,
+       "font": "Barlow",
+       "b": true,
+       "c": "0B2240"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Subtitle",
+     "band": "top",
+     "left_px": 62,
+     "width_px": 1330,
+     "baseline_px": 215,
+     "align": "l",
+     "runs": [
+      {
+       "t": "Leading omnichannel health & beauty retailer with accelerating international expansion",
+       "pt": 18,
+       "font": "Barlow SemiBold",
+       "c": "DDA92F"
+      }
+     ]
+    },
+    {
+     "type": "group",
+     "name": "Brokerage logo",
+     "children": [
+      {
+       "type": "freeform",
+       "name": "Logo wordmark",
+       "d_ref": "traced.json#logo_word",
+       "box_px": [
+        1229,
+        40,
+        1406,
+        103
+       ],
+       "fill": "0B2240"
+      },
+      {
+       "type": "freeform",
+       "name": "Logo mark",
+       "d_ref": "traced.json#logo_mark",
+       "box_px": [
+        1413,
+        42,
+        1490,
+        115
+       ],
+       "fill": "DDA92F"
+      }
+     ]
+    },
+    {
+     "type": "rect",
+     "name": "Card 1 - Stores",
+     "band": "cards",
+     "box_px": [
+      69,
+      266,
+      289,
+      605
+     ],
+     "radius_px": 22,
+     "gradient": [
+      "16355A",
+      "0B2240"
+     ],
+     "shadow": true
+    },
+    {
+     "type": "icon",
+     "name": "Icon store",
+     "band": "cards",
+     "icon": "store",
+     "center_x_px": 179,
+     "top_px": 309,
+     "height_px": 59,
+     "color": "DDA92F"
+    },
+    {
+     "type": "text",
+     "name": "Card 1 number",
+     "band": "cards",
+     "left_px": 69,
+     "width_px": 220,
+     "baseline_px": 473,
+     "runs": [
+      {
+       "t": "150+",
+       "pt": 58,
+       "b": true,
+       "c": "FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Card 1 label",
+     "band": "cards",
+     "left_px": 69,
+     "width_px": 220,
+     "baseline_px": 519,
+     "runs": [
+      {
+       "t": "Stores",
+       "pt": 18.5,
+       "b": true,
+       "c": "FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Card 1 sub-label",
+     "band": "cards",
+     "left_px": 69,
+     "width_px": 220,
+     "baseline_px": 555,
+     "runs": [
+      {
+       "t": "in Europe",
+       "pt": 16,
+       "c": "FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "rect",
+     "name": "Card 2 - Countries",
+     "band": "cards",
+     "box_px": [
+      302,
+      266,
+      522,
+      605
+     ],
+     "radius_px": 22,
+     "fill": "DDA92F",
+     "shadow": true
+    },
+    {
+     "type": "icon",
+     "name": "Icon globe",
+     "band": "cards",
+     "icon": "globe",
+     "center_x_px": 412,
+     "top_px": 309,
+     "height_px": 59,
+     "color": "0B2240"
+    },
+    {
+     "type": "text",
+     "name": "Card 2 number",
+     "band": "cards",
+     "left_px": 302,
+     "width_px": 220,
+     "baseline_px": 473,
+     "runs": [
+      {
+       "t": "4",
+       "pt": 60,
+       "b": true,
+       "c": "0B2240"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Card 2 label",
+     "band": "cards",
+     "left_px": 302,
+     "width_px": 220,
+     "baseline_px": 519,
+     "runs": [
+      {
+       "t": "Countries",
+       "pt": 18.5,
+       "b": true,
+       "c": "0B2240"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Card 2 sub-label",
+     "band": "cards",
+     "left_px": 302,
+     "width_px": 220,
+     "baseline_px": 555,
+     "runs": [
+      {
+       "t": "in Europe",
+       "pt": 16,
+       "c": "0B2240"
+      }
+     ]
+    },
+    {
+     "type": "picture",
+     "name": "Store photo",
+     "band": "cards",
+     "box_px": [
+      535,
+      266,
+      1000,
+      605
+     ],
+     "file": "img/store-photo.png",
+     "radius_px": 20,
+     "shadow": true
+    },
+    {
+     "type": "rect",
+     "name": "Card 3 - Revenue",
+     "band": "cards",
+     "box_px": [
+      1013,
+      266,
+      1233,
+      605
+     ],
+     "radius_px": 22,
+     "gradient": [
+      "16355A",
+      "0B2240"
+     ],
+     "shadow": true
+    },
+    {
+     "type": "icon",
+     "name": "Icon growth",
+     "band": "cards",
+     "icon": "growth",
+     "center_x_px": 1123,
+     "top_px": 309,
+     "height_px": 59,
+     "color": "DDA92F"
+    },
+    {
+     "type": "text",
+     "name": "Card 3 number",
+     "band": "cards",
+     "left_px": 1013,
+     "width_px": 220,
+     "baseline_px": 473,
+     "runs": [
+      {
+       "t": "€400",
+       "pt": 47,
+       "b": true,
+       "c": "FFFFFF"
+      },
+      {
+       "t": "M",
+       "pt": 30,
+       "b": true,
+       "c": "FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Card 3 label",
+     "band": "cards",
+     "left_px": 1013,
+     "width_px": 220,
+     "baseline_px": 519,
+     "runs": [
+      {
+       "t": "Revenue",
+       "pt": 18.5,
+       "b": true,
+       "c": "FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Card 3 sub-label",
+     "band": "cards",
+     "left_px": 1013,
+     "width_px": 220,
+     "baseline_px": 555,
+     "runs": [
+      {
+       "t": "in 2025",
+       "pt": 16,
+       "c": "FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "rect",
+     "name": "Card 4 - Employees",
+     "band": "cards",
+     "box_px": [
+      1246,
+      266,
+      1466,
+      605
+     ],
+     "radius_px": 22,
+     "fill": "DDA92F",
+     "shadow": true
+    },
+    {
+     "type": "icon",
+     "name": "Icon people",
+     "band": "cards",
+     "icon": "people",
+     "center_x_px": 1356,
+     "top_px": 309,
+     "height_px": 59,
+     "color": "0B2240"
+    },
+    {
+     "type": "text",
+     "name": "Card 4 number",
+     "band": "cards",
+     "left_px": 1246,
+     "width_px": 220,
+     "baseline_px": 473,
+     "runs": [
+      {
+       "t": "2,000",
+       "pt": 46,
+       "b": true,
+       "c": "0B2240"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Card 4 label",
+     "band": "cards",
+     "left_px": 1246,
+     "width_px": 220,
+     "baseline_px": 519,
+     "runs": [
+      {
+       "t": "Employees",
+       "pt": 18.5,
+       "b": true,
+       "c": "0B2240"
+      }
+     ]
+    },
+    {
+     "type": "rect",
+     "name": "Region panel",
+     "band": "panels",
+     "box_px": [
+      69,
+      647,
+      753,
+      924
+     ],
+     "radius_px": 24,
+     "gradient": [
+      "16355A",
+      "0B2240"
+     ],
+     "shadow": true
+    },
+    {
+     "type": "freeform",
+     "name": "Country outline",
+     "band": "panels",
+     "d_ref": "traced.json#country",
+     "box_px": [
+      102,
+      678,
+      188,
+      752
+     ],
+     "keep_aspect": "left",
+     "fill": "DDA92F"
+    },
+    {
+     "type": "text",
+     "name": "Region heading",
+     "band": "panels",
+     "left_px": 235,
+     "width_px": 500,
+     "baseline_px": 703,
+     "align": "l",
+     "runs": [
+      {
+       "t": "HOME MARKET LEADERSHIP",
+       "pt": 19,
+       "b": true,
+       "c": "DDA92F"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Region headline",
+     "band": "panels",
+     "left_px": 230,
+     "width_px": 520,
+     "baseline_px": 770,
+     "align": "l",
+     "runs": [
+      {
+       "t": "90",
+       "pt": 41.5,
+       "b": true,
+       "c": "FFFFFF"
+      },
+      {
+       "t": " Stores in region",
+       "pt": 27.5,
+       "font": "Barlow Semi Condensed SemiBold",
+       "c": "FFFFFF"
+      }
+     ]
+    },
+    {
+     "type": "bullets",
+     "name": "Region bullets",
+     "band": "panels",
+     "left_px": 236,
+     "width_px": 480,
+     "first_baseline_px": 819,
+     "spacing_px": 39,
+     "pt": 15.5,
+     "font": "Barlow Semi Condensed Medium",
+     "color": "FFFFFF",
+     "bullet": {
+      "char": "ü",
+      "font": "Wingdings",
+      "color": "DDA92F",
+      "size_pct": 120,
+      "offset_px": 40
+     },
+     "items": [
+      "Home market is the core market",
+      "~1,000 employees in home market",
+      "Strong retail + e-commerce model"
+     ]
+    },
+    {
+     "type": "rect",
+     "name": "Why attractive panel",
+     "band": "panels",
+     "box_px": [
+      785,
+      648,
+      1467,
+      924
+     ],
+     "radius_px": 24,
+     "fill": "FCFCFD",
+     "line": "DDA92F",
+     "line_pt": 1.0
+    },
+    {
+     "type": "icon",
+     "name": "Icon target",
+     "band": "panels",
+     "icon": "target",
+     "center_x_px": 863,
+     "top_px": 682,
+     "height_px": 54,
+     "color": "DDA92F"
+    },
+    {
+     "type": "text",
+     "name": "Why attractive heading",
+     "band": "panels",
+     "left_px": 917,
+     "width_px": 520,
+     "baseline_px": 716,
+     "align": "l",
+     "runs": [
+      {
+       "t": "WHY IS THIS AN ATTRACTIVE CLIENT?",
+       "pt": 19,
+       "b": true,
+       "c": "DDA92F"
+      }
+     ]
+    },
+    {
+     "type": "bullets",
+     "name": "Why attractive bullets",
+     "band": "panels",
+     "left_px": 841,
+     "width_px": 620,
+     "first_baseline_px": 790,
+     "spacing_px": 43,
+     "pt": 15.5,
+     "font": "Barlow Semi Condensed Medium",
+     "color": "0B2240",
+     "bullet": {
+      "char": "ü",
+      "font": "Wingdings",
+      "color": "0B2240",
+      "size_pct": 120,
+      "offset_px": 42
+     },
+     "items": [
+      "Large and expanding store network",
+      "Proven international growth strategy",
+      "Strong value proposition: price, choice & advice"
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Footer date",
+     "left_px": 73,
+     "width_in": 2.0,
+     "baseline_in": 7.11,
+     "align": "l",
+     "runs": [
+      {
+       "t": "01/01/2026",
+       "pt": 11.5,
+       "c": "9E9EA0"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "name": "Footer page number",
+     "left_in": 10.62,
+     "width_in": 2.0,
+     "baseline_in": 7.11,
+     "align": "r",
+     "runs": [
+      {
+       "t": "15",
+       "pt": 11.5,
+       "c": "9E9EA0"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

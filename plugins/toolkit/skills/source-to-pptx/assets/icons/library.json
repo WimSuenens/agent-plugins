@@ -1,0 +1,338 @@
+{
+ "_comment": "Line icons drawn on a 64x64 grid, as primitives the builder turns into native PowerPoint shapes. Kinds: path (stroked freeform), arrowpath (stroked, arrowhead on the last point), fill (filled freeform), oval (stroked ellipse x,y,w,h), dot (filled ellipse). Keep new icons on the same grid and at a similar optical weight; draw them with a ~3-unit stroke in mind.",
+ "viewbox": 64,
+ "icons": {
+  "store": {
+   "tags": ["shop", "retail", "outlet", "storefront", "branch"],
+   "prims": [
+    ["path", "M16,12 L48,12 L60,28 L4,28 Z"],
+    ["path", "M24,12 L18,28"],
+    ["path", "M32,12 L32,28"],
+    ["path", "M40,12 L46,28"],
+    ["path", "M4,28 C5.5,33.6 16.5,33.6 18,28C19.5,33.6 30.5,33.6 32,28C33.5,33.6 44.5,33.6 46,28C47.5,33.6 58.5,33.6 60,28"],
+    ["path", "M9,35 L9,54"],
+    ["path", "M55,35 L55,54"],
+    ["path", "M4,54 L60,54"],
+    ["path", "M25,54 L25,41 L39,41 L39,54"]
+   ]
+  },
+  "building": {
+   "tags": ["office", "company", "headquarters", "corporate", "city"],
+   "prims": [
+    ["path", "M10,56 L10,10 L40,10 L40,56"],
+    ["path", "M40,24 L56,24 L56,56"],
+    ["path", "M4,56 L60,56"],
+    ["path", "M17,18 L23,18 L23,24 L17,24 Z"],
+    ["path", "M28,18 L34,18 L34,24 L28,24 Z"],
+    ["path", "M17,30 L23,30 L23,36 L17,36 Z"],
+    ["path", "M28,30 L34,30 L34,36 L28,36 Z"],
+    ["path", "M46,32 L50,32 L50,37 L46,37 Z"],
+    ["path", "M21,56 L21,44 L30,44 L30,56"]
+   ]
+  },
+  "factory": {
+   "tags": ["plant", "manufacturing", "industry", "production"],
+   "prims": [
+    ["path", "M6,56 L6,28 L24,38 L24,28 L42,38 L42,28 L60,38 L60,56 Z"],
+    ["path", "M10,20 L10,8 L18,8 L18,24"],
+    ["path", "M4,56 L60,56"],
+    ["path", "M14,46 L20,46"],
+    ["path", "M30,46 L36,46"],
+    ["path", "M46,46 L52,46"]
+   ]
+  },
+  "globe": {
+   "tags": ["world", "international", "countries", "global", "europe"],
+   "prims": [
+    ["oval", [5, 5, 54, 54]],
+    ["oval", [21, 5, 22, 54]],
+    ["path", "M5.8,32 L58.2,32"],
+    ["path", "M11.5,20.5 C20,24 44,24 52.5,20.5"],
+    ["path", "M11.5,43.5 C20,40 44,40 52.5,43.5"]
+   ]
+  },
+  "location": {
+   "tags": ["pin", "map", "where", "address", "site"],
+   "prims": [
+    ["path", "M32,58 C32,58 52,38 52,25 C52,14 43,5 32,5 C21,5 12,14 12,25 C12,38 32,58 32,58 Z"],
+    ["oval", [24, 17, 16, 16]]
+   ]
+  },
+  "truck": {
+   "tags": ["delivery", "logistics", "shipping", "distribution", "transport"],
+   "prims": [
+    ["path", "M4,16 L36,16 L36,44 L4,44 Z"],
+    ["path", "M36,24 L48,24 L58,34 L58,44 L36,44"],
+    ["oval", [12, 40, 12, 12]],
+    ["oval", [40, 40, 12, 12]],
+    ["path", "M4,44 L12,44"],
+    ["path", "M24,44 L40,44"]
+   ]
+  },
+  "cart": {
+   "tags": ["shopping", "basket", "ecommerce", "purchase", "retail"],
+   "prims": [
+    ["path", "M4,10 L13,10 L20,40 L50,40 L57,18 L16,18"],
+    ["oval", [19, 45, 10, 10]],
+    ["oval", [42, 45, 10, 10]]
+   ]
+  },
+  "box": {
+   "tags": ["package", "product", "parcel", "sku", "inventory"],
+   "prims": [
+    ["path", "M32,6 L58,19 L58,45 L32,58 L6,45 L6,19 Z"],
+    ["path", "M6,19 L32,32 L58,19"],
+    ["path", "M32,32 L32,58"]
+   ]
+  },
+  "growth": {
+   "tags": ["revenue", "increase", "trend", "sales", "chart", "up"],
+   "prims": [
+    ["path", "M8,56 L8,44 L18,44 L18,56"],
+    ["path", "M21,56 L21,38 L31,38 L31,56"],
+    ["path", "M34,56 L34,32 L44,32 L44,56"],
+    ["path", "M47,56 L47,26 L57,26 L57,56"],
+    ["path", "M4,56 L60,56"],
+    ["arrowpath", "M5,42 C18,38 30,26 52,10"]
+   ]
+  },
+  "chart_bar": {
+   "tags": ["bars", "statistics", "volume", "comparison"],
+   "prims": [
+    ["path", "M8,8 L8,54 L60,54"],
+    ["path", "M16,54 L16,38 L24,38 L24,54"],
+    ["path", "M28,54 L28,26 L36,26 L36,54"],
+    ["path", "M40,54 L40,34 L48,34 L48,54"],
+    ["path", "M52,54 L52,16 L60,16 L60,54"]
+   ]
+  },
+  "chart_line": {
+   "tags": ["trend", "series", "performance", "over time"],
+   "prims": [
+    ["path", "M8,8 L8,54 L60,54"],
+    ["path", "M14,44 L26,32 L36,40 L56,16"],
+    ["dot", [11, 41, 6, 6]],
+    ["dot", [23, 29, 6, 6]],
+    ["dot", [33, 37, 6, 6]],
+    ["dot", [53, 13, 6, 6]]
+   ]
+  },
+  "chart_pie": {
+   "tags": ["share", "split", "mix", "percentage", "segments"],
+   "prims": [
+    ["oval", [6, 6, 52, 52]],
+    ["path", "M32,32 L32,6"],
+    ["path", "M32,32 L54,45"]
+   ]
+  },
+  "euro": {
+   "tags": ["money", "price", "cost", "currency", "financial"],
+   "prims": [
+    ["oval", [6, 6, 52, 52]],
+    ["path", "M43,21 C39,17 33,16 29,18 C23,21 20,26 20,32 C20,38 23,43 29,46 C33,48 39,47 43,43"],
+    ["path", "M15,28 L35,28"],
+    ["path", "M15,36 L35,36"]
+   ]
+  },
+  "coins": {
+   "tags": ["cash", "funding", "investment", "capital", "savings"],
+   "prims": [
+    ["oval", [6, 12, 34, 14]],
+    ["path", "M6,19 L6,31 C6,35 14,38 23,38 C32,38 40,35 40,31 L40,19"],
+    ["oval", [24, 32, 34, 14]],
+    ["path", "M24,39 L24,51 C24,55 32,58 41,58 C50,58 58,55 58,51 L58,39"]
+   ]
+  },
+  "people": {
+   "tags": ["employees", "team", "staff", "headcount", "customers", "users"],
+   "prims": [
+    ["oval", [23, 3, 18, 18]],
+    ["oval", [8, 11, 14, 14]],
+    ["oval", [42, 11, 14, 14]],
+    ["path", "M20,46 C20,29 44,29 44,46"],
+    ["path", "M4,47 C4,34 11,29 17,32.5"],
+    ["path", "M60,47 C60,34 53,29 47,32.5"]
+   ]
+  },
+  "user": {
+   "tags": ["person", "customer", "account", "profile", "contact"],
+   "prims": [
+    ["oval", [21, 8, 22, 22]],
+    ["path", "M10,56 C10,40 54,40 54,56"]
+   ]
+  },
+  "target": {
+   "tags": ["goal", "objective", "why", "focus", "strategy", "aim"],
+   "prims": [
+    ["oval", [5, 11, 44, 44]],
+    ["oval", [13, 19, 28, 28]],
+    ["oval", [21, 27, 12, 12]],
+    ["dot", [24.5, 30.5, 5, 5]],
+    ["arrowpath", "M55,9 L45,18 L34,28"],
+    ["fill", "M53,11 L63,1 L64,9 L58,14 Z"]
+   ]
+  },
+  "check": {
+   "tags": ["tick", "done", "yes", "bullet", "confirmed"],
+   "prims": [
+    ["path", "M6,33 L22,49 L52,13"]
+   ]
+  },
+  "star": {
+   "tags": ["quality", "rating", "favourite", "premium", "best"],
+   "prims": [
+    ["path", "M32,5 L40.4,22 L59.2,24.7 L45.6,38 L48.8,56.7 L32,47.9 L15.2,56.7 L18.4,38 L4.8,24.7 L23.6,22 Z"]
+   ]
+  },
+  "shield": {
+   "tags": ["trust", "security", "protection", "compliance", "risk"],
+   "prims": [
+    ["path", "M32,5 L56,14 L56,31 C56,45 45,54 32,59 C19,54 8,45 8,31 L8,14 Z"],
+    ["path", "M22,31 L29,38 L43,24"]
+   ]
+  },
+  "lightbulb": {
+   "tags": ["idea", "innovation", "insight", "concept", "opportunity"],
+   "prims": [
+    ["path", "M32,5 C21,5 13,13 13,24 C13,32 19,36 21,42 L43,42 C45,36 51,32 51,24 C51,13 43,5 32,5 Z"],
+    ["path", "M23,48 L41,48"],
+    ["path", "M26,55 L38,55"]
+   ]
+  },
+  "document": {
+   "tags": ["file", "report", "contract", "paper", "terms", "page"],
+   "prims": [
+    ["path", "M14,4 L40,4 L52,16 L52,60 L14,60 Z"],
+    ["path", "M40,4 L40,16 L52,16"],
+    ["path", "M22,28 L44,28"],
+    ["path", "M22,38 L44,38"],
+    ["path", "M22,48 L36,48"]
+   ]
+  },
+  "mail": {
+   "tags": ["email", "contact", "message", "newsletter", "communication"],
+   "prims": [
+    ["path", "M6,14 L58,14 L58,50 L6,50 Z"],
+    ["path", "M6,14 L32,34 L58,14"]
+   ]
+  },
+  "phone": {
+   "tags": ["call", "support", "contact", "service", "helpdesk"],
+   "prims": [
+    ["path", "M14,6 C8,10 6,18 10,26 C16,38 26,48 38,54 C46,58 54,56 58,50 L48,40 L40,45 C34,41 23,30 19,24 L24,16 Z"]
+   ]
+  },
+  "clock": {
+   "tags": ["time", "hours", "speed", "schedule", "duration", "fast"],
+   "prims": [
+    ["oval", [5, 5, 54, 54]],
+    ["path", "M32,16 L32,32 L44,40"]
+   ]
+  },
+  "calendar": {
+   "tags": ["date", "year", "period", "planning", "schedule", "quarter"],
+   "prims": [
+    ["path", "M6,14 L58,14 L58,58 L6,58 Z"],
+    ["path", "M6,26 L58,26"],
+    ["path", "M18,6 L18,18"],
+    ["path", "M46,6 L46,18"],
+    ["dot", [17, 34, 6, 6]],
+    ["dot", [29, 34, 6, 6]],
+    ["dot", [41, 34, 6, 6]],
+    ["dot", [17, 45, 6, 6]],
+    ["dot", [29, 45, 6, 6]]
+   ]
+  },
+  "search": {
+   "tags": ["find", "analysis", "review", "audit", "research", "insight"],
+   "prims": [
+    ["oval", [8, 8, 36, 36]],
+    ["path", "M40,40 L57,57"]
+   ]
+  },
+  "gear": {
+   "tags": ["settings", "operations", "process", "engine", "configuration"],
+   "prims": [
+    ["path", "M53.9,34.1 L60.1,39.2 L57.0,46.8 L49.0,46.0 L46.0,49.0 L46.8,57.0 L39.2,60.1 L34.1,53.9 L29.9,53.9 L24.8,60.1 L17.2,57.0 L18.0,49.0 L15.0,46.0 L7.0,46.8 L3.9,39.2 L10.1,34.1 L10.1,29.9 L3.9,24.8 L7.0,17.2 L15.0,18.0 L18.0,15.0 L17.2,7.0 L24.8,3.9 L29.9,10.1 L34.1,10.1 L39.2,3.9 L46.8,7.0 L46.0,15.0 L49.0,18.0 L57.0,17.2 L60.1,24.8 L53.9,29.9 Z"],
+    ["oval", [22, 22, 20, 20]]
+   ]
+  },
+  "heart": {
+   "tags": ["health", "care", "beauty", "wellbeing", "loyalty", "brand"],
+   "prims": [
+    ["path", "M32,56 C32,56 6,40 6,22 C6,13 13,7 21,7 C26,7 30,10 32,14 C34,10 38,7 43,7 C51,7 58,13 58,22 C58,40 32,56 32,56 Z"]
+   ]
+  },
+  "leaf": {
+   "tags": ["sustainability", "green", "esg", "natural", "organic", "environment"],
+   "prims": [
+    ["path", "M8,56 C8,32 20,8 56,8 C56,40 36,54 8,56 Z"],
+    ["path", "M8,56 C20,44 34,32 48,22"]
+   ]
+  },
+  "award": {
+   "tags": ["prize", "recognition", "leader", "certified", "winner", "quality"],
+   "prims": [
+    ["oval", [17, 4, 30, 30]],
+    ["path", "M25,32 L18,60 L32,52 L46,60 L39,32"],
+    ["path", "M32,52 L32,42"]
+   ]
+  },
+  "lock": {
+   "tags": ["security", "private", "protected", "compliance", "access"],
+   "prims": [
+    ["path", "M10,28 L54,28 L54,58 L10,58 Z"],
+    ["path", "M20,28 L20,18 C20,11 25,6 32,6 C39,6 44,11 44,18 L44,28"],
+    ["dot", [28, 39, 8, 8]]
+   ]
+  },
+  "rocket": {
+   "tags": ["launch", "growth", "expansion", "acceleration", "startup", "scale"],
+   "prims": [
+    ["path", "M32,4 C42,14 46,26 46,38 L18,38 C18,26 22,14 32,4 Z"],
+    ["oval", [26, 16, 12, 12]],
+    ["path", "M18,30 L8,40 L8,52 L18,44"],
+    ["path", "M46,30 L56,40 L56,52 L46,44"],
+    ["path", "M26,44 L32,58 L38,44"]
+   ]
+  },
+  "laptop": {
+   "tags": ["online", "digital", "ecommerce", "web", "technology", "computer"],
+   "prims": [
+    ["path", "M12,12 L52,12 L52,42 L12,42 Z"],
+    ["path", "M4,48 L60,48"],
+    ["path", "M12,42 L4,48"],
+    ["path", "M52,42 L60,48"]
+   ]
+  },
+  "flag": {
+   "tags": ["milestone", "market", "country", "goal", "launch"],
+   "prims": [
+    ["path", "M14,58 L14,6"],
+    ["path", "M14,8 L50,8 L42,20 L50,32 L14,32"]
+   ]
+  },
+  "arrow_up": {
+   "tags": ["increase", "growth", "improvement", "rise", "up"],
+   "prims": [
+    ["path", "M32,58 L32,12"],
+    ["path", "M16,28 L32,12 L48,28"]
+   ]
+  },
+  "warning": {
+   "tags": ["risk", "caution", "issue", "alert", "attention"],
+   "prims": [
+    ["path", "M32,6 L60,56 L4,56 Z"],
+    ["path", "M32,24 L32,40"],
+    ["dot", [29, 45, 6, 6]]
+   ]
+  },
+  "partnership": {
+   "tags": ["handshake", "deal", "client", "agreement", "relationship", "collaboration", "joint"],
+   "prims": [
+    ["oval", [4, 17, 32, 32]],
+    ["oval", [28, 17, 32, 32]]
+   ]
+  }
+ }
+}

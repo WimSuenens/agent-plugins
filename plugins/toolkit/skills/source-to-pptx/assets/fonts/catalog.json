@@ -1,0 +1,94 @@
+{
+ "_comment": "Candidates for identifying a source typeface, and equivalents for common licensed fonts. fetch_fonts.py resolves any Google Fonts family by name, so this list is a starting point, not a limit.",
+
+ "identification_shortlist": [
+  "Barlow",
+  "Barlow Semi Condensed",
+  "Inter",
+  "Roboto",
+  "Roboto Condensed",
+  "Open Sans",
+  "Lato",
+  "Montserrat",
+  "Poppins",
+  "Source Sans 3",
+  "Work Sans",
+  "IBM Plex Sans",
+  "Fira Sans",
+  "Manrope",
+  "Rubik",
+  "DM Sans",
+  "Archivo",
+  "Archivo Narrow",
+  "Public Sans",
+  "Asap",
+  "Cabin",
+  "PT Sans",
+  "Titillium Web",
+  "Oswald"
+ ],
+
+ "serif_shortlist": [
+  "Merriweather",
+  "Lora",
+  "Source Serif 4",
+  "PT Serif",
+  "Libre Baskerville",
+  "Playfair Display",
+  "Crimson Pro"
+ ],
+
+ "mono_shortlist": [
+  "JetBrains Mono",
+  "IBM Plex Mono",
+  "Roboto Mono",
+  "Source Code Pro"
+ ],
+
+ "_pdf_aliases": "Font names lifted out of a PDF are often subset-tagged (ABCDEF+Helvetica-Bold) and frequently name a licensed face. Strip the tag, then map to a metric-compatible free equivalent, or keep the original name when the font is installed on the target machines.",
+ "pdf_aliases": {
+  "Helvetica": "Arimo",
+  "Helvetica Neue": "Arimo",
+  "Arial": "Arimo",
+  "Arial Narrow": "Archivo Narrow",
+  "Times New Roman": "Tinos",
+  "Times": "Tinos",
+  "Courier New": "Cousine",
+  "Calibri": "Carlito",
+  "Cambria": "Caladea",
+  "Segoe UI": "Open Sans",
+  "Frutiger": "Source Sans 3",
+  "Univers": "Roboto Condensed",
+  "Futura": "Jost",
+  "Avenir": "Nunito Sans",
+  "Gill Sans": "Lato",
+  "Myriad Pro": "Source Sans 3",
+  "Gotham": "Montserrat",
+  "Proxima Nova": "Manrope",
+  "Franklin Gothic": "Libre Franklin",
+  "Garamond": "EB Garamond",
+  "Georgia": "Gelasio",
+  "Verdana": "DejaVu Sans",
+  "Tahoma": "Open Sans",
+  "Trebuchet MS": "Fira Sans"
+ },
+
+ "_windows_fonts": "Faces already installed on every Windows machine, so they need no embedding: Arial, Arial Narrow, Calibri, Cambria, Candara, Consolas, Constantia, Corbel, Courier New, Franklin Gothic, Georgia, Impact, Segoe UI, Tahoma, Times New Roman, Trebuchet MS, Verdana.",
+ "windows_safe": [
+  "Arial",
+  "Arial Narrow",
+  "Calibri",
+  "Cambria",
+  "Candara",
+  "Consolas",
+  "Constantia",
+  "Corbel",
+  "Courier New",
+  "Georgia",
+  "Segoe UI",
+  "Tahoma",
+  "Times New Roman",
+  "Trebuchet MS",
+  "Verdana"
+ ]
+}

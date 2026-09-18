@@ -1,4 +1,4 @@
-# wim-skills
+# agent-plugins
 
 A personal Claude Code marketplace. It lists two plugins:
 
@@ -29,25 +29,25 @@ Upstream `/wayfinder` stays installed and stays useful — reach for it when the
 The repo root must be the directory containing `.claude-plugin/`. Public is simplest; private works but complicates background auto-updates.
 
 ```bash
-cd wim-skills
+cd agent-plugins
 git init && git add -A && git commit -m "wayfinding overlay"
-gh repo create WimSuenens/wim-skills --public --source=. --push
+gh repo create WimSuenens/agent-plugins --public --source=. --push
 ```
 
 ### 2. Register the marketplace and install both plugins
 
 ```bash
-claude plugin marketplace add WimSuenens/wim-skills
-claude plugin install mattpocock-skills@wim-skills
-claude plugin install wayfinding@wim-skills
+claude plugin marketplace add WimSuenens/agent-plugins
+claude plugin install mattpocock-skills@wimsuenens
+claude plugin install wayfinding@wimsuenens
 ```
 
-Or inside a session: `/plugin marketplace add WimSuenens/wim-skills`, then the two installs. If the install summary says `Run /reload-plugins to activate.`, run it.
+Or inside a session: `/plugin marketplace add WimSuenens/agent-plugins`, then the two installs. If the install summary says `Run /reload-plugins to activate.`, run it.
 
 > **If the upstream install fails with an SSH error** — `ssh: not found`, or `Could not read from remote repository` — GitHub `owner/repo` shorthand sources clone over SSH by default. Force HTTPS:
 >
 > ```bash
-> CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1 claude plugin install mattpocock-skills@wim-skills
+> CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1 claude plugin install mattpocock-skills@wimsuenens
 > ```
 >
 > This bit me during testing. It affects the `mattpocock-skills` entry only, because that's the one with a `github` source; the overlay uses a relative path and is already local.
@@ -124,19 +124,19 @@ claude plugin validate .                       # marketplace catalog
 claude plugin validate ./plugins/wayfinding    # plugin manifest
 claude plugin validate ./plugins/wayfinding/skills   # every SKILL.md frontmatter
 
-claude plugin marketplace add ./wim-skills
-claude plugin install wayfinding@wim-skills
+claude plugin marketplace add ./agent-plugins
+claude plugin install wayfinding@wimsuenens
 ```
 
 After editing a skill, reinstall to pick it up:
 
 ```bash
-claude plugin uninstall wayfinding@wim-skills
-claude plugin marketplace update wim-skills
-claude plugin install wayfinding@wim-skills
+claude plugin uninstall wayfinding@wimsuenens
+claude plugin marketplace update wimsuenens
+claude plugin install wayfinding@wimsuenens
 ```
 
-A directory-sourced marketplace has no commit SHA, so `plugin list` reports `Version: unknown` and update detection doesn't work — hence the uninstall. Once it's on GitHub, `claude plugin marketplace update wim-skills` is enough.
+A directory-sourced marketplace has no commit SHA, so `plugin list` reports `Version: unknown` and update detection doesn't work — hence the uninstall. Once it's on GitHub, `claude plugin marketplace update wimsuenens` is enough.
 
 ### Why `plugin.json` has no `version`
 
@@ -155,11 +155,11 @@ Commit this to the project's `.claude/settings.json` and the marketplace registe
 ```json
 {
   "extraKnownMarketplaces": {
-    "wim-skills": { "source": { "source": "github", "repo": "WimSuenens/wim-skills" } }
+    "agent-plugins": { "source": { "source": "github", "repo": "WimSuenens/agent-plugins" } }
   },
   "enabledPlugins": {
-    "mattpocock-skills@wim-skills": true,
-    "wayfinding@wim-skills": true
+    "mattpocock-skills@wimsuenens": true,
+    "wayfinding@wimsuenens": true
   }
 }
 ```
@@ -175,9 +175,9 @@ Run against Claude Code `2.1.237` on Linux:
 | `claude plugin validate .` | passed |
 | `claude plugin validate ./plugins/wayfinding` | passed (version warning, intentional) |
 | `claude plugin validate ./plugins/wayfinding/skills` | passed — all three SKILL.md frontmatter blocks parse |
-| `claude plugin marketplace add ./wim-skills` | registered |
-| `claude plugin install wayfinding@wim-skills` | installed, all three skill directories present in cache |
-| `claude plugin install mattpocock-skills@wim-skills` | installed at 1.2.3 after forcing HTTPS |
+| `claude plugin marketplace add ./agent-plugins` | registered |
+| `claude plugin install wayfinding@wimsuenens` | installed, all three skill directories present in cache |
+| `claude plugin install mattpocock-skills@wimsuenens` | installed at 1.2.3 after forcing HTTPS |
 | Both plugins enabled together | no collision error; both `wayfinder` skills present under separate namespaces |
 | Uninstall → marketplace update → reinstall | clean |
 

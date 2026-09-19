@@ -1,0 +1,12 @@
+{
+  "name": "toolkil",
+  "description": "Toolkit for non-common tasks like converting files types.",
+  "author": {
+    "name": "Wim Suenens",
+    "url": "https://wim.suenens.me"
+  },
+  "license": "MIT",
+  "keywords": [
+    "toolkit"
+  ]
+}

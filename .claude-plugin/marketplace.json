@@ -27,6 +27,13 @@
       "description": "Toolkit for non-common tasks like converting files types.",
       "category": "tooling",
       "keywords": ["toolkit"]
+    },
+    {
+      "name": "discover",
+      "source": "./plugins/discover",
+      "description": "Skills for capturing what you learned, e.g. recapping a session as a Markdown guide.",
+      "category": "productivity",
+      "keywords": ["discover", "recap", "notes", "session"]
     }
   ]
 }

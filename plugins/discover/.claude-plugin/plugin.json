@@ -1,0 +1,15 @@
+{
+  "name": "discover",
+  "description": "Skills for capturing and revisiting what you learned, starting with session recaps that turn a conversation into a keepable Markdown guide.",
+  "author": {
+    "name": "Wim Suenens",
+    "url": "https://wim.suenens.me"
+  },
+  "license": "MIT",
+  "keywords": [
+    "discover",
+    "recap",
+    "notes",
+    "session"
+  ]
+}

@@ -34,6 +34,13 @@
       "description": "Skills for capturing what you learned, e.g. recapping a session as a Markdown guide.",
       "category": "productivity",
       "keywords": ["discover", "recap", "notes", "session"]
+    },
+    {
+      "name": "design",
+      "source": "./plugins/design",
+      "description": "Interview-driven design-direction skill that forces specific, counted commitments across concept, colour, type, shape, motion and voice, then prototypes and writes a reusable design brief.",
+      "category": "design",
+      "keywords": ["design", "design-system", "brand", "visual-direction", "interview", "prototyping"]
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "name": "design",
+  "description": "Interview-driven design-direction skill: commit to a governing concept, force specific counted commitments across colour, type, shape, motion and voice, then prototype and write a reusable design brief.",
+  "author": {
+    "name": "Wim Suenens",
+    "url": "https://wim.suenens.me"
+  },
+  "license": "MIT",
+  "keywords": ["design", "design-system", "brand", "visual-direction", "interview", "prototyping"]
+}

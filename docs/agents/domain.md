@@ -7,6 +7,7 @@ How the engineering skills should consume this repo's domain documentation when 
 - **`CONTEXT.md`** at the repo root, or
 - **`CONTEXT-MAP.md`** at the repo root if it exists — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
 - **`docs/adr/`** — read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- **`docs/model.dbml`** (or `src/<context>/docs/model.dbml` per context) if it exists — the shared data model as tables and relations, drawn by `/wayfinding:dbml`. Denser than re-deriving the schema from migrations or an ORM; load it before touching anything relational.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
@@ -17,9 +18,11 @@ Single-context repo (most repos):
 ```
 /
 ├── CONTEXT.md
-├── docs/adr/
-│   ├── 0001-event-sourced-orders.md
-│   └── 0002-postgres-for-write-model.md
+├── docs/
+│   ├── adr/
+│   │   ├── 0001-event-sourced-orders.md
+│   │   └── 0002-postgres-for-write-model.md
+│   └── model.dbml
 └── src/
 ```
 
@@ -32,10 +35,14 @@ Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
 └── src/
     ├── ordering/
     │   ├── CONTEXT.md
-    │   └── docs/adr/                  ← context-specific decisions
+    │   └── docs/
+    │       ├── adr/                   ← context-specific decisions
+    │       └── model.dbml
     └── billing/
         ├── CONTEXT.md
-        └── docs/adr/
+        └── docs/
+            ├── adr/
+            └── model.dbml
 ```
 
 ## Use the glossary's vocabulary
@@ -43,6 +50,8 @@ Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
 When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
 
 If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
+
+The same rule extends to `docs/model.dbml`: its table and column names are glossary terms with a type attached, not a separate vocabulary. A table named ahead of the glossary is a gap in the glossary, not a naming choice `/wayfinding:dbml` gets to make on its own.
 
 ## Flag ADR conflicts
 

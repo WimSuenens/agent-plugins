@@ -23,6 +23,10 @@ This is `/ask-matt` for a repo running the `wayfinding` overlay. `ask-matt` ship
   unlike upstream's wayfinder, which hands the cleared map to `/to-spec` as one collapse.
 - `/reversibility` holds the door vocabulary (one-way, two-way, trigger, locked, provisional).
   Its three-part test is the ADR test from `/domain-modeling` — one test, two uses.
+- A data model complex enough that slices could drift on its shape → `/wayfinding:dbml` draws it
+  once as a `.dbml` file with relation notes and a worked example; `/wayfinding:model-playground`
+  turns that file into a throwaway Vue/React app so the human can react to the shape before it
+  locks, instead of reading a schema and guessing.
 - Upstream `/wayfinder` stays available for efforts whose destination genuinely is a **document**
   rather than running software.
 - A well-scoped feature still belongs on the plain main flow: `/grill-with-docs` → `/to-spec` →

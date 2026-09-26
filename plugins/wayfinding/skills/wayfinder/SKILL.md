@@ -32,7 +32,7 @@ The map is a single issue on this repo's issue tracker, labelled `wayfinder:map`
 
 The map is an **index**, not a store. It lists what has been settled and points at the tickets holding the detail; a decision lives in exactly one place — its ticket — so the map only gists and links.
 
-The **durable** artifacts are `CONTEXT.md` and the ADRs. The map is scaffolding: it churns, shrinks, and is eventually closed. Anything that must outlive the effort belongs in the domain model, written the moment it crystallises via `/domain-modeling`.
+The **durable** artifacts are `CONTEXT.md`, the ADRs, and — when the destination has a real data model — `docs/model.dbml`. The map is scaffolding: it churns, shrinks, and is eventually closed. Anything that must outlive the effort belongs in the domain model, written the moment it crystallises via `/domain-modeling`, or in the shared shape, drawn the moment it crystallises via `/wayfinding:dbml`.
 
 **Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** The issue tracker should have been provided to you — run `/wayfinding:setup-wayfinding-skill` if not (it configures the tracker and wires in the `slice` type and Deferred conventions automatically). Consult the tracker doc's "Wayfinding operations" section for how *this* repo expresses them. Absent a tracker, default to local markdown.
 
@@ -74,6 +74,8 @@ The whole map at low resolution, loaded once per session. Open tickets are **not
 <!-- work ruled beyond the destination; closed, never graduates -->
 ```
 
+When the destination has a data model worth sharing, name `/wayfinding:dbml` in `## Notes` the moment its file exists, alongside `CONTEXT.md` — Work a ticket's step 3 already tells every session to consult whatever Notes names, so this is how concurrent sessions land on one shape instead of each re-deriving it from whichever ticket they happened to pick up.
+
 **Deferred and Not yet specified are different things.** Fog is *unspecifiable* — you can't phrase the question yet. Deferred is *specifiable and deliberately unanswered* — you can phrase it, you have judged it a two-way door, and you have written the condition that brings it back. Fog graduates into tickets or into Deferred; Deferred graduates into a ticket when its trigger fires.
 
 ### Tickets
@@ -100,7 +102,7 @@ Every ticket is **HITL** — worked *with* a human who speaks for themselves —
 
 - **Research** (AFK): Reading documentation, third-party APIs, or local knowledge bases to surface a fact a decision waits on. Resolved by a `/research` **subagent**. Fire these generously and in parallel — they cost you nothing.
 - **Slice** (AFK build, HITL gate): A thin vertical cut, shipped to main, whose purpose is to **teach**. Where a task *does* in order to unblock a decision, a slice *ships* in order to produce one. Built through `/to-tickets` → `/implement` → `/tdd` → `/code-review`; resolved when it is merged and its resolution comment records what the build taught, including any decision it contradicted. Use when the honest answer to "how would we know?" is "build it and see," and the real thing costs about what a fake would.
-- **Prototype** (HITL): Raise the fidelity of the discussion with a cheap, rough artifact to react to, via `/prototype`. Use when the fake is much cheaper than the real thing — UI look and feel, a state machine's ergonomics.
+- **Prototype** (HITL): Raise the fidelity of the discussion with a cheap, rough artifact to react to, via `/prototype`. Use when the fake is much cheaper than the real thing — UI look and feel, a state machine's ergonomics. When the reaction wanted is to the **data model itself**, reach for `/wayfinding:model-playground` instead — it seeds a throwaway Vue/React app from the current `.dbml` so the human clicks through the shape rather than reading it.
 - **Grilling** (HITL): Conversation, via `/grill-with-docs`. Reserved for questions only your preference or authority settles.
 - **Task** (HITL or AFK): Manual work a decision waits on — provisioning access, signing up for a service, moving data so its shape can be seen. Reach for `/wizard` where a human must click through it. The answer records what was done and any facts later tickets depend on.
 
@@ -128,7 +130,7 @@ User invokes with a loose idea.
 
 1. **Name the destination.** Run `/grill-with-docs` to pin down what this map is finding its way to. The destination fixes the scope, so it's settled first.
 2. **Map the frontier.** Grill again, **breadth-first**: fan out across the whole space rather than deep on any thread, surfacing every open question you can see. Don't answer them — surface them.
-3. **Triage every question by reversibility.** Invoke `/reversibility` and sort each into **lock now**, **defer**, or **out of scope**. This is the step that keeps the map light, and it is the step most easily skipped: a sharp question is not the same as a question worth a session. Charting is done when **every question surfaced in step 2 carries one of the three verdicts**, and each deferral carries a trigger.
+3. **Triage every question by reversibility.** Invoke `/reversibility` and sort each into **lock now**, **defer**, or **out of scope**. This is the step that keeps the map light, and it is the step most easily skipped: a sharp question is not the same as a question worth a session. Charting is done when **every question surfaced in step 2 carries one of the three verdicts**, and each deferral carries a trigger. A destination with a real data model almost always owes it a lock-now ticket of its own — "what are the core entities and relations" — rather than letting the shape emerge slice by slice; `/reversibility`'s own examples name schema shape as a one-way door more often than it looks.
 4. **Check the count.** Roughly five to seven "lock now" tickets is the shape of a well-triaged greenfield map. A larger set means two-way doors were sorted as one-way — re-run step 3 against the three-part test before creating anything.
 5. **Create the map** (label `wayfinder:map`): Destination and Notes filled in, Decisions-so-far empty, Deferred holding the two-way doors and their triggers, the fog sketched into Not yet specified, Out of scope populated.
 6. **Create the "lock now" tickets** as child issues, then wire blocking edges in a **second pass** (issues need ids before they can reference each other).
@@ -150,7 +152,7 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 
 Run after every resolved ticket, and always after a slice merges — a slice teaches more than a conversation does, so this is where most of the map's movement happens. Work all five; the mode is done when each has been answered out loud, including with "nothing."
 
-1. **What did it teach?** Take the resolution at face value and ask what is now known that wasn't. For a slice, that includes everything the build made obvious and nobody asked about.
+1. **What did it teach?** Take the resolution at face value and ask what is now known that wasn't. For a slice, that includes everything the build made obvious and nobody asked about. If what it taught touched the data model, refresh `/wayfinding:dbml` now, in this step — not batched for later — since this is the one step every ticket and every slice both pass through, and the map's Notes pointer to the file is only as good as how current it is.
 2. **What did it invalidate?** Check the finding against Decisions-so-far. A contradicted **[provisional]** decision gets overwritten with a note on what corrected it. A contradicted **[locked]** decision stops the resurvey: re-run `/reversibility` across every ticket and deferral that hung off it, because the ground under them moved.
 3. **Which triggers fired?** Walk **Deferred** and check each trigger against what just happened. A fired trigger becomes a ticket — re-triaged, since a two-way door can become a one-way door once something is built on it. Clear the line from Deferred so it lives only as its ticket.
 4. **What graduated from fog?** Anything in **Not yet specified** now sharp enough to phrase goes to a ticket or to Deferred, per its reversibility. Clear the graduated patch.

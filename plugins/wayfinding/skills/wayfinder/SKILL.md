@@ -34,7 +34,7 @@ The map is an **index**, not a store. It lists what has been settled and points 
 
 The **durable** artifacts are `CONTEXT.md` and the ADRs. The map is scaffolding: it churns, shrinks, and is eventually closed. Anything that must outlive the effort belongs in the domain model, written the moment it crystallises via `/domain-modeling`.
 
-**Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** The issue tracker should have been provided to you — run `/setup-matt-pocock-skills` if not, then apply the wayfinding tracker patch, which adds the `slice` type and the Deferred conventions. Consult the tracker doc's "Wayfinding operations" section for how *this* repo expresses them. Absent a tracker, default to local markdown.
+**Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** The issue tracker should have been provided to you — run `/wayfinding:setup-wayfinding-skill` if not (it configures the tracker and wires in the `slice` type and Deferred conventions automatically). Consult the tracker doc's "Wayfinding operations" section for how *this* repo expresses them. Absent a tracker, default to local markdown.
 
 ### The map body
 

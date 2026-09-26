@@ -3,7 +3,7 @@
 A personal Claude Code marketplace. It lists two plugins:
 
 - **`mattpocock-skills`** — upstream, unmodified, fetched straight from `mattpocock/skills`.
-- **`wayfinding`** — the overlay: `wayfinder`, `beachhead`, `reversibility`.
+- **`wayfinding`** — the overlay: `wayfinder`, `beachhead`, `reversibility`, `setup-wayfinding-skill`, `ask-me`.
 
 **Nothing is forked.** A marketplace catalog and a plugin source are independent, so this repo can list a plugin that lives in someone else's repo alongside one that lives in its own. The overlay sits *beside* upstream instead of on top of it: upstream ships, you pull, there is never a merge to resolve.
 
@@ -57,26 +57,12 @@ Or inside a session: `/plugin marketplace add WimSuenens/agent-plugins`, then th
 Once per repo you want to use this in:
 
 ```
-/setup-matt-pocock-skills
+/wayfinding:setup-wayfinding-skill
 ```
 
-Answer its questions (issue tracker, triage labels, doc layout). Then apply the tracker patch from `patches/` that matches the tracker you chose — `issue-tracker-github.wayfinding.md` or `issue-tracker-local.wayfinding.md`. It replaces the `## Wayfinding operations` section in the tracker doc that setup just wrote.
+It runs upstream's `/setup-matt-pocock-skills` interview first if the repo isn't configured yet (issue tracker, triage labels, doc layout), then deterministically wires the wayfinding conventions into the tracker doc's `## Wayfinding operations` section — the `slice` type, locked/provisional tagging, the Deferred list — and creates the `wayfinder:slice` label on GitHub and GitLab trackers. No manual file patch, no separate `gh label create` step.
 
-**This step is not optional.** `/wayfinding:wayfinder` reads that section for the `slice` label and the Deferred conventions, and silently falls back to upstream behaviour without it.
-
-### 4. Add the `wayfinder:slice` label
-
-On GitHub trackers only:
-
-```bash
-gh label create wayfinder:slice --description "Wayfinder: a thin slice shipped to teach"
-```
-
-### 5. Add the routing block
-
-Append the block from `patches/CLAUDE-md-routing-snippet.md` to the repo's `CLAUDE.md` or `AGENTS.md` — the same file `/setup-matt-pocock-skills` writes its `### Issue tracker` block into.
-
-This replaces the `ask-matt` edit from the earlier draft. You **cannot** patch `ask-matt` under this layout: Claude Code copies plugins into a read-only cache and overwrites edits on update. The routing has to live in the project, and the project's agent file is where it belongs.
+Use `/wayfinding:ask-me` in this repo instead of `/ask-matt` — it's the same router, with the one flow this overlay changes (the wayfinder on-ramp) pointed at `/wayfinding:wayfinder`.
 
 ---
 
@@ -90,7 +76,7 @@ Invoke by namespaced name, since plugin skills are registered as `<plugin>:<skil
 
 Both wayfinders coexist. `/mattpocock-skills:wayfinder` is upstream's plan-only original; `/wayfinding:wayfinder` is this one. That's why the overlay skill kept the plain name — the namespace already does the disambiguating a `my-` prefix would have done.
 
-`beachhead` and `reversibility` don't collide with anything, so `/beachhead` and `/reversibility` resolve fine on their own.
+`beachhead`, `reversibility`, `setup-wayfinding-skill`, and `ask-me` don't collide with anything, so `/beachhead`, `/reversibility`, `/setup-wayfinding-skill`, and `/ask-me` resolve fine on their own. Use `/ask-me` in place of `/ask-matt` in a repo running this overlay — same router, with the wayfinder on-ramp pointed here.
 
 ### The loop
 
@@ -174,9 +160,9 @@ Run against Claude Code `2.1.237` on Linux:
 | --- | --- |
 | `claude plugin validate .` | passed |
 | `claude plugin validate ./plugins/wayfinding` | passed (version warning, intentional) |
-| `claude plugin validate ./plugins/wayfinding/skills` | passed — all three SKILL.md frontmatter blocks parse |
+| `claude plugin validate ./plugins/wayfinding/skills` | passed — all five SKILL.md frontmatter blocks parse |
 | `claude plugin marketplace add ./agent-plugins` | registered |
-| `claude plugin install wayfinding@wimsuenens` | installed, all three skill directories present in cache |
+| `claude plugin install wayfinding@wimsuenens` | installed, all five skill directories present in cache |
 | `claude plugin install mattpocock-skills@wimsuenens` | installed at 1.2.3 after forcing HTTPS |
 | Both plugins enabled together | no collision error; both `wayfinder` skills present under separate namespaces |
 | Uninstall → marketplace update → reinstall | clean |
@@ -186,8 +172,8 @@ Run against Claude Code `2.1.237` on Linux:
 ## Known costs
 
 - **Triage quality is the whole mechanism.** Mis-sort a one-way door as a two-way door and you get the failure this layer exists to avoid, arriving later and more expensively than upstream's version would have. The `~5–7` count check during charting is a smoke alarm, not a guarantee.
-- **The tracker patch is a fork of one file.** Re-check it after a major upstream release; everything else updates cleanly.
-- **`reversibility` is model-invoked**, so its description carries permanent context load. That's the price of shared vocabulary between two user-invoked skills, which can't reach each other.
+- **The tracker patches are a fork of one section each.** `setup-wayfinding-skill/references/issue-tracker-{github,gitlab,local}.wayfinding.md` each fork one upstream "Wayfinding operations" section; re-check them after a major upstream release, since upstream could change the mechanics they're built on. Applying them is automatic now — only the content itself still needs re-checking.
+- **`reversibility` is model-invoked**, so its description carries permanent context load — the price of shared vocabulary between two user-invoked skills, which can't reach each other.
 - **Deferred rots without discipline.** The trigger is the only thing between a deferral and an abandonment. If resurvey step 3 gets skipped, the section becomes a graveyard within a month.
 
 ## Lighter alternatives

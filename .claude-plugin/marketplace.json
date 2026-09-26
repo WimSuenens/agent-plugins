@@ -17,7 +17,7 @@
     {
       "name": "wayfinding",
       "source": "./plugins/wayfinding",
-      "description": "Reversibility-triaged wayfinder, beachhead slice selection, and the door vocabulary.",
+      "description": "Reversibility-triaged wayfinder, beachhead slice selection, the door vocabulary, deterministic per-repo setup, and an ask-me router overlay.",
       "category": "engineering",
       "keywords": ["wayfinding", "planning", "reversibility", "slices"]
     },

@@ -34,11 +34,13 @@ Walk the subject once per pass and log findings as you go:
 5. **Persuasion and trust**: every persuasion technique present, run through the three-check test; trust signals at the decision point.
 6. **The moment's principles**: the index row's principles that the screen ignores, and the "watch for" patterns it contains.
 
-**Done when** all six passes have run against the whole subject; a pass with no findings says so in the report.
+When a persuasion technique fails a check, or its truth can't be seen on the screen, read [../ux-psychology/references/dark-patterns.md](../ux-psychology/references/dark-patterns.md) for the pattern name.
+
+**Done when** all six passes have run against the whole subject, and each pass has a coverage line (step 4).
 
 ## 4. Report
 
-One entry per finding, most severe first:
+One entry per finding, ordered by severity, then by impact on the task from step 1:
 
 ```
 [severity] <principle> — <one-line problem>
@@ -47,14 +49,18 @@ One entry per finding, most severe first:
   Dark pattern: <named pattern + failed check>   (only when the three-check test fails)
 ```
 
+`<principle>` is the `ux-psychology` term (Proximity, Fitts, Defaults, …); for a craft rule with no single term, use the craft rule's title.
+
 Severity:
 
-- **blocker**: a dark pattern, or a WCAG AA failure.
-- **major**: breaks the moment's primary task or its main trust signal.
+- **blocker**: a dark pattern, or a WCAG AA failure. That includes an *estimated* failure (mark it "estimated" in Evidence) and a failure that only shows with other real content, such as icons that pass on this photo but not on the catalogue's light photos.
+- **major**: breaks the moment's primary task (from step 1) or the trust signal it depends on. A persuasion claim whose truth can't be seen (a discount with no reference price, an unexplained countdown) is major, and its Fix names what would make it honest, and that it becomes a blocker if the claim is false.
 - **minor**: costs effort or clarity without breaking the task.
 - **polish**: craft consistency.
 
-After the findings, add **beyond fixes**: up to three structural improvements the screen would benefit from (a sticky action area, presets, a reordered flow), each tied to a principle.
+Then a **coverage** line per pass: its finding count, persuasion techniques that passed the three-check test, and what this subject can't show (focus, motion, feedback and target sizes are invisible on a static screenshot; name them as unchecked).
+
+Then **beyond fixes**: up to three structural improvements the screen would benefit from (a sticky action area, presets, a reordered flow), each tied to a principle.
 
 Deliver in chat. Then offer two optional outputs:
 

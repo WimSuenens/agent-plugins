@@ -91,4 +91,4 @@ A persuasive technique is **honest** only if it passes all three; failing any on
 2. **Symmetric exit**: declining is as easy, visible and emotionally neutral as accepting.
 3. **Endorsement**: the user would endorse the technique if they understood it — it would survive being explained on the screen itself.
 
-Checks 1 and 2 are observable on the screen; check 3 takes judgement, so state the reasoning when it's the one that fails. When a finding needs the named pattern or its regulatory anchor (EU DSA Art. 25, FTC), read [references/dark-patterns.md](references/dark-patterns.md).
+Check 2 is observable on the screen. Check 1 often isn't: a discount's reference price or a countdown's deadline lives in the business, not the pixels — name what would settle it. Check 3 takes judgement, so state the reasoning when it's the one that fails. When a finding needs the named pattern or its regulatory anchor (EU DSA Art. 25, FTC), read [references/dark-patterns.md](references/dark-patterns.md).

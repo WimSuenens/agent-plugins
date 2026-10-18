@@ -1,10 +1,11 @@
 # Design brief schema
 
 The canonical shape every direction gets written in — both the 2-3
-candidate briefs from phase 3 and the final brief from phase 6. Every
-section exists to hold a *specific, counted* commitment. A section that
-could be copy-pasted unchanged into a different project's brief has failed
-— vagueness is the failure mode this schema exists to block.
+candidate briefs from phase 3 and the final brief from phase 6: a title
+(§1), a fixed opening line (§2), then seven content sections (§3-9).
+Every content section exists to hold a **counted commitment**. A section
+that could be copy-pasted unchanged into a different project's brief is
+still a **mood word**, and has failed.
 
 ## 1. `# Design brief`
 
@@ -42,7 +43,10 @@ for text-on-text contrast, if that exception is itself stated). For each
 one, state the *one* thing it is allowed to touch, and what it is
 forbidden from touching. Cards/surfaces must be built from an explicit
 rule (a tint? a border-only treatment? the ground colour itself?) rather
-than left implicit.
+than left implicit. Name the contrast pairs the palette relies on (body
+text, secondary text and UI components against each surface) and state
+that each passes WCAG AA: 4.5:1 for body text, 3:1 for large text and UI
+components.
 
 **Good looks like:** "Three colours: a ground, an ink, one accent. The
 accent appears on at most N elements, chosen for X reason, never as a

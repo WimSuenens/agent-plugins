@@ -1,151 +1,103 @@
 ---
 name: direction
-description: Run a structured interview that forces a project to commit to a governing design concept and specific, counted rules for colour, type, shape & elevation, motion, and voice — the same method used by a library of five reference "brand kit" design briefs. Synthesizes one direction, or 2-3 divergent candidates, optionally prototypes them (Artifact tool or static HTML fallback), and writes the chosen direction as a reusable design-brief markdown file into the user's project. Explicit-invoke only — do not trigger opportunistically from a passing mention of "design," "colours," or "branding."
+description: Interview a project into one design direction — counted rules for concept, colour, type, shape, motion and voice — then optionally prototype it and write a reusable brief.
 disable-model-invocation: true
 ---
 
-A design direction is a small set of *specific, counted* rules — not a mood
-board. "Pick a calm palette" produces nothing anyone can build from; "pick
-exactly three colours and name what each one is allowed to touch" does. This
-skill runs that kind of interview, then turns the answers into a design-brief
-markdown file that reads like `references/brief-schema.md` and can be handed
-to any implementer (human or agent) as its own starting prompt.
+A design direction is a small set of **counted commitments**, not a mood
+board. "Pick a calm palette" is a **mood word**: nothing anyone can build
+from. "Pick exactly three colours and name what each one is allowed to
+touch" is a counted commitment. This skill runs an interview that turns
+every answer into counted commitments, then writes them as a design brief
+that any implementer (human or agent) can take as its own starting prompt.
 
-Five worked examples ship in `references/kits/` — real design briefs, each
-picking different, tightly specific values for the same dimensions. They are
-calibration material, never a source to copy from. Skim, don't transcribe.
+Every phase below converts mood words into counted commitments. When an
+answer comes back as a mood word, ask one forced-choice follow-up and
+log the counted answer it produces.
 
 ## Workflow
 
 ### 0. Project context
 
-Before any design question, get the brief for the *thing being designed*:
-what's being built, who it's for, and any hard constraints (existing brand
-colours, accessibility requirements, platform/framework, dark-mode-only,
-etc.). Keep this to a few direct questions — this phase is scoping, not
-ideation. Write down constraints verbatim; they gate every later answer (an
-accent colour choice that fails contrast on a required background is wrong
-regardless of how good it looks).
+Ask a few direct questions about the *thing being designed*: what's being
+built, who it's for, and its hard constraints (existing brand colours,
+accessibility requirements, platform/framework, dark-mode-only, etc.).
+This phase is scoping, not ideation.
+
+**Done when** product, audience and every constraint are written down
+verbatim in a working draft. Constraints gate every later answer: an
+accent that fails contrast on a required background is wrong however good
+it looks.
 
 ### 1. Concept
 
-Surface the governing metaphor or tension in a handful of sharp
-forced-choice or short-answer questions — see `references/interview-guide.md`
-§Concept. The concept is the thing every later dimension has to justify
-itself against ("does this serve luxury-through-restraint, or fight it?").
-Do not move to phase 2 until the user has committed to one sentence naming
-it. If they want to defer commitment in favour of exploring divergent
-directions, see the "undecided user" note in the interview guide and switch
-straight to producing 2-3 concept sketches instead of one.
+Skim 1-2 files from `references/kits/` for calibration on how narrow a
+concept statement should be, picking kits whose domain differs from the
+user's so nothing bleeds across. Kits are calibration, never a source:
+invent every colour, font, device and line of copy fresh.
 
-**Before this phase**, skim 1-2 files from `references/kits/` (not all
-five) if you want calibration on how narrow and specific a concept
-statement should be. Pick kits whose domain differs from the user's, so
-nothing bleeds across by accident.
+Then surface the governing metaphor or tension with the questions in
+`references/interview-guide.md` §Concept. The concept is what every later
+dimension justifies itself against ("does this serve
+luxury-through-restraint, or fight it?").
+
+**Done when** the user has committed to one sentence naming the concept.
+If they want to explore instead of commit, follow the guide's
+"undecided user" note and carry 2-3 concept sentences forward.
 
 ### 2. Colour, Type, Shape & elevation, Motion, Voice
 
-Walk these five dimensions one at a time, in this order. For each, ask 2-4
-questions from `references/interview-guide.md` that force a *specific,
-counted* commitment — never accept a mood word as a final answer. Example
-phrasings (full bank is in the reference file):
+Copy `assets/design-brief-template.md` into the working draft (one copy
+per candidate concept). Walk the five dimensions in that order with
+the questions in `references/interview-guide.md`. Write
+each counted commitment into its template section the moment it's given.
 
-- Colour: "Pick an exact number of colours for the whole palette — not
-  counting greys. What is that number, and what is each one the *only*
-  thing allowed to use it for?"
-- Type: "How many typefaces — one, two, three? Give each one job it does
-  and nothing else does."
-- Shape & elevation: "Pick one distinctive elevation device (a shadow
-  pairing, a cut corner, a glow) that will appear everywhere something
-  needs to lift off the page. What is it, concretely?"
-- Motion: "What's the one thing that animates once, on entrance, and
-  never again? Separately: is there an ambient loop, and if so, how many —
-  zero, one, or two, never more?"
-- Voice: "How are section labels formatted — numbered, slash-prefixed,
-  plain? What's the one verbal tic that shows up nowhere else in the
-  product's copy?"
-
-If an answer comes back vague ("something modern," "a nice blue"), push
-back once with a forced-choice follow-up rather than accepting it — this is
-the whole mechanism the reference kits model. Log each committed answer
-against the matching section of `references/brief-schema.md` as you go
-rather than holding them in memory until the end.
+**Done when** all five sections of every draft hold counted commitments
+and no mood words.
 
 ### 3. Synthesize
 
-Write the answers into the 7-section schema from
-`references/brief-schema.md` (Concept, Colour strategy, Type strategy,
-Shape & elevation, Motion, Voice, Apply it). Two paths:
+Read `references/brief-schema.md` — what "counted" vs "mood word" looks
+like per section — and finish each draft against it: the title, the fixed
+opening line, and the seven content sections (Concept, Colour strategy,
+Type strategy, Shape & elevation, Motion, Voice, Apply it).
 
-- **User committed to one direction** — write it straight.
-- **User wants options, or answers pulled in genuinely different
-  directions** — write 2-3 *divergent* candidate briefs, each internally
-  consistent and each choosing different values for every dimension (don't
-  let two candidates share a palette size or the same entrance device —
-  that's not really two directions). Label them clearly (A/B/C with a
-  one-line epithet each, e.g. "A: instrument panel," "B: paper and ink").
+- **One concept** → one brief.
+- **Several concepts, or answers pulling in genuinely different
+  directions** → 2-3 *divergent* candidate briefs, each internally
+  consistent and choosing different values on every dimension (two
+  candidates sharing a palette size or an entrance device are one
+  direction twice). Label them A/B/C with a one-line epithet each, e.g.
+  "A: instrument panel," "B: paper and ink."
 
-Use `assets/design-brief-template.md` as the literal skeleton to copy and
-fill for each brief; `references/brief-schema.md` is what tells you what
-"good" looks like per section while you fill it in.
+**Done when** every brief's *Apply it* recap names one concrete device per
+dimension. If it can't, the section it can't name is still a mood word:
+go back to phase 2 for it.
 
 ### 4. Prototype (offer, don't assume)
 
-Ask whether the user wants 1-3 candidate directions prototyped as a quick
-landing-page mockup for their actual product, implementing that
-candidate's rules literally (the counted colours, the type roles, the
-named shape/elevation device, the motion rules, the voice rules).
-
-- **Artifact tool available this session** → load the `artifact-design`
-  skill first (its own contract requires this), then publish one artifact
-  per candidate.
-- **Artifact tool not available** → write a self-contained static
-  HTML+CSS file per candidate (inline `<style>`, no build step, no
-  external assets) to `design/prototypes/<candidate-slug>.html` in the
-  user's project (ask before writing outside the current project; offer to
-  use a different folder if the user prefers). Tell the user to open it in
-  a browser — do not attempt to open it yourself.
-
-Skip this phase entirely if the user declines or if there's no concrete
-product context to mock up against yet.
+Offer to prototype 1-3 candidates as a landing-page mockup for the user's
+actual product. On a yes, follow `references/prototyping.md`. Skip this
+phase if the user declines or there's no concrete product to mock up yet.
 
 ### 5. React, iterate, blend, pick
 
 Walk the user through what they're seeing (or reading, if unprototyped).
-Expect blending — "A's palette with B's type system" is a normal outcome,
-not a failure of phase 3. Re-run the relevant slice of phase 2 for anything
-that changes, and keep every section's commitments counted and specific
-through the edits; don't let a revision reintroduce vagueness.
+Blending is a normal outcome ("A's palette with B's type system"). Re-run
+the relevant slice of phase 2 for anything that changes, so every edited
+section still holds counted commitments.
+
+**Done when** the user names one direction as final.
 
 ### 6. Write the final brief
 
-Once the user picks (or refines to) one direction, write it as a markdown
-file in the user's project, in the exact 7-section schema — this is what
-makes it reusable as an implementation prompt later, the same way the
-reference kits' `prompt.md` files are consumed. Default path:
-`design/direction.md` (or `design/direction-<slug>.md` if multiple named
-directions are being kept side by side); confirm the path and filename
-with the user before writing, and honour any override. Report the path
-back when done.
+Write the chosen direction as a markdown file in the user's project, in
+the schema from `references/brief-schema.md` — that shape is what makes it
+reusable as an implementation prompt, the same way the files in
+`references/kits/` are. Default path: `design/direction.md` (or
+`design/direction-<slug>.md` when several named directions are kept side
+by side); confirm path and filename with the user before writing and
+honour any override.
 
-## References
-
-Read lazily, per repo convention — not up front:
-
-- `references/kits/aurelia.md`, `halftone.md`, `mira.md`, `nexus.md`,
-  `vacance.md` — five full worked example briefs. Skim 1-2 before phase 1
-  for calibration on specificity; never read all five for one interview,
-  and never copy their concrete colours/fonts/copy/devices.
-- `references/brief-schema.md` — the 7-section schema explainer: what each
-  section must contain and what "vague" vs. "specific" looks like per
-  section. Read before phase 3 (synthesis) and keep open while writing.
-- `references/interview-guide.md` — the full question bank by dimension,
-  with example phrasings and guidance for the undecided-user / multiple-
-  candidates case. Read before phase 1, re-check per dimension through
-  phase 2.
-
-## Assets
-
-- `assets/design-brief-template.md` — blank, prose-free skeleton of the
-  7-section schema. Copy this verbatim per candidate/direction and fill it
-  in during phases 3 and 6, rather than freehanding the headings.
+Report the path back, and name the next step: `/design:design-system`
+reads this brief as its input when building the design system.

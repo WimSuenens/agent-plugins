@@ -1,9 +1,12 @@
 # agent-plugins
 
-A personal Claude Code marketplace. It lists two plugins:
+A personal Claude Code marketplace. Its main plugins:
 
 - **`mattpocock-skills`** — upstream, unmodified, fetched straight from `mattpocock/skills`.
-- **`wayfinding`** — the overlay: `wayfinder`, `beachhead`, `reversibility`, `setup-wayfinding-skill`, `ask-me`.
+- **`wayfinding`** — the planning overlay: `wayfinder`, `beachhead`, `reversibility`, `setup-wayfinding-skill`, `ask-me`.
+- **`design`** — the design overlay: `ux-psychology`, `ux-review`, `design-system`, `direction`, `setup-design-skill`. See [The design overlay](#the-design-overlay).
+
+It also lists `toolkit` (`source-to-pptx`) and `discover` (`session-recap`).
 
 **Nothing is forked.** A marketplace catalog and a plugin source are independent, so this repo can list a plugin that lives in someone else's repo alongside one that lives in its own. The overlay sits *beside* upstream instead of on top of it: upstream ships, you pull, there is never a merge to resolve.
 
@@ -19,6 +22,32 @@ The overlay keeps the map and changes four things:
 4. **An incremental exit.** No big-bang collapse of the map into one spec. Each slice carries its own; the map **dissolves** mid-build when no one-way doors remain ahead.
 
 Upstream `/wayfinder` stays installed and stays useful — reach for it when the destination genuinely is a document rather than running software.
+
+## The design overlay
+
+Upstream has no design vocabulary: `/prototype` can generate UI variations and `/code-review` can check code against standards, but neither knows *why* a screen works. The design overlay adds that layer the same way `wayfinding` does — beside upstream, never forked.
+
+| Skill | Invocation | What it does |
+|---|---|---|
+| `ux-psychology` | model | Glossary by **mechanism** (perception, memory, interaction cost, decisions, motivation, trust, accessibility). Every principle carries an evidence grade — *replicated*, *contested* or *folklore* — never a statistic. Ends with the **three-check test** for dark patterns: truthful framing, symmetric exit, endorsement. |
+| `ux-review` | model | Six-pass review of a screenshot, URL or component code. Findings carry severity, principle, evidence, fix, and a dark-pattern flag. Optional outputs: `design/reviews/` and the issue tracker. |
+| `design-system` | user | Builds `design/system.md` plus tokens in the repo's stack (DTCG on request), from scratch or extracted from existing UI. Asks the one-way doors, chooses the two-way doors. Reads a `direction` brief when one exists. |
+| `direction` | user | Interviews a project into one design direction of counted commitments and writes a reusable brief. |
+| `setup-design-skill` | user | Writes `docs/agents/design.md` and its `AGENTS.md` pointer once per repo. |
+
+It reaches upstream two ways:
+
+1. **Vocabulary hook.** `ux-psychology`'s description ends "…or when another skill needs the UX-psychology vocabulary", the same hook `codebase-design` and `reversibility` use.
+2. **Upstream artefacts.** `setup-design-skill` adds `docs/agents/design.md`, which every upstream skill reads through `AGENTS.md`: build UI from `design/system.md`, name findings with the vocabulary, record one-way design decisions as ADRs and UI terms in `CONTEXT.md`, file review findings as issues.
+
+The research behind it — every principle traced to primary sources and graded, with corrections to the popular claims (the jam study, "70–90% never change defaults", "losses weigh 2x") — is in [docs/research/ux-psychology.md](docs/research/ux-psychology.md).
+
+```
+/design:setup-design-skill    once per repo
+/design:direction             optional — when the visual identity is still open
+/design:design-system         writes design/system.md + tokens
+/design:ux-review             on any screen, flow or component
+```
 
 ---
 

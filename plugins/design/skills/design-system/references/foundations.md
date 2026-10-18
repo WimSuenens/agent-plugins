@@ -13,12 +13,15 @@ Two-way-door defaults for `design-system` step 3. A direction brief overrides an
   - `accent` text-on-fill (button label on accent) → ≥ 4.5:1
   - `border` of inputs, `focus` ring, meaningful icons on their background → ≥ 3:1
   - every status colour used as text → ≥ 4.5:1; as an icon/fill → ≥ 3:1
+- **Accent vs status collision**: when the natural accent shares a hue with a status (a green accent and green success), either shift the status hue or let them share it and rely on icon and text for meaning. Record which in the spec's Set aside section.
 - **Status never colour-only**: pair with an icon or text.
+- **Focus ring recipe**: a 2 px ring in `focus` with a 2 px offset in the surface colour, so the ring is measured against the surface and stays ≥ 3:1 on any fill, including accent buttons.
+- **Disabled**: exempt from WCAG contrast; aim for ≈3:1 so it stays legible, without gating on it.
 
 ## Type
 
 - **One family**; add a second only with one stated job (e.g. tabular numerals, display headings). *Mechanism:* fewer varying dimensions, each variation means more.
-- **Scale**: ratio 1.2 (dense UI) to 1.25 (content-led), base 16 px on web; round to whole pixels. 5–7 steps cover most products: caption, body-sm, body, title-sm, title, heading, display.
+- **Scale**: ratio 1.2 (dense UI) to 1.25 (content-led), base 16 px on web; round to whole pixels, with 12 px as the smallest text size (round up below base). 5–7 steps cover most products: caption, body-sm, body, title-sm, title, heading, display.
 - **Weights**: two or three (regular, medium/semibold, bold), each locked to roles.
 - **Line height**: ≈1.5 for body, 1.2–1.3 for headings; tighter as size grows.
 - **Line length**: cap reading text at ≈45–75 characters (`max-width` in `ch`).

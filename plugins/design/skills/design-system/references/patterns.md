@@ -12,7 +12,7 @@ For `design-system` step 4: include the patterns for the product moments the con
 ## Primary action
 
 - **One primary action per view**, visually distinct, in thumb reach on mobile (sticky bottom bar on long pages, never covering focus). *Principle:* Von Restorff, Fitts.
-- **The label states outcome and cost** ("Pay €49.00", "Add 2 kg — €9.80"). *Principle:* uncertainty reduction, honest anchoring. *Boundary:* hidden costs fail check 1.
+- **The label states outcome and cost** ("Pay €49.00", "Add 2 kg — €9.80"). *Principle:* working-memory limit, anchoring (honest reference). *Boundary:* hidden costs fail check 1.
 - **Decline is symmetric**: secondary actions are visible, neutral and as easy to hit. *Principle:* framing. *Boundary:* confirmshaming and grey-on-grey "no thanks" fail check 2.
 
 ## Progress and onboarding

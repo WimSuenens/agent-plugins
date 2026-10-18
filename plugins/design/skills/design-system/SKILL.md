@@ -10,6 +10,8 @@ A design system is a set of decisions made once so no screen has to make them ag
 
 ## 0. Pick the mode and read what exists
 
+The **working draft** is the spec itself: copy [assets/system-template.md](assets/system-template.md) to `design/system.md` now (or next to an existing design folder if the repo has one) and fill it as you go.
+
 - **Extract**: the repo already has UI (stylesheets, a Tailwind config, a component folder, a theme file). Inventory every colour, font size, weight, line height, spacing value, radius, shadow and duration actually in use, with counts. Near-duplicates (`#333` / `#343434`, 15 px / 16 px) are one decision made twice.
 - **From scratch**: no UI yet.
 
@@ -17,13 +19,13 @@ In both modes, read `design/direction.md` (or `design/direction-*.md`) if presen
 
 Invoke `/design:ux-psychology` now; the vocabulary is used in every later step.
 
-**Done when** the mode is set, and in extract mode the inventory is written to the working draft.
+**Done when** the mode is set, and in extract mode the inventory is written to the draft's Context section.
 
 ## 1. Context
 
 Ask a few direct questions: what's being built, for whom, on which platforms, the hard constraints (existing brand assets, accessibility level, dark mode, framework), and the product moments that matter most (onboarding, checkout, pricing, …).
 
-**Done when** the answers are written verbatim in the working draft.
+**Done when** the answers are written verbatim in the draft's Context section.
 
 ## 2. One-way doors: ask
 
@@ -43,23 +45,23 @@ Skip any that a direction brief or an existing ADR already settles. If the repo 
 
 Choose every remaining value yourself, using [references/foundations.md](references/foundations.md) for the defaults and their mechanisms: colour roles and contrast pairs, type scale, spacing scale and grid, radius, elevation, motion, iconography, breakpoints. In extract mode, collapse the inventory onto the new scales and map each old value to its replacement.
 
-Run `scripts/contrast.py` on every text/surface and component/surface pair (see foundations); adjust until each passes the step-2 level.
+Run `scripts/contrast.py` on every pair listed in foundations, once per kind (`--kind text` for text, `--kind ui` for borders, focus rings and icons; `--over` for scrims on photos); adjust until each run exits 0 at the step-2 level.
 
 **Done when** every foundation has values, and every contrast pair is measured and passing.
 
 ## 4. Components and patterns
 
-Specify the core components with every state from [references/components.md](references/components.md), then the patterns from [references/patterns.md](references/patterns.md) for the product moments named in step 1. Each pattern names its principle and passes the three-check test.
+Specify the core components with every state from [references/components.md](references/components.md) — the list is a floor; add the product-specific components the chosen patterns need — then the patterns from [references/patterns.md](references/patterns.md) for the product moments named in step 1. Each pattern names its principle and passes the three-check test.
 
 **Done when** every component lists all its states and every chosen pattern names its principle.
 
 ## 5. Write it
 
-1. **Spec**: copy [assets/system-template.md](assets/system-template.md) to `design/system.md` (confirm the path first) and fill every section. Each rule keeps its mechanism.
-2. **Code tokens**: emit tokens in the repo's existing stack: CSS custom properties, a Tailwind theme, a native theme file — whichever the repo already uses; CSS custom properties when there's nothing yet. Token names follow the step-2 architecture.
-3. **DTCG JSON** (`design/tokens.json`, W3C Design Tokens format): only when the user asks.
+1. **Spec**: finish every section of `design/system.md`. Each rule keeps its mechanism.
+2. **Code tokens**: one output per step-2 platform target, in the format that platform's code already uses (CSS custom properties, a Tailwind theme, a Swift or Kotlin theme file); CSS custom properties for web when there's nothing yet. Token names follow the step-2 architecture. Values CSS can't express as custom properties (media-query breakpoints) go in as named constants or comments.
+3. **DTCG JSON** (`design/tokens.json`, W3C Design Tokens format): when the user asks, or when there are two or more platform targets — then it is the single source, and the platform outputs are generated from it (suggest Style Dictionary).
 
-**Done when** the spec and the code tokens agree value for value.
+**Done when** the spec and every token output agree value for value.
 
 ## 6. Check it
 

@@ -1,8 +1,10 @@
 # Design system: [product]
 
-[One paragraph: what this system is for, who it serves, platforms. If a direction brief exists, name it and its concept sentence.]
-
 Every rule names the mechanism it serves (`/design:ux-psychology` terms). Bend a rule only where its mechanism doesn't apply, and say so.
+
+## Context
+
+[Product, audience, platforms, hard constraints, key product moments — verbatim from the context round. Direction brief: path and concept sentence, or "none". Extract mode: the inventory of values in use, with counts, and the old → new mapping.]
 
 ## Decisions (one-way doors)
 
@@ -18,7 +20,7 @@ Every rule names the mechanism it serves (`/design:ux-psychology` terms). Bend a
 
 [Role table: role · light value · dark value (if themed) · its one job.]
 
-[Contrast pairs: pair · ratio · passes (from scripts/contrast.py).]
+[Contrast pairs: pair · kind (text / large / ui) · needs · ratio · passes (from scripts/contrast.py).]
 
 ## Type
 
@@ -42,7 +44,7 @@ Every rule names the mechanism it serves (`/design:ux-psychology` terms). Bend a
 
 ## Components
 
-[Per component: anatomy, variants, sizes, every state, rules with mechanism.]
+[Per component: anatomy, variants, sizes, every state, rules with mechanism, and its component-tier tokens.]
 
 ## Patterns
 

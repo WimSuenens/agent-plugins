@@ -27,4 +27,6 @@ Every interactive component specifies: **default, hover, focus-visible, active/p
 | **Toast / inline feedback** | success, error, with action | Confirms every async result; errors persist until dismissed or resolved. Never covers the primary action or focus (WCAG 2.4.11). |
 | **Progress (bar, steps, checklist)** | determinate, indeterminate, complete | Credits real completed steps (goal gradient); determinate past ~1 s where possible (response-time bands). |
 | **Empty state** | first-use, no-results, error | One primary action; shows what value will appear (reciprocity, commitment). |
+| **Sticky action bar** | hidden, visible, with keyboard open | Holds the primary action (and its controls, e.g. quantity) on long mobile pages (Fitts, proximity). Safe-area aware; never covers the focused element (WCAG 2.4.11). |
+| **Image scrim / icon chip** | — | Behind any icon or text over a photo; measured with `contrast.py --over` against the lightest and darkest catalogue images (figure–ground, WCAG 1.4.11). |
 | **Skeleton / loading** | — | Matches final layout to avoid shift; replaced by content or an error, never left spinning. |

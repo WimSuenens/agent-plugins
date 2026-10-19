@@ -2,9 +2,9 @@
 
 Question bank for `direction`'s phases 1-2, organized by dimension. Keep
 each dimension to 2-4 questions — this is a tight interview, not an
-exhaustive checklist. The goal of every question is a *specific, counted*
-answer; if the answer comes back as a mood word, ask one forced-choice
-follow-up before moving on, don't accept it and continue.
+exhaustive checklist. Every question aims at a **counted commitment**; when
+an answer comes back as a **mood word**, ask one forced-choice follow-up
+and log the counted answer it produces.
 
 ## Concept (phase 1)
 
@@ -40,6 +40,9 @@ concept — check this explicitly in phase 3.
 - "When a card or surface needs to read as distinct from the page behind
   it, what's the rule — a tint, a border, a shadow, the same colour as the
   ground? Pick one mechanism and apply it everywhere."
+- "Which text and UI colours sit on which surfaces? Name each pair — they
+  all have to pass WCAG AA (4.5:1 body text, 3:1 large text and UI
+  components), so any pair that fails changes the palette now."
 
 ## Type (phase 2)
 

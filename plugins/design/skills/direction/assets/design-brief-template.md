@@ -12,7 +12,8 @@ structural consequence it forces.]
 ## Colour strategy
 
 [Exact colour count. What each one is the only thing allowed to touch.
-The rule for how a distinct surface (card, panel) is built.]
+The rule for how a distinct surface (card, panel) is built. The contrast
+pairs relied on, each passing WCAG AA.]
 
 ## Type strategy
 

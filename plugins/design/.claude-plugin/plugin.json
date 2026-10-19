@@ -1,10 +1,10 @@
 {
   "name": "design",
-  "description": "Interview-driven design-direction skill: commit to a governing concept, force specific counted commitments across colour, type, shape, motion and voice, then prototype and write a reusable design brief.",
+  "description": "A design layer over mattpocock/skills: UX-psychology vocabulary graded by evidence, UI reviews that flag dark patterns, design systems built from mechanism, an interview-driven design direction, and per-repo setup so upstream skills honour all of it.",
   "author": {
     "name": "Wim Suenens",
     "url": "https://wim.suenens.me"
   },
   "license": "MIT",
-  "keywords": ["design", "design-system", "brand", "visual-direction", "interview", "prototyping"]
+  "keywords": ["design", "design-system", "ux", "ux-psychology", "ux-review", "dark-patterns", "accessibility", "visual-direction"]
 }

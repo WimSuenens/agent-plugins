@@ -31,9 +31,9 @@
     {
       "name": "discover",
       "source": "./plugins/discover",
-      "description": "Skills for capturing what you learned, e.g. recapping a session as a Markdown guide.",
+      "description": "Skills for capturing what you learned, e.g. debriefing a session into a short course of lessons.",
       "category": "productivity",
-      "keywords": ["discover", "recap", "notes", "session"]
+      "keywords": ["discover", "debrief", "learning", "course", "session", "handover"]
     },
     {
       "name": "design",

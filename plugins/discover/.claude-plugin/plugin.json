@@ -1,6 +1,6 @@
 {
   "name": "discover",
-  "description": "Skills for capturing and revisiting what you learned, starting with session recaps that turn a conversation into a keepable Markdown guide.",
+  "description": "Skills for capturing and revisiting what you learned, starting with debrief, which turns a session into a short course: one lesson per topic, with its documents.",
   "author": {
     "name": "Wim Suenens",
     "url": "https://wim.suenens.me"
@@ -8,8 +8,10 @@
   "license": "MIT",
   "keywords": [
     "discover",
-    "recap",
-    "notes",
-    "session"
+    "debrief",
+    "learning",
+    "course",
+    "session",
+    "handover"
   ]
 }

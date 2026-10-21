@@ -6,7 +6,7 @@ A personal Claude Code marketplace. Its main plugins:
 - **`wayfinding`** — the planning overlay: `wayfinder`, `beachhead`, `reversibility`, `setup-wayfinding-skill`, `ask-me`.
 - **`design`** — the design overlay: `ux-psychology`, `ux-review`, `design-system`, `direction`, `setup-design-skill`. See [The design overlay](#the-design-overlay).
 
-It also lists `toolkit` (`source-to-pptx`) and `discover` (`session-recap`).
+It also lists `toolkit` (`source-to-pptx`) and `discover` (`debrief`).
 
 **Nothing is forked.** A marketplace catalog and a plugin source are independent, so this repo can list a plugin that lives in someone else's repo alongside one that lives in its own. The overlay sits *beside* upstream instead of on top of it: upstream ships, you pull, there is never a merge to resolve.
 

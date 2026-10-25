@@ -41,6 +41,13 @@
       "description": "Design overlay: evidence-graded UX-psychology vocabulary, UI reviews that flag dark patterns, design systems built from mechanism, design direction interviews, and per-repo setup that wires it into upstream skills.",
       "category": "design",
       "keywords": ["design", "design-system", "ux", "ux-psychology", "ux-review", "dark-patterns", "accessibility", "visual-direction"]
+    },
+    {
+      "name": "factory",
+      "source": "./plugins/factory",
+      "description": "Software factory over wayfinding: a lead and seven role agents build one slice end to end, with private role memory, one worktree per item, and plain-language decision cards for one-way doors.",
+      "category": "engineering",
+      "keywords": ["factory", "agents", "roles", "orchestration", "worktrees", "slices"]
     }
   ]
 }

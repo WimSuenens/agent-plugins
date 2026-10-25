@@ -1,7 +1,6 @@
 ---
 name: wayfinder
-description: Chart a huge, foggy effort as a map of one-way doors on the issue tracker, clear only those, then push the fog back by shipping thin slices — resurveying the map after each one.
-disable-model-invocation: true
+description: Chart a huge, foggy effort as a map of one-way doors on the issue tracker, clear only those, then push the fog back by shipping thin slices — resurveying the map after each one. Use when an effort is too big for one session, or when /factory:run needs a map to cut slices from or to resurvey after a merge.
 ---
 
 A loose idea has arrived — too big for one agent session, and wrapped in fog: the way from here to the **destination** isn't visible yet. This skill charts the way as a **shared map** on the repo's issue tracker.

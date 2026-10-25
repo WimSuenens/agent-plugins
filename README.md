@@ -5,6 +5,7 @@ A personal Claude Code marketplace. Its main plugins:
 - **`mattpocock-skills`** — upstream, unmodified, fetched straight from `mattpocock/skills`.
 - **`wayfinding`** — the planning overlay: `wayfinder`, `beachhead`, `reversibility`, `setup-wayfinding-skill`, `ask-me`.
 - **`design`** — the design overlay: `ux-psychology`, `ux-review`, `design-system`, `direction`, `setup-design-skill`. See [The design overlay](#the-design-overlay).
+- **`factory`** — a lead and seven role agents that build wayfinder slices end to end: `run`, `setup-factory-skill`. See [The factory](#the-factory).
 
 It also lists `toolkit` (`source-to-pptx`) and `discover` (`debrief`).
 
@@ -48,6 +49,28 @@ The research behind it — every principle traced to primary sources and graded,
 /design:design-system         writes design/system.md + tokens
 /design:ux-review             on any screen, flow or component
 ```
+
+## The factory
+
+Wayfinding decides *what* to build next; the factory decides *who builds it how*. `/factory:run` makes the main session a **lead** that takes one wayfinder slice through seven role agents — product owner, architect, developer, QA engineer, security reviewer, DevOps, docs writer — to a merged PR. Long sessions stop filling their context windows because the roles are subagents that report summaries, and every message between them is a file.
+
+| Piece | What it does |
+|---|---|
+| `run` (user) | The lead. Charts a map or frames a slice with wayfinding when needed, starts a branch and worktree per item, briefs each role, moves the item across a `Factory status` board, and resurveys after the merge. |
+| `setup-factory-skill` (user) | Writes `docs/agents/factory.md` (decision-maker level, path ownership, worktree location, tracker ids), patches the tracker doc, and prepares the GitHub Project field. |
+| 7 role agents | `factory:<role>`, each with checkable *Inputs needed* and *Done* lists, sharing one [protocol](plugins/factory/references/protocol.md). |
+| Private role memory | Each role keeps craft notes in its own memory; a plugin hook stops one role reading another's. |
+| Decision cards | A one-way door never gets decided by an agent. The product owner writes a [card](plugins/factory/references/decision-card.md) in everyday words — consequences, cost, effort to undo, a recommendation — and the lead offers ways to dig deeper (`/research`, `/prototype`, `/grilling`). |
+
+```
+/wayfinding:setup-wayfinding-skill   once per repo (setup-factory-skill runs it if needed)
+/factory:setup-factory-skill         once per repo — GitHub trackers only for now
+/factory:run [#slice | idea]         per item
+```
+
+**Status: drafted, not yet run end to end.** The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0006 in [docs/adr/](docs/adr/), all provisional.
+
+**Feedback goes to this repo's issues** with the `plugin:factory` label — use the *Factory feedback* template, or let `/factory:run` draft the issue at the end of an item. It posts only what you approve, and leaves your project's code and names out.
 
 ---
 
@@ -198,11 +221,22 @@ Run against Claude Code `2.1.237` on Linux:
 
 **Not tested, because it needs an interactive session against a real repo:** whether the skills fire correctly end to end, and whether bare cross-references inside the skill bodies (`/grill-with-docs`, `/to-tickets`, `/implement`) resolve across the plugin boundary. Upstream's own skills reference each other bare and ship as a plugin, so the convention is proven — but proven *within* one plugin, not across two. If a cross-plugin reference doesn't resolve, prefix it: `/mattpocock-skills:grill-with-docs`.
 
+The `factory` plugin, on macOS with gh `2.94.0`:
+
+| Check | Result |
+| --- | --- |
+| `claude plugin validate .` and `./plugins/factory` | passed (version warnings, intentional) |
+| `claude plugin validate ./plugins/factory/skills` | passed |
+| `guard-memory.sh` against twelve sample inputs, with and without `jq` | every input allowed or blocked as intended |
+| `gh project` flags used by the setup and the tracker patch | present in `--help` |
+
+**Not tested yet:** a factory item end to end. The open questions are `plugin:factory` issues on this repo; the first validation run, on a project with real application code, closes them or turns them into findings.
+
 ## Known costs
 
 - **Triage quality is the whole mechanism.** Mis-sort a one-way door as a two-way door and you get the failure this layer exists to avoid, arriving later and more expensively than upstream's version would have. The `~5–7` count check during charting is a smoke alarm, not a guarantee.
 - **The tracker patches are a fork of one section each.** `setup-wayfinding-skill/references/issue-tracker-{github,gitlab,local}.wayfinding.md` each fork one upstream "Wayfinding operations" section; re-check them after a major upstream release, since upstream could change the mechanics they're built on. Applying them is automatic now — only the content itself still needs re-checking.
-- **`reversibility` is model-invoked**, so its description carries permanent context load — the price of shared vocabulary between two user-invoked skills, which can't reach each other.
+- **`reversibility`, `wayfinder`, and `beachhead` are model-invoked**, so their descriptions carry permanent context load. `reversibility` pays it for shared vocabulary; `wayfinder` and `beachhead` pay it so `/factory:run` can chart, frame, and resurvey on its own ([ADR 0006](docs/adr/0006-factory-builds-wayfinder-slices.md)).
 - **Deferred rots without discipline.** The trigger is the only thing between a deferral and an abandonment. If resurvey step 3 gets skipped, the section becomes a graveyard within a month.
 
 ## Lighter alternatives

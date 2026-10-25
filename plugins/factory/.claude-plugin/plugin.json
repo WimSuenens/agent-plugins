@@ -1,0 +1,18 @@
+{
+  "name": "factory",
+  "description": "A role-based software factory over wayfinding: a lead plus seven role agents that build one wayfinder slice end to end, talking through per-item message files, each with private craft memory, on one branch and worktree per item. One-way doors reach the person as plain-language decision cards.",
+  "author": {
+    "name": "Wim Suenens",
+    "url": "https://wim.suenens.me"
+  },
+  "license": "MIT",
+  "keywords": [
+    "factory",
+    "agents",
+    "roles",
+    "orchestration",
+    "worktrees",
+    "slices"
+  ],
+  "dependencies": ["wayfinding", "mattpocock-skills"]
+}

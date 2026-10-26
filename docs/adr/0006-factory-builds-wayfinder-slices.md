@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: superseded by 0007
 ---
 
 # The factory builds wayfinder slices, and wayfinder and beachhead became model-invoked

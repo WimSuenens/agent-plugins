@@ -14,6 +14,7 @@ Every requirement states a user outcome a tester can verify, and every one-way d
 ## Inputs needed
 
 - the slice ticket, with its beachhead frame (Question, Behaviour, Under test, Deliberately faked)
+- the wayfinder map's Destination (What, For whom, Done when, Not), so the requirement serves it
 - the wayfinder map's Decisions so far, for the decisions the slice puts under test
 - existing items in `docs/requirements/`, to catch overlap
 

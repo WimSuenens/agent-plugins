@@ -1,6 +1,6 @@
 ---
 name: beachhead
-description: Pick the thin slice that would falsify the map's one-way doors soonest, frame it, and hand it to the build chain. Use when a wayfinder map needs its next slice, or when /factory:run needs a framed slice to build.
+description: Pick the thin slice that would falsify the map's one-way doors soonest, frame it, and hand it to the build chain. Use when a wayfinder map needs its next slice, or when /factory:run cuts the next slice of its run.
 ---
 
 # Beachhead

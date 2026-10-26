@@ -1,6 +1,6 @@
 ---
 name: wayfinder
-description: Chart a huge, foggy effort as a map of one-way doors on the issue tracker, clear only those, then push the fog back by shipping thin slices — resurveying the map after each one. Use when an effort is too big for one session, or when /factory:run needs a map to cut slices from or to resurvey after a merge.
+description: Chart a huge, foggy effort as a map of one-way doors on the issue tracker, clear only those, then push the fog back by shipping thin slices — resurveying the map after each one. Use when an effort is too big for one session, or when /factory:run has a destination that needs a route, or must resurvey after a merge.
 ---
 
 A loose idea has arrived — too big for one agent session, and wrapped in fog: the way from here to the **destination** isn't visible yet. This skill charts the way as a **shared map** on the repo's issue tracker.
@@ -127,7 +127,7 @@ Three modes. **Never resolve more than one HITL ticket per session**; AFK ticket
 
 User invokes with a loose idea.
 
-1. **Name the destination.** Run `/grill-with-docs` to pin down what this map is finding its way to. The destination fixes the scope, so it's settled first.
+1. **Name the destination.** Run `/grill-with-docs` to pin down what this map is finding its way to. The destination fixes the scope, so it's settled first. When the caller passes a destination in (as `/factory:run` does), take it as given and skip the grilling; seed **Out of scope** from its "Not" list.
 2. **Map the frontier.** Grill again, **breadth-first**: fan out across the whole space rather than deep on any thread, surfacing every open question you can see. Don't answer them — surface them.
 3. **Triage every question by reversibility.** Invoke `/reversibility` and sort each into **lock now**, **defer**, or **out of scope**. This is the step that keeps the map light, and it is the step most easily skipped: a sharp question is not the same as a question worth a session. Charting is done when **every question surfaced in step 2 carries one of the three verdicts**, and each deferral carries a trigger. A destination with a real data model almost always owes it a lock-now ticket of its own — "what are the core entities and relations" — rather than letting the shape emerge slice by slice; `/reversibility`'s own examples name schema shape as a one-way door more often than it looks.
 4. **Check the count.** Roughly five to seven "lock now" tickets is the shape of a well-triaged greenfield map. A larger set means two-way doors were sorted as one-way — re-run step 3 against the three-part test before creating anything.

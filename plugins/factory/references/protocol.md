@@ -32,6 +32,7 @@ Result (role → lead):
     Status: done | blocked | needs-decision
     Summary: <at most 10 lines>
     Artifacts: <paths>
+    Decisions: <one line per two-way door you decided: chosen / rejected / cost to undo, or none>
     Open questions: <list, or none>
     Missing: <inputs, when blocked>
     Decision card: <path, when needs-decision>
@@ -39,7 +40,7 @@ Result (role → lead):
 Feedback (lead → role):
 
     # Feedback: <role> — <id>
-    Source: qa | security | architect
+    Source: qa | security | architect | lead
     Findings:
     1. <location> — <severity> — <required fix>
     Re-verify: <what>
@@ -59,7 +60,7 @@ Compare the brief against your role's **Inputs needed**. When one is absent, wri
 
 Sort every decision you meet with the `/wayfinding:reversibility` door vocabulary.
 
-- A **two-way door** inside your authority: decide it, and note it in your result.
+- A **two-way door** inside your authority: decide it without waiting, and list it under `Decisions` in your result. List every one; the lead does the filtering. The lead or the person may overturn it later through a feedback brief with `Source: lead`; apply that in your next round like any other finding.
 - A **one-way door**, or anything outside your authority: write a question to the lead. The lead routes one-way doors to the product-owner, who turns them into a decision card for the person.
 
 ## Memory

@@ -5,7 +5,7 @@ A personal Claude Code marketplace. Its main plugins:
 - **`mattpocock-skills`** — upstream, unmodified, fetched straight from `mattpocock/skills`.
 - **`wayfinding`** — the planning overlay: `wayfinder`, `beachhead`, `reversibility`, `setup-wayfinding-skill`, `ask-me`.
 - **`design`** — the design overlay: `ux-psychology`, `ux-review`, `design-system`, `direction`, `setup-design-skill`. See [The design overlay](#the-design-overlay).
-- **`factory`** — a lead and seven role agents that build wayfinder slices end to end: `run`, `setup-factory-skill`. See [The factory](#the-factory).
+- **`factory`** — a lead and seven role agents that take an idea to a destination, slice by slice: `run`, `setup-factory-skill`. See [The factory](#the-factory).
 
 It also lists `toolkit` (`source-to-pptx`) and `discover` (`debrief`).
 
@@ -52,11 +52,11 @@ The research behind it — every principle traced to primary sources and graded,
 
 ## The factory
 
-Wayfinding decides *what* to build next; the factory decides *who builds it how*. `/factory:run` makes the main session a **lead** that takes one wayfinder slice through seven role agents — product owner, architect, developer, QA engineer, security reviewer, DevOps, docs writer — to a merged PR. Long sessions stop filling their context windows because the roles are subagents that report summaries, and every message between them is a file.
+The factory decides *what* the destination is and cuts the slices; wayfinding charts *how* to get there. `/factory:run` makes the main session a **lead** that grills the person briefly about the destination, has wayfinding chart the route, then takes slice after slice through seven role agents — product owner, architect, developer, QA engineer, security reviewer, DevOps, docs writer — to merged PRs, resurveying after each. Every two-way decision a role takes comes back to the lead and to the person at the next stage boundary; overturning one becomes feedback to that role, and the work never stops for it. Long sessions stop filling their context windows because the roles are subagents that report summaries, and every message between them is a file.
 
 | Piece | What it does |
 |---|---|
-| `run` (user) | The lead. Charts a map or frames a slice with wayfinding when needed, starts a branch and worktree per item, briefs each role, moves the item across a `Factory status` board, and resurveys after the merge. |
+| `run` (user) | The lead. Clarifies the destination, has wayfinding chart the map, clears its one-way doors (research and prototypes AFK, the decision to the person), cuts each slice, starts a branch and worktree per item, briefs each role, reviews their two-way decisions, moves the item across a `Factory status` board, and resurveys after each merge until the map dissolves. |
 | `setup-factory-skill` (user) | Writes `docs/agents/factory.md` (decision-maker level, path ownership, worktree location, tracker ids), patches the tracker doc, and prepares the GitHub Project field. |
 | 7 role agents | `factory:<role>`, each with checkable *Inputs needed* and *Done* lists, sharing one [protocol](plugins/factory/references/protocol.md). |
 | Private role memory | Each role keeps craft notes in its own memory; a plugin hook stops one role reading another's. |
@@ -65,10 +65,10 @@ Wayfinding decides *what* to build next; the factory decides *who builds it how*
 ```
 /wayfinding:setup-wayfinding-skill   once per repo (setup-factory-skill runs it if needed)
 /factory:setup-factory-skill         once per repo — GitHub trackers only for now
-/factory:run [#slice | idea]         per item
+/factory:run [idea | #map]           per destination; #map resumes
 ```
 
-**Status: drafted, not yet run end to end.** The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0006 in [docs/adr/](docs/adr/), all provisional.
+**Status: drafted, not yet run end to end.** The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0008 (0006 superseded by 0007) in [docs/adr/](docs/adr/), all provisional.
 
 **Feedback goes to this repo's issues** with the `plugin:factory` label — use the *Factory feedback* template, or let `/factory:run` draft the issue at the end of an item. It posts only what you approve, and leaves your project's code and names out.
 

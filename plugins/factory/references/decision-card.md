@@ -25,7 +25,7 @@ The reader is the **decision-maker** named in `docs/agents/factory.md`. At `non-
 **Want to dig deeper?** Reply with a number:
 1. **Ask me** — I explain with an example or comparison until it is clear.
 2. **Look it up** — `/research` writes a sourced report on the options.
-3. **Show me** — `/prototype` builds a throwaway version you can look at or click through.
+3. **Show me** — `/prototype` builds a throwaway version you can look at or click through. <when a prototype was already built: "Already built: <link>">
 4. **Question me** — `/grilling` asks you questions until your own answer is clear.
 ```
 
@@ -33,6 +33,7 @@ The reader is the **decision-maker** named in `docs/agents/factory.md`. At `non-
 
 - **Consequences, not mechanisms.** Every option is described by what changes for users, cost, time, and the effort to undo it. The technical mechanism appears only at `technical`, after those three lines.
 - **Every unavoidable term carries its meaning beside it**, in brackets, the first time it appears: "a queue (a waiting line where tasks are picked up one by one)".
+- **A prototype built ahead of the card is linked under Show me**, so the person can look before choosing.
 - **Two or three options.** More than three goes back to the architect to narrow down.
 - **The recommendation is the product-owner's own pick**, with the architect's leaning noted when the two differ.
 - **"Undoing it later" is concrete.** It is what makes this a one-way door, so it carries the most weight: "about three weeks of rework across every screen", never "hard to reverse".

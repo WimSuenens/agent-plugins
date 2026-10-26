@@ -1,6 +1,6 @@
 # The software factory
 
-The concept behind the `factory` plugin: a lead plus seven role agents that build one wayfinder slice end to end. This document is the base to extend from. It records what the design is, why each part is shaped the way it is, what has been verified, and where the extension points are. The decisions themselves are ADRs [0001](../adr/0001-factory-roles-talk-through-files.md)–[0006](../adr/0006-factory-builds-wayfinder-slices.md); all are provisional until a real item has run.
+The concept behind the `factory` plugin: a lead plus seven role agents that take an idea to a destination, building one wayfinder slice at a time. This document is the base to extend from. It records what the design is, why each part is shaped the way it is, what has been verified, and where the extension points are. The decisions themselves are ADRs [0001](../adr/0001-factory-roles-talk-through-files.md)–[0008](../adr/0008-two-way-decisions-flow-back-to-the-lead.md), with 0006 superseded by 0007; all are provisional until a real item has run.
 
 Origin: a design session on 2026-10-25, debriefed into a six-lesson course and processed into this repo.
 
@@ -47,7 +47,7 @@ One branch `item/<id>` and one worktree per item, shared by every role, each wri
 
 ## Wayfinding
 
-A factory item is one `wayfinder:slice` ticket with its `/beachhead` frame. The lead charts the map with `/wayfinding:wayfinder`, frames the slice with `/wayfinding:beachhead`, and resurveys after the merge, all in the main session, because both skills talk to the person. The product owner turns the frame into acceptance criteria: one per **Under test** line, and every **Deliberately faked** item out of scope.
+A factory run starts from an idea: the lead grills the person about the destination (What, For whom, Done when, Not), passes it to `/wayfinding:wayfinder` to chart the route, and then cuts slice after slice with `/wayfinding:beachhead`, resurveying after each merge until the map dissolves ([ADR 0007](../adr/0007-factory-owns-destination-and-slicing.md)). A factory item is one such `wayfinder:slice` ticket with its frame. Roles report every two-way decision back; the lead and the person can overturn one through a feedback brief without stopping the stage ([ADR 0008](../adr/0008-two-way-decisions-flow-back-to-the-lead.md)). The product owner turns the frame into acceptance criteria: one per **Under test** line, and every **Deliberately faked** item out of scope.
 
 ## Decision cards
 

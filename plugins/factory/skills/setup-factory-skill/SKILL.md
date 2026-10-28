@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Setup the factory
 
-`/factory:run` and the seven role agents read two repo files: `docs/agents/factory.md` (decision-maker, path ownership, worktree location, tracker ids) and the `## Factory operations` section of `docs/agents/issue-tracker.md`. This skill writes both, once.
+`/factory:run` and the seven role agents read two repo files: `docs/agents/factory.md` (decision-maker, role model overrides, path ownership, worktree location, tracker ids) and the `## Factory operations` section of `docs/agents/issue-tracker.md`. This skill writes both, once.
 
 ## Process
 
@@ -33,23 +33,38 @@ Ask the user one question: who decides one-way doors in this repo, and could the
 
 **Done when** the user has answered.
 
-### 4. Write `docs/agents/factory.md`
+### 4. Ask about role models
+
+Each role runs on the default model in its agent file:
+
+| Role | Default |
+|---|---|
+| product-owner, architect, qa-engineer, security-reviewer | `inherit` (the lead's model) |
+| developer, devops | `sonnet` |
+| docs-writer | `haiku` |
+
+When an existing `docs/agents/factory.md` has a `## Role models` table, show its overrides and ask whether to keep or change them; keep is the default. Otherwise show the defaults and ask one question: override any of them for this repo? On yes, ask per role, offering `haiku`, `sonnet`, `opus`, or `fable` with the default preselected. Only these four work: the lead passes the override as the spawn's `model`, which takes no pinned id and no `inherit`.
+
+**Done when** the user has kept the overrides, declined, or picked a model for every role they want overridden.
+
+### 5. Write `docs/agents/factory.md`
 
 Copy [assets/factory.md](./assets/factory.md) to `docs/agents/factory.md`, replacing the whole file if one exists. Then fit it to the repo:
 
 - Set `decision-maker:` to the answer from step 3.
+- When step 4 produced overrides, replace the `None` line under `## Role models` with a `| Role | Model |` table, one row per overridden role, and keep the paragraph that explains the format.
 - Point `src/` and `tests/` in the ownership table at where this repo keeps its code and tests. Look at the directory layout and the test command in the repo's own config; use one row per directory when there are several.
 - Keep the other ownership rows as written unless the repo already uses a different home for that material (an existing `adr/` folder, a `docs/decisions/`, a runbook folder); then point the row there.
 
 **Done when** every path in the ownership table names a directory this repo has, or one the factory will create.
 
-### 5. Patch the tracker doc
+### 6. Patch the tracker doc
 
 Add [references/issue-tracker-github.factory.md](./references/issue-tracker-github.factory.md)'s section to `docs/agents/issue-tracker.md` as its patch note describes. Leave every other section untouched.
 
 **Done when** exactly one `## Factory operations` section exists.
 
-### 6. Prepare the Project board
+### 7. Prepare the Project board
 
 The factory tracks status in a GitHub Project with a single-select `Factory status` field. Run `gh auth status`; when the token lacks the `project` scope, ask the user to run `gh auth refresh -s project` and wait.
 
@@ -60,13 +75,13 @@ The factory tracks status in a GitHub Project with a single-select `Factory stat
 
 **Done when** every cell in both Tracker tables holds a value.
 
-### 7. Keep item folders out of trunk
+### 8. Keep item folders out of trunk
 
 Item folders in `work/` are removed by the last commit on each item branch. Nothing to ignore; confirm no `work/` rule in `.gitignore` hides them, since roles commit their messages.
 
 **Done when** `git check-ignore work/x` prints nothing.
 
-### 8. Add the pointer
+### 9. Add the pointer
 
 In the `## Agent skills` block, add this subsection after the last existing `###` subsection, unless a `### Factory` subsection is already there:
 
@@ -78,7 +93,7 @@ Slices are built by the factory's role agents. See `docs/agents/factory.md`.
 
 **Done when** exactly one `### Factory` subsection exists in the block.
 
-### 9. Report completion
+### 10. Report completion
 
 Tell the user setup is done and name the next step:
 

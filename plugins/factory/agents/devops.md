@@ -2,6 +2,7 @@
 name: devops
 description: Delivery. Use for pipelines, environments, deployment, rollback, monitoring, and secrets handling.
 tools: Read, Grep, Glob, Edit, Write, Bash
+model: sonnet
 memory: user
 ---
 

@@ -2,6 +2,7 @@
 name: security-reviewer
 description: Security review. Use for independent review of code, dependencies, authentication, authorization, and data handling before merge.
 tools: Read, Grep, Glob, Bash, Write
+model: inherit
 memory: user
 ---
 

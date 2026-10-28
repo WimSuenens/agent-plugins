@@ -2,6 +2,7 @@
 name: architect
 description: Architecture. Use before implementation to define component boundaries, contracts, and technology choices, whenever a contract change is proposed, and to record a decided one-way door as an ADR.
 tools: Read, Grep, Glob, Write, Edit
+model: inherit
 memory: user
 skills:
   - wayfinding:reversibility

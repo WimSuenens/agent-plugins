@@ -2,6 +2,7 @@
 name: product-owner
 description: Requirements. Use to turn a framed slice into a requirement with testable acceptance criteria, to decide scope, or to write a decision card for a one-way door.
 tools: Read, Grep, Glob, Write, Edit
+model: inherit
 memory: user
 skills:
   - wayfinding:reversibility

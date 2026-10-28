@@ -8,6 +8,12 @@ decision-maker: non-technical
 
 One-way doors reach this person as decision cards. `non-technical`: consequences in everyday words, no mechanism. `technical`: the same card with the technical detail added.
 
+## Role models
+
+None — roles use the plugin defaults (see the factory's README).
+
+Overrides replace a role's default model in this repo, one row per role: `| <role> | <haiku, sonnet, opus, or fable> |` under a `| Role | Model |` header. Roles without a row keep their default.
+
 ## Ownership
 
 | Path | Owner |

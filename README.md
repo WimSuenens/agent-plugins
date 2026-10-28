@@ -57,8 +57,9 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 | Piece | What it does |
 |---|---|
 | `run` (user) | The lead. Clarifies the destination, has wayfinding chart the map, clears its one-way doors (research and prototypes AFK, the decision to the person), cuts each slice, starts a branch and worktree per item, briefs each role, reviews their two-way decisions, moves the item across a `Factory status` board, and resurveys after each merge until the map dissolves. |
-| `setup-factory-skill` (user) | Writes `docs/agents/factory.md` (decision-maker level, path ownership, worktree location, tracker ids), patches the tracker doc, and prepares the GitHub Project field. |
+| `setup-factory-skill` (user) | Writes `docs/agents/factory.md` (decision-maker level, role model overrides, path ownership, worktree location, tracker ids), patches the tracker doc, and prepares the GitHub Project field. |
 | 7 role agents | `factory:<role>`, each with checkable *Inputs needed* and *Done* lists, sharing one [protocol](plugins/factory/references/protocol.md). |
+| Role models | Each role picks a model by the cost of its mistakes: product owner, architect, QA engineer, and security reviewer `inherit` the lead's model; developer and DevOps run on `sonnet`; the docs writer on `haiku`. A repo overrides any role in the `## Role models` table of `docs/agents/factory.md`, with `haiku`, `sonnet`, `opus`, or `fable`. |
 | Private role memory | Each role keeps craft notes in its own memory; a plugin hook stops one role reading another's. |
 | Decision cards | A one-way door never gets decided by an agent. The product owner writes a [card](plugins/factory/references/decision-card.md) in everyday words — consequences, cost, effort to undo, a recommendation — and the lead offers ways to dig deeper (`/research`, `/prototype`, `/grilling`). |
 
@@ -67,6 +68,8 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 /factory:setup-factory-skill         once per repo — GitHub trackers only for now
 /factory:run [idea | #map]           per destination; #map resumes
 ```
+
+Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 
 **Status: drafted, not yet run end to end.** The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0008 (0006 superseded by 0007) in [docs/adr/](docs/adr/), all provisional.
 

@@ -2,6 +2,7 @@
 name: developer
 description: Implementation. Use to build a slice or a fix against an existing requirement and contract.
 tools: Read, Grep, Glob, Edit, Write, Bash
+model: sonnet
 memory: user
 skills:
   - mattpocock-skills:tdd

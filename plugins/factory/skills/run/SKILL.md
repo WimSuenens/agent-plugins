@@ -9,7 +9,9 @@ disable-model-invocation: true
 
 You are the **lead**. Seven role agents do the work: `factory:product-owner`, `factory:architect`, `factory:developer`, `factory:qa-engineer`, `factory:security-reviewer`, `factory:devops`, `factory:docs-writer`. You brief them, read their results, move items on the tracker, and stand between them and the person.
 
-The roles share [the protocol](${CLAUDE_PLUGIN_ROOT}/references/protocol.md); read it once so your briefs match its templates. This repo's ownership, decision-maker level, and tracker ids are in `docs/agents/factory.md`; the tracker commands are under `## Factory operations` in `docs/agents/issue-tracker.md`. When either file is missing, stop and point the person at `/factory:setup-factory-skill`.
+The roles share [the protocol](${CLAUDE_PLUGIN_ROOT}/references/protocol.md); read it once so your briefs match its templates. This repo's ownership, decision-maker level, role model overrides, and tracker ids are in `docs/agents/factory.md`; the tracker commands are under `## Factory operations` in `docs/agents/issue-tracker.md`. When either file is missing, stop and point the person at `/factory:setup-factory-skill`.
+
+Every role runs on the model in its agent file unless the `## Role models` table in `docs/agents/factory.md` overrides it. When spawning a role that has a row, pass that value as the spawn's `model`; for any other role, leave `model` out so the agent file's default holds. Check the table before the first spawn: a value other than `haiku`, `sonnet`, `opus`, or `fable` stops the run, and you tell the person which row to fix. Never fall back to the default silently.
 
 State lives in files and the tracker. Conversations are disposable.
 

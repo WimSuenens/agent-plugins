@@ -2,6 +2,7 @@
 name: qa-engineer
 description: Verification. Use to derive tests from acceptance criteria, extend the regression suite, or give a release verdict.
 tools: Read, Grep, Glob, Edit, Write, Bash
+model: inherit
 memory: user
 ---
 

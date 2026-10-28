@@ -2,6 +2,7 @@
 name: docs-writer
 description: Documentation. Use once QA and security pass, before merge, to update user docs, operational docs, and the changelog.
 tools: Read, Grep, Glob, Edit, Write
+model: haiku
 memory: user
 ---
 

@@ -53,9 +53,9 @@ This step runs as a **frontier round**:
 
 1. From an up-to-date main, `git worktree add ../wt/frontier-<map> -b frontier/<map>` (or the location in `docs/agents/factory.md`).
 2. For each ticket you work, create `work/frontier-<ticket>/` in that worktree. Briefs, results, options and cards there use the protocol's templates, and every commit starts with `#<ticket> <role>: <what>`.
-3. Track the round only in the map's Factory run section: the branch, the tickets in progress, open cards and tasks. There is no lead-state file for a frontier round.
+3. Track the round only in the map's Factory run section: the branch, the tickets in progress, open cards and tasks, and the running agents as in an item's lead state. There is no lead-state file for a frontier round.
 
-Work every open `lock now` ticket on the map by its type, without waiting on one to start the next:
+Work every open `lock now` ticket on the map by its type, without waiting on one to start the next (until a usage limit is hit; see *Interruptions*):
 
 - **Research** → a subagent does the reading itself, AFK, following `/research`'s source rules but spawning no background agent of its own. It keeps its report in `work/frontier-<ticket>/` and posts the **full findings** as the ticket's resolution comment, which is the durable source ADRs cite. No `research/<name>` branch is created.
 - **Prototype** → brief the architect for the two or three options the prototype must show, then the developer to build them with `/prototype` on a throwaway branch `prototype/<ticket>`, outside any item worktree. Then take the decision to the person as in step 7, with the prototype linked on the card. The prototype is built for the person; it does not decide.
@@ -88,7 +88,7 @@ Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unb
 
 1. Add the ticket to the board and set `Factory status` to Backlog (*Add to board*, *Set status*).
 2. `git worktree add ../wt/<id> -b item/<id>` (or the location in `docs/agents/factory.md`), then create `work/<id>/` in it.
-3. Write `work/<id>/00-lead-state.md`: the board item id, current status, next step, open questions.
+3. Write `work/<id>/00-lead-state.md`: the board item id, current status, next step, open questions, and a **Running agents** list with one line per running role: role, brief file, agent handle (the id you message to resume it), last commit. Keep that list current as roles start and finish; it also records interruptions and whether fan-out has gone sequential (see *Interruptions*).
 
 On a resumed item, keep what exists and continue from the lead state.
 
@@ -101,7 +101,7 @@ On a resumed item, keep what exists and continue from the lead state.
 | Requirement | product-owner | Ready |
 | Contracts and ADRs | architect | Designed |
 | Build, tracer bullet first | developer | In progress when it starts, In review when done |
-| Verification | qa-engineer and security-reviewer, alongside each other | Ready to deploy when both verdicts are `pass` |
+| Verification | qa-engineer and security-reviewer, alongside each other (one after the other once a limit has been hit) | Ready to deploy when both verdicts are `pass` |
 | Delivery | devops | |
 | Documentation | docs-writer | |
 | Merge, on the person's approval | you | Done |
@@ -109,13 +109,15 @@ On a resumed item, keep what exists and continue from the lead state.
 For each stage:
 
 1. Write the brief in `work/<id>/`, filling **Inputs** from the role's *Inputs needed*, and delegate to the role. Name tracker issues by number; the role reads them itself, so never copy their content into files. The product-owner's inputs include the map's Destination. Each role commits its own paths.
-2. Read only the result's `Status`, `Summary`, and `Decisions`. Open an artifact only to check a Done item.
+2. Read only the result's `Status`, `Summary`, and `Decisions` (and `Progress` after an interruption). Open an artifact only to check a Done item.
 3. Review the `Decisions` (see below).
 4. On the status:
    - `done`: check the role's Done list against its artifacts, set the next status, post a stage summary with its decisions (*Stage summary*), and update the lead state.
    - `blocked`: supply what `Missing` lists in the next brief.
    - `needs-decision`: run step 7.
+   - `working` from an agent that has stopped, or an agent that failed on a limit before writing its result: it was cut off; follow *Interruptions*.
 5. QA and security findings go to the developer as feedback; repeat until both verdicts are `pass`.
+
 
 Open the PR (*Open PR*) when the developer is done, so QA and security review the diff in place.
 Production actions wait for the person's explicit approval.
@@ -170,6 +172,15 @@ When there is anything, draft one issue per finding for `WimSuenens/agent-plugin
 `gh issue create --repo WimSuenens/agent-plugins --label plugin:factory --title "<title>" --body "<body>"`
 
 **Done when** the person has approved, edited, or declined every draft.
+
+## Interruptions
+
+A role agent can stop mid-task on a usage or session limit (HTTP 429), often two parallel agents at once.
+
+1. Note the interruption in the lead state (or the Factory run section, in a frontier round): which agent, when, its last commit.
+2. After the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
+3. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
+4. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it.
 
 ## Context
 

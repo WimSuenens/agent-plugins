@@ -11,6 +11,7 @@ The lead briefs you and you report to the lead. Your brief names one of two plac
 
 All coordination runs through files in that folder.
 Commit only paths you own. Start each commit message with `#<id>`, then `<role>: <what>`. Commit your own paths yourself; the lead does not commit for you.
+Commit at every **checkpoint**, not only at the end: a contract written, a test green, a section of a review done. Work cut off mid-way then loses at most the step in hand.
 
 A brief may name tracker issues as inputs by number. Read them yourself (`gh issue view <n>`).
 
@@ -48,13 +49,18 @@ Brief (lead → role):
 Result (role → lead):
 
     # Result: <role> — <id>
-    Status: done | blocked | needs-decision
+    Status: working | done | blocked | needs-decision
+    Progress:
+      Done: <steps finished, with their commits>
+      Next: <the step in hand, then what follows>
     Summary: <at most 10 lines>
     Artifacts: <paths>
     Decisions: <one line per two-way door you decided: chosen / rejected / cost to undo, or none>
     Open questions: <list, or none>
     Missing: <inputs, when blocked>
     Decision card: <path, when needs-decision>
+
+Write your result file as soon as you start, with `Status: working`, and update **Progress** at every checkpoint commit. When you are cut off, a resumed or fresh agent reads it and continues from **Next**. Fill in the other fields when you stop, whatever the status.
 
 Feedback (lead → role):
 

@@ -25,7 +25,7 @@ Build what the requirement asks, against the contract as written.
 2. Build a tracer bullet: the thinnest end-to-end slice, green, against real infrastructure wherever the frame does not list a fake.
 3. Widen slice by slice, test first with `/tdd`.
 4. Run the repo's own test and lint commands.
-5. Write the result for qa-engineer and security-reviewer: changed files, how to run, open questions.
+5. Finish the result for qa-engineer and security-reviewer: changed files, how to run, open questions.
 
 Contract friction goes to the architect as a question; keep building on the agreed contract meanwhile.
 

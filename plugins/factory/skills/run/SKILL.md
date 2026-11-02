@@ -88,7 +88,7 @@ Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unb
 
 1. Add the ticket to the board and set `Factory status` to Backlog (*Add to board*, *Set status*).
 2. `git worktree add ../wt/<id> -b item/<id>` (or the location in `docs/agents/factory.md`), then create `work/<id>/` in it.
-3. Write `work/<id>/00-lead-state.md`: the board item id, current status, next step, open questions, and a **Running agents** list with one line per running role: role, brief file, agent handle (the id you message to resume it), last commit. Keep that list current as roles start and finish; it also records interruptions and whether fan-out has gone sequential (see *Interruptions*).
+3. Write `work/<id>/00-lead-state.md`: the board item id, current status, next step, open questions, and a **Running agents** list with one line per running role: role, brief file, agent handle (the id you message to resume it), last commit. Keep that list current as roles start and finish; it also records interruptions and whether fan-out has gone sequential (see *Interruptions*). Once the architect's stage is done, add a **Shared resources** list too (see *Environment and shared resources*).
 
 On a resumed item, keep what exists and continue from the lead state.
 
@@ -100,8 +100,10 @@ On a resumed item, keep what exists and continue from the lead state.
 |---|---|---|
 | Requirement | product-owner | Ready |
 | Contracts and ADRs | architect | Designed |
+| Environment, only when the item needs real infrastructure | devops, alongside the build | |
 | Build, tracer bullet first | developer | In progress when it starts, In review when done |
 | Verification | qa-engineer and security-reviewer, alongside each other (one after the other once a limit has been hit) | Ready to deploy when both verdicts are `pass` |
+| Acceptance demo, only when QA lists human-only criteria | the person, prepared by devops or you | |
 | Delivery | devops | |
 | Documentation | docs-writer | |
 | Merge, on the person's approval | you | Done |
@@ -122,6 +124,26 @@ For each stage:
 Open the PR (*Open PR*) when the developer is done, so QA and security review the diff in place.
 Production actions wait for the person's explicit approval.
 
+### Environment and shared resources
+
+When the architect's stage is done, decide from its contracts and the slice frame whether the item needs real infrastructure: anything the frame does not list as **Deliberately faked**, such as a database, a stand-in for an external system, or a CI gate.
+
+- **It does** → brief devops for the Environment stage, alongside the developer's build and started before the developer needs it. Its result names every shared resource it set up. The stage runs within `In progress`; it has no status of its own.
+- **It does not** → skip the stage.
+
+Write the **Shared resources** list in the lead state: each resource, and which role is using it now. Take the resources from the Environment result, or from the architect's contracts when there was no Environment stage. Keep the users current as briefs start and finish.
+
+A role's question announcing a disruptive action on a shared resource (see the protocol's *Shared resources*) is yours to schedule: brief that role to go ahead once every other role using the resource is idle.
+
+### Acceptance demo
+
+QA's verdict lists the **Human-only criteria**: acceptance criteria only a person can judge in a real client. When it says `none`, skip this step. Otherwise, within `Ready to deploy` and before Delivery:
+
+1. Have the environment prepared: by devops when the item had an Environment stage, by you otherwise.
+2. Write a short script in plain language: what to open, what to do, what to expect, one step per criterion.
+3. Put it to the person, let them run it, and post the outcome on the slice ticket (*Stage summary*, stage `Acceptance demo`).
+4. A criterion that fails goes to the developer as feedback, like a QA finding; QA re-verifies before the demo runs again. Brief the architect to update any ADR whose status waited on the demo, before the merge.
+
 ### Two-way decisions
 
 Every two-way door a role decided comes back in its `Decisions`. Show them to the person in chat with the stage summary, in the same words, and mark any you overturned.
@@ -131,7 +153,7 @@ Every two-way door a role decided comes back in its `Decisions`. Show them to th
 - **An overturn** becomes a feedback brief (`Source: lead`) to the role that decided it, picked up in that role's next round. The stage in progress keeps running; never stop it for a correction. Track the correction in the lead state until the role confirms it.
 - **A decision that turns out to be a one-way door** goes through step 7. The stages keep running, but the item does not merge until that card is decided.
 
-**Done when** every row has run, both verdicts are `pass`, and no correction or card on this item is open.
+**Done when** every row has run or was skipped, both verdicts are `pass`, every Human-only criterion passed its demo, and no correction or card on this item is open.
 
 ## 7. Take a one-way door to the person
 
@@ -151,17 +173,18 @@ The person's choice is final for this item; a later contradiction from running c
 
 ## 8. Close the item and resurvey
 
-1. Once delivery and documentation are done, the last commit on `item/<id>` removes `work/<id>/`; the tracker holds the stage summaries and the ADRs hold the decisions.
-2. Put the PR to the person with its stage summaries and any open decisions, and ask one question: **merge and clean up?** Merging is never automatic, and this one approval covers both the merge and the clean-up.
-3. On approval, merge the PR and clean up (*Merge PR*), and set `Factory status` to Done. Until then, the item waits. When the merge fails, keep the worktree and put the failure to the person.
-4. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
-5. Advance without waiting for the person again:
+1. Once delivery and documentation are done, put the PR to the person with its stage summaries and any open decisions, and ask one question: **merge and clean up?** Merging is never automatic, and this one approval covers the merge and the whole clean-up, the item's environment included. Until then, the item waits.
+2. On approval, when the item had an Environment stage, brief devops to tear down the resources in the lead state's **Shared resources** list.
+3. The last commit on `item/<id>` removes `work/<id>/`; the tracker holds the stage summaries and the ADRs hold the decisions.
+4. Merge the PR and remove the worktree and branch (*Merge PR*), and set `Factory status` to Done. When the merge fails, keep the worktree and put the failure to the person.
+5. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
+6. Advance without waiting for the person again:
    - **The destination moved, or a `[locked]` decision was contradicted** → stop the run and put it to the person. Redrawing the destination is step 1 again.
    - **One-way doors on the frontier** → step 3, as a new frontier round from main.
    - **Frontier clear, destination not reached** → step 4.
    - **The map dissolves** → step 9.
 
-**Done when** the person approved, the PR is merged, the worktree and branch are gone, the board shows Done, the map is resurveyed, and the next step is written into the Factory run section.
+**Done when** the person approved, the item's environment is torn down, the PR is merged, the worktree and branch are gone, the board shows Done, the map is resurveyed, and the next step is written into the Factory run section.
 
 ## 9. Offer factory feedback
 
@@ -180,7 +203,7 @@ A role agent can stop mid-task on a usage or session limit (HTTP 429), often two
 1. Note the interruption in the lead state (or the Factory run section, in a frontier round): which agent, when, its last commit.
 2. After the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
 3. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
-4. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it.
+4. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it.
 
 ## Context
 

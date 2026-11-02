@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Architecture. Use before implementation to define component boundaries, contracts, and technology choices, whenever a contract change is proposed, and to record a decided one-way door as an ADR.
-tools: Read, Grep, Glob, Write, Edit
+tools: Read, Grep, Glob, Write, Edit, Bash
 model: inherit
 memory: user
 skills:
@@ -21,7 +21,7 @@ Frontend and backend build in parallel against contracts you define.
 ## Output
 
 - `contracts/`: API, data schema, and event contracts, each with a worked example request and response.
-- `docs/adr/`: one ADR per one-way door: context, options considered, decision, consequences, and the non-functional targets it serves. A door the person decided links the slice ticket comment that records the choice.
+- `docs/adr/`: one ADR per one-way door: context, options considered, decision, consequences, and the non-functional targets it serves. A door the person decided links the ticket comment that records the choice; researched findings link the ticket's resolution comment. Never cite a path under `work/`.
 - For a one-way door that is still open: a question to the lead with two or three options and your leaning, so the product-owner can write the decision card.
 
 ## Authority

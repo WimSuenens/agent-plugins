@@ -56,7 +56,7 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 | Piece | What it does |
 |---|---|
-| `run` (user) | The lead. Clarifies the destination, has wayfinding chart the map, clears its one-way doors (research and prototypes AFK, the decision to the person), cuts each slice, starts a branch and worktree per item, briefs each role, reviews their two-way decisions, moves the item across a `Factory status` board, and resurveys after each merge until the map dissolves. |
+| `run` (user) | The lead. Clarifies the destination, has wayfinding chart the map, clears its one-way doors in a frontier round merged as one PR of ADRs (research and prototypes AFK, the decision to the person), cuts each slice, starts a branch and worktree per item, briefs each role, reviews their two-way decisions, moves the item across a `Factory status` board, and resurveys after each merge until the map dissolves. |
 | `setup-factory-skill` (user) | Writes `docs/agents/factory.md` (decision-maker level, role model overrides, path ownership, worktree location, tracker ids), patches the tracker doc, and prepares the GitHub Project field. |
 | 7 role agents | `factory:<role>`, each with checkable *Inputs needed* and *Done* lists, sharing one [protocol](plugins/factory/references/protocol.md). |
 | Role models | Each role picks a model by the cost of its mistakes: product owner, architect, QA engineer, and security reviewer `inherit` the lead's model; developer and DevOps run on `sonnet`; the docs writer on `haiku`. A repo overrides any role in the `## Role models` table of `docs/agents/factory.md`, with `haiku`, `sonnet`, `opus`, or `fable`. |

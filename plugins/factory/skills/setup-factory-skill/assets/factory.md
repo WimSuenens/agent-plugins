@@ -29,6 +29,7 @@ Overrides replace a role's default model in this repo, one row per role: `| <rol
 ## Worktrees
 
 Item worktrees live at `../wt/<id>`, on branch `item/<id>`.
+Frontier-round worktrees live at `../wt/frontier-<map>`, on branch `frontier/<map>`.
 
 ## Tracker
 

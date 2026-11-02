@@ -1,7 +1,7 @@
 ---
 name: product-owner
 description: Requirements. Use to turn a framed slice into a requirement with testable acceptance criteria, to decide scope, or to write a decision card for a one-way door.
-tools: Read, Grep, Glob, Write, Edit
+tools: Read, Grep, Glob, Write, Edit, Bash
 model: inherit
 memory: user
 skills:
@@ -26,7 +26,7 @@ One file per slice in `docs/requirements/<id>-<slug>.md`, holding:
 - acceptance criteria, written Given / When / Then, including one per **Under test** line that would show the contradiction
 - out-of-scope list, including everything the frame lists as **Deliberately faked**
 
-For a one-way door: a decision card in `work/<id>/NN-decision-<slug>.md`, following `${CLAUDE_PLUGIN_ROOT}/references/decision-card.md`, and a result with `Status: needs-decision`.
+For a one-way door: a decision card in `work/<id>/NN-decision-<slug>.md` (`work/frontier-<id>/` in a frontier round), following `${CLAUDE_PLUGIN_ROOT}/references/decision-card.md`, and a result with `Status: needs-decision`.
 
 ## Authority
 

@@ -64,9 +64,11 @@ Work every open `lock now` ticket on the map by its type, without waiting on one
 
 Resolve each ticket as wayfinder's *Work a ticket* does (resolution comment, close, Decisions so far, ADR for a one-way door), then resurvey. ADRs are written in the frontier worktree by the architect, and cite the ticket comment holding the card, the decision, or the findings, never a path under `work/`.
 
+Review every result's `Decisions` as in step 6's *Two-way decisions*: post them on the frontier ticket being worked and in chat, and track corrections in the Factory run section instead of a lead state.
+
 An open card or task blocks only the tickets and slices that hang off it through a blocking edge. Go on with everything else.
 
-When no unblocked one-way door is left, end the round:
+When no unblocked one-way door is left and no correction or card on the round's tickets is open, end the round:
 
 1. The round's last commit removes `work/`.
 2. Open one PR from `frontier/<map>` carrying only ADRs and glossary changes, and merge it to main before step 4 cuts the next item.

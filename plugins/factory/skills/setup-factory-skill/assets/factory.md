@@ -33,7 +33,9 @@ Frontier-round worktrees live at `../wt/frontier-<map>`, on branch `frontier/<ma
 
 ## Tracker
 
-Factory operations are in `docs/agents/issue-tracker.md`, under `## Factory operations`. Resolved ids for the GitHub Project:
+Factory operations are in `docs/agents/issue-tracker.md`, under `## Factory operations`. The board view groups by `Factory status`; the project's built-in `Status` field is not used by the factory.
+
+Resolved ids for the GitHub Project:
 
 | Key | Value |
 |---|---|

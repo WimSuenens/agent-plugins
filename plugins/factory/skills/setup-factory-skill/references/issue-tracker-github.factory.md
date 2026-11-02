@@ -17,4 +17,5 @@ Used by `/factory:run`. Only the lead touches the tracker. A factory **run** fol
 - **Decision card**: `gh issue comment <ticket> --body-file <card>.md` on the ticket the door belongs to (the slice, or the map's `prototype` or `grilling` ticket). Record the person's choice as a reply comment: `Decision: <option>. Reason: <their words>.`
 - **Task request**: `gh issue comment <ticket> --body "Task for you: <what, and why it blocks>"` on the map's `task` ticket. Record what was done as its resolution comment.
 - **Open PR**: `gh pr create --head item/<id> --title "<slice title>" --body "Closes #<id>"`. Merging it closes the slice ticket, which is the moment `/wayfinding:wayfinder` resurveys.
+- **Merge PR**: only after the person approved *merge and clean up?*. `<branch>` is `item/<id>` or `frontier/<map>`. `gh pr merge <branch> --merge`; once it succeeds, `git worktree remove <worktree>`, `git branch -D <branch>`, and `git push origin --delete <branch>`.
 - **Commit reference**: every commit message on `item/<id>` starts with `#<id>`.

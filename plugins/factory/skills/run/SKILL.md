@@ -27,7 +27,7 @@ A slice ticket the factory did not cut is not an entry point; point the person a
 
 ## 1. Clarify the destination
 
-Grill the person with `/grill-with-docs` about **what** the destination is. How to get there is wayfinding's question, not this one. Keep it brief: stop as soon as these four fields hold and the person confirms them.
+Grill the person with `/grilling`, together with `/domain-modeling` for the terms and decisions it settles, about **what** the destination is. How to get there is wayfinding's question, not this one. Keep it brief: stop as soon as these four fields hold and the person confirms them.
 
 ```
 **What:** <one sentence>
@@ -71,12 +71,12 @@ An open card or task blocks only the tickets and slices that hang off it through
 When no unblocked one-way door is left and no correction or card on the round's tickets is open, end the round:
 
 1. The round's last commit removes `work/`.
-2. Open one PR from `frontier/<map>` carrying only ADRs and glossary changes, and merge it to main before step 4 cuts the next item.
-3. Remove the worktree and the branch.
+2. Open one PR from `frontier/<map>` carrying only ADRs and glossary changes.
+3. Ask **merge and clean up?** as in step 8.2; a frontier round sets no `Factory status`. On approval, merge the PR to main and clean up (*Merge PR*), before step 4 cuts the next item.
 
 A card decided after its round merged, or one-way doors reopened by a resurvey, start a **new** frontier round on a fresh `frontier/<map>` branch from main.
 
-**Done when** no unblocked one-way door is left on the frontier, and the round's PR is merged and its worktree removed.
+**Done when** no unblocked one-way door is left on the frontier, the person approved, the round's PR is merged, and its worktree and branch are gone.
 
 ## 4. Cut the next slice
 
@@ -104,7 +104,7 @@ On a resumed item, keep what exists and continue from the lead state.
 | Verification | qa-engineer and security-reviewer, alongside each other | Ready to deploy when both verdicts are `pass` |
 | Delivery | devops | |
 | Documentation | docs-writer | |
-| Merge | you | Done |
+| Merge, on the person's approval | you | Done |
 
 For each stage:
 
@@ -149,16 +149,17 @@ The person's choice is final for this item; a later contradiction from running c
 
 ## 8. Close the item and resurvey
 
-1. Merge the PR once delivery and documentation are done. The last commit on `item/<id>` removes `work/<id>/`; the tracker holds the stage summaries and the ADRs hold the decisions.
-2. Set `Factory status` to Done and remove the worktree.
-3. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
-4. Advance without waiting for the person:
+1. Once delivery and documentation are done, the last commit on `item/<id>` removes `work/<id>/`; the tracker holds the stage summaries and the ADRs hold the decisions.
+2. Put the PR to the person with its stage summaries and any open decisions, and ask one question: **merge and clean up?** Merging is never automatic, and this one approval covers both the merge and the clean-up.
+3. On approval, merge the PR and clean up (*Merge PR*), and set `Factory status` to Done. Until then, the item waits. When the merge fails, keep the worktree and put the failure to the person.
+4. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
+5. Advance without waiting for the person again:
    - **The destination moved, or a `[locked]` decision was contradicted** → stop the run and put it to the person. Redrawing the destination is step 1 again.
    - **One-way doors on the frontier** → step 3, as a new frontier round from main.
    - **Frontier clear, destination not reached** → step 4.
    - **The map dissolves** → step 9.
 
-**Done when** the PR is merged, the board shows Done, the map is resurveyed, and the next step is written into the Factory run section.
+**Done when** the person approved, the PR is merged, the worktree and branch are gone, the board shows Done, the map is resurveyed, and the next step is written into the Factory run section.
 
 ## 9. Offer factory feedback
 

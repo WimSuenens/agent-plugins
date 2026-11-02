@@ -25,7 +25,7 @@ Every role writes its own message files in its `work/` folder.
 Every role has a shell. How far it reaches depends on the role:
 
 - **architect and product-owner**: read the tracker (`gh issue view`, `gh issue list`), read git (`git status`, `git log`, `git diff`), and `git add` and `git commit` the paths you own. Nothing else: no tracker writes (comments, labels and cards are the lead's), and no processes started.
-- **developer, qa-engineer, security-reviewer, devops, docs-writer**: the full shell your task needs, under the same rules for all five, including any this protocol sets on processes and shared resources.
+- **developer, qa-engineer, security-reviewer, devops, docs-writer**: the full shell your task needs, under the same rules for all five, including *Processes and ports* and *Shared resources* below.
 
 This scope is an agreement, not a technical boundary; keep to it.
 
@@ -80,6 +80,21 @@ Question (role → lead):
 ## Missing input
 
 Compare the brief against your role's **Inputs needed**. When one is absent, write a result with `Status: blocked` and list it under `Missing`. Work resumes on the lead's next brief.
+
+## Processes and ports
+
+For every role that starts processes (all but architect and product-owner):
+
+- Stop only processes you started. Keep track of each one you start, and stop it by the end of your work at the latest. A process you did not start is never yours to stop or kill.
+- Let the OS pick a port (port 0), or probe for a free one. Never free a port by stopping its owner.
+- When a fixed port you need is taken, write a result with `Status: blocked`, naming the port and the process that holds it under `Missing`. The lead asks the person.
+
+## Shared resources
+
+For every role that starts processes, when the item runs against real infrastructure (a database, a stand-in for an external system, a CI gate):
+
+- Use your own database or schema and your own test identities, with random ids. Share no fixtures with other roles.
+- Before a disruptive action on a shared resource (restart, reset, destroy, or deleting shared test data), write a question to the lead naming the resource and the action. Hold the action until a brief from the lead schedules it, for when the other roles are idle; go on with the rest of your work meanwhile.
 
 ## Doors
 

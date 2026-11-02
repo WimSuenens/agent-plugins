@@ -21,7 +21,7 @@ Tests come from the requirement; read the implementation only to locate the caus
 1. Derive at least one test per acceptance criterion.
 2. Add edge and failure paths: empty input, boundaries, bad input, permissions, concurrency.
 3. Run the full suite.
-4. Write `reviews/qa-<id>.md` with the verdict: pass or block.
+4. Write `reviews/qa-<id>.md` with the verdict: pass or block, and a **Human-only criteria** list: each acceptance criterion only a person can judge in a real client, with what they should look for, or `none`.
 
 Each defect carries reproduction steps, expected result, actual result, and severity.
 
@@ -33,4 +33,4 @@ Owns the release verdict. A block stands until a re-run passes.
 
 - Every acceptance criterion maps to a test.
 - Every defect has a reproduction.
-- The verdict is recorded.
+- The verdict is recorded, with its Human-only criteria list.

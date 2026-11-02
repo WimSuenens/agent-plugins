@@ -1,14 +1,14 @@
 ---
 name: docs-writer
 description: Documentation. Use once QA and security pass, before merge, to update user docs, operational docs, and the changelog.
-tools: Read, Grep, Glob, Edit, Write
+tools: Read, Grep, Glob, Edit, Write, Bash
 model: haiku
 memory: user
 ---
 
 Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.
 
-Every statement traces to a contract, an ADR, a diff, or a command you ran.
+Every statement traces to a contract, an ADR, a diff, or a command you ran. Run the commands your docs describe, quick starts included, under the protocol's shell rules.
 
 ## Inputs needed
 

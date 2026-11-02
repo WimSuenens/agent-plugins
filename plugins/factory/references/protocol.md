@@ -4,24 +4,43 @@ Every role reads this at the start of every task, then `docs/agents/factory.md` 
 
 ## Your place
 
-You work in the item's worktree, on branch `item/<id>`. The lead briefs you and you report to the lead.
-All coordination runs through files in `work/<id>/`. `<id>` is the slice ticket's number.
-Commit only paths you own. Start each commit message with `#<id>`, then `<role>: <what>`.
+The lead briefs you and you report to the lead. Your brief names one of two places:
+
+- **An item**: the item's worktree, on branch `item/<id>`, with messages in `work/<id>/`. `<id>` is the slice ticket's number.
+- **A frontier round**: the round's worktree, on branch `frontier/<map>`, with messages in `work/frontier-<id>/`. `<id>` is the number of the frontier ticket being worked (a ticket on the map), and `<map>` the map issue's number.
+
+All coordination runs through files in that folder.
+Commit only paths you own. Start each commit message with `#<id>`, then `<role>: <what>`. Commit your own paths yourself; the lead does not commit for you.
+
+A brief may name tracker issues as inputs by number. Read them yourself (`gh issue view <n>`).
 
 ## Ownership
 
 One owner per path, as listed in `docs/agents/factory.md`. Propose changes to other paths in a result or question.
-Every role writes its own message files in `work/<id>/`.
+Every role writes its own message files in its `work/` folder.
+
+## Shell
+
+Every role has a shell. How far it reaches depends on the role:
+
+- **architect and product-owner**: read the tracker (`gh issue view`, `gh issue list`), read git (`git status`, `git log`, `git diff`), and `git add` and `git commit` the paths you own. Nothing else: no tracker writes (comments, labels and cards are the lead's), and no processes started.
+- **developer, qa-engineer, security-reviewer, devops, docs-writer**: the full shell your task needs, under the same rules for all five, including any this protocol sets on processes and shared resources.
+
+This scope is an agreement, not a technical boundary; keep to it.
+
+## Citations
+
+An ADR, requirement, or doc that lands on main never cites a path under `work/`, because `work/` is removed before the merge. Cite the tracker comment that holds the decision card, the decision, or the findings instead.
 
 ## Messages
 
-Files in `work/<id>/` are named `NN-<type>-<role>.md`; NN counts up per item.
+Files in `work/<id>/` (or `work/frontier-<id>/`) are named `NN-<type>-<role>.md`; NN counts up per folder.
 
 Brief (lead → role):
 
     # Brief: <role> — <id>
     Goal: <one sentence>
-    Inputs: <file paths>
+    Inputs: <file paths and tracker issue numbers>
     Constraints: <list>
     Output: <paths>
     Done: <the role's Done list>

@@ -15,12 +15,12 @@ Every role runs on the model in its agent file unless the `## Role models` table
 
 State lives in files and the tracker. Conversations are disposable.
 
-A **run** takes one destination from idea to a dissolved map. An **item** is one slice of that run, built on its own branch and merged on its own PR. Items run one at a time.
+A **run** takes one destination from idea to a dissolved map. An **item** is one slice of that run, built on its own branch and merged on its own PR. Items run one at a time. A **frontier round** is the work of step 3, clearing the map's one-way doors outside any item; it too has its own branch and one PR.
 
 ## 0. Resume or start
 
 - **An idea, or nothing** → start a new run at step 1.
-- **`#<map>`** → read its **Factory run** section and continue from the step it names.
+- **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round in progress is resumed in its worktree, from the state that section records.
 - **`#<slice>`** of a map this factory runs → read `work/<id>/00-lead-state.md` in its worktree and continue that item at the step it names.
 
 A slice ticket the factory did not cut is not an entry point; point the person at `/wayfinding:beachhead` for building outside the factory.
@@ -49,18 +49,32 @@ Add a **Factory run** section at the top of the map's body (*Run state*): curren
 
 ## 3. Clear the frontier's one-way doors
 
+This step runs as a **frontier round**:
+
+1. From an up-to-date main, `git worktree add ../wt/frontier-<map> -b frontier/<map>` (or the location in `docs/agents/factory.md`).
+2. For each ticket you work, create `work/frontier-<ticket>/` in that worktree. Briefs, results, options and cards there use the protocol's templates, and every commit starts with `#<ticket> <role>: <what>`.
+3. Track the round only in the map's Factory run section: the branch, the tickets in progress, open cards and tasks. There is no lead-state file for a frontier round.
+
 Work every open `lock now` ticket on the map by its type, without waiting on one to start the next:
 
-- **Research** → a subagent runs `/research` AFK and posts the findings as the ticket's resolution.
+- **Research** → a subagent does the reading itself, AFK, following `/research`'s source rules but spawning no background agent of its own. It keeps its report in `work/frontier-<ticket>/` and posts the **full findings** as the ticket's resolution comment, which is the durable source ADRs cite. No `research/<name>` branch is created.
 - **Prototype** → brief the architect for the two or three options the prototype must show, then the developer to build them with `/prototype` on a throwaway branch `prototype/<ticket>`, outside any item worktree. Then take the decision to the person as in step 7, with the prototype linked on the card. The prototype is built for the person; it does not decide.
 - **Grilling** → a decision card per step 7, offering **Question me** (`/grilling`) first.
 - **Task** → manual work, not a decision. Post a task request to the person (*Task request*), using `/wizard` where they must click through a dashboard.
 
-Resolve each ticket as wayfinder's *Work a ticket* does (resolution comment, close, Decisions so far, ADR for a one-way door), then resurvey.
+Resolve each ticket as wayfinder's *Work a ticket* does (resolution comment, close, Decisions so far, ADR for a one-way door), then resurvey. ADRs are written in the frontier worktree by the architect, and cite the ticket comment holding the card, the decision, or the findings, never a path under `work/`.
 
 An open card or task blocks only the tickets and slices that hang off it through a blocking edge. Go on with everything else.
 
-**Done when** no unblocked one-way door is left on the frontier.
+When no unblocked one-way door is left, end the round:
+
+1. The round's last commit removes `work/`.
+2. Open one PR from `frontier/<map>` carrying only ADRs and glossary changes, and merge it to main before step 4 cuts the next item.
+3. Remove the worktree and the branch.
+
+A card decided after its round merged, or one-way doors reopened by a resurvey, start a **new** frontier round on a fresh `frontier/<map>` branch from main.
+
+**Done when** no unblocked one-way door is left on the frontier, and the round's PR is merged and its worktree removed.
 
 ## 4. Cut the next slice
 
@@ -92,7 +106,7 @@ On a resumed item, keep what exists and continue from the lead state.
 
 For each stage:
 
-1. Write the brief in `work/<id>/`, filling **Inputs** from the role's *Inputs needed*, and delegate to the role. The product-owner's inputs include the map's Destination.
+1. Write the brief in `work/<id>/`, filling **Inputs** from the role's *Inputs needed*, and delegate to the role. Name tracker issues by number; the role reads them itself, so never copy their content into files. The product-owner's inputs include the map's Destination. Each role commits its own paths.
 2. Read only the result's `Status`, `Summary`, and `Decisions`. Open an artifact only to check a Done item.
 3. Review the `Decisions` (see below).
 4. On the status:
@@ -125,7 +139,7 @@ A **one-way door** goes to the person:
 2. Brief the product-owner to write a decision card, per [decision-card.md](${CLAUDE_PLUGIN_ROOT}/references/decision-card.md), at the level in `docs/agents/factory.md`. Link a prototype that was already built.
 3. Post the card on the ticket it belongs to (*Decision card*) and put it to the person in chat, in the same words. Work that does not hang off the card goes on meanwhile.
 4. When they pick a dig-deeper option, run it here: explain with an example, or invoke `/research`, `/prototype`, or `/grilling`. Come back to the card afterwards.
-5. Record their choice and reason (*Decision card*), append it to the map's Decisions so far as `[provisional]`, and brief the architect to write the ADR.
+5. Record their choice and reason (*Decision card*), append it to the map's Decisions so far as `[provisional]`, and brief the architect to write the ADR, citing that comment. A card on a frontier ticket decided after its round merged starts a new frontier round for the ADR.
 
 The person's choice is final for this item; a later contradiction from running code is a resurvey finding, not a reason to reopen it mid-build.
 
@@ -138,7 +152,7 @@ The person's choice is final for this item; a later contradiction from running c
 3. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
 4. Advance without waiting for the person:
    - **The destination moved, or a `[locked]` decision was contradicted** → stop the run and put it to the person. Redrawing the destination is step 1 again.
-   - **One-way doors on the frontier** → step 3.
+   - **One-way doors on the frontier** → step 3, as a new frontier round from main.
    - **Frontier clear, destination not reached** → step 4.
    - **The map dissolves** → step 9.
 

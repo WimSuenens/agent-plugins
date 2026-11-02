@@ -72,8 +72,9 @@ The factory tracks status in a GitHub Project with a single-select `Factory stat
 2. Look for the field: `gh project field-list <number> --owner <owner> --format json`. When `Factory status` is missing, create it:
    `gh project field-create <number> --owner <owner> --name "Factory status" --data-type SINGLE_SELECT --single-select-options "Backlog,Ready,Designed,In progress,In review,Ready to deploy,Done"`
 3. Read the project id, the field id, and the seven option ids from `gh project field-list` and `gh project view <number> --owner <owner> --format json`, and fill the Tracker tables in `docs/agents/factory.md`.
+4. `gh` cannot change a project view, so ask the user: "Open the project's board view, and set *Column by* to **Factory status**." Wait until they confirm.
 
-**Done when** every cell in both Tracker tables holds a value.
+**Done when** every cell in both Tracker tables holds a value and the user has confirmed the board groups by `Factory status`.
 
 ### 8. Keep item folders out of trunk
 

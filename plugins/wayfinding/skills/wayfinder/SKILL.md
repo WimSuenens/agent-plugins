@@ -102,7 +102,7 @@ Every ticket is **HITL** — worked *with* a human who speaks for themselves —
 - **Research** (AFK): Reading documentation, third-party APIs, or local knowledge bases to surface a fact a decision waits on. Resolved by a `/research` **subagent**. Fire these generously and in parallel — they cost you nothing.
 - **Slice** (AFK build, HITL gate): A thin vertical cut, shipped to main, whose purpose is to **teach**. Where a task *does* in order to unblock a decision, a slice *ships* in order to produce one. Built through `/to-tickets` → `/implement` → `/tdd` → `/code-review`; resolved when it is merged and its resolution comment records what the build taught, including any decision it contradicted. Use when the honest answer to "how would we know?" is "build it and see," and the real thing costs about what a fake would.
 - **Prototype** (HITL): Raise the fidelity of the discussion with a cheap, rough artifact to react to, via `/prototype`. Use when the fake is much cheaper than the real thing — UI look and feel, a state machine's ergonomics. When the reaction wanted is to the **data model itself**, reach for `/wayfinding:model-playground` instead — it seeds a throwaway Vue/React app from the current `.dbml` so the human clicks through the shape rather than reading it.
-- **Grilling** (HITL): Conversation, via `/grill-with-docs`. Reserved for questions only your preference or authority settles.
+- **Grilling** (HITL): Conversation, via `/grilling` together with `/domain-modeling`. Reserved for questions only your preference or authority settles.
 - **Task** (HITL or AFK): Manual work a decision waits on — provisioning access, signing up for a service, moving data so its shape can be seen. Reach for `/wizard` where a human must click through it. The answer records what was done and any facts later tickets depend on.
 
 ## Fog of war
@@ -127,7 +127,7 @@ Three modes. **Never resolve more than one HITL ticket per session**; AFK ticket
 
 User invokes with a loose idea.
 
-1. **Name the destination.** Run `/grill-with-docs` to pin down what this map is finding its way to. The destination fixes the scope, so it's settled first. When the caller passes a destination in (as `/factory:run` does), take it as given and skip the grilling; seed **Out of scope** from its "Not" list.
+1. **Name the destination.** Run `/grilling` together with `/domain-modeling` to pin down what this map is finding its way to. The destination fixes the scope, so it's settled first. When the caller passes a destination in (as `/factory:run` does), take it as given and skip the grilling; seed **Out of scope** from its "Not" list.
 2. **Map the frontier.** Grill again, **breadth-first**: fan out across the whole space rather than deep on any thread, surfacing every open question you can see. Don't answer them — surface them.
 3. **Triage every question by reversibility.** Invoke `/reversibility` and sort each into **lock now**, **defer**, or **out of scope**. This is the step that keeps the map light, and it is the step most easily skipped: a sharp question is not the same as a question worth a session. Charting is done when **every question surfaced in step 2 carries one of the three verdicts**, and each deferral carries a trigger. A destination with a real data model almost always owes it a lock-now ticket of its own — "what are the core entities and relations" — rather than letting the shape emerge slice by slice; `/reversibility`'s own examples name schema shape as a one-way door more often than it looks.
 4. **Check the count.** Roughly five to seven "lock now" tickets is the shape of a well-triaged greenfield map. A larger set means two-way doors were sorted as one-way — re-run step 3 against the three-part test before creating anything.
@@ -165,7 +165,7 @@ After the resurvey, pick what happens next:
 
 - **One-way doors on the frontier** → work a ticket.
 - **Frontier clear, destination not reached** → `/beachhead` for the next slice.
-- **No one-way doors left ahead and the rest is ordinary feature work** → the map has done its job. Note the closure on the map, close it, and drop into the plain main flow (`/grill-with-docs` → `/to-spec` → `/to-tickets` → `/implement`) for what remains.
+- **No one-way doors left ahead and the rest is ordinary feature work** → the map has done its job. Note the closure on the map, close it, and drop into the plain main flow (`/grilling` with `/domain-modeling` → `/to-spec` → `/to-tickets` → `/implement`) for what remains.
 
 The effort ends by **dissolving**, mid-build, not at a handoff gate. There is no final collapse of the map into one spec, because each slice already carried its own.
 

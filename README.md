@@ -150,7 +150,7 @@ Every third slice, run `/improve-codebase-architecture` before picking the next 
 
 **Promoted.** `/domain-modeling` becomes the spine — `CONTEXT.md` and the ADRs are the durable artifacts, the map is scaffolding. `/research` fires generously and in parallel; it's AFK and free. `/improve-codebase-architecture` moves from "when you have a spare moment" to a scheduled step. `/to-questionnaire` becomes load-bearing: a deferred decision whose trigger is "ask a design partner" is exactly what it's for.
 
-**Repositioned.** `/grilling` demoted from default to preference-questions-only — routing is now by *what kind of answer would settle it*. `/grill-with-docs` over `/grill-me` during charting, because the paper trail is the point. `/to-spec` runs per slice, not per map. `/prototype` competes with `slice`: prototype when the fake is much cheaper than the real thing, slice when they cost about the same. `/to-tickets`' expand–contract guidance gets more load-bearing, because deferring decisions means migrating shapes later.
+**Repositioned.** `/grilling` demoted from default to preference-questions-only — routing is now by *what kind of answer would settle it*. During charting, `/grilling` runs together with `/domain-modeling` (the pair `/grill-with-docs` bundles, which agents cannot invoke), because the paper trail is the point. `/to-spec` runs per slice, not per map. `/prototype` competes with `slice`: prototype when the fake is much cheaper than the real thing, slice when they cost about the same. `/to-tickets`' expand–contract guidance gets more load-bearing, because deferring decisions means migrating shapes later.
 
 **Unchanged.** `/implement` → `/tdd` → `/code-review` is the per-slice engine. `/triage` stays for inbound work only, never map tickets. `/diagnosing-bugs` stays an on-ramp, with one addition: a post-mortem that contradicts a `[locked]` decision is a resurvey trigger. `/wizard` serves `task` tickets. `/resolving-merge-conflicts` gets more use with parallel slices.
 
@@ -222,7 +222,7 @@ Run against Claude Code `2.1.237` on Linux:
 | Both plugins enabled together | no collision error; both `wayfinder` skills present under separate namespaces |
 | Uninstall → marketplace update → reinstall | clean |
 
-**Not tested, because it needs an interactive session against a real repo:** whether the skills fire correctly end to end, and whether bare cross-references inside the skill bodies (`/grill-with-docs`, `/to-tickets`, `/implement`) resolve across the plugin boundary. Upstream's own skills reference each other bare and ship as a plugin, so the convention is proven — but proven *within* one plugin, not across two. If a cross-plugin reference doesn't resolve, prefix it: `/mattpocock-skills:grill-with-docs`.
+**Not tested, because it needs an interactive session against a real repo:** whether the skills fire correctly end to end, and whether bare cross-references inside the skill bodies (`/grilling`, `/to-tickets`, `/implement`) resolve across the plugin boundary. Upstream's own skills reference each other bare and ship as a plugin, so the convention is proven — but proven *within* one plugin, not across two. If a cross-plugin reference doesn't resolve, prefix it: `/mattpocock-skills:to-tickets`.
 
 The `factory` plugin, on macOS with gh `2.94.0`:
 

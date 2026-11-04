@@ -2,7 +2,7 @@
 
 Reviewer: security-reviewer · Branch `item/39` against `main` (diff `main...item/39`, head `4774b97`) · 2026-11-04
 
-**Verdict: pass** (re-verified at `34ac83c`). No critical, high or medium findings. L1–L7 are fixed; one residual low (L1a, a newline in a file name) is left open and does not block the merge. The session-id rationale for L5 is accepted.
+**Verdict: pass** (re-verified at `34ac83c`, and again at `dd57082` after `9ee1cdc`). No critical, high or medium findings. L1–L7 and the residual L1a are fixed. The session-id rationale for L5 is accepted.
 
 ## Scope
 
@@ -107,4 +107,19 @@ Re-verified 2026-11-04 at `34ac83c`, after `2a6b32f`, `be77591` (developer) and 
 
 Fix: fail closed. In the `case`, add `plugins/factory/*) ;;` before a final `*) level=minor ;;`, so any line that does not start with `plugins/factory/` counts as standard work. Or loop over the NUL-separated output directly with `while IFS= read -r -d '' p` and drop the `tr`.
 
-Verdict after re-verify: **pass**. Nothing critical or high is open, so the merge is not blocked.
+## Re-verify, round 3
+
+Re-verified 2026-11-04 at `dd57082`, after `9ee1cdc` (developer). The probes ran on a throwaway repo in the scratchpad with a copy of `check-bump.sh`.
+
+| Finding | Status | Evidence |
+|---|---|---|
+| L1a | fixed | `check-bump.sh` writes `git diff -z` to a `mktemp` file and loops with `while IFS= read -r -d '' p`, and `tr` is gone from the classification. A new `*$'\n'*) level=minor` case puts any name holding a newline in standard work. With a 1.0.0 -> 1.0.1 bump, `agents/a<LF>b.md`, `references/r<LF>.md`, `agents/d<LF>ir/x.md` and `scripts/s<LF>x.sh` all give `refuse: … needs at least a minor bump (1.1.0)`, exit 1. `agents/a<LF>b.md` with 1.1.0 passes. The L1 regression checks still refuse: `agents/développeur.md`, and a name holding a tab and a `"`. A plain `scripts/x.sh` with a patch bump passes, as the contract says. A bad base ref exits 2. No temp file is left behind. |
+
+**The catch-all is not needed.** I accept the developer's rationale. With `-z`, git passes every path through raw, unquoted, so each NUL-separated record is the real path. The only way a path could slip past the standard-work patterns was the newline split, and the new case closes that, failing closed. Contract 39-plugin-scripts §2 puts every other path under `plugins/factory/` at patch level, so a catch-all `*) level=minor` would contradict the contract without adding any security. The dropped `\"*)` case is safe to drop too: with `-z`, git never quotes a path.
+
+Also read in `9ee1cdc`:
+- `token-spend.sh` now sends the main jq call's stderr to `/dev/null`, and its exit 3 message no longer lists every file's name. Less reaches stderr than before.
+- In the tracker patch, *Post hansei* writes its scratch file with `mktemp` and removes it with `rm -f`, and *Merge PR* uses the strict semver regex for the tag. Neither adds an injection point.
+- `bash tests/run.sh`: ALL PASSED.
+
+Verdict after re-verify: **pass**. No finding is open, so the merge is not blocked.

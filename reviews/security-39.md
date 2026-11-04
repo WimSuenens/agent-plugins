@@ -2,7 +2,7 @@
 
 Reviewer: security-reviewer · Branch `item/39` against `main` (diff `main...item/39`, head `4774b97`) · 2026-11-04
 
-**Verdict: pass.** No critical, high or medium findings. Seven low findings and two informational notes below. None blocks the merge; the developer may fix them in this item or a follow-up.
+**Verdict: pass** (re-verified at `34ac83c`). No critical, high or medium findings. L1–L7 are fixed; one residual low (L1a, a newline in a file name) is left open and does not block the merge. The session-id rationale for L5 is accepted.
 
 ## Scope
 
@@ -89,4 +89,22 @@ Fix: prefix relative arguments with `./` before use (`case "$f" in -*) f="./$f";
 
 ## Re-verify
 
-To be filled in after any fixes: rerun the L1 (non-ASCII path), L4 (unreadable file) and L7 (option-like name) probes, and read the changed *Find hansei*, *Edit hansei* and *Merge PR* lines.
+Re-verified 2026-11-04 at `34ac83c`, after `2a6b32f`, `be77591` (developer) and `ed0e627` (architect). The probes ran on throwaway copies in the scratchpad.
+
+| Finding | Status | Evidence |
+|---|---|---|
+| L1 | fixed | `check-bump.sh` reads `git diff -z`. `agents/développeur.md` with a 1.0.0 -> 1.0.1 bump now gives `refuse: standard work changed … needs at least a minor bump (1.1.0)`, exit 1. A path git still quotes is classed as minor. |
+| L2 | fixed | *Merge PR* first runs `git fetch origin main` and `check-bump.sh`. On exit 1 or 2 it does not merge. It tags only when the version matches `^[0-9]+\.[0-9]+\.[0-9]+$`, and otherwise skips the tag and tells the person. The frontier round (SKILL.md step 2) also runs the check before its PR. |
+| L3 | fixed | *Find hansei* filters on `.user.login == "$me"`, where `me` comes from `gh api user --jq .login`. Splicing the login into `--jq` is safe because GitHub logins are alphanumerics and hyphens and cannot hold a quote. |
+| L4 | fixed | An unreadable `scripts/check-bump.sh` gives `fingerprint: cannot read scripts/check-bump.sh`, exit 2, with empty stdout. An unreadable `agents/developer.md` does the same. |
+| L5 | fixed / accepted | fingerprint.sh names the root by basename only (`not a factory plugin root: proj` for `/Users/nobody/secret/proj`) and files by their path relative to the root. The label's `plugin root` is written with `~` (hansei.md, and stage-log contract l.25). Script calls take the path from SKILL.md's `Plugin root:` line. The contract example uses `~/.claude/projects/<project>/<session id>/…`, and no `/Users/` path is left in the contracts, hansei.md, SKILL.md, the requirement or CONTEXT.md. **Session ids accepted**: they are random ids that only locate a transcript on the machine that wrote it. They grant no access, and the close needs them after a resume in a fresh session. Keeping them in `--merge` history exposes nothing usable. |
+| L6 | fixed | *Edit hansei* uses `rec="$(mktemp)"` and `rm -f "$rec"` afterwards. |
+| L7 | fixed | `token-spend.sh -- -n.jsonl` reads the file (spend 3, exit 0). A missing `-missing.jsonl` gives `transcript -missing.jsonl unreadable`, exit 3, with the name kept. Without `--`, `-n.jsonl` is refused as an unknown option, exit 2, named, as the contract specifies. |
+
+### L1a — `plugins/factory/scripts/check-bump.sh:13,22-31` — low — a newline in a file name still escapes the classification (residual of L1)
+
+`git diff -z … | tr '\0' '\n'` turns the NUL separators back into newlines. A path such as `plugins/factory/agents/a<LF>b.md` splits into `plugins/factory/agents/a` and `b.md`. Neither matches a minor pattern, so a patch bump passes (reproduced: `pass: patch bump needed, 1.0.0 -> 1.0.1`). This needs a newline committed in a file name under `agents/` or `references/`. The standard fingerprint still moves, so the change is still detected. Not blocking.
+
+Fix: fail closed. In the `case`, add `plugins/factory/*) ;;` before a final `*) level=minor ;;`, so any line that does not start with `plugins/factory/` counts as standard work. Or loop over the NUL-separated output directly with `while IFS= read -r -d '' p` and drop the `tr`.
+
+Verdict after re-verify: **pass**. Nothing critical or high is open, so the merge is not blocked.

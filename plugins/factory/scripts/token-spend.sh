@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Token spend of one role (or the lead) from Claude Code transcripts.
+# Usage: bash token-spend.sh [--since <UTC time>] [--until <UTC time>] <transcript.jsonl>...
+# Times: YYYY-MM-DDTHH:MMZ or YYYY-MM-DDTHH:MM:SSZ, compared as epoch seconds.
+# Stdout: spend <total> (input <i>, cache write <w>, cache read <r>, output <o>); peak <p>; messages <n>
+# Exit: 0 ok; 2 bad arguments; 3 a file is missing, unreadable or not JSON; 4 jq missing; 5 no message in window.
+# See contracts/39-plugin-scripts.md section 3 in the repo that hosts the factory.
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "token-spend: jq missing" >&2
+  exit 4
+fi
+
+since=""
+until_=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --since) since="${2:-}"; shift 2 || { echo "token-spend: --since needs a time" >&2; exit 2; } ;;
+    --until) until_="${2:-}"; shift 2 || { echo "token-spend: --until needs a time" >&2; exit 2; } ;;
+    --) shift; break ;;
+    -*) echo "token-spend: unknown option $1" >&2; exit 2 ;;
+    *) break ;;
+  esac
+done
+if [ $# -eq 0 ]; then
+  echo "usage: token-spend.sh [--since T] [--until T] <transcript.jsonl>..." >&2
+  exit 2
+fi
+
+# Turn YYYY-MM-DDTHH:MMZ[:SS] into YYYY-MM-DDTHH:MM:SSZ; empty stays empty; anything else fails.
+norm() {
+  case "$1" in
+    "") return 0 ;;
+    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]Z) printf '%s:00Z' "${1%Z}" ;;
+    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]Z) printf '%s' "$1" ;;
+    *) return 1 ;;
+  esac
+}
+since="$(norm "$since")" || { echo "token-spend: bad --since time" >&2; exit 2; }
+until_="$(norm "$until_")" || { echo "token-spend: bad --until time" >&2; exit 2; }
+
+for f in "$@"; do
+  if [ ! -r "$f" ] || [ ! -f "$f" ] || ! jq empty "$f" >/dev/null 2>&1; then
+    echo "token-spend: transcript $(basename "$f") unreadable" >&2
+    exit 3
+  fi
+done
+
+out="$(jq -rs --arg since "$since" --arg until "$until_" '
+  def epoch: sub("\\.[0-9]+"; "") | fromdateiso8601;
+  def tok: (.input_tokens // 0), (.cache_creation_input_tokens // 0), (.cache_read_input_tokens // 0), (.output_tokens // 0);
+  [ to_entries[] | .key as $i | .value
+    | select(.type == "assistant" and (.message.usage | type) == "object" and .message.model != "<synthetic>")
+    | select(
+        ($since == "" or ((.timestamp // "") != "" and (.timestamp | epoch) >= ($since | epoch))) and
+        ($until == "" or ((.timestamp // "") != "" and (.timestamp | epoch) <= ($until | epoch))))
+    | {k: (.message.id // ("noid-" + ($i | tostring))), u: .message.usage}
+  ]
+  | reduce .[] as $e ({}; .[$e.k] = $e.u)
+  | [ .[] | {i: (.input_tokens // 0), w: (.cache_creation_input_tokens // 0), r: (.cache_read_input_tokens // 0), o: (.output_tokens // 0)} ]
+  | if length == 0 then empty else
+      {i: (map(.i) | add), w: (map(.w) | add), r: (map(.r) | add), o: (map(.o) | add), p: (map(.i + .w + .r + .o) | max), n: length}
+      | "spend \(.i + .w + .r + .o) (input \(.i), cache write \(.w), cache read \(.r), output \(.o)); peak \(.p); messages \(.n)"
+    end
+' "$@")" || { echo "token-spend: transcript unreadable" >&2; exit 3; }
+
+if [ -z "$out" ]; then
+  echo "token-spend: no assistant message in window" >&2
+  exit 5
+fi
+printf '%s\n' "$out"

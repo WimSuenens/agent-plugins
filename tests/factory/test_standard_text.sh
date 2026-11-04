@@ -1,0 +1,173 @@
+#!/bin/bash
+# The new standard's text: AC-1, AC-6, AC-8, AC-11, AC-13, AC-14, AC-15, AC-16, AC-18, AC-19, AC-20,
+# and contract 39-standard-changes. Checks what the Lead is told, not how it behaves in a session
+# (that is the acceptance demo's human-only list in reviews/qa-39.md).
+. "$(dirname "$0")/lib.sh"
+SK="$PLUGIN/skills/run/SKILL.md"
+HA="$PLUGIN/references/hansei.md"
+TP="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
+MK="$REPO/.claude-plugin/marketplace.json"
+# first line number of a fixed string in a file (0 when absent)
+ln_of() { n="$(grep -nF -- "$2" "$1" | head -1 | cut -d: -f1)"; echo "${n:-0}"; }
+before() { # name file a b: a appears, b appears, a before b
+  la="$(ln_of "$2" "$3")"; lb="$(ln_of "$2" "$4")"
+  if [ "$la" -gt 0 ] && [ "$lb" -gt 0 ] && [ "$la" -lt "$lb" ]; then echo "ok   $1"; passed=$((passed + 1)); else echo "FAIL $1: '$3' (line $la) not before '$4' (line $lb)"; fail=1; fi
+}
+# the fenced block that follows a heading line, without the fences
+block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
+
+# --- AC-1
+ck ac1-plugin-version "1.0.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.0.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
+
+# --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
+has plugin-root-line "$SK" 'Plugin root: ${CLAUDE_PLUGIN_ROOT}'
+has fallback-older-tracker-doc "$SK" 'has no *Post hansei* bullet'
+has fallback-points-at-patch "$SK" '${CLAUDE_PLUGIN_ROOT}/skills/setup-factory-skill/references/issue-tracker-github.factory.md'
+has fallback-never-edit "$SK" "Never edit the project's tracker doc yourself."
+has step5-runs-fingerprint "$SK" 'bash "${CLAUDE_PLUGIN_ROOT}/scripts/fingerprint.sh" "${CLAUDE_PLUGIN_ROOT}"'
+has skill-links-hansei "$SK" '(${CLAUDE_PLUGIN_ROOT}/references/hansei.md)'
+
+# --- AC-6
+TEMPLATE="$(block_after "$HA" '### Layout')"
+ck ac6-context-line 1 "$(printf '%s\n' "$TEMPLATE" | grep -c '^- context: wayfinding <version>; mattpocock-skills <version>$')"
+has ac6-context-only "$HA" 'context only, never a reset trigger'
+has ac6-unreadable-not-captured "$HA" 'Otherwise `not captured (<reason>)`'
+has ac6-label-wayfinding "$HA" '- wayfinding: <version> (<source>)'
+
+# --- AC-8: the Open PR check
+has ac8-fetch-then-check "$SK" '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"` in the item worktree.'
+has ac8-before-pr-create "$SK" 'Before `gh pr create`, always:'
+has ac8-exit1-no-pr "$SK" 'Exit 1: do not open the PR.'
+has ac8-exit1-feedback-source-lead "$SK" 'Send the developer a feedback brief (`Source: lead`) quoting the refusal'
+has ac8-exit1-logged-refused "$SK" 'log the row with `Result` `refused`'
+has ac8-exit2-no-pr "$SK" 'Exit 2: do not open the PR'
+has ac8-refusal-in-stage-log-format "$HA" 'A refused *Open PR* (bump check) is an `Open PR` row with `Result` `refused`'
+# every instruction that opens a PR must run the check first. PR-opening lines, outside the check's own paragraph:
+pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'check-bump|do not open the PR|opens a PR without this check|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR')"
+if [ -z "$pr_lines" ]; then ck ac8-no-pr-without-check "" ""
+else skip ac8-no-pr-without-check "QA-39 F1: PR opened without the bump check at SKILL.md:$(printf '%s' "$pr_lines" | cut -d: -f1 | tr '\n' ' ')(frontier round end) (developer)"; fi
+# the tracker patch's Open PR bullet is the command the check guards
+has ac8-tracker-open-pr "$TP" '- **Open PR**: `gh pr create --head item/<id>'
+
+# --- AC-11: stage log
+has ac11-in-lead-state "$HA" '`work/<id>/00-lead-state.md`'
+has ac11-date-u "$HA" 'Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards'
+has ac11-columns "$HA" '| # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |'
+has ac11-feedback-rounds "$HA" 'A feedback round is its own row with ` (round <n>)` appended'
+has ac11-acceptance-demo-stage "$HA" '`Acceptance demo`, `Delivery`'
+has ac11-waits-kinds "$HA" '| Id | Kind | Start (UTC) | End (UTC) | Held item | What |'
+has ac11-limits-wait "$HA" '`limits` from a role'"'"'s failure notice'
+has ac11-touches "$HA" '| Time (UTC) | Kind | What |'
+has ac11-as-it-happens "$SK" 'Every wait goes to `## Waits` and every touch the person makes to `## Person'"'"'s touches`, as it happens'
+has ac11-skill-stamps-each-stage "$SK" '1. Stamp `date -u +%FT%TZ` and open the stage'"'"'s row in the stage log.'
+has ac11-skill-close-row-peak "$SK" 'close the row, with the agent ids and the completion notice'"'"'s peak context'
+has ac11-interruption-limits-wait "$SK" 'open a `limits` wait in `## Waits`'
+
+# --- AC-13: cross-check written in, before posting
+has ac13-git-evidence "$HA" "git log item/<id> --format='%cI %s'"
+has ac13-tracker-evidence "$HA" '.created_at, (.body | split("\n")[0])'
+has ac13-largest-gap "$HA" 'names the largest gap across rows'
+before ac13-cross-check-before-post "$SK" '2. Cross-check the stage log against git and the tracker' '4. Fill the hansei template'
+
+# --- AC-14: marker, header, seven measures in fixed order
+ck ac14-marker-first-line '<!-- factory:hansei v1 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
+ck ac14-marker-regex-matches 1 "$(printf '%s\n' "$TEMPLATE" | sed -n 1p | grep -Ec '^<!-- factory:hansei v([0-9]+) -->$')"
+has ac14-find-hansei-op "$TP" "select(.body | startswith(\"<!-- factory:hansei v\")) | .id"
+for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex>' '- active overrides: <none | name (since YYYY-MM-DD); …>' '- stage-log cross-check: largest gap <N>m (<row>: <evidence>)'; do
+  ck "ac14-header '${k%%:*}'" 1 "$(printf '%s\n' "$TEMPLATE" | grep -cxF -- "$k")"
+done
+ck ac14-seven-measures-in-order "1. lead time|2. first-pass yield|3. rework|4. escaped defects|5. tokens|6. person's touches|7. doors" \
+  "$(printf '%s\n' "$TEMPLATE" | grep -E '^[1-7]\. ' | cut -d: -f1 | paste -sd'|' -)"
+has ac14-overrides-none "$HA" '`none` when the project'"'"'s `docs/agents/factory.md` has no `## Overrides` section or it lists none'
+# the worked example follows the template's line keys in the same order
+EXAMPLE="$(block_after "$HA" '### Worked example')"
+keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z-]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
+ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
+ck ac14-example-marker '<!-- factory:hansei v1 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
+
+# --- AC-15: each measure says what is counted and where it is read
+MT="$(awk '/^### Measures$/ {f=1; next} f && /^\| [1-7] \|/ {print} f && /^Token script exits/ {exit}' "$HA")"
+ck ac15-seven-rows 7 "$(printf '%s\n' "$MT" | grep -c .)"
+ck ac15-every-row-has-counted-and-source 7 "$(printf '%s\n' "$MT" | awk -F'|' 'NF>=6 && length($4)>10 && length($5)>3 {n++} END {print n+0}')"
+has ac15-m1-split "$HA" '**agent working** = total − both waits, so the three parts add up to the total'
+has ac15-m2-na "$HA" '`n/a (did not run)` when the stage was skipped'
+has ac15-m3-overturned "$HA" 'two-way decisions overturned by a `Source: lead` feedback brief'
+has ac15-m5-script "$HA" 'bash "${CLAUDE_PLUGIN_ROOT}/scripts/token-spend.sh" <transcripts>'
+has ac15-m5-lead-included "$HA" '   - lead: spend <tok>; peak context <n>'
+has ac15-m6-touches "$HA" '6. person'"'"'s touches: decision cards <n>; demos <n>; approvals <n>; overturns <n>; other <n>'
+
+# --- AC-16: honesty rule
+has ac16-rule "$HA" 'an uncaptured value is never `0`, never blank, never dropped. The line stays in its place. `n/a` never stands in for `not captured`.'
+has ac16-escaped-defects "$HA" '4. escaped defects: not captured (tracing deferred until the first defect found in a merged item)'
+has ac16-na-scope "$HA" 'Allowed only in measures 2 and 5, and only for a stage or role that did not run.'
+has ac16-token-exit-never-0 "$HA" 'any non-zero exit: write the value as below, never `0`'
+has ac16-example-uncaptured-spend "$HA" '   - security-reviewer: spend not captured (transcript agent-a41f09.jsonl unreadable); peak context 48820'
+has ac16-example-zero-is-0 "$HA" 'feedback briefs product-owner 0, architect 0'
+has ac16-cross-check-not-captured "$HA" 'With no evidence for any row it reads `not captured (<reason>)`'
+has ac16-label-script-fails "$HA" 'When the script fails, each reads `not captured (<script'"'"'s message>)`'
+# (the one line allowed to end in ':' is "7. doors:" with sub-lines, and "5. tokens:")
+ck ac16-only-list-heads-end-in-colon "5. tokens:|7. doors:" "$(printf '%s\n' "$EXAMPLE" | grep -E ':[[:space:]]*$' | paste -sd'|' -)"
+
+# --- worked examples add up
+# lead time: 11:40Z -> 16:13Z = 273m = 4h33m; held person W1 31m + W3 20m = 51m; limits W2 15m; working 273-51-15 = 207 = 3h27m
+has example-lead-time "$HA" '1. lead time: total 4h33m; agent working 3h27m; waiting for the person 51m; waiting on limits 15m'
+ck example-arithmetic "273 51 15 207" "$(( (16*60+13)-(11*60+40) )) $(( (12*60+41-12*60-10) + (16*60+13-15*60-53) )) $(( 13*60+20-13*60-5 )) $(( 273-51-15 ))"
+# every token line: total = i + w + r + o
+bad=0
+while IFS= read -r l; do
+  t="$(printf '%s' "$l" | sed -E 's/.*spend ([0-9]+) \(.*/\1/')"
+  s="$(printf '%s' "$l" | sed -E 's/.*input ([0-9]+), cache write ([0-9]+), cache read ([0-9]+), output ([0-9]+)\).*/\1+\2+\3+\4/' | bc)"
+  [ "$t" = "$s" ] || { bad=$((bad + 1)); echo "     $l: $t vs $s"; }
+done <<EOT
+$(printf '%s\n' "$EXAMPLE" | grep -E 'spend [0-9]+ \(input')
+EOT
+ck example-token-totals-add-up 0 "$bad"
+# stage-log example durations = End - Start
+SL="$(awk '/^## Stage log$/ {f++} f==2 && /^\| [0-9]+ \|/ {print}' "$HA")"
+bad=0
+while IFS='|' read -r _ n st ro ag s e d _rest; do
+  sm=$(( 10#$(echo "$s" | sed -E 's/.*T([0-9]{2}):.*/\1/')*60 + 10#$(echo "$s" | sed -E 's/.*T[0-9]{2}:([0-9]{2})Z.*/\1/') ))
+  em=$(( 10#$(echo "$e" | sed -E 's/.*T([0-9]{2}):.*/\1/')*60 + 10#$(echo "$e" | sed -E 's/.*T[0-9]{2}:([0-9]{2})Z.*/\1/') ))
+  m=$((em - sm)); if [ $m -ge 60 ]; then want="$((m / 60))h$(printf '%02d' $((m % 60)))m"; else want="${m}m"; fi
+  [ "$(echo $d)" = "$want" ] || { bad=$((bad + 1)); echo "     row$n: $d vs $want"; }
+done <<EOT
+$SL
+EOT
+ck example-stage-durations "0 11" "$bad $(printf '%s\n' "$SL" | grep -c .)"
+
+# --- AC-18: posted after approval and before work/<id>/ goes
+before ac18-approval-before-post "$SK" '1. Once delivery and documentation are done' '4. Fill the hansei template'
+before ac18-post-before-remove-work "$SK" '4. Fill the hansei template' '6. The last commit on `item/<id>` removes `work/<id>/`'
+has ac18-posted-before-commit "$SK" 'The record is posted before this commit.'
+before ac18-remove-work-before-merge "$SK" '6. The last commit on `item/<id>` removes `work/<id>/`' '7. Merge the PR'
+has ac18-done-when "$SK" 'the hansei record is posted on the slice ticket'
+
+# --- AC-19: measure 7 pending, then the same comment edited after the resurvey
+has ac19-pending "$SK" 'measure 7 reading `pending resurvey`'
+before ac19-resurvey-before-edit "$SK" '8. Invoke `/wayfinding:wayfinder` to resurvey' '9. Fill measure 7 (*Edit hansei*)'
+has ac19-stopped "$SK" 'edit measure 7 to `not captured (run stopped before the resurvey)`'
+has ac19-post-finds-first "$TP" '- **Post hansei**: run *Find hansei* first.'
+has ac19-never-second "$TP" 'Never post a second record.'
+has ac19-edit-patches-same "$TP" 'gh api --method PATCH "repos/{owner}/{repo}/issues/comments/<comment-id>" -F body=@<record>.md'
+has ac19-pointer-in-map "$SK" 'hansei: <comment URL> (measure 7 pending)'
+has ac19-done-when "$SK" 'measure 7 of the record is filled'
+
+# --- AC-20: measurements stay in the project
+repo_lines="$(grep -rnF -- '--repo' "$PLUGIN" | grep -v 'None names `--repo`' | grep -v 'No command here names `--repo`' | grep -v 'only instruction that names `--repo' | grep -vF -- '--repo <owner>/<repo>')"  # setup links the project to its own repo
+ck ac20-only-step9-names-repo 1 "$(printf '%s\n' "$repo_lines" | grep -c .)"
+ck ac20-the-one-is-feedback-issue 1 "$(printf '%s\n' "$repo_lines" | grep -c 'gh issue create --repo WimSuenens/agent-plugins --label plugin:factory')"
+before ac20-feedback-issue-in-step9 "$SK" '## 9. Offer factory feedback' 'gh issue create --repo WimSuenens/agent-plugins'
+for w in 'the problem in factory terms' 'the standard change' 'before/after numbers against the baseline with item count and release' 'no code, no project names, no business content, and no raw hansei records'; do
+  has "ac20-step9-rule '$w'" "$SK" "$w"
+done
+has ac20-hansei-rule "$HA" 'None names `--repo`, and none is written to `WimSuenens/agent-plugins`.'
+ck ac20-tracker-ops-no-repo 0 "$(grep -E 'Find hansei|Post hansei|Edit hansei' "$TP" | grep -c -- '--repo ')"
+# no hansei instruction writes into the plugin's own tree
+ck ac20-no-write-into-plugin-root 0 "$(grep -nE '> *"?\$\{CLAUDE_PLUGIN_ROOT\}|tee .*CLAUDE_PLUGIN_ROOT' "$SK" "$HA" "$TP" | grep -c .)"
+
+# --- AC-7 support: the tag step exists in Merge PR
+has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'
+
+done_

@@ -36,6 +36,7 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | Security re-check round 3 | security-reviewer | 21:43Z | 21:45Z | 1m40s | none | 39,204 | pass | no finding open |
 | QA re-check round 3 | qa-engineer | 21:43Z | 21:47Z | 4m30s | none | 59,505 | pass | 340 pass; 1 contract note → architect |
 | Contract note | architect | 21:48Z | 21:49Z | 51s | none | 23,588 | done | rework loop 7 (source: qa observation) |
+| Delivery prep | devops | 21:5xZ | 21:5xZ | | none | (notice) | done | rollback untested (freeze) |
 | Acceptance demo | person + factory-sandbox | 21:3xZ | | | person | | | |
 
 ## Person's touches

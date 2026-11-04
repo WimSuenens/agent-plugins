@@ -9,7 +9,7 @@
 
 ## Running agents
 
-- (none yet)
+- product-owner — brief 01 — handle aff847e3e8c7e5bfa — started 20:54Z
 
 ## Stage log (manual, calibration — ADR 0012)
 

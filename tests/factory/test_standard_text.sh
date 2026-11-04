@@ -94,7 +94,7 @@ ck ac15-every-row-has-counted-and-source 7 "$(printf '%s\n' "$MT" | awk -F'|' 'N
 has ac15-m1-split "$HA" '**agent working** = total − both waits, so the three parts add up to the total'
 has ac15-m2-na "$HA" '`n/a (did not run)` when the stage was skipped'
 has ac15-m3-overturned "$HA" 'two-way decisions overturned by a `Source: lead` feedback brief'
-has ac15-m5-script "$HA" 'bash "${CLAUDE_PLUGIN_ROOT}/scripts/token-spend.sh" <transcripts>'
+has ac15-m5-script "$HA" 'bash "<plugin root>/scripts/token-spend.sh" <transcripts>'
 has ac15-m5-lead-included "$HA" '   - lead: spend <tok>; peak context <n>'
 has ac15-m6-touches "$HA" '6. person'"'"'s touches: decision cards <n>; demos <n>; approvals <n>; overturns <n>; other <n>'
 
@@ -166,6 +166,66 @@ has ac20-hansei-rule "$HA" 'None names `--repo`, and none is written to `WimSuen
 ck ac20-tracker-ops-no-repo 0 "$(grep -E 'Find hansei|Post hansei|Edit hansei' "$TP" | grep -c -- '--repo ')"
 # no hansei instruction writes into the plugin's own tree
 ck ac20-no-write-into-plugin-root 0 "$(grep -nE '> *"?\$\{CLAUDE_PLUGIN_ROOT\}|tee .*CLAUDE_PLUGIN_ROOT' "$SK" "$HA" "$TP" | grep -c .)"
+
+# --- feedback 15 #4 / contract 39-standard-changes section 3: hansei.md names <plugin root>, never runs ${CLAUDE_PLUGIN_ROOT}
+ck plugin-root-no-literal-var-in-commands 0 "$(grep -cF '"${CLAUDE_PLUGIN_ROOT}' "$HA")"
+has plugin-root-placeholder-explained "$HA" '`<plugin root>` is the path on the `Plugin root:` line of `skills/run/SKILL.md`'
+has label-fingerprint-uses-placeholder "$HA" 'bash "<plugin root>/scripts/fingerprint.sh" "<plugin root>"'
+ck label-example-root-as-tilde 0 "$(grep -cE '^- plugin root: /(Users|home)/' "$HA")"
+
+# --- feedback 15 #6 (security L2): bump re-check before merge; semver before tag
+# inline_before name text a b: within one line of text, a occurs before b
+inline_before() { awk -v a="$3" -v b="$4" 'BEGIN{ia=0; ib=0} {i=index($0,a); j=index($0,b); if(i&&!ia) ia=i; if(j&&!ib) ib=j} END{exit !(ia && ib && ia<ib)}' <<EOT
+$2
+EOT
+  if [ $? = 0 ]; then echo "ok   $1"; passed=$((passed + 1)); else echo "FAIL $1: '$3' not before '$4'"; fail=1; fi; }
+MP="$(grep -F -- '- **Merge PR**' "$TP")"
+ck merge-pr-one-bullet 1 "$(printf '%s\n' "$MP" | grep -c .)"
+inline_before merge-recheck-before-merge "$MP" 'First re-run the bump check' 'Exit 0: `gh pr merge <branch> --merge`'
+has merge-recheck-fetch-and-script "$TP" 'First re-run the bump check: `git fetch origin main`, then `bash "<plugin root>/scripts/check-bump.sh"` in the branch'"'"'s worktree'
+has merge-recheck-refuse-no-merge "$TP" 'Exit 1 or 2: do not merge'
+ck merge-pr-no-literal-var 0 "$(printf '%s' "$MP" | grep -cF '${CLAUDE_PLUGIN_ROOT}')"
+inline_before tag-semver-before-tag "$(grep -F 'tag only when it is MAJOR.MINOR.PATCH' "$TP")" 'tag only when it is MAJOR.MINOR.PATCH' 'git tag factory-v<version>'
+# the tag check must be the contract's semver (no leading zeros); pull the regex out of the patch and run it
+RX="$(grep -oE "grep -Eq '[^']+'" "$TP" | head -1 | sed -E "s/^grep -Eq '//; s/'$//")"
+ck tag-regex-present 1 "$([ -n "$RX" ] && echo 1)"
+okc=0; for v in 1.0.0 0.0.0 10.20.30; do printf '%s' "$v" | grep -Eq "$RX" && okc=$((okc + 1)); done; ck tag-regex-accepts-semver 3 $okc
+badc=0; for v in 1.0 v1.0.0 1.0.0-rc1 '1.0.0 x'; do printf '%s' "$v" | grep -Eq "$RX" || badc=$((badc + 1)); done; ck tag-regex-rejects-non-semver 4 $badc
+lz=0; for v in 1.08.0 01.0.0 1.0.00; do printf '%s' "$v" | grep -Eq "$RX" || lz=$((lz + 1)); done
+if [ $lz = 3 ]; then ck tag-regex-rejects-leading-zeros 3 $lz
+else skip tag-regex-rejects-leading-zeros "QA-39 F5: Merge PR tag check '$RX' accepts 1.08.0; contract 39-standard-changes section 5 gives the strict semver regex (developer, low: the merge re-check refuses 1.08.0 first)"; fi
+# SKILL.md step 7 sends the merge through Merge PR (which holds the re-check)
+has merge-through-merge-pr "$SK" '7. Merge the PR and remove the worktree and branch (*Merge PR*'
+has frontier-merge-through-merge-pr "$SK" 'merge the PR to main and clean up (*Merge PR*)'
+has frontier-pr-bump-check "$SK" '2. Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh` in the round'"'"'s worktree) with the same exit handling as in step 6, then open one PR from `frontier/<map>`'
+
+# --- feedback 15 #7 (security L3): Find hansei keeps only the Lead's own comments with the marker; run its jq on sample comments
+FH="$(grep -F -- '- **Find hansei**' "$TP")"
+ck find-hansei-me-from-gh 1 "$(printf '%s' "$FH" | grep -cF 'me="$(gh api user --jq .login)"')"
+JQ="${FH#*--paginate --jq \'}"; JQ="${JQ%%\'\`*}"   # the filter between --jq ' and the closing '`
+me=lead-bot
+JQ="$(printf '%s' "$JQ" | sed "s/'\"\$me\"'/$me/")"
+cat > "$T/comments.json" <<'EOJ'
+[{"id":1,"user":{"login":"mallory"},"body":"<!-- factory:hansei v1 -->\nfake"},
+ {"id":2,"user":{"login":"lead-bot"},"body":"stage summary"},
+ {"id":3,"user":{"login":"lead-bot"},"body":"<!-- factory:hansei v1 -->\n## Hansei: #1"},
+ {"id":4,"user":{"login":"lead-bot"},"body":"quote: <!-- factory:hansei v1 -->"},
+ {"id":5,"user":{"login":"Lead-Bot"},"body":"<!-- factory:hansei v2 -->"}]
+EOJ
+ck find-hansei-jq-filters-author-and-marker 3 "$(jq -r "$JQ" "$T/comments.json" | paste -sd, -)"
+printf '[{"id":9,"user":{"login":"mallory"},"body":"<!-- factory:hansei v1 -->"}]' > "$T/c2.json"
+ck find-hansei-others-only-prints-nothing "" "$(jq -r "$JQ" "$T/c2.json")"
+ck find-hansei-no-repo 0 "$(printf '%s' "$FH" | grep -c -- '--repo')"
+
+# --- feedback 15 #9 (security L6): Edit hansei scratch file from mktemp, removed afterwards
+ED="$(grep -F -- '- **Edit hansei**' "$TP")"
+ck edit-hansei-mktemp 1 "$(printf '%s' "$ED" | grep -cF 'rec="$(mktemp)"')"
+ck edit-hansei-rm 1 "$(printf '%s' "$ED" | grep -cF 'rm -f "$rec"')"
+ck edit-hansei-outside-repo-not-committed 1 "$(printf '%s' "$ED" | grep -cF 'outside the repo, never committed')"
+ck edit-hansei-patch-same-comment 1 "$(printf '%s' "$ED" | grep -cF -- '--method PATCH "repos/{owner}/{repo}/issues/comments/<comment-id>"')"
+PH="$(grep -F -- '- **Post hansei**' "$TP")"
+if printf '%s' "$PH" | grep -qF 'mktemp'; then ck post-hansei-mktemp 1 1
+else skip post-hansei-mktemp "QA-39 F6: Post hansei writes <record>.md with no mktemp; contract 39-hansei-record section 5 makes Post use rec=\$(mktemp) and rm -f too (developer, low)"; fi
 
 # --- AC-7 support: the tag step exists in Merge PR
 has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'

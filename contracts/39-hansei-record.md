@@ -68,7 +68,7 @@ Every value slot (`<dur>`, `<n>`, `<fpy>`, `<tok>`, a version, a hash) holds exa
 |---|---|
 | a measured value | as defined per field below |
 | `0` (or `0m`) | measured, and truly zero |
-| `n/a (did not run)` | the stage or role did not run on this item. Allowed only in measures 2, 3 and 5, and only for a stage or role that did not run. |
+| `n/a (did not run)` | the stage or role did not run on this item. Allowed only in measures 2 and 5 (measure 3 counts briefs received, which is a known `0` for a role that never ran), and only for a stage or role that did not run. |
 | `not captured (<reason>)` | the Lead could not observe it. The reason is short and always present. |
 | `pending resurvey` | measure 7 only, between posting and the resurvey edit |
 
@@ -165,8 +165,8 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
    - architect: spend 612090 (input 140, cache write 70221, cache read 530417, output 11312); peak context 81277
    - developer: spend 1466997 (input 302, cache write 120554, cache read 1321874, output 24267); peak context 138578
    - qa-engineer: spend 520336 (input 97, cache write 64010, cache read 447880, output 8349); peak context 70114
-   - security-reviewer: not captured (transcript agent-a41f09.jsonl unreadable); peak context 48820
-   - devops: n/a (did not run); peak context n/a (did not run)
+   - security-reviewer: spend not captured (transcript agent-a41f09.jsonl unreadable); peak context 48820
+   - devops: spend n/a (did not run); peak context n/a (did not run)
    - docs-writer: spend 120774 (input 31, cache write 30215, cache read 87790, output 2738); peak context 31006
 6. person's touches: decision cards 1; demos 0; approvals 1; overturns 1; other 0
 7. doors:

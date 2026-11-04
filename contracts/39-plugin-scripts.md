@@ -92,7 +92,7 @@ bash <root>/scripts/check-bump.sh [<base-ref>]        # default base: origin/mai
 |---|---|---|
 | no factory path changed | 0 | `pass: no factory paths changed` |
 | bump covers the change | 0 | `pass: <minor\|patch> bump needed, <old> -> <new>` |
-| bump missing or too small | 1 | `refuse: <standard work\|factory files> changed; plugin.json version <old> -> <new>; needs at least a <minor\|patch> bump (<suggested>)` then one line per changed path, indented two spaces |
+| bump missing or too small | 1 | `refuse: <standard work\|factory files> changed; plugin.json version <old> -> <new>; needs at least a <minor\|patch> bump (<suggested>)` then one line per changed path other than `plugins/factory/.claude-plugin/plugin.json`, indented two spaces; `plugin.json` itself is listed only when it is the sole changed path |
 | not a git repo, base ref missing | 2 | nothing; reason on stderr |
 
 `<suggested>` is the smallest passing version: `<major>.<minor+1>.0` for minor, `<major>.<minor>.<patch+1>` for patch.
@@ -108,7 +108,7 @@ refuse: standard work changed; plugin.json version 1.0.0 -> 1.0.0; needs at leas
 exit 1
 ```
 
-The same branch with `1.0.1`:
+The same branch with `1.0.1` (the branch now also changes `plugin.json`, which the path lines leave out because the first line already reports its version):
 
 ```
 refuse: standard work changed; plugin.json version 1.0.0 -> 1.0.1; needs at least a minor bump (1.1.0)
@@ -117,6 +117,14 @@ exit 1
 ```
 
 A change under `scripts/` only, bumped to `1.0.1`: `pass: patch bump needed, 1.0.0 -> 1.0.1`, exit 0.
+
+A change to `plugin.json` alone (say its `description`) with the version left at `1.0.0`: it still counts as a factory change, so a patch is needed, and being the sole path it is listed:
+
+```
+refuse: factory files changed; plugin.json version 1.0.0 -> 1.0.0; needs at least a patch bump (1.0.1)
+  plugins/factory/.claude-plugin/plugin.json
+exit 1
+```
 
 AC-10, any project without `plugins/factory/` (or a branch not touching it): `pass: no factory paths changed`, exit 0.
 

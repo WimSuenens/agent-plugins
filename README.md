@@ -71,9 +71,43 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 
-**Status: drafted, not yet run end to end.** The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0008 (0006 superseded by 0007) in [docs/adr/](docs/adr/), all provisional.
+**Status: drafted, not yet run end to end.** The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0012 (0006 superseded by 0007) in [docs/adr/](docs/adr/), all provisional.
 
 **Feedback goes to this repo's issues** with the `plugin:factory` label — use the *Factory feedback* template, or let `/factory:run` draft the issue at the end of an item. It posts only what you approve, and leaves your project's code and names out.
+
+### Measurement: the hansei record
+
+Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. It starts with the marker `<!-- factory:hansei v1 -->` and holds the release, two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (`none` for now), a stage-log cross-check, and seven measures in a fixed order: lead time, first-pass yield, rework, escaped defects, tokens per role, the person's touches, and doors confirmed or contradicted. Measure 7 reads `pending resurvey` at posting and is filled by editing the same comment after the resurvey.
+
+While an item runs, the lead keeps a **stage log** in `work/<id>/00-lead-state.md`: one row per stage with UTC times, the waits on the person and on usage limits, and the person's touches. The item's folder is removed by the last commit, after the record is posted.
+
+A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. Escaped defects read `not captured` in schema v1.
+
+The data lives in the project's own tracker (the record, the stage summaries, the decisions) and in `work/<id>/` while the item runs. Nothing is aggregated yet; the baseline is a later slice. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md) and [contracts/39-stage-log.md](contracts/39-stage-log.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
+
+The three scripts behind the labels and the bump check are described in [contracts/39-plugin-scripts.md](contracts/39-plugin-scripts.md). Run from the repo root:
+
+```bash
+bash plugins/factory/scripts/fingerprint.sh plugins/factory          # release, standard and tooling lines
+bash plugins/factory/scripts/check-bump.sh                           # in the branch's worktree, after git fetch origin main
+bash plugins/factory/scripts/token-spend.sh -- <transcript.jsonl>... # spend and peak context; needs jq
+```
+
+### Versions and updates
+
+The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. The first release is `1.0.0`. Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
+
+Any change under `plugins/factory/` needs a bump in `plugin.json`:
+
+- **minor** or more for standard work: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`;
+- **patch** or more for every other path under `plugins/factory/`, including `hooks/`, `scripts/`, the setup skill and `plugin.json` itself;
+- **major** when message formats or the protocol break. The check never requires a major; the architect calls it.
+
+`scripts/check-bump.sh` enforces this. The lead runs it before a PR is opened and again before it is merged, and a PR that fails it does not open or merge. Changes outside `plugins/factory/` pass without a bump.
+
+Installs of the factory change only when its version string changes, so a push without a bump does not reach other projects. The measurement baseline resets on a minor or major release only. A run can be frozen on one install (a calibration run): then `/plugin marketplace update` and `/reload-plugins` wait until it closes, because the freeze holds for every project on the machine.
+
+The contract-by-contract reference and the steps for changing the factory are in [docs/factory/reference.md](docs/factory/reference.md).
 
 ---
 
@@ -181,7 +215,7 @@ A directory-sourced marketplace has no commit SHA, so `plugin list` reports `Ver
 
 ### Why `plugin.json` has no `version`
 
-Deliberate. With `version` omitted, a git-sourced plugin's version resolves to the commit SHA, so every push propagates. With `version` pinned, Claude Code serves the cached copy until the string changes — and forgetting to bump it produces a silent, confusing staleness. `claude plugin validate` emits a non-blocking warning about the missing version; that warning is the cost, and it's the cheaper of the two failure modes.
+Deliberate, for every plugin except the factory, which has carried `version` since 1.0.0 (see [Versions and updates](#versions-and-updates)). With `version` omitted, a git-sourced plugin's version resolves to the commit SHA, so every push propagates. With `version` pinned, Claude Code serves the cached copy until the string changes — and forgetting to bump it produces a silent, confusing staleness. `claude plugin validate` emits a non-blocking warning about the missing version; that warning is the cost, and it's the cheaper of the two failure modes.
 
 To pin upstream so its updates arrive on your schedule rather than Matt's, add a `ref` to the `mattpocock-skills` entry in `marketplace.json`:
 
@@ -228,8 +262,12 @@ The `factory` plugin, on macOS with gh `2.94.0`:
 
 | Check | Result |
 | --- | --- |
-| `claude plugin validate .` and `./plugins/factory` | passed (version warnings, intentional) |
+| `claude plugin validate .` | passed; four warnings for the plugins without a `version` (wayfinding, toolkit, discover, design), intentional; the factory has none |
+| `claude plugin validate ./plugins/factory` | passed, no warning (version 1.0.0) |
 | `claude plugin validate ./plugins/factory/skills` | passed |
+| `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.0.0` and the standard and tooling fingerprints |
+| `bash plugins/factory/scripts/check-bump.sh` on `item/39` | `pass: minor bump needed, 0.0.0 -> 1.0.0` (main has no version yet) |
+| `bash tests/run.sh` | `ALL PASSED`; the factory's script and standard-text tests |
 | `guard-memory.sh` against twelve sample inputs, with and without `jq` | every input allowed or blocked as intended |
 | `gh project` flags used by the setup and the tracker patch | present in `--help` |
 

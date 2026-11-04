@@ -118,7 +118,7 @@ newb; echo y >> $F/agents/developer.md; ver 01.1.0; git commit -qam c; run
 ck leading-zero-major-branch-refuses "$(refuse_std 1.0.0 01.1.0 1.1.0 '  plugins/factory/agents/developer.md')" "$out"
 newb; echo y >> $F/agents/developer.md; ver ""; git commit -qam c; run
 # (contract: "<new> printed as found, (absent) when there is none"; an empty string may print either way)
-ck empty-branch-version-refuses 1 "$(line "$out" 1 | grep -cE '^refuse: standard work changed; plugin.json version 1\.0\.0 -> (|\(absent\)); needs at least a minor bump \(1\.1\.0\)$')"; ck empty-branch-version-exit 1 $code
+ck empty-branch-version-refuses 1 "$(line "$out" 1 | grep -cE '^refuse: standard work changed; plugin.json version 1\.0\.0 -> (\(absent\))?; needs at least a minor bump \(1\.1\.0\)$')"; ck empty-branch-version-exit 1 $code
 # base (origin/main stand-in) holding 1.08.0, or an empty version: exit 2, nothing on stdout, reason on stderr
 git checkout -q main; git checkout -q -b lz; ver 1.08.0; git commit -qam lz; git branch -q lzbase
 echo y >> $F/agents/developer.md; ver 1.9.0; git commit -qam c; run lzbase
@@ -142,7 +142,7 @@ newb; printf 's\n' > "$F/scripts/naïve.sh"; ver 1.0.1; git add -A; git commit -
 ck nonascii-script-patch-passes "pass: patch bump needed, 1.0.0 -> 1.0.1" "$out"
 # core.quotePath=true in the user's config must not change the result
 newb; printf 'c\n' > "$F/references/ü.md"; ver 1.0.1; git add -A; git commit -qm c
-out="$(git -c core.quotePath=true config core.quotePath >/dev/null; GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.quotePath GIT_CONFIG_VALUE_0=true bash "$CB" 2>/dev/null)"; code=$?
+out="$(GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.quotePath GIT_CONFIG_VALUE_0=true bash "$CB" 2>/dev/null)"; code=$?
 ck nonascii-quotepath-true-needs-minor 1 $code
 # a tab in a name (git quotes it even with quotePath off)
 newb; printf 't\n' > "$F/references/a	b.md"; ver 1.0.1; git add -A; git commit -qm c; run

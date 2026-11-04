@@ -17,7 +17,7 @@ Slice [#39](https://github.com/WimSuenens/agent-plugins/issues/39), map [#34](ht
 - **Two fingerprints.** `standard` (sha256 over `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`) and `tooling` (sha256 over `hooks/` and `scripts/`). A change to one of them under the same release means a bump was forgotten. Standard work is the set in ADR 0012 with `references/hansei.md` added. Schema: [contracts/39-plugin-scripts.md](contracts/39-plugin-scripts.md).
 - **Three scripts** under `plugins/factory/scripts/`, all bash 3.2 compatible:
   - `fingerprint.sh <plugin root>`: prints the release and both fingerprints.
-  - `check-bump.sh [<base-ref>]`: the bump check, run from the branch's worktree (default base `origin/main`). It exits 0 when the bump covers the change, 1 when it does not, and 2 on a usage or repository error.
+  - `check-bump.sh [<base-ref>]`: the bump check, run from the branch's worktree (default base `origin/main`). It exits 0 when the bump covers the change, 1 when it does not, and 2 when the repository, the base ref or the base version cannot be used.
   - `token-spend.sh [--since T] [--until T] [--] <transcript.jsonl>...`: sums token spend and reports the peak context from transcripts. It needs `jq`.
 - **Tracker operations** in the GitHub tracker patch: *Find hansei*, *Post hansei* and *Edit hansei*. They act only in the project's own tracker and never name `--repo`.
 - **Release tag** in *Merge PR*: after a merge that changed the version, the Lead tags `factory-v<version>` on the merge commit, when the version is a strict semver and the tag does not exist yet.

@@ -11,3 +11,7 @@ Default vocabulary — label strings equal the five canonical role names. See `d
 ### Domain docs
 
 Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Factory
+
+Slices are built by the factory's role agents. See `docs/agents/factory.md`.

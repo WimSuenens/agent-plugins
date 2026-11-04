@@ -45,3 +45,17 @@ Used by `/wayfinding:wayfinder`. The **map** is a single issue with **child** is
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer to the map's Decisions-so-far in the form `- [<title>](<url>) — [locked|provisional] <gist>`. A one-way door also gets an ADR under `docs/adr/` via `/domain-modeling`.
 - **Slice ticket**: label `wayfinder:slice`. Its body is the `/beachhead` frame (Question / Behaviour / Under test / Deliberately faked). It stays open across the whole build and closes when the implementation PR merges; its resolution comment records what the build taught and any decision it contradicted. Link the implementation tickets `/to-tickets` produced back to it so the build is reachable from the map.
 - **Deferred**: plain lines in the map body under `## Deferred`, each ending in `— **trigger:** <condition>`. Deferred items are deliberately **not** issues: giving them ids invites them onto the frontier, which is the weight this layer exists to avoid.
+
+## Factory operations
+
+Used by `/factory:run`. Only the lead touches the tracker. A factory **run** follows one `wayfinder:map`, `<map>`; an **item** is one `wayfinder:slice` ticket the run cut, and `<id>` is its issue number. Ids for the Project, the `Factory status` field, and its options are cached in `docs/agents/factory.md`.
+
+- **Add to board**: `gh project item-add <project-number> --owner <owner> --url <issue-url> --format json --jq .id`. The output is the item's project id, `<item>`; write it into the item's lead state.
+- **Set status**: `gh project item-edit --id <item> --project-id <project-id> --field-id <field-id> --single-select-option-id <option-id>`.
+- **Run state**: `gh issue view <map> --json body --jq .body`, replace the `## Factory run` section at the top, then `gh issue edit <map> --body-file <file>`.
+- **Stage summary**: `gh issue comment <id> --body "<stage>: <summary>"`, at most five lines, after every stage, followed by a `Decisions:` list of the stage's two-way decisions, overturned ones marked `[overturned: <reason>]`.
+- **Decision card**: `gh issue comment <ticket> --body-file <card>.md` on the ticket the door belongs to (the slice, or the map's `prototype` or `grilling` ticket). Record the person's choice as a reply comment: `Decision: <option>. Reason: <their words>.`
+- **Task request**: `gh issue comment <ticket> --body "Task for you: <what, and why it blocks>"` on the map's `task` ticket. Record what was done as its resolution comment.
+- **Open PR**: `gh pr create --head item/<id> --title "<slice title>" --body "Closes #<id>"`. Merging it closes the slice ticket, which is the moment `/wayfinding:wayfinder` resurveys.
+- **Merge PR**: only after the person approved *merge and clean up?*. `<branch>` is `item/<id>` or `frontier/<map>`. `gh pr merge <branch> --merge`; once it succeeds, `git worktree remove <worktree>`, `git branch -D <branch>`, and `git push origin --delete <branch>`.
+- **Commit reference**: every commit message on `item/<id>` starts with `#<id>`.

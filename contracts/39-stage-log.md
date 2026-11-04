@@ -103,7 +103,7 @@ The lead state of item #12 at approval, abridged to the new sections:
 ```
 ## Label
 
-- plugin root: /Users/p/.claude/plugins/cache/wimsuenens/factory/1.0.0
+- plugin root: ~/.claude/plugins/cache/wimsuenens/factory/1.0.0
 - release: 1.0.0
 - standard: 3b9f0c2e7a41d65f0e8c9a7b2d1f4e6a8c0b3d5e7f9a1c2b4d6e8f0a1b3c5d7e
 - tooling: d079b65b9ad1fb187cd08f0033ff589838e8564baf2bc92a4ff521e63af37652
@@ -125,7 +125,7 @@ The lead state of item #12 at approval, abridged to the new sections:
 | 8 | Build (round 2) | developer | c44a10 | 2026-11-04T15:11Z | 2026-11-04T15:30Z | 19m | - | 141210 | done | QA finding fixed |
 | 9 | QA (round 2) | qa-engineer | d21f77 | 2026-11-04T15:31Z | 2026-11-04T15:40Z | 9m | - | 74480 | pass | |
 | 10 | Documentation | docs-writer | e90b55 | 2026-11-04T15:41Z | 2026-11-04T15:52Z | 11m | - | 31006 | done | |
-| 11 | Merge approval | person | - | 2026-11-04T15:53Z | 2026-11-04T16:13Z | 20m | W3 | - | approved | |
+| 11 | Merge approval | person | - | 2026-11-04T15:53Z | 2026-11-04T16:13Z | 20m | W3 | - | approved | bump re-check passed (no factory paths) |
 
 ## Waits
 

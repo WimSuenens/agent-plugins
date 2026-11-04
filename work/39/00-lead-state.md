@@ -1,7 +1,7 @@
 # Lead state — #39 Hansei record end to end, shipped as release 1.0.0
 
 - Map: #34 · Board item: PVTI_lAHOBIbaa84BqOBFzhGGBlg
-- Status: Ready to deploy — last fix round (L1a, F4–F6) before the acceptance demo
+- Status: Ready to deploy — acceptance demo in factory-sandbox
 - Next step: QA (brief 09) + security (brief 10) in parallel; architect contract alignment (feedback 11)
 - Freeze: factory install 9147301f75c3 — checked at item start 2026-11-04T20:52Z: installed_plugins.json factory version = 9147301f75c3 ✔
 - Open questions: demo host project for the human-only ACs (asked the person 21:0xZ: create empty repo, e.g. factory-sandbox); tag factory-v1.0.0 created by the Lead in Merge PR
@@ -10,7 +10,7 @@
 
 ## Running agents
 
-- developer — feedback 25
+- factory-sandbox session (peer) — demo brief
 
 ## Stage log (manual, calibration — ADR 0012)
 
@@ -30,7 +30,9 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | Contract fixes round 1 | architect | 21:23Z | 21:27Z | 3m24s | none | 74,105 | done | rework loop 4 (source: security); contracts ahead of build on 3 points |
 | Fix round 2 | developer | 21:28Z | 21:29Z | 1m09s | none | 37,615 | done | rework loop 5 (source: lead, contract drift); 2 overturns applied |
 | Security re-check | security-reviewer | 21:30Z | 21:31Z | 1m18s | none | 44,397 | pass | 1 low open (L1a) |
-| QA re-verify | qa-engineer | 21:30Z | 21:4xZ | | none | (notice) | pass | 322 pass, 3 named skips (F4–F6) |
+| QA re-verify | qa-engineer | 21:26Z | 21:33Z | 6m46s | none | 98,403 | pass | 322 pass, 3 named skips (F4–F6) |
+| Fix round 3 | developer | 21:34Z | 21:36Z | 2m10s | none | 39,064 | done | rework loop 6 (source: security L1a, QA F4–F6); lead ran suite: all pass |
+| Acceptance demo | person + factory-sandbox | 21:3xZ | | | person | | | |
 
 ## Person's touches
 

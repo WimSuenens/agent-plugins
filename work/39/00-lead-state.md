@@ -32,6 +32,9 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | Security re-check | security-reviewer | 21:30Z | 21:31Z | 1m18s | none | 44,397 | pass | 1 low open (L1a) |
 | QA re-verify | qa-engineer | 21:26Z | 21:33Z | 6m46s | none | 98,403 | pass | 322 pass, 3 named skips (F4–F6) |
 | Fix round 3 | developer | 21:34Z | 21:36Z | 2m10s | none | 39,064 | done | rework loop 6 (source: security L1a, QA F4–F6); lead ran suite: all pass |
+| Documentation | docs-writer | 21:37Z | 21:42Z | 4m42s | none | 145,507 | done | 4 files; flagged round 3 unverified by QA/security |
+| Security re-check round 3 | security-reviewer | 21:43Z | 21:45Z | 1m40s | none | 39,204 | pass | no finding open |
+| QA re-check round 3 | qa-engineer | 21:43Z | 21:4xZ | | none | (pending) | pass | 340 pass; 1 contract note → architect |
 | Acceptance demo | person + factory-sandbox | 21:3xZ | | | person | | | |
 
 ## Person's touches

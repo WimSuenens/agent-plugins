@@ -79,7 +79,7 @@ An open card or task blocks only the tickets and slices that hang off it through
 When no unblocked one-way door is left and no correction or card on the round's tickets is open, end the round:
 
 1. The round's last commit removes `work/`.
-2. Open one PR from `frontier/<map>` carrying only ADRs and glossary changes.
+2. Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh` in the round's worktree) with the same exit handling as in step 6, then open one PR from `frontier/<map>` carrying only ADRs and glossary changes.
 3. Ask **merge and clean up?** as in step 8.2; a frontier round sets no `Factory status`. On approval, merge the PR to main and clean up (*Merge PR*), before step 4 cuts the next item.
 
 A card decided after its round merged, or one-way doors reopened by a resurvey, start a **new** frontier round on a fresh `frontier/<map>` branch from main.

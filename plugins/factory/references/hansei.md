@@ -6,7 +6,7 @@ The lead keeps a **stage log** in `work/<id>/00-lead-state.md` while the item ru
 
 **Measurements stay in the project.** Every record, log line and measure is written to the project's own tracker or to `work/<id>/` in the project's worktree. None names `--repo`, and none is written to `WimSuenens/agent-plugins`. The one cross-repo write is step 9's factory feedback issue, under the rule in `skills/run/SKILL.md`.
 
-Scripts below are called with the substituted plugin root: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh" …`. Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards; a time filled in later is marked `~` (`~14:20Z`), and the cross-check names it.
+Scripts below are called as `bash "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh" …`. `${CLAUDE_PLUGIN_ROOT}` is substituted only in `skills/run/SKILL.md`, not in this file, so here it is a placeholder: before running a command, replace it with the literal path on the `Plugin root:` line of `skills/run/SKILL.md`, which the lead already holds. The same literal path goes into the label's `plugin root` line. Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards; a time filled in later is marked `~` (`~14:20Z`), and the cross-check names it.
 
 ## 1. The lead state's four sections
 
@@ -19,7 +19,7 @@ Written once at item start, never changed.
 ```
 ## Label
 
-- plugin root: <the substituted ${CLAUDE_PLUGIN_ROOT}>
+- plugin root: <the path on the `Plugin root:` line of skills/run/SKILL.md>
 - release: <semver, or "<dir name> (pre-release install, no semver)">
 - standard: <64 hex>
 - tooling: <64 hex>

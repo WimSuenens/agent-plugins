@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Prints the factory label: release, standard fingerprint, tooling fingerprint.
 # Usage: bash fingerprint.sh <plugin-root>
-# Exit: 0 ok; 2 not a factory root or a version that is not MAJOR.MINOR.PATCH; 3 no sha256 tool.
+# Exit: 0 ok; 2 not a factory root, an unreadable file, or a version that is not MAJOR.MINOR.PATCH; 3 no sha256 tool.
 # See contracts/39-plugin-scripts.md section 1 in the repo that hosts the factory.
 
 root="${1:-}"
 if [ -z "$root" ] || [ ! -f "$root/skills/run/SKILL.md" ] || [ ! -f "$root/.claude-plugin/plugin.json" ]; then
-  echo "fingerprint: not a factory plugin root: ${root:-<none>}" >&2
+  echo "fingerprint: not a factory plugin root (needs skills/run/SKILL.md and .claude-plugin/plugin.json)" >&2
   exit 2
 fi
 root="${root%/}"
@@ -22,7 +22,10 @@ fi
 
 # Release: the "version" string of plugin.json, nothing else.
 version="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$root/.claude-plugin/plugin.json" | head -n1)"
-if [ -z "$version" ]; then
+if [ -z "$version" ] && grep -Eq '"version"[[:space:]]*:' "$root/.claude-plugin/plugin.json"; then
+  echo "fingerprint: version in plugin.json is empty, not MAJOR.MINOR.PATCH" >&2
+  exit 2
+elif [ -z "$version" ]; then
   name="$(basename "$root")"
   release="$name (pre-release install, no semver)"
 else
@@ -68,7 +71,21 @@ tooling_files() {
   return 0
 }
 
-standard="$(standard_files | fingerprint)"
-tooling="$(tooling_files | fingerprint)"
+# every listed file must be readable, else no fingerprint is printed
+std_list="$(standard_files)" || exit 2
+tool_list="$(tooling_files)" || exit 2
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  if [ ! -r "$root/$rel" ]; then
+    echo "fingerprint: unreadable file: $rel" >&2
+    exit 2
+  fi
+done <<EOT
+$std_list
+$tool_list
+EOT
+
+standard="$(printf '%s\n' "$std_list" | fingerprint)"
+tooling="$(printf '%s\n' "$tool_list" | fingerprint)"
 
 printf 'release: %s\nstandard: %s\ntooling: %s\n' "$release" "$standard" "$tooling"

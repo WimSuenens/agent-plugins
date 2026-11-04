@@ -10,7 +10,7 @@ pj="plugins/factory/.claude-plugin/plugin.json"
 top="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "check-bump: not a git repository" >&2; exit 2; }
 cd "$top" || exit 2
 git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "check-bump: base ref '$base' not found" >&2; exit 2; }
-changed="$(git diff --no-renames --name-only "$base...HEAD" -- plugins/factory/ 2>/dev/null)" || { echo "check-bump: cannot diff $base...HEAD" >&2; exit 2; }
+changed="$(git -c core.quotepath=off diff --no-renames --name-only "$base...HEAD" -- plugins/factory/ 2>/dev/null)" || { echo "check-bump: cannot diff $base...HEAD" >&2; exit 2; }
 
 if [ -z "$changed" ]; then
   echo "pass: no factory paths changed"
@@ -22,6 +22,7 @@ level=patch
 what="factory files"
 while IFS= read -r p; do
   case "$p" in
+    \"*) level=minor ;;   # a path git still quotes cannot be classified: treat as standard work
     plugins/factory/skills/run/SKILL.md) level=minor ;;
     plugins/factory/references/*/* | plugins/factory/agents/*/*) ;;
     plugins/factory/references/*.md | plugins/factory/agents/*.md) level=minor ;;
@@ -35,11 +36,19 @@ EOT
 version_at() {
   git show "$1:$pj" 2>/dev/null | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1
 }
-is_semver() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; }
+is_semver() { printf '%s' "$1" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; }
 
 old="$(version_at "$base")"
-is_semver "$old" || old="0.0.0"
+if [ -n "$old" ] && ! is_semver "$old"; then
+  echo "refuse: plugin.json version '$old' at $base is not MAJOR.MINOR.PATCH (digits only, no leading zeros); fix it before bumping"
+  exit 1
+fi
+[ -n "$old" ] || old="0.0.0"
 new="$(version_at HEAD)"
+if [ -n "$new" ] && ! is_semver "$new"; then
+  echo "refuse: plugin.json version '$new' is not MAJOR.MINOR.PATCH (digits only, no leading zeros)"
+  exit 1
+fi
 
 o_major="${old%%.*}"; rest="${old#*.}"; o_minor="${rest%%.*}"; o_patch="${rest#*.}"
 if [ "$level" = minor ]; then suggested="$o_major.$((o_minor + 1)).0"; else suggested="$o_major.$o_minor.$((o_patch + 1))"; fi

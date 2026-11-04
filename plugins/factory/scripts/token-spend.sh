@@ -48,7 +48,7 @@ done
 set -- "${args[@]}"
 
 for f in "$@"; do
-  if [ ! -r "$f" ] || [ ! -f "$f" ] || ! jq empty "$f" >/dev/null 2>&1; then
+  if [ ! -r "$f" ] || [ ! -f "$f" ] || ! jq -se 'all(.[]; type == "object")' "$f" >/dev/null 2>&1; then
     echo "token-spend: transcript $(basename "$f") unreadable" >&2
     exit 3
   fi
@@ -70,7 +70,7 @@ out="$(jq -rs --arg since "$since" --arg until "$until_" '
       {i: (map(.i) | add), w: (map(.w) | add), r: (map(.r) | add), o: (map(.o) | add), p: (map(.i + .w + .r + .o) | max), n: length}
       | "spend \(.i + .w + .r + .o) (input \(.i), cache write \(.w), cache read \(.r), output \(.o)); peak \(.p); messages \(.n)"
     end
-' "$@")" || { echo "token-spend: a transcript is unreadable or not JSON (one of: $(for f in "$@"; do basename "$f"; done | tr '\n' ' '))" >&2; exit 3; }
+' "$@" 2>/dev/null)" || { echo "token-spend: a transcript is unreadable or not JSON" >&2; exit 3; }
 
 if [ -z "$out" ]; then
   echo "token-spend: no messages in window" >&2

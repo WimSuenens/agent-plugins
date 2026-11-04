@@ -10,9 +10,11 @@ pj="plugins/factory/.claude-plugin/plugin.json"
 top="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "check-bump: not a git repository" >&2; exit 2; }
 cd "$top" || exit 2
 git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "check-bump: base ref '$base' not found" >&2; exit 2; }
-changed="$(git diff -z --no-renames --name-only "$base...HEAD" -- plugins/factory/ 2>/dev/null | tr '\0' '\n'; exit "${PIPESTATUS[0]}")" || { echo "check-bump: cannot diff $base...HEAD" >&2; exit 2; }
+tmp="$(mktemp)" || exit 2
+trap 'rm -f "$tmp"' EXIT
+git diff -z --no-renames --name-only "$base...HEAD" -- plugins/factory/ >"$tmp" 2>/dev/null || { echo "check-bump: cannot diff $base...HEAD" >&2; exit 2; }
 
-if [ -z "$changed" ]; then
+if [ ! -s "$tmp" ]; then
   echo "pass: no factory paths changed"
   exit 0
 fi
@@ -20,16 +22,14 @@ fi
 # Needed level: minor for standard work, else patch.
 level=patch
 what="factory files"
-while IFS= read -r p; do
+while IFS= read -r -d '' p; do
   case "$p" in
-    \"*) level=minor ;;   # a path git still quotes cannot be classified: treat as standard work
+    *$'\n'*) level=minor ;;   # a name holding a newline cannot be classified: standard work
     plugins/factory/skills/run/SKILL.md) level=minor ;;
     plugins/factory/references/*/* | plugins/factory/agents/*/*) ;;
     plugins/factory/references/*.md | plugins/factory/agents/*.md) level=minor ;;
   esac
-done <<EOT
-$changed
-EOT
+done <"$tmp"
 [ "$level" = minor ] && what="standard work"
 
 # plugin.json version at a revision: prints the version, or nothing when absent.
@@ -74,6 +74,7 @@ fi
 
 echo "refuse: $what changed; plugin.json version $old -> $new; needs at least a $level bump ($suggested)"
 # plugin.json is the thing being compared; list it only when it is the sole change.
+changed="$(tr '\0' '\n' <"$tmp")"   # display only
 others="$(printf '%s\n' "$changed" | grep -vxF "$pj")"
 printf '%s\n' "${others:-$changed}" | sed 's/^/  /'
 exit 1

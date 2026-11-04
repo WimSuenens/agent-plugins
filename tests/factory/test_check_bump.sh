@@ -109,8 +109,43 @@ run main; ck no-merge-base-exit 2 $code; ck no-merge-base-stdout "" "$out"
 mkdir "$T/noorigin"; ( cd "$T/noorigin" && git init -q -b main && echo a > a && git add a && git commit -qm a )
 out="$(cd "$T/noorigin" && bash "$CB" 2>/dev/null)"; code=$?; ck default-base-missing-exit 2 $code
 
-# --- leading zeros (not semver, never written in practice): refusal still exits 1
-cd "$T/r"; git checkout -q main; git checkout -q -b lz; ver 1.08.0; git commit -qam lz; git branch -q lzbase
-echo y >> $F/agents/developer.md; git commit -qam c; run lzbase; ck leading-zero-still-refuses 1 $code
+# --- leading zeros (contract section 2 as of ed0e627)
+# branch version 1.08.0 over main's 1.0.0 with a scripts/ change: refused, smallest valid suggestion (contract example)
+cd "$T/r"; newb; echo y >> $F/scripts/s.sh; ver 1.08.0; git commit -qam c; run
+ck leading-zero-branch-refuses "refuse: factory files changed; plugin.json version 1.0.0 -> 1.08.0; needs at least a patch bump (1.0.1)
+  plugins/factory/scripts/s.sh" "$out"; ck leading-zero-branch-exit 1 $code
+newb; echo y >> $F/agents/developer.md; ver 01.1.0; git commit -qam c; run
+ck leading-zero-major-branch-refuses "$(refuse_std 1.0.0 01.1.0 1.1.0 '  plugins/factory/agents/developer.md')" "$out"
+newb; echo y >> $F/agents/developer.md; ver ""; git commit -qam c; run
+# (contract: "<new> printed as found, (absent) when there is none"; an empty string may print either way)
+ck empty-branch-version-refuses 1 "$(line "$out" 1 | grep -cE '^refuse: standard work changed; plugin.json version 1\.0\.0 -> (|\(absent\)); needs at least a minor bump \(1\.1\.0\)$')"; ck empty-branch-version-exit 1 $code
+# base (origin/main stand-in) holding 1.08.0, or an empty version: exit 2, nothing on stdout, reason on stderr
+git checkout -q main; git checkout -q -b lz; ver 1.08.0; git commit -qam lz; git branch -q lzbase
+echo y >> $F/agents/developer.md; ver 1.9.0; git commit -qam c; run lzbase
+ck leading-zero-base-exit-2 2 $code; ck leading-zero-base-no-stdout "" "$out"; ck leading-zero-base-stderr 1 "$([ -s "$T/err" ] && echo 1)"
+ck leading-zero-base-no-abs-path 0 "$(grep -cF "$T" "$T/err")"
+git checkout -q main; git checkout -q -b ez; ver ""; git commit -qam ez; git branch -q ezbase
+echo y >> $F/agents/developer.md; ver 1.1.0; git commit -qam c; run ezbase
+ck empty-base-exit-2 2 $code; ck empty-base-no-stdout "" "$out"
+# base with no version key is 0.0.0 (covered by item39-old-absent); base not a semver otherwise
+git checkout -q main; git checkout -q -b vb; ver v1.0.0; git commit -qam vb; git branch -q vbase
+echo y >> $F/scripts/s.sh; ver 1.0.1; git commit -qam c; run vbase; ck v-prefixed-base-exit-2 2 $code
+
+# --- feedback 15 #5 (security L1): non-ASCII paths are classified by their real names
+newb; printf 'c\n' > "$F/references/café.md"; ver 1.0.1; git add -A; git commit -qm c; run
+ck nonascii-reference-needs-minor "$(refuse_std 1.0.0 1.0.1 1.1.0 '  plugins/factory/references/café.md')" "$out"; ck nonascii-reference-exit 1 $code
+ver 1.1.0; git commit -qam v; run; ck nonascii-reference-minor-passes "pass: minor bump needed, 1.0.0 -> 1.1.0" "$out"
+newb; printf 'a\n' > "$F/agents/rôle dev.md"; ver 1.0.1; git add -A; git commit -qm c; run
+ck nonascii-space-agent-needs-minor "$(refuse_std 1.0.0 1.0.1 1.1.0 '  plugins/factory/agents/rôle dev.md')" "$out"
+# non-ASCII outside standard work stays a patch
+newb; printf 's\n' > "$F/scripts/naïve.sh"; ver 1.0.1; git add -A; git commit -qm c; run
+ck nonascii-script-patch-passes "pass: patch bump needed, 1.0.0 -> 1.0.1" "$out"
+# core.quotePath=true in the user's config must not change the result
+newb; printf 'c\n' > "$F/references/ü.md"; ver 1.0.1; git add -A; git commit -qm c
+out="$(git -c core.quotePath=true config core.quotePath >/dev/null; GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.quotePath GIT_CONFIG_VALUE_0=true bash "$CB" 2>/dev/null)"; code=$?
+ck nonascii-quotepath-true-needs-minor 1 $code
+# a tab in a name (git quotes it even with quotePath off)
+newb; printf 't\n' > "$F/references/a	b.md"; ver 1.0.1; git add -A; git commit -qm c; run
+ck tab-in-name-needs-minor 1 $code
 
 done_

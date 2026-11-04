@@ -122,14 +122,15 @@ ck no-version-label "release: myinstall (pre-release install, no semver)" "$(lin
 ck empty-tooling-set "tooling: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" "$(line "$out" 3)"
 mk "$T/x/min" '{"name":"factory","version":"2.10.3","dependencies":["a"]}'
 ck minified-json-version "release: 2.10.3" "$(line "$(bash "$FP" "$T/x/min")" 1)"
-for v in 1.0 1.0.0-rc1 v1.0.0 1.0.0.0 1..0 abc; do
+for v in 1.0 1.0.0-rc1 v1.0.0 1.0.0.0 1..0 abc 1.08.0 01.0.0 1.0.00; do
   mk "$T/x/bad" "{\"version\": \"$v\"}"
   out="$(bash "$FP" "$T/x/bad" 2>"$T/err")"; code=$?
   ck "bad-version-$v-exit-2" 2 "$code"; ck "bad-version-$v-no-stdout" "" "$out"
 done
 mk "$T/x/emptyver" '{"version": ""}'
-bash "$FP" "$T/x/emptyver" >/dev/null 2>&1; code=$?
-if [ "$code" = 2 ]; then ck empty-version-exit-2 2 "$code"; else skip empty-version-exit-2 "QA-39 F3: \"version\": \"\" gives a pre-release label with exit 0, contract says exit 2 (developer)"; fi
+out="$(bash "$FP" "$T/x/emptyver" 2>/dev/null)"; code=$?
+ck empty-version-exit-2 2 "$code"; ck empty-version-no-stdout "" "$out"   # QA-39 F3, fixed
+mk "$T/x/zerover" '{"version":"0.0.0"}'; ck zero-version-is-semver "release: 0.0.0" "$(line "$(bash "$FP" "$T/x/zerover")" 1)"
 bash "$FP" "$T/nonexistent" >/dev/null 2>"$T/err"; ck not-a-root-exit-2 2 $?
 [ -s "$T/err" ] && ck not-a-root-stderr 1 1 || ck not-a-root-stderr "a reason" ""
 bash "$FP" >/dev/null 2>&1; ck no-argument-exit-2 2 $?
@@ -141,9 +142,23 @@ PATH="$T/bin" /bin/bash "$FP" "$T/x/ok" >/dev/null 2>&1; ck no-sha-tool-exit-3 3
 
 # --- permissions: an unreadable standard file must not yield a fingerprint as if captured
 cp -R "$R" "$T/perm"; chmod 000 "$T/perm/references/hansei.md"
-out="$(bash "$FP" "$T/perm" 2>/dev/null)"; code=$?
-if [ "$code" != 0 ]; then ck unreadable-file-fails nonzero nonzero
-else skip unreadable-file-fails "QA-39 F2: unreadable references/hansei.md gives exit 0 and a fingerprint of empty content ($(line "$out" 2 | cut -c1-22)…) (developer)"; fi
+out="$(bash "$FP" "$T/perm" 2>"$T/err")"; code=$?
+ck unreadable-file-exit-2 2 "$code"; ck unreadable-file-no-stdout "" "$out"   # QA-39 F2, fixed
+ck unreadable-file-names-rel-path "fingerprint: cannot read references/hansei.md" "$(cat "$T/err")"
 chmod 644 "$T/perm/references/hansei.md"
+# all or nothing for the tooling set too, recursively
+mkdir -p "$T/perm/scripts/sub"; echo t > "$T/perm/scripts/sub/t.sh"; chmod 000 "$T/perm/scripts/sub/t.sh"
+out="$(bash "$FP" "$T/perm" 2>"$T/err")"; code=$?
+ck unreadable-tooling-exit-2 2 "$code"; ck unreadable-tooling-no-stdout "" "$out"
+ck unreadable-tooling-names-rel-path "fingerprint: cannot read scripts/sub/t.sh" "$(cat "$T/err")"
+chmod 644 "$T/perm/scripts/sub/t.sh"
+
+# --- feedback 15 #8 (security L5): no absolute path in any message; a root is named by its basename
+H="$T/home/someone/.claude/plugins/cache/wimsuenens/factory/9147301f75c3"; mkdir -p "$H"
+bash "$FP" "$H" >/dev/null 2>"$T/err"; ck not-a-root-basename-only "fingerprint: not a factory plugin root: 9147301f75c3" "$(cat "$T/err")"
+bash "$FP" "$H/" >/dev/null 2>"$T/err"; ck not-a-root-trailing-slash-no-path 0 "$(grep -c / "$T/err")"
+for d in "$T/x/emptyver" "$T/x/bad"; do
+  bash "$FP" "$d" >/dev/null 2>"$T/err"; ck "no-abs-path-in-error-$(basename "$d")" 0 "$(grep -cF "$T" "$T/err")"
+done
 
 done_

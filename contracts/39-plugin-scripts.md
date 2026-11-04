@@ -87,6 +87,7 @@ bash <root>/scripts/check-bump.sh [<base-ref>]        # default base: origin/mai
 
 - **Changed paths**: `git diff -z --name-only <base>...HEAD -- plugins/factory/` (committed changes on the branch since it forked; uncommitted files don't count, since the PR carries commits). Paths are read by their real names, NUL-separated (`-z`), never in git's quoted form: a quoted non-ASCII name (`"plugins/factory/references/caf\303\251.md"`) would miss the standard-work rule and pass with a patch.
 - **Needed level**: `minor` when any changed path is standard work (`plugins/factory/skills/run/SKILL.md`, `plugins/factory/references/*.md`, `plugins/factory/agents/*.md`); else `patch` when any path changed; else nothing.
+- **Newline names fail closed**: a changed path whose name contains a newline counts as standard work (`minor`), wherever it sits under `plugins/factory/`, `scripts/` and `hooks/` included. Such a name cannot be told apart from two shorter paths when it is displayed or classified line by line, so the check takes the stricter level rather than guess; a standard-work rename can never slip through as a patch this way. In a refusal the path is printed as is, so it spans two (or more) lines.
 - **Versions**: old = `version` in `git show <base>:plugins/factory/.claude-plugin/plugin.json`, `0.0.0` when the file or field is absent; present but not a semver (empty, `1.08.0`, …) is exit 2, because no suggestion can be computed from it and main should never hold one. New = the same at `HEAD`; absent, empty or not a semver (`1.08.0` included) is a refusal (exit 1), with `<new>` printed as found (`(absent)` when there is none).
 - **Pass**: no factory path changed; or level `minor` and (new major > old major, or equal majors and new minor > old minor); or level `patch` and new > old. A major is never required by the script: whether a change breaks message formats or the protocol is the architect's call in the item, and the developer bumps major when told to.
 - **Stdout and exit**:
@@ -134,6 +135,15 @@ A branch that sets the version to `1.08.0` over main's `1.0.0`, with a `scripts/
 ```
 refuse: factory files changed; plugin.json version 1.0.0 -> 1.08.0; needs at least a patch bump (1.0.1)
   plugins/factory/scripts/fingerprint.sh
+exit 1
+```
+
+A file under `scripts/` whose name holds a newline (`scripts/a⏎b.sh`), bumped to `1.0.1`: fails closed as standard work, though a plain `scripts/` change would need only a patch:
+
+```
+refuse: standard work changed; plugin.json version 1.0.0 -> 1.0.1; needs at least a minor bump (1.1.0)
+  plugins/factory/scripts/a
+b.sh
 exit 1
 ```
 

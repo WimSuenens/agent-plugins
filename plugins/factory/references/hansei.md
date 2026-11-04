@@ -6,7 +6,7 @@ The lead keeps a **stage log** in `work/<id>/00-lead-state.md` while the item ru
 
 **Measurements stay in the project.** Every record, log line and measure is written to the project's own tracker or to `work/<id>/` in the project's worktree. None names `--repo`, and none is written to `WimSuenens/agent-plugins`. The one cross-repo write is step 9's factory feedback issue, under the rule in `skills/run/SKILL.md`.
 
-Scripts below are called as `bash "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh" …`. `${CLAUDE_PLUGIN_ROOT}` is substituted only in `skills/run/SKILL.md`, not in this file, so here it is a placeholder: before running a command, replace it with the literal path on the `Plugin root:` line of `skills/run/SKILL.md`, which the lead already holds. The same literal path goes into the label's `plugin root` line. Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards; a time filled in later is marked `~` (`~14:20Z`), and the cross-check names it.
+Scripts below are called as `bash "<plugin root>/scripts/<name>.sh" …`. `<plugin root>` is the path on the `Plugin root:` line of `skills/run/SKILL.md`, which the lead already holds (Claude Code substitutes `${CLAUDE_PLUGIN_ROOT}` only in that skill file, not in this one): fill it in before running a command. The same path goes into the label's `plugin root` line, with a leading home directory written as `~`. Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards; a time filled in later is marked `~` (`~14:20Z`), and the cross-check names it.
 
 ## 1. The lead state's four sections
 
@@ -28,7 +28,7 @@ Written once at item start, never changed.
 - lead sessions: <session id>[, <session id> …]
 ```
 
-- `release`, `standard`, `tooling`: the output of `bash "${CLAUDE_PLUGIN_ROOT}/scripts/fingerprint.sh" "${CLAUDE_PLUGIN_ROOT}"`. When the script fails, each reads `not captured (<script's message>)`.
+- `release`, `standard`, `tooling`: the output of `bash "<plugin root>/scripts/fingerprint.sh" "<plugin root>"`. When the script fails, each reads `not captured (<script's message>)`.
 - Dependency versions, first source that works:
   1. `skill base dir`: the path segment after `<plugin>/` in the "Base directory for this skill" line the session showed when it last invoked one of that plugin's skills (for example `/wayfinding:beachhead` at step 4). This is the copy the session runs.
   2. `plugin list`: `claude plugin list --json`, the `version` of that plugin's entry. It is the installed record and can be stale mid-session, so it is labelled.
@@ -188,7 +188,7 @@ Copy the label from the lead state. The record never recomputes it.
 | 2 | `first-pass yield` | per stage (QA, security, acceptance demo): the stage's **first** verdict. `pass first time` when it was `pass`; `failed first time` when it had findings or a failed criterion; `n/a (did not run)` when the stage was skipped. | QA and security results, demo outcome, in `work/<id>/` |
 | 3 | `rework` | per role, the number of feedback briefs that role received (any `Source`); then the number of two-way decisions overturned by a `Source: lead` feedback brief. Roles that ran and got none read `0`; roles that never ran read `0` too. | `work/<id>/NN-feedback-*.md` |
 | 4 | `escaped defects` | always `not captured (tracing deferred until the first defect found in a merged item)` in v1 | deferred |
-| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/token-spend.sh" <transcripts>` over every transcript of that role's agents on this item (resumes and feedback rounds included); for the Lead, its main-session transcript(s) (`~/.claude/projects/<project>/<session id>.jsonl` for each id under `lead sessions`) with `--since` the `Start item` start and `--until` the approval time. **peak context**: the largest `<subagent_tokens>` / `totalTokens` across that role's completion notices (from the stage log's `Peak ctx`); for the Lead, the `peak` the script reports over the same window. A role with no agent on this item: `n/a (did not run)` for both. | the script; completion notices |
+| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `bash "<plugin root>/scripts/token-spend.sh" <transcripts>` over every transcript of that role's agents on this item (resumes and feedback rounds included); for the Lead, its main-session transcript(s) (`~/.claude/projects/<project>/<session id>.jsonl` for each id under `lead sessions`) with `--since` the `Start item` start and `--until` the approval time. **peak context**: the largest `<subagent_tokens>` / `totalTokens` across that role's completion notices (from the stage log's `Peak ctx`); for the Lead, the `peak` the script reports over the same window. A role with no agent on this item: `n/a (did not run)` for both. | the script; completion notices |
 | 6 | `person's touches` | counts of the touches list by kind | `## Person's touches` |
 | 7 | `doors` | per **Under test** line of the slice frame, in frame order, named by its link text: `confirmed`, `contradicted`, or `not exercised`, as the resurvey found. `pending resurvey` from posting to the edit; `not captured (run stopped before the resurvey)` when the resurvey never happens. | the resurvey |
 
@@ -248,7 +248,7 @@ The lead state of item #12 at approval, new sections only.
 ```
 ## Label
 
-- plugin root: /Users/p/.claude/plugins/cache/wimsuenens/factory/1.0.0
+- plugin root: ~/.claude/plugins/cache/wimsuenens/factory/1.0.0
 - release: 1.0.0
 - standard: 3b9f0c2e7a41d65f0e8c9a7b2d1f4e6a8c0b3d5e7f9a1c2b4d6e8f0a1b3c5d7e
 - tooling: d079b65b9ad1fb187cd08f0033ff589838e8564baf2bc92a4ff521e63af37652

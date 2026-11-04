@@ -6,7 +6,7 @@
 
 root="${1:-}"
 if [ -z "$root" ] || [ ! -f "$root/skills/run/SKILL.md" ] || [ ! -f "$root/.claude-plugin/plugin.json" ]; then
-  echo "fingerprint: not a factory plugin root (needs skills/run/SKILL.md and .claude-plugin/plugin.json)" >&2
+  echo "fingerprint: not a factory plugin root: $(basename "${root:-.}")" >&2
   exit 2
 fi
 root="${root%/}"
@@ -29,11 +29,7 @@ elif [ -z "$version" ]; then
   name="$(basename "$root")"
   release="$name (pre-release install, no semver)"
 else
-  case "$version" in
-    *[!0-9.]* | .* | *. | *..*) bad=1 ;;
-    *) bad=0 ;;
-  esac
-  if [ "$bad" = 1 ] || [ "$(printf '%s' "$version" | tr -cd '.' | wc -c | tr -d ' ')" != 2 ]; then
+  if ! printf '%s' "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then
     echo "fingerprint: version '$version' in plugin.json is not MAJOR.MINOR.PATCH" >&2
     exit 2
   fi
@@ -77,7 +73,7 @@ tool_list="$(tooling_files)" || exit 2
 while IFS= read -r rel; do
   [ -n "$rel" ] || continue
   if [ ! -r "$root/$rel" ]; then
-    echo "fingerprint: unreadable file: $rel" >&2
+    echo "fingerprint: cannot read $rel" >&2
     exit 2
   fi
 done <<EOT

@@ -73,7 +73,7 @@ out="$(jq -rs --arg since "$since" --arg until "$until_" '
 ' "$@")" || { echo "token-spend: a transcript is unreadable or not JSON (one of: $(for f in "$@"; do basename "$f"; done | tr '\n' ' '))" >&2; exit 3; }
 
 if [ -z "$out" ]; then
-  echo "token-spend: no assistant message in window" >&2
+  echo "token-spend: no messages in window" >&2
   exit 5
 fi
 printf '%s\n' "$out"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Refuses a factory change that comes without the version bump it needs.
 # Usage: bash check-bump.sh [<base-ref>]     (default base: origin/main; run in the item worktree)
-# Exit: 0 pass; 1 refuse; 2 not a git repo or base ref missing (reason on stderr).
+# Exit: 0 pass; 1 refuse; 2 not a git repo, base ref missing, or base version not a semver (reason on stderr).
 # See contracts/39-plugin-scripts.md section 2 in the repo that hosts the factory.
 
 base="${1:-origin/main}"
@@ -10,7 +10,7 @@ pj="plugins/factory/.claude-plugin/plugin.json"
 top="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "check-bump: not a git repository" >&2; exit 2; }
 cd "$top" || exit 2
 git rev-parse --verify --quiet "$base^{commit}" >/dev/null || { echo "check-bump: base ref '$base' not found" >&2; exit 2; }
-changed="$(git -c core.quotepath=off diff --no-renames --name-only "$base...HEAD" -- plugins/factory/ 2>/dev/null)" || { echo "check-bump: cannot diff $base...HEAD" >&2; exit 2; }
+changed="$(git diff -z --no-renames --name-only "$base...HEAD" -- plugins/factory/ 2>/dev/null | tr '\0' '\n'; exit "${PIPESTATUS[0]}")" || { echo "check-bump: cannot diff $base...HEAD" >&2; exit 2; }
 
 if [ -z "$changed" ]; then
   echo "pass: no factory paths changed"
@@ -39,16 +39,16 @@ version_at() {
 is_semver() { printf '%s' "$1" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; }
 
 old="$(version_at "$base")"
+if [ -z "$old" ] && git show "$base:$pj" 2>/dev/null | grep -Eq '"version"[[:space:]]*:'; then
+  echo "check-bump: plugin.json version at $base is empty, not MAJOR.MINOR.PATCH" >&2
+  exit 2
+fi
 if [ -n "$old" ] && ! is_semver "$old"; then
-  echo "refuse: plugin.json version '$old' at $base is not MAJOR.MINOR.PATCH (digits only, no leading zeros); fix it before bumping"
-  exit 1
+  echo "check-bump: plugin.json version '$old' at $base is not MAJOR.MINOR.PATCH" >&2
+  exit 2
 fi
 [ -n "$old" ] || old="0.0.0"
 new="$(version_at HEAD)"
-if [ -n "$new" ] && ! is_semver "$new"; then
-  echo "refuse: plugin.json version '$new' is not MAJOR.MINOR.PATCH (digits only, no leading zeros)"
-  exit 1
-fi
 
 o_major="${old%%.*}"; rest="${old#*.}"; o_minor="${rest%%.*}"; o_patch="${rest#*.}"
 if [ "$level" = minor ]; then suggested="$o_major.$((o_minor + 1)).0"; else suggested="$o_major.$o_minor.$((o_patch + 1))"; fi

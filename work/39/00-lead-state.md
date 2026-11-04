@@ -6,12 +6,11 @@
 - Freeze: factory install 9147301f75c3 — checked at item start 2026-11-04T20:52Z: installed_plugins.json factory version = 9147301f75c3 ✔
 - Open questions: demo host project for the human-only ACs (asked the person 21:0xZ: create empty repo, e.g. factory-sandbox); tag factory-v1.0.0 created by the Lead in Merge PR
 - Environment stage: skipped — no shared resources for build/QA (architect); the demo environment is prepared later by the Lead
-- Corrections in flight: none
+- Corrections in flight: 2 overturned developer decisions (leading-zero base exit code; hansei.md placeholder) → feedback 19
 
 ## Running agents
 
-- developer — feedback 15
-- architect — feedback 17
+- developer — feedback 19
 
 ## Stage log (manual, calibration — ADR 0012)
 
@@ -26,7 +25,9 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | Build | developer | 21:06Z | 21:11Z | 4m57s | none | 83,019 | done | 0 cards; 6 two-way decisions; 2 contract conflicts → architect |
 | Contract alignment (feedback) | architect | 21:12Z | 21:13Z | 1m08s | none | 44,352 | done | rework loop 2 (source: lead, from build) |
 | Security review | security-reviewer | 21:12Z | 21:15Z | 3m18s | none | 75,451 | pass | first-pass yield: pass with 7 low |
-| QA verification | qa-engineer | 21:12Z | ~21:2xZ | | none | (notice pending) | block | first-pass yield: QA fail (F1 major); 248 pass / 3 named skips |
+| QA verification | qa-engineer | 21:12Z | 21:21Z | 8m44s | none | 137,284 | block | first-pass yield: QA fail (F1 major); 248 pass / 3 named skips |
+| Fix round 1 | developer | 21:23Z | 21:25Z | 2m24s | none | 47,631 | done | rework loop 3 (source: qa, security); 10 findings |
+| Contract fixes round 1 | architect | 21:23Z | ~21:27Z | | none | (notice pending) | done | rework loop 4 (source: security); contracts ahead of build on 3 points |
 
 ## Person's touches
 

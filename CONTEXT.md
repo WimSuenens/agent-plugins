@@ -25,3 +25,15 @@ _Avoid_: guardrail, allowlist
 
 **Yokoten** — spreading a proven local countermeasure into the plugin for every project; always the person's decision card.
 _Avoid_: rollout, promotion (as a noun for the whole act; "promote" is the person's choice at run close that starts it)
+
+**Release** — a factory version with a semver in `plugins/factory/.claude-plugin/plugin.json` and a `factory-v<semver>` tag on its commit; a major or minor release resets the baseline.
+_Avoid_: build, version (for a commit sha; the sha is the commit, not the release)
+
+**Standard fingerprint** — a sha256 over the factory's standard-work files, `hooks/` and `scripts/`, computed by the Lead at run start and carried on every record; it shows whether two items really ran on the same text.
+_Avoid_: checksum, hash (without saying which files it covers)
+
+**Baseline** — the reference numbers that later changes are compared with; it opens with the first item on a major or minor release.
+_Avoid_: benchmark, before (for numbers that were never meant as one)
+
+**Calibration** — the measurements of a run that are recorded with full labels but never used as a baseline, such as a run frozen on a pre-release install; they show what the numbers look like and what capturing them costs.
+_Avoid_: pilot, dry run, baseline

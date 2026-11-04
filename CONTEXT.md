@@ -29,8 +29,19 @@ _Avoid_: rollout, promotion (as a noun for the whole act; "promote" is the perso
 **Release** — a factory version with a semver in `plugins/factory/.claude-plugin/plugin.json` and a `factory-v<semver>` tag on its commit; a major or minor release resets the baseline.
 _Avoid_: build, version (for a commit sha; the sha is the commit, not the release)
 
-**Standard fingerprint** — a sha256 over the factory's standard-work files, `hooks/` and `scripts/`, computed by the Lead at run start and carried on every record; it shows whether two items really ran on the same text.
+**Standard work** — the factory text the Lead and the roles follow: `skills/run/SKILL.md`, `references/*.md`, and `agents/*.md` under the factory plugin root. Any change to it is a minor release.
+_Avoid_: the prompts, the plugin (for the whole of `plugins/factory/`)
+
+**Tooling** — the factory's `hooks/` and `scripts/`: code the standard calls, not text it follows. A change to it alone is a patch release.
+
+**Standard fingerprint** — a sha256 over the standard-work files, computed by the Lead at item start and carried on every hansei record; it shows whether two items really ran on the same standard. Its sibling, the **tooling fingerprint**, covers `hooks/` and `scripts/`, so a record shows which of the two changed.
 _Avoid_: checksum, hash (without saying which files it covers)
+
+**Hansei record** — the one comment the Lead leaves on an item's slice ticket, in the project's own tracker, at the person's merge approval: a marker with a schema version, the release and both fingerprints, and the seven measures, each with a value or "not captured". Its doors measure is filled in the same comment after the resurvey.
+_Avoid_: retro, report, post-mortem
+
+**Stage log** — the Lead's timed account of an item in its lead state: one row per stage with UTC start and end, the agents that worked it, waits for the person or on limits, and the person's touches. The hansei record is computed from it, and it goes with `work/<id>/` at close.
+_Avoid_: timeline, audit log
 
 **Baseline** — the reference numbers that later changes are compared with; it opens with the first item on a major or minor release.
 _Avoid_: benchmark, before (for numbers that were never meant as one)

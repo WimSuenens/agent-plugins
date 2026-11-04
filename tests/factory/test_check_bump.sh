@@ -148,4 +148,23 @@ ck nonascii-quotepath-true-needs-minor 1 $code
 newb; printf 't\n' > "$F/references/a	b.md"; ver 1.0.1; git add -A; git commit -qm c; run
 ck tab-in-name-needs-minor 1 $code
 
+# --- security L1a (fixed in 9ee1cdc): a newline in a name must not split it into two harmless-looking paths.
+# Before the fix, agents/dev<LF>.md split into agents/dev and .md and passed with a patch bump.
+nl='
+'
+newb; printf 'a\n' > "$F/agents/dev${nl}.md"; ver 1.0.1; git add -A; git commit -qm c; run
+ck newline-agent-refuses 1 $code
+ck newline-agent-standard-work "refuse: standard work changed; plugin.json version 1.0.0 -> 1.0.1; needs at least a minor bump (1.1.0)" "$(line "$out" 1)"
+ver 1.1.0; git commit -qam v; run; ck newline-agent-minor-passes "pass: minor bump needed, 1.0.0 -> 1.1.0" "$out"; ck newline-agent-minor-exit 0 $code
+# a nested reference whose folder name holds a newline: it split into references/x and plugins/y.md (patch) before the fix
+newb; mkdir -p "$F/references/x${nl}plugins"; printf 'r\n' > "$F/references/x${nl}plugins/y.md"; ver 1.0.1; git add -A; git commit -qm c; run
+ck newline-nested-reference-refuses 1 $code
+# fail closed: a newline name anywhere under plugins/factory/ counts as standard work (developer decision, feedback 25)
+newb; printf 's\n' > "$F/scripts/a${nl}b.sh"; ver 1.0.1; git add -A; git commit -qm c; run
+ck newline-script-fails-closed 1 $code
+ck newline-script-standard-work 1 "$(line "$out" 1 | grep -c '^refuse: standard work changed;')"
+# a newline name with a minor bump passes
+ver 1.1.0; git commit -qam v; run
+ck newline-script-minor-passes "pass: minor bump needed, 1.0.0 -> 1.1.0" "$out"
+
 done_

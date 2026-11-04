@@ -192,8 +192,7 @@ ck tag-regex-present 1 "$([ -n "$RX" ] && echo 1)"
 okc=0; for v in 1.0.0 0.0.0 10.20.30; do printf '%s' "$v" | grep -Eq "$RX" && okc=$((okc + 1)); done; ck tag-regex-accepts-semver 3 $okc
 badc=0; for v in 1.0 v1.0.0 1.0.0-rc1 '1.0.0 x'; do printf '%s' "$v" | grep -Eq "$RX" || badc=$((badc + 1)); done; ck tag-regex-rejects-non-semver 4 $badc
 lz=0; for v in 1.08.0 01.0.0 1.0.00; do printf '%s' "$v" | grep -Eq "$RX" || lz=$((lz + 1)); done
-if [ $lz = 3 ]; then ck tag-regex-rejects-leading-zeros 3 $lz
-else skip tag-regex-rejects-leading-zeros "QA-39 F5: Merge PR tag check '$RX' accepts 1.08.0; contract 39-standard-changes section 5 gives the strict semver regex (developer, low: the merge re-check refuses 1.08.0 first)"; fi
+ck tag-regex-rejects-leading-zeros 3 $lz   # QA-39 F5, fixed in 9ee1cdc
 # SKILL.md step 7 sends the merge through Merge PR (which holds the re-check)
 has merge-through-merge-pr "$SK" '7. Merge the PR and remove the worktree and branch (*Merge PR*'
 has frontier-merge-through-merge-pr "$SK" 'merge the PR to main and clean up (*Merge PR*)'
@@ -224,8 +223,12 @@ ck edit-hansei-rm 1 "$(printf '%s' "$ED" | grep -cF 'rm -f "$rec"')"
 ck edit-hansei-outside-repo-not-committed 1 "$(printf '%s' "$ED" | grep -cF 'outside the repo, never committed')"
 ck edit-hansei-patch-same-comment 1 "$(printf '%s' "$ED" | grep -cF -- '--method PATCH "repos/{owner}/{repo}/issues/comments/<comment-id>"')"
 PH="$(grep -F -- '- **Post hansei**' "$TP")"
-if printf '%s' "$PH" | grep -qF 'mktemp'; then ck post-hansei-mktemp 1 1
-else skip post-hansei-mktemp "QA-39 F6: Post hansei writes <record>.md with no mktemp; contract 39-hansei-record section 5 makes Post use rec=\$(mktemp) and rm -f too (developer, low)"; fi
+# QA-39 F6, fixed in 9ee1cdc: scratch file from mktemp, posted from it, removed afterwards, in that order
+ck post-hansei-mktemp 1 "$(printf '%s' "$PH" | grep -cF 'rec="$(mktemp)"')"
+ck post-hansei-body-file 1 "$(printf '%s' "$PH" | grep -cF -- '--body-file "$rec"')"
+ck post-hansei-rm 1 "$(printf '%s' "$PH" | grep -cF 'rm -f "$rec"')"
+inline_before post-hansei-mktemp-before-post "$PH" 'rec="$(mktemp)"' '--body-file "$rec"'
+inline_before post-hansei-post-before-rm "$PH" '--body-file "$rec"' 'rm -f "$rec"'
 
 # --- AC-7 support: the tag step exists in Merge PR
 has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'

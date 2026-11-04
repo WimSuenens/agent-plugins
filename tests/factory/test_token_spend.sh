@@ -81,8 +81,11 @@ bash "$TS" "$deep/agent-gone.jsonl" >/dev/null 2>"$T/err"; ck missing-no-abs-pat
 # JSON that is valid but the wrong shape: the error still names the file and holds no path
 cp "$T/arr.jsonl" "$deep/agent-arr.jsonl"; bash "$TS" "$T/one.jsonl" "$deep/agent-arr.jsonl" >/dev/null 2>"$T/err"; code=$?
 ck wrong-shape-exit-3 3 $code; has wrong-shape-names-file "$T/err" "agent-arr.jsonl"
-if [ "$(grep -c / "$T/err")" = 0 ] && [ "$(cat "$T/err")" = "token-spend: transcript agent-arr.jsonl unreadable" ]; then ck wrong-shape-contract-line-no-path 1 1
-else skip wrong-shape-contract-line-no-path "QA-39 F4: valid-JSON-wrong-shape exit 3 passes jq's own error (absolute transcript path) to stderr and lists every file, not the contract's one-file line (developer)"; fi
+# QA-39 F4 (fixed in 9ee1cdc): the contract's one-file line, no path
+ck wrong-shape-contract-line "token-spend: transcript agent-arr.jsonl unreadable" "$(cat "$T/err")"; ck wrong-shape-no-path 0 "$(grep -c / "$T/err")"
+# wrong shape in the first of two files, and an object-per-line file mixed with a bare number: still one line naming the bad file
+printf '{"type":"assistant"}\n42\n' > "$deep/agent-num.jsonl"; bash "$TS" "$deep/agent-num.jsonl" "$T/one.jsonl" >/dev/null 2>"$T/err"; code=$?
+ck wrong-shape-mixed-exit-3 3 $code; ck wrong-shape-mixed-line "token-spend: transcript agent-num.jsonl unreadable" "$(cat "$T/err")"
 # exit-5 text is the contract's
 bash "$TS" --since 2030-01-01T00:00Z "$T/one.jsonl" >/dev/null 2>"$T/err"; ck exit5-text "token-spend: no messages in window" "$(cat "$T/err")"
 

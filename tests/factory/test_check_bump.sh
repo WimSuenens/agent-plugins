@@ -61,6 +61,10 @@ newb; ver 1.0.1; git commit -qam v; run; ck plugin-json-only-patch "pass: patch 
 newb; ver 0.9.9; git commit -qam v; run
 ck plugin-json-only-lowered-listed "refuse: factory files changed; plugin.json version 1.0.0 -> 0.9.9; needs at least a patch bump (1.0.1)
   plugins/factory/.claude-plugin/plugin.json" "$out"
+# contract example: plugin.json description changed alone, version kept -> patch needed, plugin.json listed
+newb; echo '{"name":"factory","description":"x","version":"1.0.0"}' > $F/.claude-plugin/plugin.json; git commit -qam d; run
+ck contract-example-json-description-only "refuse: factory files changed; plugin.json version 1.0.0 -> 1.0.0; needs at least a patch bump (1.0.1)
+  plugins/factory/.claude-plugin/plugin.json" "$out"; ck contract-example-json-description-only-exit 1 $code
 # plugin.json left out of the path lines when other paths changed too (developer's resolution of contract example 2)
 newb; echo y >> $F/scripts/s.sh; ver 1.0.0; echo '{"name":"factory", "version":"1.0.0"}' > $F/.claude-plugin/plugin.json; git commit -qam c; run
 ck plugin-json-not-listed-with-others "refuse: factory files changed; plugin.json version 1.0.0 -> 1.0.0; needs at least a patch bump (1.0.1)

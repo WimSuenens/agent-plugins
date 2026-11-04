@@ -19,8 +19,8 @@ The body's **first line** is exactly:
 ```
 
 - Regex a reader uses to find a record of any schema: `^<!-- factory:hansei v([0-9]+) -->$` on the first line of a comment body.
-- A script finds the record without reading the rest:
-  `gh api "repos/{owner}/{repo}/issues/<id>/comments" --paginate --jq '.[] | select(.body | startswith("<!-- factory:hansei v")) | {id, html_url, created_at}'`
+- A script finds the record without reading the rest, counting only comments by the account that posts records (the marker alone is not proof: anyone who can comment on the ticket can type it):
+  `me="$(gh api user --jq .login)"; gh api "repos/{owner}/{repo}/issues/<id>/comments" --paginate --jq '.[] | select(.user.login == "'"$me"'" and (.body | startswith("<!-- factory:hansei v"))) | {id, html_url, created_at}'` (`gh api --jq` takes no `--arg`, so the login is spliced into the filter; a GitHub login holds only letters, digits and `-`, so it cannot break out of the string).
 - The HTML comment is invisible on GitHub; the visible heading on line 2 carries the item for a human.
 - **Schema version.** `v1` is this contract. Any change to a field's key, order, grammar or meaning bumps it (`v2`, …). Adding gemba, A3 or andon fields later is a new version. A reader that meets an unknown version skips the record and says so; it never guesses.
 
@@ -115,11 +115,11 @@ The label is copied from the lead state, as computed at item start. The record n
 
 These go into the factory's tracker patch (`skills/setup-factory-skill/references/issue-tracker-github.factory.md`, `## Factory operations`), as new bullets after *Stage summary*. For projects whose section predates 1.0.0, see [39-standard-changes](39-standard-changes.md) §4. All commands run in the project's own clone; none names `--repo`, so the record lands in the project's own tracker (AC-20).
 
-- **Find hansei**: `gh api "repos/{owner}/{repo}/issues/<id>/comments" --paginate --jq '.[] | select(.body | startswith("<!-- factory:hansei v")) | .id'`. Prints the comment id, or nothing.
-- **Post hansei**: run *Find hansei* first. When it prints nothing: `gh issue comment <id> --body-file <record>.md`; the command prints the comment URL, ending `#issuecomment-<comment-id>`. When it prints an id, the record exists already (a resumed close): update it with *Edit hansei* instead. Never post a second record.
-- **Edit hansei**: `gh api "repos/{owner}/{repo}/issues/comments/<comment-id>" --jq .body > <record>.md`, change only the measure 7 block, then `gh api --method PATCH "repos/{owner}/{repo}/issues/comments/<comment-id>" -F body=@<record>.md`.
+- **Find hansei**: `me="$(gh api user --jq .login)"`, then `gh api "repos/{owner}/{repo}/issues/<id>/comments" --paginate --jq '.[] | select(.user.login == "'"$me"'" and (.body | startswith("<!-- factory:hansei v"))) | .id'`. Prints the id of the record the Lead's own `gh` account posted, or nothing. A comment by anyone else that starts with the marker is ignored: it can neither block *Post hansei* nor be edited in place of the real record.
+- **Post hansei**: run *Find hansei* first. When it prints nothing: `rec="$(mktemp)"`, write the filled template to `"$rec"`, `gh issue comment <id> --body-file "$rec"`, then `rm -f "$rec"`; the command prints the comment URL, ending `#issuecomment-<comment-id>`. When it prints an id, the record exists already (a resumed close): update it with *Edit hansei* instead. Never post a second record.
+- **Edit hansei**: `rec="$(mktemp)"`, `gh api "repos/{owner}/{repo}/issues/comments/<comment-id>" --jq .body > "$rec"`, change only the measure 7 block, `gh api --method PATCH "repos/{owner}/{repo}/issues/comments/<comment-id>" -F body=@"$rec"`, then `rm -f "$rec"`.
 
-`{owner}/{repo}` are filled in by `gh api` from the clone's remote. `<record>.md` is a scratch file outside the repo (the Lead's temp directory), never committed.
+`{owner}/{repo}` are filled in by `gh api` from the clone's remote. The scratch file comes from `mktemp` (the system temp directory, private to the user, outside the repo), is never committed, and is removed once the command that reads it has run.
 
 ## 6. Lifecycle at close
 

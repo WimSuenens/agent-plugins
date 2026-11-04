@@ -40,6 +40,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 
 ## Person's touches
 
+- 21:4xZ–21:5xZ — sandbox setup: three setup skills typed, AGENTS.md choice, board columns confirmed, /factory:run typed (blocked)
+
 - 21:1xZ — started factory-sandbox terminal session with --plugin-dir; ran /factory:setup-factory-skill load check; chose to wait for the demo brief
 
 - 20:56Z..21:10Z — created factory-sandbox repo (demo host) on request
@@ -52,6 +54,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 
 - 21:4xZ — same finding type twice again: QA F6 (Post hansei without mktemp) = security L6 (Edit hansei without mktemp)
 - process note (blame the process): contract and code fixes run in parallel → contract ahead of build → extra rework loop 5. Countermeasure candidate: contract-text fixes before code fixes.
+
+- 21:5xZ — demo blocked at /factory:run: the --plugin-dir session (started 21:10Z) kept the run skill text read at start (pre-1.0.0), though its base dir pointed at wt/39; run/SKILL.md changed at 21:11Z and 21:23Z. Prep check 1 checked the base dir only — an input the demo script should have named (check the loaded text). Countermeasure: restart the demo session after the last change to plugins/ and check the loaded text for "Plugin root:". Release-note item: sessions keep skill text read at start.
 
 ## Interruptions
 

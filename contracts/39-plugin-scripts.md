@@ -7,8 +7,10 @@ Three scripts under `plugins/factory/scripts/`. They are **tooling**: covered by
 Common rules for all three:
 
 - `bash` 3.2 compatible (macOS's `/bin/bash`), no other interpreter. `jq` (1.6 or later) only where stated. sha256 via `sha256sum`, falling back to `shasum -a 256`.
-- The Lead calls them with the substituted plugin root from `skills/run/SKILL.md`: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh" …`. `CLAUDE_PLUGIN_ROOT` is not in the Bash environment (#35), so no script reads it; the root is always an argument or the script's own location.
-- Results on stdout, in the exact lines below. Diagnostics on stderr. Exit codes as listed; any non-zero exit means the Lead writes `not captured (<stderr line>)` for what the script would have produced (or, for the bump check, does not open the PR).
+- The Lead calls them with the plugin root that `skills/run/SKILL.md` shows on its `Plugin root:` line, where Claude Code substitutes `${CLAUDE_PLUGIN_ROOT}`: `bash "<plugin root>/scripts/<name>.sh" …`. Only a skill file gets that substitution; a reference file such as `references/hansei.md` writes `<plugin root>` and says it is the path from that line, never a literal `${CLAUDE_PLUGIN_ROOT}`. `CLAUDE_PLUGIN_ROOT` is not in the Bash environment either (#35), so no script reads it; the root is always an argument or the script's own location.
+- Results on stdout, in the exact lines below. Diagnostics on stderr. Exit codes as listed; any non-zero exit means the Lead writes `not captured (<stderr line>)` for what the script would have produced (or, for the bump check, does not open or merge the PR).
+- **No absolute paths in output.** A stderr line can be copied into a record on a public tracker, so it names a directory or file by its basename only (`fingerprint: not a factory plugin root: 9147301f75c3`), never a path under the home directory.
+- **A semver** is `MAJOR.MINOR.PATCH`, each part `0` or a number without leading zeros (`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`, as semver.org). `1.08.0`, `1.0`, `v1.0.0` and `2.0.0-rc1` are not semvers.
 - No network, no writes outside stdout and stderr.
 
 ## 1. `scripts/fingerprint.sh` — the label
@@ -25,7 +27,7 @@ standard: <64 lowercase hex>
 tooling: <64 lowercase hex>
 ```
 
-- **release**: the `"version"` string of `<root>/.claude-plugin/plugin.json`, read from the plugin root alone (no git, no `installed_plugins.json`). This is what gives `1.0.0` both for an install path ending `factory/1.0.0` and for a `--plugin-dir` path ending `plugins/factory` (AC-2). The version must be plain `MAJOR.MINOR.PATCH`. When `plugin.json` has no `version`, the line reads `<basename of root> (pre-release install, no semver)`.
+- **release**: the `"version"` string of `<root>/.claude-plugin/plugin.json`, read from the plugin root alone (no git, no `installed_plugins.json`). This is what gives `1.0.0` both for an install path ending `factory/1.0.0` and for a `--plugin-dir` path ending `plugins/factory` (AC-2). The version must be a semver (common rules). Only when `plugin.json` has **no** `version` key does the line read `<basename of root> (pre-release install, no semver)`; a `version` key that is present but empty (`""`) or not a semver is an error (exit 2), never the pre-release label.
 - **Two fingerprints** (AC-5). A reader compares the two lines with another record's: a different `standard` means standard work changed; a different `tooling` with the same `standard` means only tooling changed.
   - **standard** covers standard work: `skills/run/SKILL.md`, every `references/*.md`, every `agents/*.md` (top level of each folder only).
   - **tooling** covers every regular file under `hooks/` and `scripts/`, recursively.
@@ -37,7 +39,8 @@ tooling: <64 lowercase hex>
   4. The fingerprint is the sha256 hex of the whole manifest's bytes.
 
   File contents and relative paths only: not the absolute root, not mtimes, not modes (AC-3). Adding, removing or renaming a file in a set changes its manifest and so its fingerprint (AC-4). An empty tooling set hashes the empty manifest (`e3b0c442…b855`).
-- **Exit codes**: 0 ok. 2 when `<root>` has no `skills/run/SKILL.md` or no `.claude-plugin/plugin.json` (not a factory root), or `plugin.json` has a `version` that isn't `MAJOR.MINOR.PATCH`. 3 when no sha256 tool is found.
+- **All or nothing.** When any file of either set cannot be read, the script prints nothing on stdout and exits 2, naming the file by its path relative to `<root>` on stderr (`fingerprint: cannot read scripts/x.sh`). A fingerprint that silently skipped a file, or hashed an error, would be a wrong label that looks right.
+- **Exit codes**: 0 ok. 2 when `<root>` has no `skills/run/SKILL.md` or no `.claude-plugin/plugin.json` (not a factory root), `plugin.json` has a `version` that is empty or not a semver, or a file in a set is unreadable. 3 when no sha256 tool is found. On any non-zero exit stdout is empty.
 
 ### Worked example
 
@@ -76,15 +79,15 @@ Whether a tooling change should still reset a baseline stays with the baseline s
 
 ## 2. `scripts/check-bump.sh` — the bump poka-yoke
 
-Run by the Lead in the item worktree, after `git fetch origin main`, before `gh pr create`:
+Run by the Lead after `git fetch origin main`, in the branch's worktree, at three points: before `gh pr create` for an item, before `gh pr create` for a frontier round (its PR should carry only ADRs and glossary changes, so the check normally passes with `no factory paths changed`; it is there for the round that touched `plugins/factory/` anyway), and again before `gh pr merge` (*Merge PR*), because commits can land on the branch, or on main, after the PR was opened:
 
 ```
 bash <root>/scripts/check-bump.sh [<base-ref>]        # default base: origin/main
 ```
 
-- **Changed paths**: `git diff --name-only <base>...HEAD -- plugins/factory/` (committed changes on the branch since it forked; uncommitted files don't count, since the PR carries commits).
+- **Changed paths**: `git diff -z --name-only <base>...HEAD -- plugins/factory/` (committed changes on the branch since it forked; uncommitted files don't count, since the PR carries commits). Paths are read by their real names, NUL-separated (`-z`), never in git's quoted form: a quoted non-ASCII name (`"plugins/factory/references/caf\303\251.md"`) would miss the standard-work rule and pass with a patch.
 - **Needed level**: `minor` when any changed path is standard work (`plugins/factory/skills/run/SKILL.md`, `plugins/factory/references/*.md`, `plugins/factory/agents/*.md`); else `patch` when any path changed; else nothing.
-- **Versions**: old = `version` in `git show <base>:plugins/factory/.claude-plugin/plugin.json`, `0.0.0` when the file or field is absent. New = the same at `HEAD`; absent or not `MAJOR.MINOR.PATCH` is a refusal.
+- **Versions**: old = `version` in `git show <base>:plugins/factory/.claude-plugin/plugin.json`, `0.0.0` when the file or field is absent; present but not a semver (empty, `1.08.0`, …) is exit 2, because no suggestion can be computed from it and main should never hold one. New = the same at `HEAD`; absent, empty or not a semver (`1.08.0` included) is a refusal (exit 1), with `<new>` printed as found (`(absent)` when there is none).
 - **Pass**: no factory path changed; or level `minor` and (new major > old major, or equal majors and new minor > old minor); or level `patch` and new > old. A major is never required by the script: whether a change breaks message formats or the protocol is the architect's call in the item, and the developer bumps major when told to.
 - **Stdout and exit**:
 
@@ -93,7 +96,7 @@ bash <root>/scripts/check-bump.sh [<base-ref>]        # default base: origin/mai
 | no factory path changed | 0 | `pass: no factory paths changed` |
 | bump covers the change | 0 | `pass: <minor\|patch> bump needed, <old> -> <new>` |
 | bump missing or too small | 1 | `refuse: <standard work\|factory files> changed; plugin.json version <old> -> <new>; needs at least a <minor\|patch> bump (<suggested>)` then one line per changed path other than `plugins/factory/.claude-plugin/plugin.json`, indented two spaces; `plugin.json` itself is listed only when it is the sole changed path |
-| not a git repo, base ref missing | 2 | nothing; reason on stderr |
+| not a git repo, base ref missing, base version not a semver | 2 | nothing; reason on stderr |
 
 `<suggested>` is the smallest passing version: `<major>.<minor+1>.0` for minor, `<major>.<minor>.<patch+1>` for patch.
 
@@ -118,6 +121,22 @@ exit 1
 
 A change under `scripts/` only, bumped to `1.0.1`: `pass: patch bump needed, 1.0.0 -> 1.0.1`, exit 0.
 
+A new standard-work file with a non-ASCII name, `references/café.md`, bumped to `1.0.1`: classified by its real name, so it is standard work and the patch falls short:
+
+```
+refuse: standard work changed; plugin.json version 1.0.0 -> 1.0.1; needs at least a minor bump (1.1.0)
+  plugins/factory/references/café.md
+exit 1
+```
+
+A branch that sets the version to `1.08.0` over main's `1.0.0`, with a `scripts/` change: not a semver, so refused with the smallest valid suggestion:
+
+```
+refuse: factory files changed; plugin.json version 1.0.0 -> 1.08.0; needs at least a patch bump (1.0.1)
+  plugins/factory/scripts/fingerprint.sh
+exit 1
+```
+
 A change to `plugin.json` alone (say its `description`) with the version left at `1.0.0`: it still counts as a factory change, so a patch is needed, and being the sole path it is listed:
 
 ```
@@ -132,13 +151,15 @@ This item's own branch (main has no `version`): `pass: minor bump needed, 0.0.0 
 
 ### What the Lead does with the result
 
-Written into *Open PR* in `skills/run/SKILL.md` ([39-standard-changes](39-standard-changes.md) §3): exit 0 → open the PR, and log the pass line in the `Open PR` row's Notes. Exit 1 → do not open the PR; send the developer a feedback brief (`Source: lead`) quoting the refusal; log a `refused` row. Exit 2 → do not open the PR; put the stderr line to the person.
+Written into *Open PR* in `skills/run/SKILL.md`, and into step 3 for the frontier round's PR and *Merge PR* ([39-standard-changes](39-standard-changes.md) §3, §5): exit 0 → open (or merge) the PR, and log the pass line in the `Open PR` (or `Merge approval`) row's Notes. Exit 1 → do not open or merge; in an item, send the developer a feedback brief (`Source: lead`) quoting the refusal and log a `refused` row; in a frontier round, put the refusal to the person (the round's PR is not meant to touch `plugins/factory/`) and note it in the map's Factory run section, which stands in for the stage log there. Exit 2 → do not open or merge; put the stderr line to the person.
 
 ## 3. `scripts/token-spend.sh` — spend from transcripts
 
 ```
-bash <root>/scripts/token-spend.sh [--since <UTC time>] [--until <UTC time>] <transcript.jsonl>...
+bash <root>/scripts/token-spend.sh [--since <UTC time>] [--until <UTC time>] [--] <transcript.jsonl>...
 ```
+
+`--` ends the options; every argument after it is a transcript, so a file named `-x.jsonl` or `--since` is read as a file. An unknown option before `--` is exit 2 (usage on stderr).
 
 Needs `jq`. Times are `YYYY-MM-DDTHH:MMZ` or `YYYY-MM-DDTHH:MM:SSZ`; the script compares on epoch seconds (fractions dropped), not as strings, because `20:44Z` sorts after `20:44:12.345Z` as text.
 
@@ -157,18 +178,19 @@ The `spend …` part is the record's `<tok>` slot verbatim; `peak` is the Lead's
 | Exit | When | The Lead writes |
 |---|---|---|
 | 0 | ok | the line |
-| 3 | a file is missing, unreadable, or holds a line that is not JSON | `not captured (transcript <file name> unreadable)` |
+| 2 | bad usage: unknown option, a time not in the formats above | `not captured (<stderr line>)` |
+| 3 | a file is missing, unreadable, or holds a line that is not JSON; stderr names that file by basename (`token-spend: transcript agent-a41f09.jsonl unreadable`) | `not captured (transcript <basename> unreadable)` |
 | 4 | `jq` missing | `not captured (jq missing)` |
 | 5 | no assistant message in the window | `not captured (no messages in window)`, never `0` |
 
-Locating transcripts: a role agent's is `find ~/.claude/projects -name 'agent-<agent id>.jsonl'`; the Lead's is `~/.claude/projects/<project>/<session id>.jsonl` for each id under `lead sessions` in the lead state, with `--since` the `Start item` start and `--until` the approval time. Transcripts are deleted after `cleanupPeriodDays` (30 by default), and those written before Claude Code 2.1.307 may hold placeholder usage (#35), which is why the totals are taken at close.
+Locating transcripts: a role agent's is `~/.claude/projects/<project>/<session id>/subagents/agent-<agent id>.jsonl`, found with `find ~/.claude/projects -name 'agent-<agent id>.jsonl'`; the Lead's is `~/.claude/projects/<project>/<session id>.jsonl` for each id under `lead sessions` in the lead state, with `--since` the `Start item` start and `--until` the approval time. Transcripts are deleted after `cleanupPeriodDays` (30 by default), and those written before Claude Code 2.1.307 may hold placeholder usage (#35), which is why the totals are taken at close.
 
 ### Worked example
 
 The product-owner of this item (#39), agent `aff847e3e8c7e5bfa`:
 
 ```
-$ bash plugins/factory/scripts/token-spend.sh ~/.claude/projects/-Users-wimsuenens-Projects-portfolio-agent-plugins/b3146b4a-f9f3-49bc-a33a-9f3c202be9b0/subagents/agent-aff847e3e8c7e5bfa.jsonl
+$ bash plugins/factory/scripts/token-spend.sh -- ~/.claude/projects/<project>/<session id>/subagents/agent-aff847e3e8c7e5bfa.jsonl
 spend 387472 (input 22, cache write 52402, cache read 316497, output 18551); peak 53942; messages 11
 ```
 

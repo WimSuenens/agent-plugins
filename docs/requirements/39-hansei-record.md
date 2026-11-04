@@ -10,7 +10,7 @@ This serves the map's first *Done when*: every closed item leaves a hansei recor
 
 ## Terms used here
 
-- **Standard work**: `skills/run/SKILL.md`, `references/protocol.md`, `agents/*.md`, `references/decision-card.md` under the factory plugin root (map #34, Notes).
+- **Standard work**: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md` under the factory plugin root. This widens map #34's Notes (four paths) so that the new `references/hansei.md` counts as standard work (contract `39-standard-changes.md`).
 - **Tooling**: `hooks/` and `scripts/` under the factory plugin root.
 - **New standard**: the factory as it is on branch `item/39`, loaded with `claude --plugin-dir <worktree>/plugins/factory` in a separate session.
 - **Hansei record**: the hansei comment as the new standard defines it. Its exact layout is the architect's contract; this requirement fixes what it must contain.
@@ -40,7 +40,7 @@ It is contradicted if the same files give two different fingerprints.
 
 **AC-4 Fingerprint moves with the text.**
 Given a copy of the plugin tree,
-when one byte changes in any one standard-work file (each of the four kinds tried once), or a file is added to or removed from `agents/`,
+when one byte changes in any one standard-work file (tried once each in `skills/run/SKILL.md`, `references/protocol.md`, `references/hansei.md` and one file in `agents/`), or a file is added to or removed from `agents/` or `references/`,
 then the fingerprint changes.
 And when a file outside standard work and tooling changes (for example `README.md`, or `plugin.json` itself),
 then the fingerprint does not change.
@@ -92,14 +92,15 @@ then it tells the Lead to keep a stage log in `work/<id>/00-lead-state.md` with 
 
 **AC-12 Stage-log times agree with git and the tracker.** **[human-only]** *(Under test: Capture)*
 Given the item run in the demo session with the new standard,
-when each stage's logged start and end are compared with the commits made in that stage (first and last commit times of the stage's role) and with the tracker events of that stage (the stage summary comment time and the `Factory status` change),
+when each stage's logged start and end are compared with the commits made in that stage (first and last commit times of the stage's role, messages starting `#<id> <role>:`) and with that stage's stage summary comment creation time on the slice ticket,
 then no logged time is further from its git or tracker evidence than that stage's own logged duration.
+`Factory status` change times are not evidence: `gh` does not expose their history (contract `39-stage-log.md`, section 4).
 The person (or QA, from the posted record) writes down the largest gap found in minutes. It is contradicted if any gap is larger than the stage's duration.
 
 **AC-13 Cross-check written into the standard.**
 Given the new standard,
 when it is read,
-then it tells the Lead, before posting the hansei comment, to compare the stage log with git commit times and tracker timestamps and to note in the record the largest gap found.
+then it tells the Lead, before posting the hansei comment, to compare the stage log with git commit times and stage summary comment times and to note in the record the largest gap found.
 
 ### D. The hansei record: content and honesty rule
 

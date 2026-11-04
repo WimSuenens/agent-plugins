@@ -64,6 +64,28 @@ bash "$TS" --since >/dev/null 2>&1; ck since-without-value-exit-2 2 $?
 bash "$TS" --frobnicate "$T/one.jsonl" >/dev/null 2>&1; ck unknown-option-exit-2 2 $?
 bash "$TS" >/dev/null 2>&1; ck no-files-exit-2 2 $?
 
+# --- feedback 15 #10 (security L7): "--" ends the options; '-'-prefixed transcript names
+mkdir -p "$T/d"; cp "$T/two.jsonl" "$T/d/-x.jsonl"; cp "$T/two.jsonl" "$T/d/--since"
+want_two="spend 100 (input 100, cache write 0, cache read 0, output 0); peak 100; messages 1"
+ck dashdash-dash-name "$want_two" "$(cd "$T/d" && bash "$TS" -- -x.jsonl)"
+ck dashdash-option-like-name "$want_two" "$(cd "$T/d" && bash "$TS" -- --since)"
+ck options-then-dashdash "spend 4 (input 1, cache write 1, cache read 1, output 1); peak 4; messages 1" "$(bash "$TS" --since 2026-11-04T20:44Z -- "$T/one.jsonl")"
+(cd "$T/d" && bash "$TS" -x.jsonl >/dev/null 2>&1); ck dash-name-without-dashdash-exit-2 2 $?
+out="$(cd "$T/d" && bash "$TS" -- -missing.jsonl 2>"$T/err")"; code=$?
+ck dashdash-missing-exit-3 3 $code; ck dashdash-missing-stderr "token-spend: transcript -missing.jsonl unreadable" "$(cat "$T/err")"
+# exit 3 names the file by basename, in the contract's form, and no directory reaches stderr
+deep="$T/home/someone/.claude/projects/p/s/subagents"; mkdir -p "$deep"; echo 'nope' > "$deep/agent-a41f09.jsonl"
+bash "$TS" "$T/one.jsonl" "$deep/agent-a41f09.jsonl" >/dev/null 2>"$T/err"; code=$?
+ck exit3-contract-line "token-spend: transcript agent-a41f09.jsonl unreadable" "$(cat "$T/err")"; ck exit3-code 3 $code
+bash "$TS" "$deep/agent-gone.jsonl" >/dev/null 2>"$T/err"; ck missing-no-abs-path 0 "$(grep -c / "$T/err")"
+# JSON that is valid but the wrong shape: the error still names the file and holds no path
+cp "$T/arr.jsonl" "$deep/agent-arr.jsonl"; bash "$TS" "$T/one.jsonl" "$deep/agent-arr.jsonl" >/dev/null 2>"$T/err"; code=$?
+ck wrong-shape-exit-3 3 $code; has wrong-shape-names-file "$T/err" "agent-arr.jsonl"
+if [ "$(grep -c / "$T/err")" = 0 ] && [ "$(cat "$T/err")" = "token-spend: transcript agent-arr.jsonl unreadable" ]; then ck wrong-shape-contract-line-no-path 1 1
+else skip wrong-shape-contract-line-no-path "QA-39 F4: valid-JSON-wrong-shape exit 3 passes jq's own error (absolute transcript path) to stderr and lists every file, not the contract's one-file line (developer)"; fi
+# exit-5 text is the contract's
+bash "$TS" --since 2030-01-01T00:00Z "$T/one.jsonl" >/dev/null 2>"$T/err"; ck exit5-text "token-spend: no messages in window" "$(cat "$T/err")"
+
 # --- contract worked example on the real product-owner transcript of #39, when this machine still has it
 R="$(find "$HOME/.claude/projects" -name 'agent-aff847e3e8c7e5bfa.jsonl' 2>/dev/null | head -1)"
 if [ -n "$R" ]; then

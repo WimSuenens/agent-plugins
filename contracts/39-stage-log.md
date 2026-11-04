@@ -13,7 +13,7 @@ Written once at item start (step 5), never changed during the item.
 ```
 ## Label
 
-- plugin root: <the substituted ${CLAUDE_PLUGIN_ROOT}>
+- plugin root: <the plugin root, with the home directory written as ~>
 - release: <semver, or "<dir name> (pre-release install, no semver)">
 - standard: <64 hex>
 - tooling: <64 hex>
@@ -22,12 +22,13 @@ Written once at item start (step 5), never changed during the item.
 - lead sessions: <session id>[, <session id> …]
 ```
 
-- `release`, `standard`, `tooling`: the output of `scripts/fingerprint.sh` ([39-plugin-scripts](39-plugin-scripts.md) §1). When the script fails, each reads `not captured (<script's message>)`.
+- `plugin root`: the path on `skills/run/SKILL.md`'s `Plugin root:` line, with a leading home directory written as `~` (`~/.claude/plugins/cache/<marketplace>/factory/1.0.0`), because the lead state is committed and stays in the project's history. It is for a human reader; script calls take the path from the `Plugin root:` line, not from here.
+- `release`, `standard`, `tooling`: the output of `bash "<plugin root>/scripts/fingerprint.sh" "<plugin root>"` ([39-plugin-scripts](39-plugin-scripts.md) §1). When the script fails, each reads `not captured (<script's message>)`; the message names the root by its basename only, so no home path reaches the record.
 - Dependency versions, first source that works:
   1. `skill base dir`: the path segment after `<plugin>/` in the "Base directory for this skill" line the session showed when it last invoked one of that plugin's skills (for example `/wayfinding:beachhead` at step 4). This is the copy the session runs.
   2. `plugin list`: `claude plugin list --json`, the `version` of the entry for that plugin. It is the installed record and can be stale mid-session (#35), so it is labelled.
   3. Otherwise `not captured (<reason>)`.
-- `lead sessions`: the Lead's session id, read from the path of the first role transcript it spawns in that session (`~/.claude/projects/<project>/<session id>/subagents/agent-<agent id>.jsonl`; find it with `find ~/.claude/projects -name 'agent-<agent id>.jsonl'`). A resumed item in a fresh session appends that session's id.
+- `lead sessions`: the Lead's session id, read from the path of the first role transcript it spawns in that session (`~/.claude/projects/<project>/<session id>/subagents/agent-<agent id>.jsonl`; find it with `find ~/.claude/projects -name 'agent-<agent id>.jsonl'`). A resumed item in a fresh session appends that session's id. Session ids stay in the committed lead state: they are random ids that locate a transcript on this machine only, carry no access, and the close needs them after a resume in a fresh session, when the chat that knew them is gone.
 
 ## 2. `## Stage log`
 

@@ -8,9 +8,9 @@ The placement contract for the developer: which file under `plugins/factory/` ca
 |---|---|---|
 | `.claude-plugin/plugin.json` | other | `"version": "1.0.0"` (§1) |
 | `references/hansei.md` | standard work (new) | record template, field definitions, stage-log format (§2) |
-| `skills/run/SKILL.md` | standard work | plugin root, label at item start, stage log through the stages, *Open PR* check, step 8 order, step 9 rule, fallback for older tracker docs (§3, §4, §6) |
+| `skills/run/SKILL.md` | standard work | plugin root, label at item start, stage log through the stages, *Open PR* check, frontier PR check in step 3, step 8 order, step 9 rule, fallback for older tracker docs (§3, §4, §6) |
 | `scripts/fingerprint.sh`, `scripts/check-bump.sh`, `scripts/token-spend.sh` | tooling (new) | [39-plugin-scripts](39-plugin-scripts.md) |
-| `skills/setup-factory-skill/references/issue-tracker-github.factory.md` | other | *Find / Post / Edit hansei* bullets; tag in *Merge PR* (§4, §5) |
+| `skills/setup-factory-skill/references/issue-tracker-github.factory.md` | other | *Find / Post / Edit hansei* bullets; bump re-check and tag in *Merge PR* (§4, §5) |
 | `references/protocol.md`, `references/decision-card.md`, `agents/*.md` | standard work | no change |
 | `hooks/hooks.json`, `scripts/guard-memory.sh` | tooling | no change (the memory guard does not apply to the Lead, so its transcript reads pass) |
 
@@ -33,11 +33,12 @@ The glob `references/*.md` puts it in the standard fingerprint, and the bump che
 
 ## 3. `skills/run/SKILL.md`
 
-- **Plugin root.** One line near the top: `Plugin root: ${CLAUDE_PLUGIN_ROOT}`. Every script call uses that substituted path.
+- **Plugin root.** One line near the top: `Plugin root: ${CLAUDE_PLUGIN_ROOT}`. Claude Code substitutes the variable in skill files only, so every script call, in `SKILL.md` and in `references/hansei.md` alike, uses the path that line shows. `references/hansei.md` writes `<plugin root>` and says where it comes from; it never writes a literal `${CLAUDE_PLUGIN_ROOT}`, which would reach the shell unsubstituted ([39-plugin-scripts](39-plugin-scripts.md), common rules).
 - **Step 5, Start the item.** Stamp `date -u +%FT%TZ`, open the `Start item` row, run `scripts/fingerprint.sh` and write `## Label` (with dependency versions and the lead session id), and start the `## Stage log`, `## Waits` and `## Person's touches` sections, per `references/hansei.md`.
 - **Step 6, Run the stages.** At each brief and each result: stamp `date -u +%FT%TZ` and open or close the row, with agent ids and the notice's peak context. Each wait goes to `## Waits` and each touch the person makes goes to `## Person's touches`, as it happens.
 - **Interruptions.** A limit failure opens a `limits` wait; the resume closes it.
 - **Open PR.** Before `gh pr create`: `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"`. Exit 0: open the PR. Exit 1: don't open it, send the developer a feedback brief (`Source: lead`) quoting the refusal, log the `refused` row, and run *Open PR* again when the developer is done. Exit 2: don't open it; put the message to the person. No instruction anywhere opens a PR without this check (AC-8).
+- **Step 3, the frontier round's PR.** Before its `gh pr create`, the same `git fetch origin main` and `check-bump.sh`, in the frontier worktree, with the same exit handling, except that a refusal goes to the person and is noted in the Factory run section ([39-plugin-scripts](39-plugin-scripts.md) §2, *What the Lead does*). This is what makes "no instruction anywhere opens a PR without this check" true for both kinds of PR.
 - **Step 8, Close the item.** The order in [39-hansei-record](39-hansei-record.md) §6, with its *Done when* extended: the hansei record is posted, and after the resurvey its measure 7 is filled.
 - **Step 9 rule.** Keep the factory feedback issue to the map's rule: the problem in factory terms, the standard change, before/after numbers against the baseline with item count and release, and no code, names, business content or raw hansei records (AC-20). This is the only instruction that names `--repo WimSuenens/agent-plugins`.
 
@@ -47,15 +48,19 @@ The glob `references/*.md` puts it in the standard fingerprint, and the bump che
 - **Projects set up before 1.0.0.** Their `## Factory operations` section has no *Post hansei* bullet. `skills/run/SKILL.md` says, where it points at the tracker doc: when that section has no *Post hansei* bullet, it predates factory 1.0.0; use the `## Factory operations` section of `${CLAUDE_PLUGIN_ROOT}/skills/setup-factory-skill/references/issue-tracker-github.factory.md` for the whole item instead, and tell the person once that replacing their section with it (setup's step 6) brings the project up to date. The Lead never edits the project's tracker doc itself.
 - So there is one copy of the commands, in the plugin; the project's copy is a snapshot of it. A fallback copy inside `run/SKILL.md` would be a second source to keep in step.
 
-## 5. Release tag in *Merge PR*
+## 5. Bump re-check and release tag in *Merge PR*
 
-The *Merge PR* bullet in the tracker patch gains, between the merge and the clean-up:
+The *Merge PR* bullet in the tracker patch gains two steps.
 
-> When the merged branch changed the `version` in `plugins/factory/.claude-plugin/plugin.json` (only in the repo that hosts the factory): `git fetch origin main`, then `git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"` and `git push origin factory-v<version>`. Skip when that tag exists already (`git ls-remote --tags origin factory-v<version>` prints a line).
+Before `gh pr merge`, the same bump check as *Open PR*: `git fetch origin main`, then `bash "<plugin root>/scripts/check-bump.sh"` in the branch's worktree (`<plugin root>` is the path on `run/SKILL.md`'s `Plugin root:` line, which the Lead has; the tracker doc is a project file and gets no substitution). Exit 0: merge. Exit 1 or 2: don't merge; handle it as *Open PR* does. Commits can land on the branch (a feedback round) or on main after the PR was opened, so the check at opening does not cover the merge.
+
+Between the merge and the clean-up:
+
+> When the merged branch changed the `version` in `plugins/factory/.claude-plugin/plugin.json` (only in the repo that hosts the factory): `git fetch origin main`, then `git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"` and `git push origin factory-v<version>`. Before tagging, check that `<version>` is a semver ([39-plugin-scripts](39-plugin-scripts.md), common rules: `printf '%s' "<version>" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'`); when it is not, don't tag and tell the person. Skip when that tag exists already (`git ls-remote --tags origin factory-v<version>` prints a line).
 
 The Lead creates the tag, in *Merge PR* (the lead's decision for this item). It points at the merge commit on `main` (AC-7). Taking the commit from `gh pr view` instead of `origin/main` keeps it right even when something else lands on main between the merge and the tag.
 
-For #39 itself, which runs on the frozen install without this text, the Lead follows this paragraph by hand at its merge: `factory-v1.0.0` on #39's merge commit.
+For #39 itself, which runs on the frozen install without this text, the Lead follows this section by hand at its merge, running the branch's own `plugins/factory/scripts/check-bump.sh` before the merge (expected: `pass: minor bump needed, 0.0.0 -> 1.0.0`), then tagging `factory-v1.0.0` on #39's merge commit.
 
 ## 6. What reaches agent-plugins
 

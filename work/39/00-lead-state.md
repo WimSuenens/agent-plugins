@@ -24,7 +24,7 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | Requirement | product-owner | 20:54Z | 20:57Z | 3m10s | none | 53,942 (spend 387,472) | done | 22 ACs, 0 cards, 6 two-way decisions, 0 overturned |
 | Contracts | architect | 20:57Z | 21:06Z | 9m17s | none | 128,114 | done | 4 contracts, 0 ADRs, 15 two-way decisions, 0 overturned; 2 AC amendments routed to PO |
 | Requirement amend (feedback) | product-owner | 21:06Z | 21:07Z | 41s | none | 32,373 | done | rework loop 1 (source: architect); 2 two-way decisions |
-| Build | developer | 21:06Z | 21:2xZ | see notice | none | (pending) | done | 0 cards; 6 two-way decisions; 2 contract conflicts → architect |
+| Build | developer | 21:06Z | 21:11Z | 4m57s | none | 83,019 | done | 0 cards; 6 two-way decisions; 2 contract conflicts → architect |
 
 ## Person's touches
 

@@ -50,6 +50,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 
 ## Person's touches
 
+- 08:4xZ — decision card #48 (merge style): chose A
+
 - 08:0xZ — chose to finish AC-17 in #39 after the andon (not merge with a known limitation)
 
 - 07:2xZ — AC-17 after the fix: accepted on QA's word, unless QA demands a demo re-run
@@ -89,6 +91,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 - ANDON (lead, calibration): AC-17 stall accounting failed twice (demo, v2 re-check) — same finding twice. 5 Whys → no rule that a measurement fix is validated on the data that showed the defect. Local countermeasure this item: contract rules written and replayed against the demo transcripts before code.
 
 - Countermeasure side effect: my brief asked the architect to replay rules on transcripts — past its shell scope (no processes). Process cause, not the role. Next time: QA (or the developer) runs the replay.
+
+- Same finding type twice again: security L12 (basename without --) repeats L7.
 
 ## Interruptions
 

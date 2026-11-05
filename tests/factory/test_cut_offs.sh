@@ -34,6 +34,18 @@ ck marker-request-interrupted-only-at-start "" "$(CO_ "$T/m2m.jsonl")"
 ck marker-api-error-sleep "interrupted|2026-11-05T00:48:37Z|2026-11-05T01:04:31Z|api-error:server_error" "$(CO_ "$T/m3.jsonl" | rows)"
 { U 2026-11-05T00:40:00Z; A 2026-11-05T00:48:37Z; printf '{"type":"assistant","timestamp":"2026-11-05T01:00:00Z","error":"overloaded_error","message":{"id":"f","content":[{"type":"text","text":"x"}]}}\n'; A 2026-11-05T01:01:00Z; } > "$T/m3f.jsonl"
 ck marker-api-error-field-only "interrupted|2026-11-05T00:48:37Z|2026-11-05T01:01:00Z|api-error:overloaded_error" "$(CO_ "$T/m3f.jsonl" | rows)"
+# --- I4 (contract ce920d4): the error value reaches the output only when it matches ^[a-z_]+$; any other string reads "other"
+i4() { { U 2026-11-05T00:40:00Z; A 2026-11-05T00:48:37Z; printf '{"type":"assistant","timestamp":"2026-11-05T01:00:00Z","error":%s,"message":{"id":"f","content":[{"type":"text","text":"x"}]}}\n' "$1"; A 2026-11-05T01:01:00Z; } > "$T/i4.jsonl"; CO_ "$T/i4.jsonl" | cut -f5; }
+ck i4-lower-underscore-kept "api-error:invalid_request_error" "$(i4 '"invalid_request_error"')"
+ck i4-uppercase-other "api-error:other" "$(i4 '"Overloaded"')"
+ck i4-digits-other "api-error:other" "$(i4 '"error_529"')"
+ck i4-space-other "api-error:other" "$(i4 '"server error"')"
+ck i4-tab-newline-other "api-error:other" "$(i4 '"a\tb\nc"')"
+ck i4-path-secret-other "api-error:other" "$(i4 '"/Users/someone/.env TOKEN=abc"')"
+ck i4-empty-string-other "api-error:other" "$(i4 '""')"
+ck i4-five-fields-kept 5 "$(i4 '"a\tb\nc"' >/dev/null; CO_ "$T/i4.jsonl" | awk -F'\t' '{print NF}' | paste -sd' ' -)"
+{ U 2026-11-05T00:40:00Z; A 2026-11-05T00:48:37Z; printf '{"type":"assistant","timestamp":"2026-11-05T01:00:00Z","isApiErrorMessage":true,"error":{"status":529},"message":{"id":"f","content":[{"type":"text","text":"x"}]}}\n'; A 2026-11-05T01:01:00Z; } > "$T/i4o.jsonl"
+ck i4-object-error-other "api-error:other" "$(CO_ "$T/i4o.jsonl" | cut -f5)"
 { U 2026-11-05T00:40:00Z; A 2026-11-05T00:48:37Z; printf '{"type":"assistant","timestamp":"2026-11-05T01:00:00Z","isApiErrorMessage":true,"message":{"id":"f","content":[{"type":"text","text":"Something new"}]}}\n'; A 2026-11-05T01:01:00Z; } > "$T/m3g.jsonl"
 ck marker-api-error-flag-only "interrupted|2026-11-05T00:48:37Z|2026-11-05T01:01:00Z|api-error:unknown" "$(CO_ "$T/m3g.jsonl" | rows)"
 { U 2026-11-05T00:40:00Z; A 2026-11-05T00:48:37Z; A 2026-11-05T01:00:00Z f "API Error: Connection error."; A 2026-11-05T01:01:00Z; } > "$T/m3t.jsonl"
@@ -85,11 +97,14 @@ ck sleep-nonmatching-lines-skipped "stalled" "$(CO_ --sleep-log "$SL" -- "$T/m2a
 # a closed stalled gap: sleep inside [start, end]
 printf '2026-11-05 01:20:00 +0100 Sleep\n2026-11-05 01:25:00 +0100 Wake\n' > "$SL"   # 00:20Z-00:25Z inside 00:14:53Z-00:32:26Z (second gap of three.jsonl)
 ck sleep-closed-gap-only-that-one "stalled interrupted stalled" "$(CO_ --sleep-log "$SL" -- "$T/three.jsonl" | cut -f2 | paste -sd' ' -)"
-# a Wake line inside the gap with no Sleep inside, and the last line before the start a Wake: not asleep by the contract
+# a Wake line inside the gap with no Sleep inside, and the last line before the start a Wake: a Wake inside counts on its own
+# (contract ce920d4, QA F5 settled: the machine was asleep just before it, even when the log lost the matching Sleep)
 printf '2026-11-04 23:00:00 +0000 Wake\n2026-11-04 23:55:00 +0000 Wake\n' > "$SL"
-k="$(CO_ --sleep-log "$SL" -- "$T/m2a.jsonl" | cut -f2)"
-if [ "$k" = stalled ]; then ck sleep-wake-inside-alone-not-asleep stalled "$k"
-else skip sleep-wake-inside-alone-not-asleep "QA-39 r5 F5 (low): got $k -- cut-offs.sh counts any Sleep or Wake line inside the gap, the contract only a Sleep line (developer)"; fi
+ck sleep-wake-inside-alone-not-asleep interrupted "$(CO_ --sleep-log "$SL" -- "$T/m2a.jsonl" | cut -f2)"
+printf '2026-11-04 23:55:00 +0000 Wake\n' > "$SL"   # a rotated head: only the Wake survives
+ck sleep-wake-inside-only-line interrupted "$(CO_ --sleep-log "$SL" -- "$T/m2a.jsonl" | cut -f2)"
+printf '2026-11-04 23:00:00 +0000 Wake\n2026-11-05 00:30:00 +0000 Wake\n' > "$SL"   # a Wake after the open gap's last marker (00:05:54Z): outside
+ck sleep-wake-after-gap-stays-stalled stalled "$(CO_ --sleep-log "$SL" -- "$T/m2a.jsonl" | cut -f2)"
 # limits and interrupted keep their kind; stdin with -
 printf '2026-11-04 23:10:00 +0100 Sleep\n' > "$SL"
 ck sleep-limits-keeps-kind "limits" "$(CO_ --sleep-log - -- "$T/m3r.jsonl" < "$SL" | cut -f2)"

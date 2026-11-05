@@ -350,6 +350,28 @@ for a in product-owner architect developer qa-engineer security-reviewer devops 
   ck "k1-inputs-needed-section-$a" 1 "$(grep -c '^## Inputs needed' "$PLUGIN/agents/$a.md")"
 done
 
+# ---------- the written rules the executable transcriptions follow (AC-3, AC-4, AC-5): the text is pinned, so a changed rule breaks here ----------
+has k2-m1 "$AN" 'are the same type when **M1** holds: their guards pass the one-fix test'
+has k2-m2 "$AN" 'or when **M2** holds: criterion and field are equal and not `-`, and the rounds differ.'
+has k2-unclear "$AN" 'When a slot the clause hangs on is `-`, do not flag: write `unclear` for the pair in the lead state'"'"'s notes.'
+has k2-compare-except-same-role-round "$AN" 'Compare a new finding with every earlier row except rows of the same `(Role, Round)`.'
+has k2-five-slots "$AN" 'Write its signature from its text alone'
+has k2-seen-line "$AN" '`seen` reads `same-finding-twice: <role> r<round> <id> = <role> r<round> <id>: <the guard sentence>`'
+has k2-before-feedback "$AN" 'On a match start an andon of kind 2 before routing the finding as feedback'
+has k3-pattern "$AN" 'The role is read from the subject by `^#[0-9]+ ([a-z-]+): `.'
+has k3-section-skip "$AN" 'are not followed by the word `section` (those name part of a file: skip them)'
+has k3-longest-match "$AN" 'The owner of P is the Owner of the row with the longest matching token; no match means unowned.'
+has k3-diff-tree "$AN" 'git diff-tree --no-commit-id --name-only -r --no-renames <sha>'
+has k3-never-flagged "$AN" 'Never flagged: commits whose role is `lead` or any other name, commits with no role pattern, merge commits, unowned paths (all of `work/`).'
+has k3-log-cmd "$AN" 'git log --no-merges --format=%H%x09%s "$(git merge-base origin/main HEAD)"..HEAD'
+has k4-strict "$AN" 'The row is flagged when its agent-working time is strictly greater than `2 × m`, computed exactly without rounding'
+has k4-three "$AN" 'With fewer than 3 earlier rows write `no baseline: fewer than 3 earlier rows` in `Notes` and stop.'
+has k4-median-even "$AN" '(mean of the two middle values for an even count)'
+has k4-feedback-rounds "$AN" 'Earlier rows are rows of the same `Role` with a smaller `#`, feedback rounds included.'
+has k4-lead-person-never "$AN" 'Lead and person rows are never tested.'
+has k6-fingerprint-compare "$AN" 'Compare `standard` and `tooling`.'
+has k6-freeze "$AN" 'Read the map'"'"'s Factory run section for a line holding `FREEZE:`.'
+
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
 ck ac29-version-is-minor-above-1.0.0 "1.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"

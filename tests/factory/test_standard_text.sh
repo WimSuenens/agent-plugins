@@ -45,7 +45,7 @@ has ac8-exit1-logged-refused "$SK" 'log the row with `Result` `refused`'
 has ac8-exit2-no-pr "$SK" 'Exit 2: do not open the PR'
 has ac8-refusal-in-stage-log-format "$HA" 'A refused *Open PR* (bump check) is an `Open PR` row with `Result` `refused`'
 # every instruction that opens a PR must run the check first. PR-opening lines, outside the check's own paragraph:
-pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'check-bump|do not open the PR|opens a PR without this check|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR')"
+pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'check-bump|do not open the PR|opens a PR without this check|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR|once over the whole branch before \*Open PR\* and at the merge approval')"
 if [ -z "$pr_lines" ]; then ck ac8-no-pr-without-check "" ""
 else skip ac8-no-pr-without-check "QA-39 F1: PR opened without the bump check at SKILL.md:$(printf '%s' "$pr_lines" | cut -d: -f1 | tr '\n' ' ')(frontier round end) (developer)"; fi
 # the tracker patch's Open PR bullet is the command the check guards

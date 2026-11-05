@@ -84,17 +84,26 @@ Rules:
 ```
 
 - `Agent`: the agent id the wait stopped, `lead` when it stopped the Lead itself, `-` for a `person` wait. Measure 5 reads this column to find truncated transcripts.
-- Kind of a wait: four kinds. Each is opened by an observable event and closed by your next action on the stopped agent; every stretch in which an agent or you sat still for a reason other than its own work is one of them.
+- Kind of a wait: four kinds. **Every** stretch in which an agent or you sat still for a reason other than its own work is one of them. A wait is found in one of two ways, and both use the same evidence, the transcript, through `scripts/cut-offs.sh`:
+  - **at a notice**, during the run: a role's failure notice (or your own resume after you stopped) opens the wait, and your next action on the stopped agent closes it;
+  - **at close**, by scanning every transcript of the item: this finds the cut-offs an agent recovered from by itself, which send no notice, and your own (*Cut-offs at close* below).
 
 | Kind | What it is | Detected by | Start | End |
 |---|---|---|---|---|
 | `person` | the item waits on the person's answer | you put a question, card, demo or approval to the person | `date -u` when you put it | `date -u` when you read the answer |
-| `limits` | a usage or session limit | a role's failure notice `failed … You've hit your … limit`, or your own `Usage limit reached` line | `date -u` at the notice | `date -u` at the resume |
-| `stalled` | an agent or you made no progress while the session stayed up | a role's failure notice naming no progress (the stream watchdog, `no progress for 600s`, or a stream idle timeout); for you, a turn that stopped mid-step (your transcript's last entry before the gap is a tool result with no reply after it, or `[Request interrupted …]`) and was set going again only by a person message that answers no question you put (for example "continue") | the `timestamp` of the stopped transcript's last entry before the gap | `date -u` when you resume the agent, spawn a new one for the work, or accept its `done` result (*Done, then stopped*); for you, the `timestamp` of the person message that set you going |
-| `interrupted` | the connection or machine went away: machine sleep, network loss, an API server error | a role's failure notice naming an API, server or connection error that is not a usage limit (`server_error`, `overloaded`, a 5xx, a dropped connection); or a `stalled` gap with a sleep inside it in `pmset -g log` (macOS: `pmset -g log \| grep -E ' (Sleep\|Wake) '`) | as `stalled` | as `stalled` |
+| `limits` | a usage or session limit | a role's failure notice `failed … You've hit your … limit`; or a `cut-offs.sh` line of kind `limits` (marker `api-error:rate_limit`: your own `You've hit your … limit` entry, or a role's) | the line's start; at a role's notice, the start of the last line `cut-offs.sh` prints for that agent's transcript | the line's end; `open`, or a role's notice: `date -u` at the resume |
+| `stalled` | an agent or you made no progress while the session stayed up | a role's failure notice naming no progress (the stream watchdog, `no progress for 600s`, or a stream idle timeout); or a `cut-offs.sh` line of kind `stalled` (markers `cut-mid-stream`, `request-interrupted`, `silent-gap`). For you, the line comes from your own session transcript: you stopped mid-step and were set going again only by a person message that answers no question you put (for example "continue") | the line's start: the `timestamp` of the last entry before the gap that is not itself a cut-off marker | the line's end (the agent's first output after the gap); when the line reads `open`, `date -u` when you resume the agent, spawn a new one for the work, or accept its `done` result (*Done, then stopped*) |
+| `interrupted` | the connection or machine went away: machine sleep, network loss, an API server error | a role's failure notice naming an API, server or connection error that is not a usage limit (`server_error`, `overloaded`, a 5xx, a dropped connection); or a `cut-offs.sh` line of kind `interrupted` (markers `api-error:<error>` other than `rate_limit`, such as your own `API Error: Your computer went to sleep mid-response`, and `api-retry`), including a `stalled` gap the sleep log turned `interrupted` | as `stalled` | as `stalled` |
 
-- **stalled or interrupted.** The notice decides. One exception: a watchdog notice whose gap contains a machine sleep is `interrupted`, because the sleep is what the watchdog saw. Where `pmset` is not available, the notice alone decides.
-- **Taking the start from the transcript.** For `stalled` and `interrupted`, read the start when the notice arrives, from the stopped agent's transcript (`tail -n 1 <transcript> | jq -r .timestamp`; for you, your own session transcript), converted to `YYYY-MM-DDTHH:MMZ`. A recorded clock is not an estimate, so it carries no `~`. When the transcript cannot be read, the start is your `date -u` stamp at the notice, marked `~`, and the cross-check names it.
+- **stalled or interrupted.** The notice or the marker decides. One exception: a `stalled` gap in which the machine was asleep at any moment is `interrupted`, because the sleep is what the watchdog saw. `cut-offs.sh --sleep-log -` applies this when you pipe in the sleep log, and only then (macOS):
+
+  ```
+  pmset -g log | awk -F'\t' '$1 ~ /^[0-9-]+ [0-9:]+ [+-][0-9]+ (Sleep|Wake) *$/ {print $1}' | bash "<plugin root>/scripts/cut-offs.sh" --sleep-log - -- <transcript>
+  ```
+
+  Use this exact filter, never a looser `grep`: `pmset -g log` also holds process names, PIDs, launchd service names and battery data. **Copy only UTC start and end times** of a sleep into `What` (`sleep 13:53Z–14:08Z`), never a pmset line. Where `pmset` is not available, call the script without `--sleep-log`; the notice or marker alone decides.
+- **Taking the start from the transcript.** At a role's notice, run `bash "<plugin root>/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>` on the stopped agent's transcript, and the **last line's start**, cut to `YYYY-MM-DDTHH:MMZ`, is the wait's start. Never `tail -n 1`: the stream watchdog writes its `[Request interrupted by user]` entry at the notice, so the last line of the file is the notice, and the stall would lose its whole ten-minute watchdog window to agent working. A recorded clock is not an estimate, so it carries no `~`. When the script prints nothing for a role's notice (a notice the transcript shows no marker for), the start is the `timestamp` of the transcript's last `user` or `assistant` entry before the notice. When the transcript cannot be read (exit 3 or 4), the start is your `date -u` stamp at the notice, marked `~` (it is later than the real start), and the cross-check names it. Your own waits come from the close scan; you may log one when you resume, with the same script on your own session transcript.
+- **The Lead's own wait stops a role's.** While you are in a wait yourself, no role wait accrues: a role wait still open when your own wait starts ends there, and if the role is still waiting when you resume, a new entry opens from your resume to your action on that role. The time goes to your wait, whose cause held everything. (In the demo, QA's last stall, 01:25Z, ends at 01:43Z when your own sleep starts; the 5h06m to 06:49Z are your `interrupted`.)
 - **One wait, one kind.** A stretch that changes cause midway (a stall, then a limit hit on the resume) is two entries, back to back.
 - **Overlapping held waits of different kinds** (a sleep while a decision card is open) are counted once, to the kind first in measure 1's order: person, limits, stalled, interrupted.
 
@@ -102,6 +111,16 @@ Rules:
 - Kind of a touch: `decision card` (an answered card), `demo`, `approval`, `overturn`, `other`. A touch's time is the person's answer, as you saw it.
 
 Write each wait and each touch as it happens, not at close.
+
+### Cut-offs at close
+
+At close, before the cross-check (section 5, step 2), complete `## Waits` from the transcripts:
+
+1. Run `cut-offs.sh` once over every role agent's transcript of this item (the `Agents` column of the stage log), with `--sleep-log -` where `pmset` exists; and once over each session under `lead sessions`, with `--since` the `Start item` start and `--until` the approval time.
+2. For each line, find a logged wait for the same agent (`lead` for a session transcript) whose interval overlaps or touches the line's. **When there is one**, it is the same wait: set its Start to the line's start when they differ (the line is the better clock), keep its End and its kind unless the line's kind is the stronger (`limits`, `interrupted`, `stalled`, in that order). **When there is none**, add a wait: the line's kind, the agent, Start and End from the line (cut to minutes; an `open` end takes the End of that agent's last stage-log row), `Held item` as for any wait, and `What` `found at close: <markers>`.
+3. Apply *The Lead's own wait stops a role's* to the result.
+
+A wait found at close carries no `~`: its times are recorded clocks. When the script fails for a transcript (exit 3 or 4), the cross-check names it: `cut-offs not captured (transcript <basename> unreadable)`, and that role's spend reads `not captured` (`--require-end` exits with the same code). A role agent's transcript holds only this item's work, and your window is cut by `--since`/`--until`, so no further filter is needed.
 
 ### Done, then stopped
 
@@ -207,15 +226,15 @@ Copy the label from the lead state. The record never recomputes it.
 
 | # | Key | Counted | Source |
 |---|---|---|---|
-| 1 | `lead time` | **total** = approval time − start of the `Start item` row. **waiting for the person**, **waiting on limits**, **stalled**, **interrupted** = the item-held waits of that kind (stage log `## Waits`, `held item: yes`; kinds and how each is detected in this file). Overlaps are counted once: within a kind as one stretch, and across kinds to the kind that comes first in this line's order (person, limits, stalled, interrupted). **agent working** = total − the four waits, so agent working + person + limits + stalled + interrupted = total. | stage log |
+| 1 | `lead time` | **total** = approval time − start of the `Start item` row. **waiting for the person**, **waiting on limits**, **stalled**, **interrupted** = the item-held waits of that kind (stage log `## Waits`, `held item: yes`, after the close scan has added the cut-offs no notice reported; kinds and how each is detected in this file). Overlaps are counted once: within a kind as one stretch, and across kinds to the kind that comes first in this line's order (person, limits, stalled, interrupted). **agent working** = total − the four waits, so agent working + person + limits + stalled + interrupted = total. | stage log |
 | 2 | `first-pass yield` | per stage (QA, security, acceptance demo), from the stage's **first** run only. **Pass first time** = the first verdict is `pass` **and** that run lists no finding at or above minor. Below minor means a severity of `low`, `info`, `trivial` or `note`; every other severity (`minor`, `medium`, `major`, `high`, `critical`, `blocker`), and a finding with no severity, counts as at or above minor. Written `pass first time` with no finding below minor either, `pass first time (<n> low)` with `<n>` findings below minor, whether or not the Lead routed them as feedback. **Failed first time** = the first verdict is not `pass`, or it lists a finding at or above minor, or (demo) any criterion failed. `n/a (did not run)` when the stage was skipped. | QA and security results, demo outcome, in `work/<id>/` |
 | 3 | `rework` | per role, the number of feedback briefs that role received (any `Source`); then the number of two-way decisions overturned by a `Source: lead` feedback brief. Roles that ran and got none read `0`; roles that never ran read `0` too. | `work/<id>/NN-feedback-*.md` |
 | 4 | `escaped defects` | always `not captured (tracing deferred until the first defect found in a merged item)` in v2 | deferred |
-| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `bash "<plugin root>/scripts/token-spend.sh" <transcripts>` sums `message.usage` over every transcript of that role's agents on this item (resumes and feedback rounds included), one count per distinct `message.id`; for the Lead, its main-session transcript(s) between the `Start item` start and approval. **Truncated transcripts**: a transcript cut by a stall or an interruption lost the request in flight, so its sum is short by an unknown amount; the role's spend then reads `not captured (transcript truncated by <kind>)`, never a number, `<kind>` being `stalled` or `interrupted`. The Lead recognises truncation by either of two signals: (a) **the notice**: a `stalled` or `interrupted` wait in `## Waits` names one of the role's agents (or `lead`) in its `Agent` column; `<kind>` is that wait's kind (the earliest, when there are several); (b) **the transcript**: `token-spend.sh --require-end` exits 6 for one of the role's transcripts (see below), with no such wait logged; `<kind>` is then `unlogged`. **peak context**: the largest `<subagent_tokens>` (background) or `totalTokens` (foreground) across that role's completion notices that carried one; `not captured (failure notice carried no token count)` when none did; for the Lead, the `peak` the spend script reports over the same window, or `not captured (transcript truncated by <kind>)` when its spend reads so. A role with no agent on this item: `n/a (did not run)` for both. | `scripts/token-spend.sh`; completion notices logged in the stage log |
+| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `bash "<plugin root>/scripts/token-spend.sh" <transcripts>` sums `message.usage` over every transcript of that role's agents on this item (resumes and feedback rounds included), one count per distinct `message.id`; for the Lead, its main-session transcript(s) between the `Start item` start and approval. **Truncated transcripts**: a transcript cut by a stall or an interruption lost the request in flight, so its sum is short by an unknown amount; the role's spend then reads `not captured (transcript truncated by <kind>)`, never a number, `<kind>` being `stalled` or `interrupted`. The Lead recognises truncation by either of two signals: (a) **the wait**: a `stalled` or `interrupted` wait in `## Waits`, logged at a notice or added by the close scan (*Cut-offs at close*), names one of the role's agents (or `lead`) in its `Agent` column; `<kind>` is that wait's kind (the earliest, when there are several). A recovered cut-off counts as much as a final one: the request it cut was lost either way; (b) **the transcript**: `token-spend.sh --require-end` exits 6 for one of the role's transcripts (see below), with no such wait logged; `<kind>` is then `unlogged`. Exit 3 or 4 there reads `not captured (<stderr line>)` as usual. **peak context**: the largest `<subagent_tokens>` (background) or `totalTokens` (foreground) across that role's completion notices that carried one; `not captured (failure notice carried no token count)` when none did; for the Lead, the `peak` the spend script reports over the same window, or `not captured (transcript truncated by <kind>)` when its spend reads so. A role with no agent on this item: `n/a (did not run)` for both. | `scripts/token-spend.sh`; completion notices logged in the stage log |
 | 6 | `person's touches` | counts of the touches list by kind | `## Person's touches` |
 | 7 | `doors` | per **Under test** line of the slice frame, in frame order, named by its link text: `confirmed`, `contradicted`, or `not exercised`, as the resurvey found. `pending resurvey` from posting to the edit; `not captured (run stopped before the resurvey)` when the resurvey never happens. | the resurvey |
 
-At close pass `--require-end` for every role transcript (never for the Lead's own session, still running). It exits 6 when a transcript was cut off: it holds a `[Request interrupted` user entry, or does not end on a final reply.
+At close pass `--require-end` for every role transcript (never for the Lead's own session, still running). It exits 6 when a transcript was cut off: `cut-offs.sh` finds a cut-off marker anywhere in it (a `stalled` or `interrupted` line other than `silent-gap`, even one the agent recovered from), or it does not end on a final reply.
 
 Token script exits (any non-zero exit: write the value as below, never `0`):
 
@@ -230,7 +249,7 @@ Transcripts are deleted after `cleanupPeriodDays` (30 by default), and those wri
 
 ### Worked example
 
-A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edit. QA failed once, security passed with two low findings, no demo, no devops stage, one decision card, one overturn, one limit hit, one machine sleep during the build, and a docs-writer that stalled after writing its `done` result. Its lead state is the stage-log example in section 4.
+A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edit. QA failed once, security passed with two low findings, no demo, no devops stage, one decision card, one overturn, one limit hit, one machine sleep during the build, a mid-stream cut-off QA recovered from by itself, and a docs-writer that stalled after writing its `done` result. Its lead state is the stage-log example in section 4.
 
 ```
 <!-- factory:hansei v2 -->
@@ -246,7 +265,7 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
 
 ### Measures
 
-1. lead time: total 4h41m; agent working 3h06m; waiting for the person 51m; waiting on limits 15m; stalled 11m; interrupted 18m
+1. lead time: total 4h41m; agent working 3h02m; waiting for the person 51m; waiting on limits 15m; stalled 15m; interrupted 18m
 2. first-pass yield: qa failed first time; security pass first time (2 low); acceptance demo n/a (did not run)
 3. rework: feedback briefs product-owner 0, architect 0, developer 1, qa-engineer 0, security-reviewer 0, devops 0, docs-writer 0; overturned two-way decisions 1
 4. escaped defects: not captured (tracing deferred until the first defect found in a merged item)
@@ -255,7 +274,7 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
    - product-owner: spend 301554 (input 88, cache write 41230, cache read 254101, output 6135); peak context 53942
    - architect: spend 612090 (input 140, cache write 70221, cache read 530417, output 11312); peak context 81277
    - developer: spend not captured (transcript truncated by interrupted); peak context 141210
-   - qa-engineer: spend 520336 (input 97, cache write 64010, cache read 447880, output 8349); peak context 70114
+   - qa-engineer: spend not captured (transcript truncated by stalled); peak context 74480
    - security-reviewer: spend not captured (transcript agent-a41f09.jsonl unreadable); peak context 48820
    - devops: spend n/a (did not run); peak context n/a (did not run)
    - docs-writer: spend not captured (transcript truncated by stalled); peak context not captured (failure notice carried no token count)
@@ -291,7 +310,7 @@ The lead state of item #12 at approval, new sections only.
 | 3 | Contracts and ADRs | architect | b7d031 | 2026-11-04T11:58Z | 2026-11-04T12:55Z | 57m | W1 | 81277 | done | 1 card |
 | 4 | Build | developer | c44a10 | 2026-11-04T12:55Z | 2026-11-04T14:46Z | 1h51m | W2, W3 | 138578 | done | resumed after a limit and after a sleep |
 | 5 | Open PR | lead | - | 2026-11-04T14:47Z | 2026-11-04T14:48Z | 1m | - | - | done | bump check passed (no factory paths) |
-| 6 | QA | qa-engineer | d21f77 | 2026-11-04T14:48Z | 2026-11-04T15:10Z | 22m | - | 70114 | findings | 1 finding |
+| 6 | QA | qa-engineer | d21f77 | 2026-11-04T14:48Z | 2026-11-04T15:10Z | 22m | W6 | 70114 | findings | 1 finding |
 | 7 | Security | security-reviewer | a41f09 | 2026-11-04T14:48Z | 2026-11-04T15:02Z | 14m | - | 48820 | pass | 2 low |
 | 8 | Build (round 2) | developer | c44a10 | 2026-11-04T15:11Z | 2026-11-04T15:30Z | 19m | - | 141210 | done | QA finding fixed |
 | 9 | QA (round 2) | qa-engineer | d21f77 | 2026-11-04T15:31Z | 2026-11-04T15:40Z | 9m | - | 74480 | pass | |
@@ -304,9 +323,10 @@ The lead state of item #12 at approval, new sections only.
 |---|---|---|---|---|---|---|
 | W1 | person | - | 2026-11-04T12:10Z | 2026-11-04T12:41Z | yes | decision card on #12: export format |
 | W2 | limits | c44a10 | 2026-11-04T13:05Z | 2026-11-04T13:20Z | yes | developer failed: session limit, resumed at reset |
-| W3 | interrupted | c44a10 | 2026-11-04T13:52Z | 2026-11-04T14:10Z | yes | developer failed: server_error at 14:09Z; pmset shows sleep 13:53Z–14:08Z; start from transcript; resumed |
-| W4 | stalled | e90b55 | 2026-11-04T15:49Z | 2026-11-04T16:00Z | yes | docs-writer failed: no progress for 600s, after its done result; start from transcript; accepted, not resumed |
+| W3 | interrupted | c44a10 | 2026-11-04T13:52Z | 2026-11-04T14:10Z | yes | developer failed: server_error at 14:09Z; sleep 13:53Z–14:08Z; start from cut-offs.sh; resumed |
+| W4 | stalled | e90b55 | 2026-11-04T15:49Z | 2026-11-04T16:00Z | yes | docs-writer failed: no progress for 600s, after its done result; start from cut-offs.sh; accepted, not resumed |
 | W5 | person | - | 2026-11-04T16:01Z | 2026-11-04T16:21Z | yes | merge and clean up? |
+| W6 | stalled | d21f77 | 2026-11-04T15:03Z | 2026-11-04T15:07Z | yes | found at close: cut-mid-stream; QA recovered by itself, no notice |
 
 ## Person's touches
 
@@ -317,22 +337,32 @@ The lead state of item #12 at approval, new sections only.
 | 2026-11-04T16:21Z | approval | merge and clean up: yes |
 ```
 
-From this log: total 11:40Z → 16:21Z = 4h41m; held person waits W1 + W5 = 51m; held limit wait W2 = 15m; held stall W4 = 11m; held interruption W3 = 18m; no two held waits overlap; agent working 4h41m − 51m − 15m − 11m − 18m = 3h06m. W3 and W4 also mark the developer's and the docs-writer's transcripts as truncated, so the record reads their spend as `not captured`. No Delivery row: the item had nothing to deliver, and devops reads `n/a (did not run)` in the record.
+From this log: total 11:40Z → 16:21Z = 4h41m; held person waits W1 + W5 = 51m; held limit wait W2 = 15m; held stalls W4 + W6 = 11m + 4m = 15m; held interruption W3 = 18m; no two held waits overlap; agent working 4h41m − 51m − 15m − 15m − 18m = 3h02m. W6 is held because the security review, the only other agent in that stretch, ended at 15:02Z. W3, W4 and W6 also mark the developer's, the docs-writer's and the QA's transcripts as truncated, so the record reads their spend as `not captured`. No Delivery row: the item had nothing to deliver, and devops reads `n/a (did not run)` in the record.
+
+W6 is the close scan's work: QA's transcript held one `cut-off mid-stream` marker, QA recovered and handed back normally, and no notice came. `cut-offs.sh` printed `agent-d21f77.jsonl\tstalled\t2026-11-04T15:03:12Z\t2026-11-04T15:07:40Z\tcut-mid-stream`, with no logged wait for `d21f77` overlapping it, so the lead added W6.
 
 ## 5. Close, in order
 
 Step 8 of `skills/run/SKILL.md` follows this order:
 
 1. Ask **merge and clean up?**. On the yes, stamp the approval time: it ends the `Merge approval` row and is the touch `approval`.
-2. Cross-check the stage log (section 2).
+2. Complete `## Waits` with the close scan (*Cut-offs at close*), then cross-check the stage log (section 2).
 3. Total the token spend per role.
 4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*. Write `hansei: <comment URL> (measure 7 pending)` into the map's **Factory run** section, because `work/<id>/` is about to go and the map survives.
 5. Environment teardown, when the item had one.
-6. Remove `work/<id>/`, in this order:
-   1. Commit the lead state: `git add -A work/<id>` then, when anything is staged (`git diff --cached --quiet` exits 1), `git commit -m "#<id> lead: close"`.
-   2. `git rm -r -q work/<id>`, then `rm -rf work/<id>` for what git does not track (ignored files such as `.DS_Store`), then `git commit -m "#<id> lead: remove work/"`. This is the last commit on `item/<id>`.
+6. Remove `work/<id>/`, in the item worktree, in this order, which never meets a dirty file and never reaches outside the worktree. Every command names the worktree by its absolute path, so the shell's working directory does not matter (it starts in the main checkout, and a `cd` into `../wt/<id>` does not persist):
+   0. Guard:
+      ```
+      case "<id>" in ''|*[!0-9]*) echo "close: id not numeric" >&2; exit 1 ;; esac
+      w="$(git worktree list --porcelain | awk -v b="branch refs/heads/item/<id>" '/^worktree /{p=substr($0,10)} $0==b{print p}')"
+      [ -n "$w" ] || { echo "close: no worktree for item/<id>" >&2; exit 1; }
+      if [ -L "$w/work" ] || [ -L "$w/work/<id>" ]; then echo "close: work/ is a symlink" >&2; exit 1; fi
+      ```
+      When the guard stops, stop the close and put it to the person; nothing has been removed.
+   1. Commit the lead state, staging only the protocol's files: `git -C "$w" add -- "work/<id>/[0-9][0-9]-*.md"` (lead state, briefs, results, feedback, questions, including any not yet committed), then `git -C "$w" add -u -- "work/<id>"` (changes to tracked files), then, when anything is staged (`git -C "$w" diff --cached --quiet` exits 1), `git -C "$w" commit -m "#<id> lead: close"`. Any other untracked file under `work/<id>/` (a scratch dump, a copied transcript, an `.env` a role made for a test) is never staged: a commit stays in the project's history for good, and those files were never meant for it. The next step deletes them.
+   2. `git -C "$w" rm -r -q -- "work/<id>" && rm -rf -- "$w/work/<id>" && git -C "$w" commit -m "#<id> lead: remove work/"`. `rm -rf` takes what git does not track (ignored files such as `.DS_Store`, and the untracked files 6.1 left out); with `&&` it never runs after a failed `git rm`. This is the last commit on `item/<id>`.
 
-   No `-f` is needed. The record's `created_at` is earlier than both commits.
+   No `-f` is needed: after 6.1 nothing tracked under `work/<id>/` differs from `HEAD`. The record's `created_at` is earlier than both commits.
 7. *Merge PR* (with the release tag), board to Done.
 8. Resurvey with the frame's **Under test** list.
 9. *Edit hansei*: measure 7 gets one line per Under test line. Remove the `hansei:` pointer from the Factory run section.

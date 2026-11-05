@@ -372,6 +372,17 @@ has k4-lead-person-never "$AN" 'Lead and person rows are never tested.'
 has k6-fingerprint-compare "$AN" 'Compare `standard` and `tooling`.'
 has k6-freeze "$AN" 'Read the map'"'"'s Factory run section for a line holding `FREEZE:`.'
 
+# ---------- every role reads the protocol, which now carries the andon (contract 49-standard-changes: agent files unchanged) ----------
+for a in product-owner architect developer qa-engineer security-reviewer devops docs-writer; do
+  has "agent-reads-protocol-$a" "$PLUGIN/agents/$a.md" 'Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.'
+done
+
+# ---------- QA-49 F1 (low): the pause's wait must be listed in the paused row's Waits, or the 2x test counts the pause as agent working ----------
+step1="$(grep -m1 '^1\. Stamp `date -u +%FT%TZ`: the pause start' "$AN")"
+hband="$(grep -m1 'Each andon is a row: `Stage` `Andon A<n>`' "$HA")"
+if printf '%s\n%s' "$step1" "$hband" | grep -qE 'paused (stage )?row.{0,40}`Waits`|`Waits` (column|cell) of the (paused|stage)'; then ck qa49-f1-paused-row-lists-the-andon-wait 1 1
+else skip qa49-f1-paused-row-lists-the-andon-wait "QA-49 F1 (low): Procedure step 1 names only Notes for the paused row; the row's Waits column must also list the andon wait or kind 4 flags the paused stage (developer)"; fi
+
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
 ck ac29-version-is-minor-above-1.0.0 "1.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"

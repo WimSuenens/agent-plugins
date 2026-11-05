@@ -170,6 +170,14 @@ cp "$T/final.jsonl" "$T/d/--require-end"; ck require-end-name-after-dashdash "$(
 RE "$T/sleep-midrun.jsonl" >/dev/null 2>&1; code=$?
 if [ $code = 6 ]; then ck require-end-sleep-mid-run-exit-6 6 $code
 else skip require-end-sleep-mid-run-exit-6 "QA-39 v2 F3: exit $code, want 6 -- a server_error API-error entry mid-run is not read as a cut (architect, then developer)"; fi
+# the same for a stream cut that Claude Code recovered by itself: it writes an isMeta user entry "Your response above was
+# cut off mid-stream ..." and the agent goes on (the demo's QA agent a85f55… had three, 00:14Z-00:48Z, with no notice)
+{ ubrief 2026-11-05T00:07:00Z; athink 2026-11-05T00:08:06Z c1
+  printf '{"type":"user","timestamp":"2026-11-05T00:14:49.000Z","isMeta":true,"message":{"role":"user","content":"Your response above was cut off mid-stream and only your next message is delivered. Write the complete response again from the start — no apology, no mention of the cut-off."}}\n'
+  ast 2026-11-05T00:15:00Z c2 "Done."; } > "$T/cut-midstream.jsonl"
+RE "$T/cut-midstream.jsonl" >/dev/null 2>&1; code=$?
+if [ $code = 6 ]; then ck require-end-cut-mid-stream-exit-6 6 $code
+else skip require-end-cut-mid-stream-exit-6 "QA-39 v2 F3: exit $code, want 6 -- a recovered mid-stream cut-off is not read as a cut (architect, then developer)"; fi
 
 # --- contract worked example on the real product-owner transcript of #39, when this machine still has it
 R="$(find "$HOME/.claude/projects" -name 'agent-aff847e3e8c7e5bfa.jsonl' 2>/dev/null | head -1)"

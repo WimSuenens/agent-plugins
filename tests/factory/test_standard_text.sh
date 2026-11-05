@@ -353,6 +353,13 @@ else skip stall-start-is-last-entry-before-gap "QA-39 v2 F1: hansei.md's command
 if grep -qF 'API Error' "$HA"; then ck lead-api-error-detected 1 1
 else skip lead-api-error-detected "QA-39 v2 F2: hansei.md's stalled/interrupted detection for the Lead does not name an API-error last entry (the demo's 5h Lead interruption) (architect, then developer)"; fi
 
+# --- v2 (#44), stalls and sleeps inside a running agent that recovered by itself: no failure notice reaches the Lead, so
+# no wait opens and the time stays in agent working. The demo's QA agent lost about 71m this way (five cut-offs, two of
+# them "API Error: Your computer went to sleep mid-response", 00:08Z-01:21Z) before its final stall. Its transcript shows
+# each one. The standard should tell the Lead to find them at close.
+if grep -qiE 'cut off mid-stream|isApiErrorMessage' "$HA"; then ck in-run-cutoffs-detected 1 1
+else skip in-run-cutoffs-detected "QA-39 v2 F3: hansei.md has no rule for stalls or sleeps an agent recovered from without a notice (the demo QA's ~71m stay in agent working) (architect, then developer)"; fi
+
 # --- AC-7 support: the tag step exists in Merge PR
 has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'
 

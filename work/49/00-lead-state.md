@@ -1,16 +1,16 @@
 # Lead state: #49 Andon
 
 - **Board item id:** PVTI_lAHOBIbaa84BqOBFzhGaUn0
-- **Status:** Backlog
+- **Status:** Ready
 - **Map:** #34 (Lean factory run), run step 5 done; next is step 6
 - **Branch / worktree:** `item/49` at `../wt/49`
-- **Next step:** Requirement (product-owner), with the carry-overs below in the brief
+- **Next step:** Contracts and ADRs (architect), after the person's read of the requirement decisions
 - **Open questions:** none
 - **Calibration:** frozen factory `9147301f75c3` (installed sha checked at item start: matches the FREEZE line on #34). No `/plugin marketplace update`, no `/reload-plugins`. Pre-release standard has no fingerprint script and no `## Label`; this log is manual.
 
 ## Running agents
 
-- product-owner, work/49/01-brief-product-owner.md, handle pending, last commit see git log
+none (product-owner aa940c1d056ef54db finished, d78bd99)
 
 ## Carry-overs (from #39, map #34)
 
@@ -26,7 +26,7 @@
 | # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51Z | ~1m | - | - | done | board at Backlog, worktree + work/49 created |
-| 2 | Requirement | product-owner | pending | 2026-11-05T22:55Z | | | - | | | |
+| 2 | Requirement | product-owner | aa940c1d056ef54db | 2026-11-05T22:55Z | 2026-11-05T22:59Z | 4m | - | 84629 (subagent_tokens, peak context; spend not captured) | done | 30 ACs, 8 decisions, no card; 19 tool uses |
 
 ## Waits
 

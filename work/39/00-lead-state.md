@@ -41,6 +41,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 
 ## Person's touches
 
+- 07:2xZ — AC-17 after the fix: accepted on QA's word, unless QA demands a demo re-run
+
 - 07:1xZ — demo verdicts; AC-17 judged fail (chose A); instructed sandbox to file step-9 issues #41–#48
 
 - ~21:55Z — restarted sandbox session; approved push of sandbox main; /factory:run step 1 destination confirmed (sandbox)

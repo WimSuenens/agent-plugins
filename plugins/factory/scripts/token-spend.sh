@@ -3,7 +3,7 @@
 # Usage: bash token-spend.sh [--since <UTC time>] [--until <UTC time>] [--require-end] [--] <transcript.jsonl>...
 # Times: YYYY-MM-DDTHH:MMZ or YYYY-MM-DDTHH:MM:SSZ, compared as epoch seconds.
 # Stdout: spend <total> (input <i>, cache write <w>, cache read <r>, output <o>); peak <p>; messages <n>
-# --require-end: a transcript must show a run that ended by itself (no "[Request interrupted" user entry; last assistant/user entry is a final reply or the SubagentHandback result). Not for the lead's own session.
+# --require-end: a transcript must show a run that ended by itself and was never cut on the way (cut-offs.sh in this script's directory reports no stalled/interrupted line other than silent-gap; last assistant/user entry is a final reply or the SubagentHandback result). Not for the lead's own session.
 # Exit: 0 ok; 2 bad arguments; 3 a file is missing, unreadable or not JSON; 4 jq missing; 5 no message in window; 6 --require-end and a transcript is truncated.
 # See contracts/39-plugin-scripts.md section 3 in the repo that hosts the factory.
 
@@ -58,16 +58,24 @@ for f in "$@"; do
 done
 
 if [ "$require_end" = 1 ]; then
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   for f in "$@"; do
+    # rule 1: no cut-off marker anywhere (one marker test, shared with cut-offs.sh); exit 3 or 4 is passed on
+    all="$(bash "$here/cut-offs.sh" -- "$f" 2>&1)"; rc=$?
+    if [ "$rc" -eq 3 ] || [ "$rc" -eq 4 ]; then
+      printf '%s\n' "$all" | sed 's/^cut-offs:/token-spend:/' >&2
+      exit "$rc"
+    fi
+    if [ "$rc" -ne 0 ] || printf '%s\n' "$all" | awk -F'\t' '$2 != "limits" && $5 != "silent-gap" && NF >= 5 {f=1} END {exit !f}'; then
+      echo "token-spend: transcript $(basename "$f") truncated" >&2
+      exit 6
+    fi
     if ! jq -se '
-      def txt: if (.message.content | type) == "string" then .message.content
-               else ([.message.content[]? | select(.type == "text") | .text] | join("")) end;
       def blocks: (.message.content | if type == "array" then .[] else empty end);
       [ .[] | select(.type == "assistant" or .type == "user") ] as $m
       | [ $m[] | select(.type == "assistant") | blocks | select(.type == "tool_use" and .name == "SubagentHandback") | .id ] as $hand
       | ($m | last) as $l
-      | (([ $m[] | select(.type == "user" and (txt | startswith("[Request interrupted"))) ] | length) == 0)
-        and ($l != null)
+      | ($l != null)
         and (
           ($l.type == "assistant" and ([ $l | blocks | select(.type == "tool_use") ] | length) == 0)
           or ($l.type == "user" and ([ $l | blocks | select(.type == "tool_result" and (.tool_use_id as $t | $hand | index($t))) ] | length) > 0)

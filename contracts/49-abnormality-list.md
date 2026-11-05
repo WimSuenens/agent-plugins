@@ -14,7 +14,7 @@ Seven kinds. Each has a number, a name (used on the `Abnormality:` line and in r
 
 | # | Name | Observation that proves it | Who normally sees it |
 |---|---|---|---|
-| 1 | `blocked-input` | a result with `Status: blocked` whose `Missing` lists an input that is not in that role's `## Inputs needed` (§3 of this contract, *Kind 1*) | Lead, at each result |
+| 1 | `blocked-input` | a result with `Status: blocked` whose `Missing` lists an input that is not in that role's `## Inputs needed` (*Kind 1, the comparison*, below) | Lead, at each result |
 | 2 | `same-finding-twice` | two findings in one item that §4 matches | Lead, at each result or verdict that lists findings |
 | 3 | `role-outside-role` | a commit whose subject names role R and that changes a path the ownership table gives to another role (§5) | Lead, at each role stage and before the PR |
 | 4 | `slow-stage` | a stage-log row whose agent-working time is more than twice the median of the same role's earlier rows (§6) | Lead, when it closes each row |

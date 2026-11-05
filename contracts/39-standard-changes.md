@@ -1,0 +1,120 @@
+# Contract 39 — Where each change lives in the factory plugin
+
+Slice [#39](https://github.com/WimSuenens/agent-plugins/issues/39) · Requirement [39-hansei-record](../docs/requirements/39-hansei-record.md) · ADRs [0011](../docs/adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [0012](../docs/adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md), [0013](../docs/adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md)
+
+The placement contract for the developer: which file under `plugins/factory/` carries which rule. Wording is the developer's; what each file must say is fixed here. Formats are in [39-hansei-record](39-hansei-record.md), [39-stage-log](39-stage-log.md) and [39-plugin-scripts](39-plugin-scripts.md).
+
+| File | Kind | Change |
+|---|---|---|
+| `.claude-plugin/plugin.json` | other | `"version": "1.0.0"` (§1) |
+| `references/hansei.md` | standard work (new) | record template (schema v2), field definitions, stage-log format with the four wait kinds (§2) |
+| `skills/run/SKILL.md` | standard work | plugin root, label at item start, stage log through the stages, *Open PR* check, frontier PR check in step 3, step 8 order, step 9 rule, fallback for older tracker docs (§3, §4, §6) |
+| `scripts/fingerprint.sh`, `scripts/check-bump.sh`, `scripts/token-spend.sh`, `scripts/cut-offs.sh` | tooling (new) | [39-plugin-scripts](39-plugin-scripts.md) |
+| `skills/setup-factory-skill/references/issue-tracker-github.factory.md` | other | *Find / Post / Edit hansei* bullets; bump re-check and tag in *Merge PR*; `--merge` kept with its reason (§4, §5, §9) |
+| `references/protocol.md` | standard work | path rule for message files (§9) |
+| `agents/security-reviewer.md` | standard work | checklist line: `work/` in merge history is expected; what is a finding (§9) |
+| `references/decision-card.md`, other `agents/*.md` | standard work | no change |
+| `hooks/hooks.json`, `scripts/guard-memory.sh` | tooling | no change (the memory guard does not apply to the Lead, so its transcript reads pass) |
+
+Outside `plugins/factory/`: `.claude-plugin/marketplace.json` keeps no `version` in the factory entry (§1).
+
+## 1. Release
+
+- `plugins/factory/.claude-plugin/plugin.json` gets `"version": "1.0.0"` on its own line (AC-1).
+- The factory entry in `.claude-plugin/marketplace.json` has no `version` (it has none today; keep it so). Two places would let the manifest win silently (#35).
+
+## 2. `references/hansei.md` (new standard work)
+
+Holds, for the Lead:
+
+1. The stage log: the four lead-state sections and their rules ([39-stage-log](39-stage-log.md) §1–§4).
+2. The record: marker, layout, value grammar, honesty rule, field definitions and sources ([39-hansei-record](39-hansei-record.md) §2–§4), with the worked example.
+3. The rule that measurements stay in the project: every record, log and measure is written to the project's own tracker or its `work/<id>/`, never to `WimSuenens/agent-plugins` (AC-20).
+
+The glob `references/*.md` puts it in the standard fingerprint, and the bump check's minor rule covers it.
+
+## 3. `skills/run/SKILL.md`
+
+- **Plugin root.** One line near the top: `Plugin root: ${CLAUDE_PLUGIN_ROOT}`. Claude Code substitutes the variable in skill files only, so every script call, in `SKILL.md` and in `references/hansei.md` alike, uses the path that line shows. `references/hansei.md` writes `<plugin root>` and says where it comes from; it never writes a literal `${CLAUDE_PLUGIN_ROOT}`, which would reach the shell unsubstituted ([39-plugin-scripts](39-plugin-scripts.md), common rules).
+- **Step 5, Start the item.** Stamp `date -u +%FT%TZ`, open the `Start item` row, run `scripts/fingerprint.sh` and write `## Label` (with dependency versions and the lead session id), and start the `## Stage log`, `## Waits` and `## Person's touches` sections, per `references/hansei.md`.
+- **Briefs and lead state.** Where the Lead writes `work/<id>/00-lead-state.md` and its briefs, one line points at the protocol's path rule (§9): the Lead's own files follow it too.
+- **Step 6, Run the stages.** At each brief and each result: stamp `date -u +%FT%TZ` and open or close the row, with agent ids and the notice's peak context. Each wait goes to `## Waits` and each touch the person makes goes to `## Person's touches`, as it happens.
+- **Interruptions.** Every failure notice opens a wait of its kind in `## Waits`, with the stopped agent in its `Agent` column: `limits` for a usage limit, `stalled` for no progress (the stream watchdog), `interrupted` for a server or connection error or a machine sleep; the Lead's own stall or interruption likewise, with `lead` ([39-stage-log](39-stage-log.md) §3, *Wait kinds*). The wait's start is the last line's start from `scripts/cut-offs.sh` on the stopped agent's transcript, with the sleep log piped in where `pmset` exists, never the file's last entry (*Taking the start from the transcript*); the text carries the exact `pmset` filter and the rule to copy only UTC sleep times. Cut-offs an agent recovered from send no notice; the close scan finds them. The resume, the respawn or the accepted result closes it. A new case: an agent that stalls or fails **after** writing a complete `done` result whose commits are on the branch is read as a completion (Done list checked as usual), logged as its wait kind, and not resumed ([39-stage-log](39-stage-log.md) §3, *Done, then stopped*).
+- **Open PR.** Before `gh pr create`: `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"`. Exit 0: open the PR. Exit 1: don't open it, send the developer a feedback brief (`Source: lead`) quoting the refusal, log the `refused` row, and run *Open PR* again when the developer is done. Exit 2: don't open it; put the message to the person. No instruction anywhere opens a PR without this check (AC-8).
+- **Step 3, the frontier round's PR.** Before its `gh pr create`, the same `git fetch origin main` and `check-bump.sh`, in the frontier worktree, with the same exit handling, except that a refusal goes to the person and is noted in the Factory run section ([39-plugin-scripts](39-plugin-scripts.md) §2, *What the Lead does*). This is what makes "no instruction anywhere opens a PR without this check" true for both kinds of PR.
+- **Step 8, Close the item.** The order in [39-hansei-record](39-hansei-record.md) §6, with its *Done when* extended: the hansei record is posted, and after the resurvey its measure 7 is filled. Step 2 there starts with the close scan (`cut-offs.sh` over every role transcript and the Lead's window, [39-stage-log](39-stage-log.md) §3, *Cut-offs at close*). Step 6 spells out the removal of `work/<id>/` (the guard, staging only `:(glob)work/<id>/[0-9][0-9]-*.md` plus `git add -u`, then `git rm -r … && git clean -fdx … && [ ! -e … ]`, all with `git -C "${w:?}"` on the worktree's absolute path, guard and both steps in **one** shell call), so `git rm` never needs `-f` and no `rm -rf` remains; the step text carries those commands verbatim and says they run as one call. `references/hansei.md` §5 repeats the same order.
+- **Step 9 rule.** Keep the factory feedback issue to the map's rule: the problem in factory terms, the standard change, before/after numbers against the baseline with item count and release, and no code, names, business content or raw hansei records (AC-20). This is the only instruction that names `--repo WimSuenens/agent-plugins`.
+
+## 4. Tracker operations, including projects set up before 1.0.0
+
+- **Canonical home.** The *Find hansei*, *Post hansei* and *Edit hansei* commands ([39-hansei-record](39-hansei-record.md) §5) go into the plugin's tracker patch, `skills/setup-factory-skill/references/issue-tracker-github.factory.md`, after *Stage summary*. `/factory:setup-factory-skill` step 6 already writes that section into a project's `docs/agents/issue-tracker.md` ("add (or replace)"), so new projects get them with no change to the setup skill.
+- **Projects set up before 1.0.0.** Their `## Factory operations` section has no *Post hansei* bullet. `skills/run/SKILL.md` says, where it points at the tracker doc: when that section has no *Post hansei* bullet, it predates factory 1.0.0; use the `## Factory operations` section of `${CLAUDE_PLUGIN_ROOT}/skills/setup-factory-skill/references/issue-tracker-github.factory.md` for the whole item instead, and tell the person once that replacing their section with it (setup's step 6) brings the project up to date. The Lead never edits the project's tracker doc itself.
+- So there is one copy of the commands, in the plugin; the project's copy is a snapshot of it. A fallback copy inside `run/SKILL.md` would be a second source to keep in step.
+
+## 5. Bump re-check and release tag in *Merge PR*
+
+The *Merge PR* bullet in the tracker patch gains two steps.
+
+Before `gh pr merge`, the same bump check as *Open PR*: `git fetch origin main`, then `bash "<plugin root>/scripts/check-bump.sh"` in the branch's worktree (`<plugin root>` is the path on `run/SKILL.md`'s `Plugin root:` line, which the Lead has; the tracker doc is a project file and gets no substitution). Exit 0: merge. Exit 1 or 2: don't merge; handle it as *Open PR* does. Commits can land on the branch (a feedback round) or on main after the PR was opened, so the check at opening does not cover the merge.
+
+Between the merge and the clean-up:
+
+> When the merged branch changed the `version` in `plugins/factory/.claude-plugin/plugin.json` (only in the repo that hosts the factory): `git fetch origin main`, then `git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"` and `git push origin factory-v<version>`. Before tagging, check that `<version>` is a semver ([39-plugin-scripts](39-plugin-scripts.md), common rules: `printf '%s' "<version>" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'`); when it is not, don't tag and tell the person. Skip when that tag exists already (`git ls-remote --tags origin factory-v<version>` prints a line).
+
+The Lead creates the tag, in *Merge PR* (the lead's decision for this item). It points at the merge commit on `main` (AC-7). Taking the commit from `gh pr view` instead of `origin/main` keeps it right even when something else lands on main between the merge and the tag.
+
+For #39 itself, which runs on the frozen install without this text, the Lead follows this section by hand at its merge, running the branch's own `plugins/factory/scripts/check-bump.sh` before the merge (expected: `pass: minor bump needed, 0.0.0 -> 1.0.0`), then tagging `factory-v1.0.0` on #39's merge commit.
+
+## 6. What reaches agent-plugins
+
+- Every write of a record, a stage-log line or a measure targets the project's own tracker (`gh` inferring the repo from the clone) or `work/<id>/` in the project's worktree. None names `--repo`, and none writes a path in the plugin's repo (AC-20).
+- The only cross-repo write stays step 9's feedback issue, under the rule in §3.
+
+## 7. Shared resources
+
+- **Build and QA**: none. The scripts run on temporary copies of the plugin tree and on fixture transcripts; the bump check runs on throwaway git repos created in a temp directory. Nothing needs a tracker.
+- **Acceptance demo** (AC-9, 12, 17, 18, 19, 21): a scratch GitHub repository the person owns, with a `wayfinder:map` and one `wayfinder:slice` ticket, set up with `/factory:setup-factory-skill`, and a session started with `claude --plugin-dir <worktree>/plugins/factory`. It must not be `WimSuenens/agent-plugins`. The AC-9 throwaway branch lives in that scratch repo or a local clone and is never pushed to `WimSuenens/agent-plugins`. Which repository is the Lead's question to the person.
+
+## 8. Outside `plugins/`
+
+- This repo's own `docs/agents/issue-tracker.md` (docs-writer's path) should get the new `## Factory operations` section from the patch in this item, so agent-plugins' next item does not need the fallback. Until it does, §4's fallback covers it.
+- This repo's `docs/agents/issue-tracker.md` gets the *Merge PR* line of §9 with the rest of the section.
+- `README.md` and `CHANGELOG.md` (docs-writer): release 1.0.0, the hansei record, the bump rule for anyone changing the factory. The CHANGELOG entry for 1.0.0 also names the merge-style rule of §9.
+- The map's Notes define standard work as four paths; with `references/hansei.md` the definition becomes `skills/run/SKILL.md`, `references/*.md`, `agents/*.md` (the Lead's edit on #34).
+
+## 9. Merge style and the path rule
+
+[ADR 0013](../docs/adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md), the person's [decision on #48](https://github.com/WimSuenens/agent-plugins/issues/48#issuecomment-6666262968), option A. All of it ships in 1.0.0 with this PR. A standard change, so it is covered by the 1.0.0 bump already in §1; no further bump.
+
+**`references/protocol.md`, *Messages*.** After the line that names the files, the rule, in substance:
+
+> Paths in a message file are worktree-relative (`plugins/factory/agents/developer.md`), relative to the repo's parent for another worktree (`../wt/<id>`), or start with `~/` for anything under the home directory (`~/.claude/plugins/cache/...`). Never write an absolute path under the home directory: `work/` is merged into the project's history with every commit and stays there for good.
+
+It covers every message file in `work/<id>/` and `work/frontier-<id>/`: briefs, results, feedback, questions, options and decision cards, and the lead state. Commands in a message take `~/` or `"$HOME"/…` the same way. What the Lead puts in a role's spawn prompt (chat, never committed) is outside the rule.
+
+Worked example. A brief line and how it must read:
+
+```
+Inputs: /Users/alice/Projects/shop/wt/39/plugins/factory      <- refused by the rule
+Inputs: plugins/factory (in the item worktree, ../wt/39)          <- conforms
+Inputs: ~/.claude/plugins/cache/wimsuenens/factory/1.0.0        <- conforms
+```
+
+**`skills/run/SKILL.md`.** One line where step 5 writes the lead state and step 6 writes briefs: they follow the protocol's path rule. The `## Label` section already writes the plugin root with `~` ([39-stage-log](39-stage-log.md) §1).
+
+**`agents/security-reviewer.md`, *Steps* 1.** One line added to the checklist, in substance:
+
+> `work/<id>/` in the merge history is expected: items merge with `--merge` and keep every role commit. Not a finding. The finding is an absolute home path, a secret, or a file not named `NN-<type>-<role>.md`, in any commit of the item that touches `work/`. Check the home path with `git log -S"$HOME/" --format='%h %s' origin/main..HEAD -- work/` (any line is a finding, severity low: the branch is public once the PR is opened, so name the file and line and tell the role whose file it is to keep to the rule, not to rewrite history).
+
+Worked example. Review of an item with one slipped path:
+
+```
+$ git log -S"$HOME/" --format='%h %s' origin/main..HEAD -- work/
+3f2a1c9 #39 lead: QA brief
+```
+
+Finding: `work/39/09-brief-qa-engineer.md:7` — low — absolute home path in a committed brief; already public on the PR ref, so not rewritten; the Lead writes later briefs with worktree-relative paths. An item with no line out of that command has no path finding, and `work/` in history is not reported.
+
+**`skills/setup-factory-skill/references/issue-tracker-github.factory.md`, *Merge PR*.** `gh pr merge <branch> --merge` stays, with a short reason so nobody tidies it to squash, in substance: "`--merge`, never squash or rebase: the role commits are the evidence the hansei record is re-checked against". No other change to the bullet.
+
+**Not chosen:** squash (`--squash`) and rebase-merge (`--rebase`); see ADR 0013. No head-sha field in the record, no runbook rollback change.

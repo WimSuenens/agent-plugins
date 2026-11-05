@@ -9,7 +9,15 @@ disable-model-invocation: true
 
 You are the **lead**. Seven role agents do the work: `factory:product-owner`, `factory:architect`, `factory:developer`, `factory:qa-engineer`, `factory:security-reviewer`, `factory:devops`, `factory:docs-writer`. You brief them, read their results, move items on the tracker, and stand between them and the person.
 
+Plugin root: ${CLAUDE_PLUGIN_ROOT}
+
+Every script call below uses this substituted path (`bash "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh" …`); the variable is not in the Bash environment, so never rely on `$CLAUDE_PLUGIN_ROOT` inside a shell command.
+
 The roles share [the protocol](${CLAUDE_PLUGIN_ROOT}/references/protocol.md); read it once so your briefs match its templates. This repo's ownership, decision-maker level, role model overrides, and tracker ids are in `docs/agents/factory.md`; the tracker commands are under `## Factory operations` in `docs/agents/issue-tracker.md`. When either file is missing, stop and point the person at `/factory:setup-factory-skill`.
+
+When the `## Factory operations` section has no *Post hansei* bullet, the project's tracker doc predates factory 1.0.0: use the `## Factory operations` section of `${CLAUDE_PLUGIN_ROOT}/skills/setup-factory-skill/references/issue-tracker-github.factory.md` for the whole item instead, and tell the person once that replacing their section with it (`/factory:setup-factory-skill`, step 6) brings the project up to date. Never edit the project's tracker doc yourself.
+
+While an item runs you keep a stage log and, at its close, post one hansei record on the slice ticket; both are defined in [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md). Read it at step 5 and at step 8.
 
 Every role runs on the model in its agent file unless the `## Role models` table in `docs/agents/factory.md` overrides it. When spawning a role that has a row, pass that value as the spawn's `model`; for any other role, leave `model` out so the agent file's default holds. Check the table before the first spawn: a value other than `haiku`, `sonnet`, `opus`, or `fable` stops the run, and you tell the person which row to fix. Never fall back to the default silently.
 
@@ -71,7 +79,7 @@ An open card or task blocks only the tickets and slices that hang off it through
 When no unblocked one-way door is left and no correction or card on the round's tickets is open, end the round:
 
 1. The round's last commit removes `work/`.
-2. Open one PR from `frontier/<map>` carrying only ADRs and glossary changes.
+2. Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh` in the round's worktree) with the same exit handling as in step 6, then open one PR from `frontier/<map>` carrying only ADRs and glossary changes.
 3. Ask **merge and clean up?** as in step 8.2; a frontier round sets no `Factory status`. On approval, merge the PR to main and clean up (*Merge PR*), before step 4 cuts the next item.
 
 A card decided after its round merged, or one-way doors reopened by a resurvey, start a **new** frontier round on a fresh `frontier/<map>` branch from main.
@@ -88,11 +96,12 @@ Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unb
 
 1. Add the ticket to the board and set `Factory status` to Backlog (*Add to board*, *Set status*).
 2. `git worktree add ../wt/<id> -b item/<id>` (or the location in `docs/agents/factory.md`), then create `work/<id>/` in it.
-3. Write `work/<id>/00-lead-state.md`: the board item id, current status, next step, open questions, and a **Running agents** list with one line per running role: role, brief file, agent handle (the id you message to resume it), last commit. Keep that list current as roles start and finish; it also records interruptions and whether fan-out has gone sequential (see *Interruptions*). Once the architect's stage is done, add a **Shared resources** list too (see *Environment and shared resources*).
+3. Stamp `date -u +%FT%TZ` and open the `Start item` row of the stage log. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/fingerprint.sh" "${CLAUDE_PLUGIN_ROOT}"` and write the label (release, standard and tooling fingerprints, dependency versions, your session id) as `## Label`; start `## Stage log`, `## Waits` and `## Person's touches`, all as `references/hansei.md` defines them.
+4. Write `work/<id>/00-lead-state.md`: the board item id, current status, next step, open questions, and a **Running agents** list with one line per running role: role, brief file, agent handle (the id you message to resume it), last commit. Keep that list current as roles start and finish; it also records interruptions and whether fan-out has gone sequential (see *Interruptions*). Once the architect's stage is done, add a **Shared resources** list too (see *Environment and shared resources*). The sections from the previous point follow these parts. The lead state and every brief follow the protocol's path rule (*Messages*): no absolute path under the home directory, only worktree-relative, `../wt/<id>` or `~/` paths.
 
 On a resumed item, keep what exists and continue from the lead state.
 
-**Done when** the worktree, the folder, and the lead state exist and the board shows Backlog.
+**Done when** the worktree, the folder, and the lead state (with its label and the three log sections) exist and the board shows Backlog.
 
 ## 6. Run the stages
 
@@ -110,8 +119,8 @@ On a resumed item, keep what exists and continue from the lead state.
 
 For each stage:
 
-1. Write the brief in `work/<id>/`, filling **Inputs** from the role's *Inputs needed*, and delegate to the role. Name tracker issues by number; the role reads them itself, so never copy their content into files. The product-owner's inputs include the map's Destination. Each role commits its own paths.
-2. Read only the result's `Status`, `Summary`, and `Decisions` (and `Progress` after an interruption). Open an artifact only to check a Done item.
+1. Stamp `date -u +%FT%TZ` and open the stage's row in the stage log. Write the brief in `work/<id>/`, filling **Inputs** from the role's *Inputs needed*, and delegate to the role. Name tracker issues by number; the role reads them itself, so never copy their content into files. The product-owner's inputs include the map's Destination. Each role commits its own paths.
+2. Stamp `date -u +%FT%TZ` and close the row, with the agent ids and the completion notice's peak context (`<subagent_tokens>` or `totalTokens`). Read only the result's `Status`, `Summary`, and `Decisions` (and `Progress` after an interruption). Open an artifact only to check a Done item.
 3. Review the `Decisions` (see below).
 4. On the status:
    - `done`: check the role's Done list against its artifacts, set the next status, post a stage summary with its decisions (*Stage summary*), and update the lead state.
@@ -121,7 +130,17 @@ For each stage:
 5. QA and security findings go to the developer as feedback; repeat until both verdicts are `pass`.
 
 
-Open the PR (*Open PR*) when the developer is done, so QA and security review the diff in place.
+Every wait goes to `## Waits` and every touch the person makes to `## Person's touches`, as it happens, not at close.
+
+Open the PR (*Open PR*) when the developer is done, so QA and security review the diff in place. Before `gh pr create`, always:
+
+1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"` in the item worktree.
+2. Exit 0: open the PR, and log the pass line in the `Open PR` row's Notes.
+3. Exit 1: do not open the PR. Send the developer a feedback brief (`Source: lead`) quoting the refusal, log the row with `Result` `refused`, and run *Open PR* again when the developer is done.
+4. Exit 2: do not open the PR; put the stderr line to the person.
+
+No instruction anywhere opens a PR without this check.
+
 Production actions wait for the person's explicit approval.
 
 ### Environment and shared resources
@@ -173,26 +192,41 @@ The person's choice is final for this item; a later contradiction from running c
 
 ## 8. Close the item and resurvey
 
-1. Once delivery and documentation are done, put the PR to the person with its stage summaries and any open decisions, and ask one question: **merge and clean up?** Merging is never automatic, and this one approval covers the merge and the whole clean-up, the item's environment included. Until then, the item waits.
-2. On approval, when the item had an Environment stage, brief devops to tear down the resources in the lead state's **Shared resources** list.
-3. The last commit on `item/<id>` removes `work/<id>/`; the tracker holds the stage summaries and the ADRs hold the decisions.
-4. Merge the PR and remove the worktree and branch (*Merge PR*), and set `Factory status` to Done. When the merge fails, keep the worktree and put the failure to the person.
-5. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
-6. Advance without waiting for the person again:
+The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md) holds the record's template and rules.
+
+1. Once delivery and documentation are done, put the PR to the person with its stage summaries and any open decisions, and ask one question: **merge and clean up?** Merging is never automatic, and this one approval covers the merge and the whole clean-up, the item's environment included. Until then, the item waits. Open the `Merge approval` row and a `person` wait when you ask; on the yes stamp `date -u +%FT%TZ`: that is the approval time and the touch `approval`.
+2. Complete `## Waits` with the close scan, then cross-check the stage log against git and the tracker, as `hansei.md` describes. The scan runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh"` once over every role agent's transcript of the item and once over each Lead session with `--since` the `Start item` start and `--until` the approval time (`--sleep-log -` with the `hansei.md` filter where `pmset` exists), and logs or reconciles each line it prints (`hansei.md`, *Cut-offs at close*): the cut-offs an agent recovered from send no notice, and this is where they are found.
+3. Total the token spend per role with `scripts/token-spend.sh` (`--require-end` for role transcripts).
+4. Fill the hansei template, measure 7 reading `pending resurvey`, and post it (*Post hansei*) on the slice ticket, before `work/<id>/` goes. Write `hansei: <comment URL> (measure 7 pending)` into the map's Factory run section.
+5. When the item had an Environment stage, brief devops to tear down the resources in the lead state's **Shared resources** list.
+6. The last commit on `item/<id>` removes `work/<id>/`, after one commit of the lead state, all in the item worktree and never reaching outside it. Run the guard and both commits as **one shell call** (one Bash tool call, one script that stops at the first failure): your shell keeps no variables between calls, so `w` exists only inside that call, and every use is written `"${w:?}"`, which stops the command when `w` is empty instead of acting on the main checkout. Every command names the worktree by its absolute path, so the shell's working directory does not matter. Guard first:
+   ```
+   case "<id>" in ''|*[!0-9]*) echo "close: id not numeric" >&2; exit 1 ;; esac
+   w="$(git worktree list --porcelain | awk -v b="branch refs/heads/item/<id>" '/^worktree /{p=substr($0,10)} $0==b{print p}')"
+   [ -n "$w" ] || { echo "close: no worktree for item/<id>" >&2; exit 1; }
+   if [ -L "${w:?}/work" ] || [ -L "${w:?}/work/<id>" ]; then echo "close: work/ is a symlink" >&2; exit 1; fi
+   ```
+   When the guard stops, stop the close and put it to the person; nothing has been removed. Then the lead-state commit, staging only the protocol's files: `git -C "${w:?}" add -- ':(glob)work/<id>/[0-9][0-9]-*.md'` (the `glob` magic keeps `*` inside one directory level, so a directory such as `work/<id>/03-dump/` is not staged), `git -C "${w:?}" add -u -- "work/<id>"`, and, when `git -C "${w:?}" diff --cached --quiet` exits 1, `git -C "${w:?}" commit -m "#<id> lead: close"`. Other untracked files under `work/<id>/` are never staged. Then `git -C "${w:?}" rm -r -q -- "work/<id>" && git -C "${w:?}" clean -f -d -x -q -- "work/<id>" && [ ! -e "${w:?}/work/<id>" ] && git -C "${w:?}" commit -m "#<id> lead: remove work/"`: `git clean` takes the untracked leftovers and the emptied directories, cannot act outside the repository and does not follow symlinks. The `[ ! -e ]` test catches what it leaves on purpose (a nested git repository): then stop the close and put it to the person, with `git rm` staged and nothing committed. With `&&` nothing runs after a failed step. No `-f` is needed on `git rm`. The tracker holds the stage summaries, the hansei record and the ADRs hold the decisions. The record is posted before this commit. It is posted before the lead-state commit too.
+7. Merge the PR and remove the worktree and branch (*Merge PR*, which also tags a factory release), and set `Factory status` to Done. When the merge fails, keep the worktree and put the failure to the person.
+8. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
+9. Fill measure 7 (*Edit hansei*): one line per Under test line, `confirmed`, `contradicted` or `not exercised`. Remove the `hansei:` pointer from the Factory run section. If the person stops the run after the record is posted and before this edit, edit measure 7 to `not captured (run stopped before the resurvey)` first; a later session that finds the pointer still in the Factory run section does the same.
+10. Advance without waiting for the person again:
    - **The destination moved, or a `[locked]` decision was contradicted** → stop the run and put it to the person. Redrawing the destination is step 1 again.
    - **One-way doors on the frontier** → step 3, as a new frontier round from main.
    - **Frontier clear, destination not reached** → step 4.
    - **The map dissolves** → step 9.
 
-**Done when** the person approved, the item's environment is torn down, the PR is merged, the worktree and branch are gone, the board shows Done, the map is resurveyed, and the next step is written into the Factory run section.
+**Done when** the person approved, the hansei record is posted on the slice ticket, the item's environment is torn down, the PR is merged, the worktree and branch are gone, the board shows Done, the map is resurveyed, measure 7 of the record is filled, and the next step is written into the Factory run section.
 
 ## 9. Offer factory feedback
 
 At the end of a run, or when the person stops one, gather what went wrong with the factory itself: briefs that came back `blocked` for a missing input the protocol should have named, a role doing another's work, a decision card the person struggled with, a stream of decisions the person had to overturn, a step in this skill that did not fit. Ask the person what felt clumsy.
 
-When there is anything, draft one issue per finding for `WimSuenens/agent-plugins`, written about the factory and stripped of this project's code, names, and data. Show the drafts and post only those the person approves:
+When there is anything, draft one issue per finding for `WimSuenens/agent-plugins`, written about the factory and stripped of this project's code, names, and data. Each draft holds the problem in factory terms, the standard change, and before/after numbers against the baseline with item count and release. It holds no code, no project names, no business content, and no raw hansei records. Show the drafts and post only those the person approves:
 
 `gh issue create --repo WimSuenens/agent-plugins --label plugin:factory --title "<title>" --body "<body>"`
+
+This is the only instruction that names `--repo WimSuenens/agent-plugins`. Everything else you measure or record, the stage log and the hansei record included, stays in the project's own tracker and `work/<id>/`.
 
 **Done when** the person has approved, edited, or declined every draft.
 
@@ -200,10 +234,11 @@ When there is anything, draft one issue per finding for `WimSuenens/agent-plugin
 
 A role agent can stop mid-task on a usage or session limit (HTTP 429), often two parallel agents at once.
 
-1. Note the interruption in the lead state (or the Factory run section, in a frontier round): which agent, when, its last commit.
-2. After the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
-3. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
-4. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it.
+1. Note the interruption in the lead state (or the Factory run section, in a frontier round): which agent, when, its last commit. In an item, also open a wait in `## Waits` from the failure notice, with the stopped agent in its `Agent` column (`lead` for yourself): `limits` for a usage limit, `stalled` for no progress (the stream watchdog), `interrupted` for a server or connection error or a machine sleep. The resume, the respawn or the accepted result closes it; the start is the last line's start from `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>` on the stopped agent's transcript, never the file's last entry; `hansei.md` gives the detection rules, the exact sleep-log filter and the rule to copy only UTC sleep times.
+2. **Done, then stopped.** When the agent stalled or failed after writing a complete result with `Status: done` whose commits are all on `item/<id>`, and its role's paths are clean, accept it as a completion after the usual Done-list check: do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the row's Notes (`hansei.md`, *Done, then stopped*).
+3. Otherwise, after the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
+4. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
+5. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it.
 
 ## Context
 

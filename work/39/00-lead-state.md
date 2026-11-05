@@ -42,6 +42,7 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | Security re-check v2 | security-reviewer | 07:4xZ | 07:5xZ | 3m51s | none | 66,865 | pass | 3 low (L8–L10), 1 info |
 | Docs v2 | docs-writer | 07:4xZ | 07:5xZ | 7m45s | none | 191,647 | done | 1 decision overturned (premature AC-17 status) |
 | QA re-check v2 | qa-engineer | 07:4xZ | 07:5xZ | 10m00s | none | 159,584 | block | AC-17 fail again (F1, F3 major); re-run not demanded |
+| Contracts from data | architect | 08:0xZ | 08:1xZ | 12m48s | none | 158,300 | done | rework loop 11 (source: qa, security); replay table matches all 3 expectations |
 | Delivery prep | devops | 21:52Z | 21:54Z | 1m48s | none | 44,808 | done | rollback untested (freeze) |
 | Acceptance demo | person + factory-sandbox | 21:38Z | 07:2xZ(+1d) | ~9h45m | person; sandbox limits 22:02Z→23:49Z; overnight sleep | | | restart at ~21:55Z (stale skill text); sandbox item #2 W1–W4; AC-17 FAIL, others pass |
 
@@ -84,6 +85,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 - Countermeasure tried locally this round: contract-text fixes before code fixes (from the drift in rework loop 5).
 
 - ANDON (lead, calibration): AC-17 stall accounting failed twice (demo, v2 re-check) — same finding twice. 5 Whys → no rule that a measurement fix is validated on the data that showed the defect. Local countermeasure this item: contract rules written and replayed against the demo transcripts before code.
+
+- Countermeasure side effect: my brief asked the architect to replay rules on transcripts — past its shell scope (no processes). Process cause, not the role. Next time: QA (or the developer) runs the replay.
 
 ## Interruptions
 

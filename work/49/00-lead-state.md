@@ -25,7 +25,7 @@ none
 
 | # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51 | ~1m | - | - | done | boardZ at Backlog, worktree + work/49 created |
+| 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51Z | ~1m | - | - | done | board at Backlog, worktree + work/49 created |
 
 ## Waits
 

@@ -65,8 +65,13 @@ ck ac11-four-wait-kinds-in-order '`person`|`limits`|`stalled`|`interrupted`' "$(
 ck ac11-every-kind-has-detection-start-end 4 "$(printf '%s\n' "$KT" | awk -F'|' 'NF>=7 && length($4)>10 && length($5)>5 && length($6)>5 {n++} END {print n+0}')"
 has ac11-limits-wait "$HA" 'a role'"'"'s failure notice `failed … You'"'"'ve hit your … limit`'
 has ac11-stalled-watchdog "$HA" 'the stream watchdog, `no progress for 600s`'
-has ac11-interrupted-sleep "$HA" 'a `stalled` gap with a sleep inside it in `pmset -g log`'
-has ac11-stall-start-from-transcript "$HA" 'the `timestamp` of the stopped transcript'"'"'s last entry before the gap'
+has ac11-interrupted-sleep "$HA" 'a `stalled` gap in which the machine was asleep at any moment is `interrupted`'
+has ac11-sleep-log-through-script "$HA" '`cut-offs.sh --sleep-log -` applies this when you pipe in the sleep log, and only then'
+has ac11-stall-start-from-transcript "$HA" 'the line'"'"'s start: the `timestamp` of the last entry before the gap that is not itself a cut-off marker'
+has ac11-stall-start-never-tail "$HA" 'Never `tail -n 1`: the stream watchdog writes its `[Request interrupted by user]` entry at the notice'
+has ac11-start-unreadable-marked "$HA" 'When the transcript cannot be read (exit 3 or 4), the start is your `date -u` stamp at the notice, marked `~`'
+has ac11-lead-wait-stops-role "$HA" '**The Lead'"'"'s own wait stops a role'"'"'s.** While you are in a wait yourself, no role wait accrues'
+has ac11-skill-start-via-cut-offs "$SK" 'the start is the last line'"'"'s start from `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>` on the stopped agent'"'"'s transcript, never the file'"'"'s last entry'
 has ac11-one-wait-one-kind "$HA" 'A stretch that changes cause midway (a stall, then a limit hit on the resume) is two entries, back to back.'
 has ac11-touches "$HA" '| Time (UTC) | Kind | What |'
 has ac11-as-it-happens "$SK" 'Every wait goes to `## Waits` and every touch the person makes to `## Person'"'"'s touches`, as it happens'
@@ -87,7 +92,24 @@ has done-then-stopped-skill-no-resume "$SK" 'do not resume or respawn it, log th
 has ac13-git-evidence "$HA" "git log item/<id> --format='%cI %s'"
 has ac13-tracker-evidence "$HA" '.created_at, (.body | split("\n")[0])'
 has ac13-largest-gap "$HA" 'names the largest gap across rows'
-before ac13-cross-check-before-post "$SK" '2. Cross-check the stage log against git and the tracker' '4. Fill the hansei template'
+before ac13-cross-check-before-post "$SK" '2. Complete `## Waits` with the close scan, then cross-check the stage log against git and the tracker' '4. Fill the hansei template'
+before ac13-close-scan-before-cross-check-ha "$HA" '2. Complete `## Waits` with the close scan (*Cut-offs at close*), then cross-check the stage log (section 2).' '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*'
+before ac13-close-scan-before-spend-ha "$HA" '2. Complete `## Waits` with the close scan' '3. Total the token spend per role.'
+# v2 round 5 (#44 F3): the close scan, in hansei.md and in the run skill
+has close-scan-heading "$HA" '### Cut-offs at close'
+has close-scan-every-role "$HA" 'Run `cut-offs.sh` once over every role agent'"'"'s transcript of this item'
+has close-scan-lead-window "$HA" 'once over each session under `lead sessions`, with `--since` the `Start item` start and `--until` the approval time'
+has close-scan-reconcile "$HA" 'it is the same wait: set its Start to the line'"'"'s start when they differ'
+has close-scan-new-wait "$HA" '`What` `found at close: <markers>`'
+has close-scan-open-end "$HA" 'an `open` end takes the End of that agent'"'"'s last stage-log row'
+has close-scan-unreadable "$HA" '`cut-offs not captured (transcript <basename> unreadable)`'
+has close-scan-skill "$SK" 'The scan runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh"` once over every role agent'"'"'s transcript of the item'
+has m5-recovered-cut-counts "$HA" 'A recovered cut-off counts as much as a final one'
+has m5-require-end-any-cut "$HA" 'a `stalled` or `interrupted` line other than `silent-gap`, even one the agent recovered from'
+# the pmset filter is the same exact line in hansei.md, the run skill names it, and no looser grep of pmset appears
+ck pmset-exact-filter-once 1 "$(grep -cF "pmset -g log | awk -F'\\t' '\$1 ~ /^[0-9-]+ [0-9:]+ [+-][0-9]+ (Sleep|Wake) *\$/ {print \$1}' | bash \"<plugin root>/scripts/cut-offs.sh\" --sleep-log -" "$HA")"
+ck pmset-no-loose-grep 0 "$(grep -hE 'pmset[^|]*\| *grep' "$HA" "$SK" | grep -c .)"
+has pmset-copy-utc-only "$HA" '**Copy only UTC start and end times** of a sleep into `What`'
 
 # --- AC-14: marker, header, seven measures in fixed order
 ck ac14-marker-first-line '<!-- factory:hansei v2 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
@@ -151,7 +173,7 @@ ck ac16-only-list-heads-end-in-colon "5. tokens:|7. doors:" "$(printf '%s\n' "$E
 hm() { echo "$1" | sed -E 's/.*T([0-9]{2}):([0-9]{2})Z.*/\1 \2/' | awk '{print $1*60+$2}'; }
 dur() { if [ "$1" -ge 60 ]; then echo "$(($1 / 60))h$(printf '%02d' $(($1 % 60)))m"; else echo "${1}m"; fi; }
 WT="$(awk '/^## Waits$/ {f++} f==2 && /^\| W[0-9]+ \|/ {print}' "$HA")"
-ck example-waits-rows 5 "$(printf '%s\n' "$WT" | grep -c .)"
+ck example-waits-rows 6 "$(printf '%s\n' "$WT" | grep -c .)"
 SL1="$(awk '/^## Stage log$/ {f++} f==2 && /^\| [0-9]+ \|/ {print}' "$HA")"
 t0="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Start item/ {print $6}')")"
 t1="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Merge approval/ {print $7}')")"
@@ -167,7 +189,9 @@ p=$(kindsum person); l=$(kindsum limits); st=$(kindsum stalled); it=$(kindsum in
 w=$((tot - p - l - st - it))
 want_m1="1. lead time: total $(dur $tot); agent working $(dur $w); waiting for the person $(dur $p); waiting on limits $(dur $l); stalled $(dur $st); interrupted $(dur $it)"
 ck example-lead-time-from-log "$want_m1" "$(printf '%s\n' "$EXAMPLE" | grep '^1\. lead time:')"
-ck example-lead-time-value "1. lead time: total 4h41m; agent working 3h06m; waiting for the person 51m; waiting on limits 15m; stalled 11m; interrupted 18m" "$want_m1"
+ck example-lead-time-value "1. lead time: total 4h41m; agent working 3h02m; waiting for the person 51m; waiting on limits 15m; stalled 15m; interrupted 18m" "$want_m1"
+# the example holds a wait found at close (W6), and it names its markers
+ck example-found-at-close-wait 1 "$(printf '%s\n' "$WT" | grep -c 'found at close: cut-mid-stream')"
 ck example-five-parts-add-up "$tot" "$((w + p + l + st + it))"
 ck example-has-stall-and-interruption "1 1" "$([ $st -gt 0 ] && echo 1 || echo 0) $([ $it -gt 0 ] && echo 1 || echo 0)"
 # no two held waits overlap in the example (the text claims so; an overlap would double-count)
@@ -308,57 +332,131 @@ ck post-hansei-rm 1 "$(printf '%s' "$PH" | grep -cF 'rm -f "$rec"')"
 inline_before post-hansei-mktemp-before-post "$PH" 'rec="$(mktemp)"' '--body-file "$rec"'
 inline_before post-hansei-post-before-rm "$PH" '--body-file "$rec"' 'rm -f "$rec"'
 
-# --- v2 close order (#47): commit the lead state, then git rm -r without -f, then commit; record posted before both
-C6="$(grep -F '6. The last commit on `item/<id>` removes `work/<id>/`' "$SK")"
-ck close-step6-one-bullet 1 "$(printf '%s\n' "$C6" | grep -c .)"
-inline_before close-add-before-commit "$C6" 'git add -A work/<id>' 'git commit -m "#<id> lead: close"'
-inline_before close-commit-staged-only "$C6" 'when `git diff --cached --quiet` exits 1' 'git commit -m "#<id> lead: close"'
-inline_before close-lead-state-before-rm "$C6" 'git commit -m "#<id> lead: close"' 'git rm -r -q work/<id>'
-inline_before close-rm-before-untracked "$C6" 'git rm -r -q work/<id>' 'rm -rf work/<id>'
-inline_before close-untracked-before-last-commit "$C6" 'rm -rf work/<id>' 'git commit -m "#<id> lead: remove work/"'
+# --- close order (v2 #47; round 5 L8/L9): guard, then the lead-state commit staging only NN-*.md and tracked changes,
+# then git rm && rm -rf && commit, every command as git -C "$w". Same text in the run skill's step 6 and hansei.md section 5.
+C6="$(awk '/^6\. The last commit on `item\/<id>` removes `work\/<id>\/`/ {f=1} f && /^7\. Merge the PR/ {exit} f' "$SK" | tr '\n' ' ')"
+H6="$(awk '/^6\. Remove `work\/<id>\/`, in the item worktree, in this order/ {f=1} f && /^7\. \*Merge PR\*/ {exit} f' "$HA" | tr '\n' ' ')"
+ck close-step6-one-bullet 1 "$(grep -cF '6. The last commit on `item/<id>` removes `work/<id>/`' "$SK")"
+ck close-ha-step6-present 1 "$([ -n "$H6" ] && echo 1)"
+guard_of() { awk -v h="$2" '$0 ~ h {f=1; next} f==1 && /^ *```/ {f=2; next} f==2 && /^ *```/ {exit} f==2 {sub(/^ +/, ""); print}' "$1"; }
+GS="$(guard_of "$SK" '^6\. The last commit on')"; GH="$(guard_of "$HA" '^ +0\. Guard:$')"
+ck close-guard-four-lines 4 "$(printf '%s\n' "$GH" | grep -c .)"
+ck close-guard-same-in-both "$GH" "$GS"
+for X in C6 H6; do
+  eval "Y=\"\$$X\""
+  inline_before "close-$X-guard-id-before-worktree" "$Y" 'case "<id>" in' 'w="$(git worktree list --porcelain'
+  inline_before "close-$X-symlink-guard-before-add" "$Y" 'if [ -L "$w/work" ] || [ -L "$w/work/<id>" ]' 'git -C "$w" add -- "work/<id>/[0-9][0-9]-*.md"'
+  inline_before "close-$X-add-nn-before-add-u" "$Y" 'git -C "$w" add -- "work/<id>/[0-9][0-9]-*.md"' 'git -C "$w" add -u -- "work/<id>"'
+  inline_before "close-$X-add-before-commit" "$Y" 'git -C "$w" add -u -- "work/<id>"' 'git -C "$w" commit -m "#<id> lead: close"'
+  inline_before "close-$X-commit-staged-only" "$Y" 'git -C "$w" diff --cached --quiet' 'git -C "$w" commit -m "#<id> lead: close"'
+  inline_before "close-$X-lead-state-before-rm" "$Y" 'git -C "$w" commit -m "#<id> lead: close"' 'git -C "$w" rm -r -q -- "work/<id>"'
+  ck "close-$X-rm-chain" 1 "$(printf '%s' "$Y" | grep -cF 'git -C "$w" rm -r -q -- "work/<id>" && rm -rf -- "$w/work/<id>" && git -C "$w" commit -m "#<id> lead: remove work/"')"
+  ck "close-$X-every-git-names-worktree" 0 "$(printf '%s' "$Y" | grep -oE 'git (add|commit|rm|diff) ' | grep -c .)"
+done
+ck close-no-add-all 0 "$(grep -cF 'git add -A' "$SK" "$HA" | awk -F: '{s+=$2} END {print s+0}')"
 ck close-no-force-git-rm 0 "$(grep -cE 'git rm -[a-z]*f' "$SK" "$HA" | awk -F: '{s+=$2} END {print s+0}')"
 has close-posted-before-lead-state-commit "$SK" 'It is posted before the lead-state commit too.'
-# hansei.md section 5 repeats the same order
-before close-ha-commit-before-rm "$HA" 'git commit -m "#<id> lead: close"' 'git rm -r -q work/<id>'
-before close-ha-post-before-remove "$HA" '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*' '6. Remove `work/<id>/`, in this order:'
-# run the close order in a scratch repo: a dirty lead state, an untracked brief and an ignored file -- no step fails, work/ is gone
-CR="$T/close"; mkdir -p "$CR/work/12"; ( cd "$CR" && git init -q && echo '.DS_Store' > .gitignore && echo a > work/12/00-lead-state.md && git add -A && git commit -qm init \
-  && echo 'close rows' >> work/12/00-lead-state.md && echo b > work/12/09-brief-docs-writer.md && echo x > work/12/.DS_Store \
-  && git add -A work/12 && { git diff --cached --quiet; [ $? = 1 ] && git commit -qm "#12 lead: close"; } \
-  && git rm -r -q work/12 && rm -rf work/12 && git commit -qm "#12 lead: remove work/" ) >/dev/null 2>&1
-ck close-order-runs-clean 0 $?
-ck close-order-work-gone "no" "$([ -e "$CR/work/12" ] && echo yes || echo no)"
-ck close-order-lead-state-in-history "close rows" "$(cd "$CR" && git show HEAD~1:work/12/00-lead-state.md 2>/dev/null | tail -1)"
-ck close-order-last-commit-removes-work "#12 lead: remove work/" "$(cd "$CR" && git log -1 --format=%s)"
+has close-untracked-never-staged "$SK" 'Other untracked files under `work/<id>/` are never staged.'
+has close-guard-stops-to-person "$HA" 'When the guard stops, stop the close and put it to the person; nothing has been removed.'
+before close-ha-post-before-remove "$HA" '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*' '6. Remove `work/<id>/`, in the item worktree, in this order'
+before close-ha-guard-before-commit "$HA" '   0. Guard:' '   1. Commit the lead state'
+before close-ha-commit-before-rm "$HA" '   1. Commit the lead state' '   2. `git -C "$w" rm -r -q -- "work/<id>"'
+# run hansei.md's own commands, verbatim, in scratch repos: the shell in the main checkout, the item in a worktree.
+# The step-1 commands are the backticked `git -C "$w" …` snippets of step 6.1 in their order: add, add -u, diff, commit.
+S1="$(awk '/^   1\. Commit the lead state/' "$HA" | grep -oE '`git -C "\$w" [^`]+`' | tr -d '`')"
+ck close-step1-four-commands 4 "$(printf '%s\n' "$S1" | grep -c .)"
+S2="$(awk '/^   2\. `git -C "\$w" rm/' "$HA" | grep -oE '^   2\. `[^`]+`' | sed -E 's/^   2\. `//; s/`$//')"
+close_script() { # id -> the close as the Lead runs it
+  { printf '%s\n' "$GH"
+    printf '%s && %s || exit 1\n' "$(line "$S1" 1)" "$(line "$S1" 2)"
+    printf '%s; if [ $? = 1 ]; then %s || exit 1; fi\n' "$(line "$S1" 3)" "$(line "$S1" 4)"
+    printf '%s\n' "$S2"; } | sed "s/<id>/$1/g"; }
+mkclose() { # dir worktree-dir: main checkout + item/12 worktree with work/12 committed
+  git init -q -b main "$1" && ( cd "$1" && printf '.DS_Store\n' > .gitignore && echo r > README && git add -A && git commit -qm init \
+    && git worktree add -q "$2" -b item/12 && mkdir -p "$2/work/12" && echo a > "$2/work/12/00-lead-state.md" && echo b > "$2/work/12/01-brief-developer.md" \
+    && git -C "$2" add -A && git -C "$2" commit -qm "#12 lead: start" ) >/dev/null 2>&1; }
+# 1. dirty lead state, untracked brief, stray .env and dump, ignored .DS_Store; worktree path with a space; a neighbour item/123
+CM="$T/cl1/main"; CW="$T/cl1/wt x/12"; mkclose "$CM" "$CW"
+( cd "$CM" && git worktree add -q "$T/cl1/wt x/123" -b item/123 && mkdir -p "$T/cl1/wt x/123/work/123" && echo n > "$T/cl1/wt x/123/work/123/00-lead-state.md" ) >/dev/null 2>&1
+echo 'close rows' >> "$CW/work/12/00-lead-state.md"; echo c > "$CW/work/12/09-brief-docs-writer.md"
+echo 'TOKEN=qa-fake-secret' > "$CW/work/12/.env"; echo dump > "$CW/work/12/dump.txt"; echo x > "$CW/work/12/.DS_Store"
+mh="$(git -C "$CM" rev-parse HEAD)"
+( cd "$CM" && bash -c "$(close_script 12)" ) >"$T/close.out" 2>&1; ck close-run-clean 0 $?
+ck close-run-work-gone "no" "$([ -e "$CW/work/12" ] && echo yes || echo no)"
+ck close-run-commits "#12 lead: remove work/|#12 lead: close" "$(git -C "$CW" log -2 --format=%s | paste -sd'|' -)"
+ck close-run-lead-state-in-history "close rows" "$(git -C "$CW" show HEAD~1:work/12/00-lead-state.md 2>/dev/null | tail -1)"
+ck close-run-untracked-brief-in-history c "$(git -C "$CW" show HEAD~1:work/12/09-brief-docs-writer.md 2>/dev/null)"
+ck close-run-no-stray-in-history "" "$(git -C "$CW" log --format= --name-only | grep -E '\.env|dump\.txt|\.DS_Store' | sort -u)"
+ck close-run-worktree-clean "" "$(git -C "$CW" status --porcelain)"
+ck close-run-main-untouched "main $mh" "$(git -C "$CM" branch --show-current) $(git -C "$CM" rev-parse HEAD)"
+ck close-run-neighbour-untouched n "$(cat "$T/cl1/wt x/123/work/123/00-lead-state.md" 2>/dev/null)"
+# 2. nothing to commit in the lead state: no close commit, the removal still runs
+CM="$T/cl2/main"; CW="$T/cl2/wt/12"; mkclose "$CM" "$CW"
+( cd "$CM" && bash -c "$(close_script 12)" ) >/dev/null 2>&1; ck close-run-clean-state 0 $?
+ck close-run-clean-state-commits "#12 lead: remove work/|#12 lead: start" "$(git -C "$CW" log -2 --format=%s | paste -sd'|' -)"
+# 3. a committed work symlink (and a work/12 symlink): the guard stops, nothing outside is removed, no commit
+for kind in work work12; do
+  CM="$T/cl3$kind/main"; CW="$T/cl3$kind/wt/12"; O3="$T/cl3$kind/outside"; mkdir -p "$O3/12"; echo keep > "$O3/12/precious.md"
+  git init -q -b main "$CM"; ( cd "$CM" && echo r > README && git add -A && git commit -qm init && git worktree add -q "$CW" -b item/12 ) >/dev/null 2>&1
+  if [ $kind = work ]; then ln -s "$O3" "$CW/work"; else mkdir "$CW/work"; ln -s "$O3/12" "$CW/work/12"; fi
+  git -C "$CW" add -A >/dev/null 2>&1; git -C "$CW" commit -qm "#12 dev: symlink" >/dev/null 2>&1; h="$(git -C "$CW" rev-parse HEAD)"
+  ( cd "$CM" && bash -c "$(close_script 12)" ) >"$T/close.out" 2>&1; code=$?
+  ck "close-guard-$kind-symlink-stops" "1 close: work/ is a symlink" "$code $(cat "$T/close.out")"
+  ck "close-guard-$kind-symlink-nothing-removed" "keep $h" "$(cat "$O3/12/precious.md" 2>/dev/null) $(git -C "$CW" rev-parse HEAD)"
+done
+# 4. a non-numeric id, and an id with no worktree: the guard stops before any git command
+( cd "$CM" && bash -c "$(close_script '12;x')" ) >"$T/close.out" 2>&1; ck close-guard-id-not-numeric "1 close: id not numeric" "$? $(cat "$T/close.out")"
+( cd "$CM" && bash -c "$(close_script '')" ) >"$T/close.out" 2>&1; ck close-guard-id-empty "1 close: id not numeric" "$? $(cat "$T/close.out")"
+( cd "$CM" && bash -c "$(close_script 99)" ) >"$T/close.out" 2>&1; ck close-guard-no-worktree "1 close: no worktree for item/99" "$? $(cat "$T/close.out")"
 
-# --- v2 (#44): the stall/interruption start, taken with hansei.md's own command, is the stopped transcript's last
-# entry before the gap. Fixture: the acceptance demo's developer transcript shape (factory-sandbox #2, agent a37df…):
-# the watchdog notice arrived at 00:05:54 and wrote "[Request interrupted by user]" at that same moment; the last
-# entry before the gap is the tool result at 23:50:46. Wanted start: 2026-11-04T23:50Z (stall 15m, not ~0m).
-SC="$(grep -oE 'from the stopped agent'"'"'s transcript \(`[^`]+`' "$HA" | sed -E 's/.*\(`//; s/`$//')"
-ck stall-start-command-present 1 "$([ -n "$SC" ] && echo 1)"
+# --- v2 F1 (round 5): the stall/interruption start, taken with hansei.md's own command (*Taking the start*: cut-offs.sh on
+# the stopped transcript, last line's start, cut to minutes), is the last entry before the gap, not the notice.
+# Fixture: the acceptance demo's developer transcript shape (factory-sandbox #2, agent a37df…): the watchdog notice
+# arrived at 00:05:54 and wrote "[Request interrupted by user]" at that same moment; the last entry before the gap is
+# the tool result at 23:50:46. Wanted start: 2026-11-04T23:50Z (stall 15m, not ~0m).
+SC="$(grep -F '**Taking the start from the transcript.**' "$HA" | grep -oE '`bash "<plugin root>/scripts/cut-offs.sh" [^`]+`' | head -1 | tr -d '`')"
+ck stall-start-command-present 'bash "<plugin root>/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>' "$SC"
 cat > "$T/dev-stalled.jsonl" <<'EOJ'
 {"type":"assistant","timestamp":"2026-11-04T23:50:41.956Z","message":{"id":"d0","content":[{"type":"thinking","thinking":""}]}}
 {"type":"assistant","timestamp":"2026-11-04T23:50:45.512Z","message":{"id":"d1","content":[{"type":"tool_use","id":"t1","name":"Bash","input":{}}]}}
 {"type":"user","timestamp":"2026-11-04T23:50:46.823Z","message":{"content":[{"tool_use_id":"t1","type":"tool_result","content":"ok"}]}}
 {"type":"user","timestamp":"2026-11-05T00:05:54.064Z","message":{"content":[{"type":"text","text":"[Request interrupted by user]"}]}}
 EOJ
-got="$(cd "$T" && eval "$(printf '%s' "$SC" | sed "s|<transcript>|dev-stalled.jsonl|")" 2>/dev/null | sed -E 's/:[0-9]{2}(\.[0-9]+)?Z$/Z/')"
-if [ "$got" = "2026-11-04T23:50Z" ]; then ck stall-start-is-last-entry-before-gap "2026-11-04T23:50Z" "$got"
-else skip stall-start-is-last-entry-before-gap "QA-39 v2 F1: hansei.md's command gives $got (the notice's interrupt marker), want 2026-11-04T23:50Z; each stall loses its watchdog window to agent working (architect, then developer)"; fi
+run_sc() { cmd="$(printf '%s' "$SC" | sed -e "s|<plugin root>|$PLUGIN|" -e 's| \[--sleep-log -\]||' -e "s|<transcript>|$1|")"; (cd "$T" && eval "$cmd") 2>/dev/null; }
+got="$(run_sc dev-stalled.jsonl | tail -n 1 | cut -f3 | cut -c1-16)Z"
+ck stall-start-is-last-entry-before-gap "2026-11-04T23:50Z" "$got"
+ck stall-start-not-tail "2026-11-05T00:05:54.064Z" "$(tail -n 1 "$T/dev-stalled.jsonl" | jq -r .timestamp)"   # what the v2 text's tail -n 1 gave
 
-# --- v2 (#44), the Lead's own interruption in the demo: the session's last entry was the assistant line
-# "API Error: Your computer went to sleep mid-response." (isApiErrorMessage, error server_error), and the person's
-# "continue" set it going about 5h after its last working entry (01:43Z to 06:49Z). hansei.md's detection for the Lead names only a tool result or "[Request interrupted".
-if grep -qF 'API Error' "$HA"; then ck lead-api-error-detected 1 1
-else skip lead-api-error-detected "QA-39 v2 F2: hansei.md's stalled/interrupted detection for the Lead does not name an API-error last entry (the demo's 5h Lead interruption) (architect, then developer)"; fi
+# --- v2 F2 (round 5): the Lead's own interruption in the demo. The session's last working entry (01:43:18) is followed by the
+# assistant line "API Error: Your computer went to sleep mid-response." (isApiErrorMessage, error server_error, 02:00:45),
+# and the person's "continue" (06:49:23) set it going; the Lead's next output is at 06:49:32. The close scan over the
+# Lead session (hansei.md: --since the Start item start, --until the approval time) must give one interrupted line.
+has lead-api-error-detected "$HA" 'such as your own `API Error: Your computer went to sleep mid-response`'
+cat > "$T/lead.jsonl" <<'EOJ'
+{"type":"user","timestamp":"2026-11-05T01:40:00.000Z","message":{"content":"next step"}}
+{"type":"assistant","timestamp":"2026-11-05T01:43:18.500Z","message":{"id":"l1","content":[{"type":"text","text":"Briefing QA."}]}}
+{"type":"assistant","timestamp":"2026-11-05T02:00:45.100Z","isApiErrorMessage":true,"error":"server_error","message":{"id":"l2","model":"<synthetic>","content":[{"type":"text","text":"API Error: Your computer went to sleep mid-response."}]}}
+{"type":"user","timestamp":"2026-11-05T06:49:23.000Z","message":{"content":"continue"}}
+{"type":"assistant","timestamp":"2026-11-05T06:49:32.900Z","message":{"id":"l3","content":[{"type":"text","text":"Resuming."}]}}
+EOJ
+ck lead-api-error-close-scan "lead.jsonl|interrupted|2026-11-05T01:43:18Z|2026-11-05T06:49:32Z|api-error:server_error" \
+  "$(cd "$T" && bash "$PLUGIN/scripts/cut-offs.sh" --since 2026-11-04T21:52Z --until 2026-11-05T07:08Z -- lead.jsonl | tr '\t' '|')"
 
-# --- v2 (#44), stalls and sleeps inside a running agent that recovered by itself: no failure notice reaches the Lead, so
-# no wait opens and the time stays in agent working. The demo's QA agent lost about 71m this way (five cut-offs, two of
-# them "API Error: Your computer went to sleep mid-response", 00:08Z-01:21Z) before its final stall. Its transcript shows
-# each one. The standard should tell the Lead to find them at close.
-if grep -qiE 'cut off mid-stream|isApiErrorMessage' "$HA"; then ck in-run-cutoffs-detected 1 1
-else skip in-run-cutoffs-detected "QA-39 v2 F3: hansei.md has no rule for stalls or sleeps an agent recovered from without a notice (the demo QA's ~71m stay in agent working) (architect, then developer)"; fi
+# --- v2 F3 (round 5): cut-offs an agent recovered from with no notice. The demo's QA agent (a85f55…) lost ~72m to three
+# "cut off mid-stream" entries and two "API Error … went to sleep" entries before its final stall. The close scan finds
+# them; a role transcript holding one marks its spend not captured (--require-end exit 6, tested in test_token_spend.sh).
+has in-run-cutoffs-detected "$HA" 'this finds the cut-offs an agent recovered from by itself, which send no notice'
+cat > "$T/qa-recovered.jsonl" <<'EOJ'
+{"type":"user","timestamp":"2026-11-05T00:07:00.000Z","message":{"content":"You are the QA engineer."}}
+{"type":"assistant","timestamp":"2026-11-05T00:08:06.200Z","message":{"id":"q1","content":[{"type":"thinking","thinking":""}]}}
+{"type":"user","timestamp":"2026-11-05T00:14:49.000Z","isMeta":true,"message":{"role":"user","content":"Your response above was cut off mid-stream and only your next message is delivered."}}
+{"type":"assistant","timestamp":"2026-11-05T00:14:53.000Z","message":{"id":"q2","content":[{"type":"text","text":"Again."}]}}
+{"type":"assistant","timestamp":"2026-11-05T01:04:10.000Z","isApiErrorMessage":true,"error":"server_error","message":{"id":"q3","model":"<synthetic>","content":[{"type":"text","text":"API Error: Your computer went to sleep mid-response."}]}}
+{"type":"user","timestamp":"2026-11-05T01:04:28.000Z","message":{"content":"continue"}}
+{"type":"assistant","timestamp":"2026-11-05T01:04:31.000Z","message":{"id":"q4","content":[{"type":"text","text":"Done."}]}}
+EOJ
+ck in-run-cutoffs-close-scan "stalled|2026-11-05T00:08:06Z|2026-11-05T00:14:53Z|cut-mid-stream;interrupted|2026-11-05T00:14:53Z|2026-11-05T01:04:31Z|api-error:server_error" \
+  "$(cd "$T" && bash "$PLUGIN/scripts/cut-offs.sh" -- qa-recovered.jsonl | cut -f2- | tr '\t' '|' | paste -sd';' -)"
 
 # --- AC-7 support: the tag step exists in Merge PR
 has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'

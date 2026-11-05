@@ -67,7 +67,7 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 
 - Sandbox demo: wait kinds "stall" (600s stream watchdog) and "interrupted" (machine sleep → server_error) aren't named in hansei.md; the sandbox Lead logged them as their own kinds.
 - Sandbox demo: Interruptions doesn't cover a stalled agent that already wrote a complete `done` result (it assumes `working` or no result).
-- Worktree collision across projects in a shared `../wt/`; the person proposes `.claude/worktrees/<id>` per project (local override pending the person's yes).
+- Worktree collision across projects in a shared `../wt/`; the person proposes `.claude/worktrees/<id>` per project — the person: leave the location as is until the run's close (2026-11-05).
 
 ## Interruptions
 

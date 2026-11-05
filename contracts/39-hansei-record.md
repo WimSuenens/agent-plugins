@@ -104,11 +104,11 @@ The label is copied from the lead state, as computed at item start. The record n
 
 | # | Key | Counted | Source |
 |---|---|---|---|
-| 1 | `lead time` | **total** = approval time − start of the `Start item` row. **waiting for the person**, **waiting on limits**, **stalled**, **interrupted** = the item-held waits of that kind (stage log `## Waits`, `held item: yes`; kinds and how each is detected in [39-stage-log](39-stage-log.md) §3). Overlaps are counted once: within a kind as one stretch, and across kinds to the kind that comes first in this line's order (person, limits, stalled, interrupted). **agent working** = total − the four waits, so agent working + person + limits + stalled + interrupted = total. | stage log |
+| 1 | `lead time` | **total** = approval time − start of the `Start item` row. **waiting for the person**, **waiting on limits**, **stalled**, **interrupted** = the item-held waits of that kind (stage log `## Waits`, `held item: yes`, after the close scan has added the cut-offs no notice reported; kinds and how each is detected in [39-stage-log](39-stage-log.md) §3). Overlaps are counted once: within a kind as one stretch, and across kinds to the kind that comes first in this line's order (person, limits, stalled, interrupted). **agent working** = total − the four waits, so agent working + person + limits + stalled + interrupted = total. | stage log |
 | 2 | `first-pass yield` | per stage (QA, security, acceptance demo), from the stage's **first** run only. **Pass first time** = the first verdict is `pass` **and** that run lists no finding at or above minor. Below minor means a severity of `low`, `info`, `trivial` or `note`; every other severity (`minor`, `medium`, `major`, `high`, `critical`, `blocker`), and a finding with no severity, counts as at or above minor. Written `pass first time` with no finding below minor either, `pass first time (<n> low)` with `<n>` findings below minor, whether or not the Lead routed them as feedback. **Failed first time** = the first verdict is not `pass`, or it lists a finding at or above minor, or (demo) any criterion failed. `n/a (did not run)` when the stage was skipped. | QA and security results, demo outcome, in `work/<id>/` |
 | 3 | `rework` | per role, the number of feedback briefs that role received (any `Source`); then the number of two-way decisions overturned by a `Source: lead` feedback brief. Roles that ran and got none read `0`; roles that never ran read `0` too (a count of briefs received is known to be zero). | `work/<id>/NN-feedback-*.md` |
 | 4 | `escaped defects` | always `not captured (tracing deferred until the first defect found in a merged item)` in v2 | deferred (map, Deferred) |
-| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `message.usage` summed over every transcript of that role's agents on this item (resumes and feedback rounds included), one count per distinct `message.id`; for the Lead, its main-session transcript(s) between the `Start item` start and approval. **Truncated transcripts**: a transcript cut by a stall or an interruption lost the request in flight, so its sum is short by an unknown amount; the role's spend then reads `not captured (transcript truncated by <kind>)`, never a number, `<kind>` being `stalled` or `interrupted`. The Lead recognises truncation by either of two signals: (a) **the notice**: a `stalled` or `interrupted` wait in `## Waits` names one of the role's agents (or `lead`) in its `Agent` column; `<kind>` is that wait's kind (the earliest, when there are several); (b) **the transcript**: `token-spend.sh --require-end` exits 6 for one of the role's transcripts ([39-plugin-scripts](39-plugin-scripts.md) §3), with no such wait logged; `<kind>` is then `unlogged`. **peak context**: the largest `<subagent_tokens>` (background) or `totalTokens` (foreground) across that role's completion notices that carried one; `not captured (failure notice carried no token count)` when none did; for the Lead, the `peak` the spend script reports over the same window, or `not captured (transcript truncated by <kind>)` when its spend reads so. A role with no agent on this item: `n/a (did not run)` for both. | `scripts/token-spend.sh` ([39-plugin-scripts](39-plugin-scripts.md) §3); completion notices logged in the stage log |
+| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `message.usage` summed over every transcript of that role's agents on this item (resumes and feedback rounds included), one count per distinct `message.id`; for the Lead, its main-session transcript(s) between the `Start item` start and approval. **Truncated transcripts**: a transcript cut by a stall or an interruption lost the request in flight, so its sum is short by an unknown amount; the role's spend then reads `not captured (transcript truncated by <kind>)`, never a number, `<kind>` being `stalled` or `interrupted`. The Lead recognises truncation by either of two signals: (a) **the wait**: a `stalled` or `interrupted` wait in `## Waits`, logged at a notice or added by the close scan ([39-stage-log](39-stage-log.md) §3, *Cut-offs at close*), names one of the role's agents (or `lead`) in its `Agent` column; `<kind>` is that wait's kind (the earliest, when there are several). A recovered cut-off counts as much as a final one: the request it cut was lost either way; (b) **the transcript**: `token-spend.sh --require-end` exits 6 for one of the role's transcripts ([39-plugin-scripts](39-plugin-scripts.md) §3: a cut-off marker anywhere in it, or no final reply), with no such wait logged; `<kind>` is then `unlogged`. Exit 3 or 4 there reads `not captured (<stderr line>)` as usual. **peak context**: the largest `<subagent_tokens>` (background) or `totalTokens` (foreground) across that role's completion notices that carried one; `not captured (failure notice carried no token count)` when none did; for the Lead, the `peak` the spend script reports over the same window, or `not captured (transcript truncated by <kind>)` when its spend reads so. A role with no agent on this item: `n/a (did not run)` for both. | `scripts/token-spend.sh` ([39-plugin-scripts](39-plugin-scripts.md) §3); completion notices logged in the stage log |
 | 6 | `person's touches` | counts of the touches list by kind: `decision card` (an answered card), `demo` (a demo the person ran), `approval` (a merge or production yes), `overturn` (a two-way decision the person overturned), `other` (anything else the person did for the item) | stage log `## Person's touches` |
 | 7 | `doors` | per **Under test** line of the slice frame, in frame order, named by its link text: `confirmed`, `contradicted`, or `not exercised`, as the resurvey found. `pending resurvey` from posting to the edit; `not captured (run stopped before the resurvey)` when the resurvey never happens. | the resurvey (step 8) |
 
@@ -127,15 +127,23 @@ These go into the factory's tracker patch (`skills/setup-factory-skill/reference
 Step 8 of `skills/run/SKILL.md` runs in this order. The numbers are the contract; the wording is the developer's.
 
 1. Ask **merge and clean up?**. On the yes, stamp `date -u +%FT%TZ` as the approval time: it ends the stage log's `Merge approval` row and is the touch `approval`.
-2. Cross-check the stage log against git and the tracker ([39-stage-log](39-stage-log.md) §4).
+2. Complete `## Waits` with the close scan ([39-stage-log](39-stage-log.md) §3, *Cut-offs at close*), then cross-check the stage log against git and the tracker ([39-stage-log](39-stage-log.md) §4).
 3. Total token spend per role ([39-plugin-scripts](39-plugin-scripts.md) §3).
 4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*. Write `hansei: <comment URL> (measure 7 pending)` into the map's **Factory run** section, because `work/<id>/` is about to go and the map is what survives.
 5. Environment teardown, when the item had one.
-6. Remove `work/<id>/`, in this order, which never meets a dirty file:
-   1. Commit the lead state: `git add -A work/<id>` then, when anything is staged (`git diff --cached --quiet` exits 1), `git commit -m "#<id> lead: close"`. This takes the close rows, the approval touch, the record URL and any brief or result not yet committed, so the index and the work tree agree.
-   2. `git rm -r -q work/<id>`, then `rm -rf work/<id>` for what git does not track (ignored files such as `.DS_Store`), then `git commit -m "#<id> lead: remove work/"`. This is the last commit on `item/<id>`.
+6. Remove `work/<id>/`, in the item worktree, in this order, which never meets a dirty file and never reaches outside the worktree (security L8, L9):
+   0. Guard. Every command names the worktree by its absolute path, so the shell's working directory does not matter (it starts in the main checkout, and a `cd` into `../wt/<id>` does not persist):
+      ```
+      case "<id>" in ''|*[!0-9]*) echo "close: id not numeric" >&2; exit 1 ;; esac
+      w="$(git worktree list --porcelain | awk -v b="branch refs/heads/item/<id>" '/^worktree /{p=substr($0,10)} $0==b{print p}')"
+      [ -n "$w" ] || { echo "close: no worktree for item/<id>" >&2; exit 1; }
+      if [ -L "$w/work" ] || [ -L "$w/work/<id>" ]; then echo "close: work/ is a symlink" >&2; exit 1; fi
+      ```
+      When the guard stops, the Lead stops the close and puts it to the person; nothing has been removed.
+   1. Commit the lead state, staging only the protocol's files: `git -C "$w" add -- "work/<id>/[0-9][0-9]-*.md"` (lead state, briefs, results, feedback, questions, including any not yet committed), then `git -C "$w" add -u -- "work/<id>"` (changes to tracked files), then, when anything is staged (`git -C "$w" diff --cached --quiet` exits 1), `git -C "$w" commit -m "#<id> lead: close"`. Any other untracked file under `work/<id>/` (a scratch dump, a copied transcript, an `.env` a role made for a test) is never staged: `--merge` keeps a commit in the project's history for good, and those files were never meant for it. The next step deletes them.
+   2. `git -C "$w" rm -r -q -- "work/<id>" && rm -rf -- "$w/work/<id>" && git -C "$w" commit -m "#<id> lead: remove work/"`. `rm -rf` takes what git does not track (ignored files such as `.DS_Store`, and the untracked files 6.1 left out); with `&&` it never runs after a failed `git rm`. This is the last commit on `item/<id>`.
 
-   No `-f` is needed: after 6.1 nothing under `work/<id>/` differs from `HEAD`. The record was posted at step 4, so its `created_at` is earlier than both commits (AC-18): the record is always posted before `work/` is removed.
+   No `-f` is needed: after 6.1 nothing tracked under `work/<id>/` differs from `HEAD`. The record was posted at step 4, so its `created_at` is earlier than both commits (AC-18): the record is always posted before `work/` is removed.
 7. *Merge PR* (with the release tag, [39-standard-changes](39-standard-changes.md) §5), board to Done.
 8. Resurvey with the frame's **Under test** list.
 9. *Edit hansei*: measure 7 gets one line per Under test line. Remove the `hansei:` pointer from the Factory run section.
@@ -144,7 +152,7 @@ When the person stops the run between 4 and 8, the Lead edits measure 7 to `not 
 
 ## 7. Worked example
 
-A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edit; its stage log is the worked example in [39-stage-log](39-stage-log.md) §5. QA failed once, security passed with two low findings, no demo, no devops stage, one decision card, one overturn, one limit hit, one machine sleep during the build, and a docs-writer that stalled after writing its `done` result.
+A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edit; its stage log is the worked example in [39-stage-log](39-stage-log.md) §5. QA failed once, security passed with two low findings, no demo, no devops stage, one decision card, one overturn, one limit hit, one machine sleep during the build, a mid-stream cut-off QA recovered from by itself, and a docs-writer that stalled after writing its `done` result.
 
 ```
 <!-- factory:hansei v2 -->
@@ -160,7 +168,7 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
 
 ### Measures
 
-1. lead time: total 4h41m; agent working 3h06m; waiting for the person 51m; waiting on limits 15m; stalled 11m; interrupted 18m
+1. lead time: total 4h41m; agent working 3h02m; waiting for the person 51m; waiting on limits 15m; stalled 15m; interrupted 18m
 2. first-pass yield: qa failed first time; security pass first time (2 low); acceptance demo n/a (did not run)
 3. rework: feedback briefs product-owner 0, architect 0, developer 1, qa-engineer 0, security-reviewer 0, devops 0, docs-writer 0; overturned two-way decisions 1
 4. escaped defects: not captured (tracing deferred until the first defect found in a merged item)
@@ -169,7 +177,7 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
    - product-owner: spend 301554 (input 88, cache write 41230, cache read 254101, output 6135); peak context 53942
    - architect: spend 612090 (input 140, cache write 70221, cache read 530417, output 11312); peak context 81277
    - developer: spend not captured (transcript truncated by interrupted); peak context 141210
-   - qa-engineer: spend 520336 (input 97, cache write 64010, cache read 447880, output 8349); peak context 70114
+   - qa-engineer: spend not captured (transcript truncated by stalled); peak context 74480
    - security-reviewer: spend not captured (transcript agent-a41f09.jsonl unreadable); peak context 48820
    - devops: spend n/a (did not run); peak context n/a (did not run)
    - docs-writer: spend not captured (transcript truncated by stalled); peak context not captured (failure notice carried no token count)
@@ -181,7 +189,7 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
 
 Before the resurvey edit, the same comment read `7. doors: pending resurvey` with no sub-lines.
 
-How the new v2 values follow from the stage log: W3 (`interrupted`, developer `c44a10`) and W4 (`stalled`, docs-writer `e90b55`) are held waits, so they are measure 1's 18m and 11m, and agent working is 4h41m − 51m − 15m − 11m − 18m = 3h06m. The same two waits name those agents, so both roles' spend reads `not captured (transcript truncated by …)` (signal a). The developer's peak is its round-2 notice (141210), the largest that carried a count; the docs-writer's only notice was the failure notice. The security review's first run passed with two `low` findings, hence `pass first time (2 low)`; a single `medium` there would have made it `failed first time`.
+How the new v2 values follow from the stage log: W3 (`interrupted`, developer `c44a10`) is a held wait, measure 1's 18m; W4 (`stalled`, docs-writer `e90b55`, logged at its notice) and W6 (`stalled`, QA `d21f77`, found by the close scan) are held waits, measure 1's 11m + 4m = 15m; agent working is 4h41m − 51m − 15m − 15m − 18m = 3h02m. The same three waits name those agents, so the developer's, the QA's and the docs-writer's spend reads `not captured (transcript truncated by …)` (signal a). W6 shows why a run that ended normally is not enough: QA handed back at 15:10Z, but the request the cut-off lost is missing from its sum. The developer's peak is its round-2 notice (141210), the largest that carried a count; QA's is its round-2 notice (74480); the docs-writer's only notice was the failure notice. The security review's first run passed with two `low` findings, hence `pass first time (2 low)`; a single `medium` there would have made it `failed first time`.
 
 ### Worked example: this item's own calibration record (AC-22)
 

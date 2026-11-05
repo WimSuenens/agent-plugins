@@ -85,19 +85,33 @@ Rules:
 
 ### Wait kinds
 
-Four kinds. Each is opened by an observable event and closed by the Lead's next action on the stopped agent; **every** stretch in which an agent or the Lead sat still for a reason other than its own work is one of them.
+Four kinds. **Every** stretch in which an agent or the Lead sat still for a reason other than its own work is one of them. A wait is found in one of two ways, and both use the same evidence, the transcript, through `scripts/cut-offs.sh` ([39-plugin-scripts](39-plugin-scripts.md) §4):
+
+- **at a notice**, during the run: a role's failure notice (or the Lead's own resume after it stopped) opens the wait, and the Lead's next action on the stopped agent closes it;
+- **at close**, by scanning every transcript of the item: this finds the cut-offs an agent recovered from by itself, which send no notice, and the Lead's own (*Cut-offs at close* below).
 
 | Kind | What it is | Detected by | Start | End |
 |---|---|---|---|---|
 | `person` | the item waits on the person's answer | the Lead puts a question, card, demo or approval to the person | `date -u` when the Lead puts it | `date -u` when the Lead reads the answer |
-| `limits` | a usage or session limit | a role's failure notice `failed … You've hit your … limit`, or the Lead's own `Usage limit reached` line | `date -u` at the notice | `date -u` at the resume |
-| `stalled` | an agent or the Lead made no progress while its session stayed up | a role's failure notice naming no progress (the stream watchdog, `no progress for 600s`, or a stream idle timeout); for the Lead, a turn of its own that stopped mid-step (its transcript's last entry before the gap is a tool result with no reply after it, or `[Request interrupted …]`) and was set going again only by a person message that answers no question the Lead put (for example "continue") | the `timestamp` of the stopped transcript's last entry before the gap | `date -u` when the Lead resumes the agent, spawns a new one for the work, or accepts its `done` result (*Done, then stopped* below); for the Lead, the `timestamp` of the person message that set it going |
-| `interrupted` | the session's connection or machine went away: machine sleep, network loss, an API server error | a role's failure notice naming an API, server or connection error that is not a usage limit (`server_error`, `overloaded`, a 5xx, a dropped connection); or a `stalled` gap with a sleep inside it in `pmset -g log` (macOS: `pmset -g log \| grep -E ' (Sleep\|Wake) '`) | as `stalled` | as `stalled` |
+| `limits` | a usage or session limit | a role's failure notice `failed … You've hit your … limit`; or a `cut-offs.sh` line of kind `limits` (marker `api-error:rate_limit`: the Lead's own `You've hit your … limit` entry, or a role's) | the line's start; at a role's notice, the start of the last line `cut-offs.sh` prints for that agent's transcript | the line's end; `open`, or a role's notice: `date -u` at the resume |
+| `stalled` | an agent or the Lead made no progress while its session stayed up | a role's failure notice naming no progress (the stream watchdog, `no progress for 600s`, or a stream idle timeout); or a `cut-offs.sh` line of kind `stalled` (markers `cut-mid-stream`, `request-interrupted`, `silent-gap`). For the Lead, the line comes from its own session transcript: the Lead stopped mid-step and was set going again only by a person message that answers no question the Lead put (for example "continue") | the line's start: the `timestamp` of the last entry before the gap that is not itself a cut-off marker | the line's end (the agent's first output after the gap); when the line reads `open`, `date -u` when the Lead resumes the agent, spawns a new one for the work, or accepts its `done` result (*Done, then stopped* below) |
+| `interrupted` | the session's connection or machine went away: machine sleep, network loss, an API server error | a role's failure notice naming an API, server or connection error that is not a usage limit (`server_error`, `overloaded`, a 5xx, a dropped connection); or a `cut-offs.sh` line of kind `interrupted` (markers `api-error:<error>` other than `rate_limit`, such as the Lead's own `API Error: Your computer went to sleep mid-response`, and `api-retry`), including a `stalled` gap the sleep log turned `interrupted` | as `stalled` | as `stalled` |
 
-- **stalled or interrupted.** The notice decides. One exception: a watchdog notice whose gap contains a machine sleep is `interrupted`, because the sleep is what the watchdog saw. Where `pmset` is not available, the notice alone decides.
-- **Taking the start from the transcript.** For `stalled` and `interrupted` the Lead reads the start when the notice arrives, from the stopped agent's transcript (`tail -n 1 <transcript> | jq -r .timestamp`; for the Lead, its own session transcript), converted to `YYYY-MM-DDTHH:MMZ`. A recorded clock read at the moment is not an estimate, so it carries no `~`. When the transcript cannot be read, the start is the Lead's `date -u` stamp at the notice, marked `~` (it is later than the real start), and the record's cross-check names it.
+- **stalled or interrupted.** The notice or the marker decides. One exception: a `stalled` gap in which the machine was asleep at any moment is `interrupted`, because the sleep is what the watchdog saw. `cut-offs.sh --sleep-log -` applies this when the Lead pipes in the sleep log, and only then: `pmset -g log | awk -F'\t' '$1 ~ /^[0-9-]+ [0-9:]+ [+-][0-9]+ (Sleep|Wake) *$/ {print $1}' | bash "<plugin root>/scripts/cut-offs.sh" --sleep-log - -- <transcript>` (macOS). This exact filter, never a looser `grep`: `pmset -g log` also holds process names, PIDs, launchd service names and battery data. **Copy only UTC start and end times** of a sleep into `What` (`sleep 13:53Z–14:08Z`), never a pmset line. Where `pmset` is not available, call the script without `--sleep-log`; the notice or marker alone decides.
+- **Taking the start from the transcript** (QA-39 v2 F1). At a role's notice, the Lead runs `bash "<plugin root>/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>` on the stopped agent's transcript, and the **last line's start**, cut to `YYYY-MM-DDTHH:MMZ`, is the wait's start. Never `tail -n 1`: the watchdog writes its `[Request interrupted by user]` entry at the notice, so the last line of the file is the notice, and the stall would lose its whole ten-minute watchdog window to agent working. A recorded clock read at the moment is not an estimate, so it carries no `~`. When the script prints nothing for a role's notice (a notice the transcript shows no marker for), the start is the `timestamp` of the transcript's last `user` or `assistant` entry before the notice. When the transcript cannot be read (exit 3 or 4), the start is the Lead's `date -u` stamp at the notice, marked `~` (it is later than the real start), and the record's cross-check names it. The Lead's own waits come from the close scan; it may log one when it resumes, with the same script on its own session transcript.
+- **The Lead's own wait stops a role's.** While the Lead itself is in a wait, no role wait accrues: a role wait still open when the Lead's own wait starts ends there, and if the role is still waiting when the Lead resumes, a new entry opens from the Lead's resume to its action on that role. The time goes to the Lead's wait, whose cause held everything. (In the demo, QA's last stall, 01:25Z, ends at 01:43Z when the Lead's own sleep starts; the 5h06m to 06:49Z are the Lead's `interrupted`.)
 - **One wait, one kind.** A stretch that changes cause midway (a stall, then a limit hit on the resume) is two entries, back to back.
 - **Overlapping held waits of different kinds** (a sleep while a decision card is open): the record counts the overlap once, to the kind that comes first in measure 1's order, `person`, `limits`, `stalled`, `interrupted` ([39-hansei-record](39-hansei-record.md) §4).
+
+### Cut-offs at close
+
+At close, before the cross-check ([39-hansei-record](39-hansei-record.md) §6, step 2), the Lead completes `## Waits` from the transcripts (QA-39 v2 F2, F3):
+
+1. Run `cut-offs.sh` once over every role agent's transcript of this item (the `Agents` column of the stage log), with `--sleep-log -` where `pmset` exists; and once over each Lead session under `lead sessions`, with `--since` the `Start item` start and `--until` the approval time.
+2. For each line, find a logged wait for the same agent (`lead` for a session transcript) whose interval overlaps or touches the line's. **When there is one**, it is the same wait: set its Start to the line's start when they differ (the line is the better clock), keep its End and its kind unless the line's kind is the stronger (`limits`, `interrupted`, `stalled`, in that order). **When there is none**, add a wait: the line's kind, the agent, Start and End from the line (cut to minutes; an `open` end takes the End of that agent's last stage-log row), `Held item` as for any wait, What `found at close: <markers>`.
+3. Apply *The Lead's own wait stops a role's* to the result.
+
+A wait found at close carries no `~`: its times are recorded clocks. When the script fails for a transcript (exit 3 or 4), the record's cross-check names it: `cut-offs not captured (transcript <basename> unreadable)`, and that role's spend reads `not captured` (`--require-end` exits with the same code). Lines outside the item's rows (a role agent's transcript holds only this item's work; the Lead's window is cut by `--since`/`--until`) need no further filter.
 
 ### Done, then stopped
 
@@ -145,7 +159,7 @@ The lead state of item #12 at approval, abridged to the new sections:
 | 3 | Contracts and ADRs | architect | b7d031 | 2026-11-04T11:58Z | 2026-11-04T12:55Z | 57m | W1 | 81277 | done | 1 card |
 | 4 | Build | developer | c44a10 | 2026-11-04T12:55Z | 2026-11-04T14:46Z | 1h51m | W2, W3 | 138578 | done | resumed after a limit and after a sleep |
 | 5 | Open PR | lead | - | 2026-11-04T14:47Z | 2026-11-04T14:48Z | 1m | - | - | done | bump check passed (no factory paths) |
-| 6 | QA | qa-engineer | d21f77 | 2026-11-04T14:48Z | 2026-11-04T15:10Z | 22m | - | 70114 | findings | 1 finding |
+| 6 | QA | qa-engineer | d21f77 | 2026-11-04T14:48Z | 2026-11-04T15:10Z | 22m | W6 | 70114 | findings | 1 finding |
 | 7 | Security | security-reviewer | a41f09 | 2026-11-04T14:48Z | 2026-11-04T15:02Z | 14m | - | 48820 | pass | 2 low |
 | 8 | Build (round 2) | developer | c44a10 | 2026-11-04T15:11Z | 2026-11-04T15:30Z | 19m | - | 141210 | done | QA finding fixed |
 | 9 | QA (round 2) | qa-engineer | d21f77 | 2026-11-04T15:31Z | 2026-11-04T15:40Z | 9m | - | 74480 | pass | |
@@ -158,9 +172,10 @@ The lead state of item #12 at approval, abridged to the new sections:
 |---|---|---|---|---|---|---|
 | W1 | person | - | 2026-11-04T12:10Z | 2026-11-04T12:41Z | yes | decision card on #12: export format |
 | W2 | limits | c44a10 | 2026-11-04T13:05Z | 2026-11-04T13:20Z | yes | developer failed: session limit, resumed at reset |
-| W3 | interrupted | c44a10 | 2026-11-04T13:52Z | 2026-11-04T14:10Z | yes | developer failed: server_error at 14:09Z; pmset shows sleep 13:53Z–14:08Z; start from transcript; resumed |
-| W4 | stalled | e90b55 | 2026-11-04T15:49Z | 2026-11-04T16:00Z | yes | docs-writer failed: no progress for 600s, after its done result; start from transcript; accepted, not resumed |
+| W3 | interrupted | c44a10 | 2026-11-04T13:52Z | 2026-11-04T14:10Z | yes | developer failed: server_error at 14:09Z; sleep 13:53Z–14:08Z; start from cut-offs.sh; resumed |
+| W4 | stalled | e90b55 | 2026-11-04T15:49Z | 2026-11-04T16:00Z | yes | docs-writer failed: no progress for 600s, after its done result; start from cut-offs.sh; accepted, not resumed |
 | W5 | person | - | 2026-11-04T16:01Z | 2026-11-04T16:21Z | yes | merge and clean up? |
+| W6 | stalled | d21f77 | 2026-11-04T15:03Z | 2026-11-04T15:07Z | yes | found at close: cut-mid-stream; QA recovered by itself, no notice |
 
 ## Person's touches
 
@@ -171,5 +186,6 @@ The lead state of item #12 at approval, abridged to the new sections:
 | 2026-11-04T16:21Z | approval | merge and clean up: yes |
 ```
 
-From this log: total 11:40Z → 16:21Z = 4h41m; held person waits W1 + W5 = 51m; held limit wait W2 = 15m; held stall W4 = 11m; held interruption W3 = 18m; no two held waits overlap; agent working 4h41m − 51m − 15m − 11m − 18m = 3h06m. W3 and W4 also mark the developer's and the docs-writer's transcripts as truncated, so the record reads their spend as `not captured` (measure 5). No Delivery row: the item had nothing to deliver, and devops reads `n/a (did not run)` in the record.
+From this log: total 11:40Z → 16:21Z = 4h41m; held person waits W1 + W5 = 51m; held limit wait W2 = 15m; held stalls W4 + W6 = 11m + 4m = 15m; held interruption W3 = 18m; no two held waits overlap; agent working 4h41m − 51m − 15m − 15m − 18m = 3h02m. W6 is held because the security review, the only other agent in that stretch, ended at 15:02Z. W3, W4 and W6 also mark the developer's, the docs-writer's and the QA's transcripts as truncated, so the record reads their spend as `not captured` (measure 5). No Delivery row: the item had nothing to deliver, and devops reads `n/a (did not run)` in the record.
 
+W6 is the close scan's work: QA's transcript held one `cut-off mid-stream` marker, QA recovered and handed back normally, and no notice came. `cut-offs.sh` printed `agent-d21f77.jsonl	stalled	2026-11-04T15:03:12Z	2026-11-04T15:07:40Z	cut-mid-stream`, with no logged wait for `d21f77` overlapping it, so the Lead added W6.

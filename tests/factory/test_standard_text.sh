@@ -57,13 +57,31 @@ has ac11-date-u "$HA" 'Times are always taken from `date -u +%FT%TZ` at the mome
 has ac11-columns "$HA" '| # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |'
 has ac11-feedback-rounds "$HA" 'A feedback round is its own row with ` (round <n>)` appended'
 has ac11-acceptance-demo-stage "$HA" '`Acceptance demo`, `Delivery`'
-has ac11-waits-kinds "$HA" '| Id | Kind | Start (UTC) | End (UTC) | Held item | What |'
-has ac11-limits-wait "$HA" '`limits` from a role'"'"'s failure notice'
+# v2: the Waits table names the agent each wait stopped, and four wait kinds each have a detection row
+has ac11-waits-kinds "$HA" '| Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |'
+has ac11-waits-agent-column "$HA" '`Agent`: the agent id the wait stopped, `lead` when it stopped the Lead itself, `-` for a `person` wait.'
+KT="$(awk '/^\| Kind \| What it is \| Detected by \| Start \| End \|$/ {f=1; next} f && /^\|---/ {next} f && /^\| `/ {print} f && !/^\|/ {exit}' "$HA")"
+ck ac11-four-wait-kinds-in-order '`person`|`limits`|`stalled`|`interrupted`' "$(printf '%s\n' "$KT" | awk -F'|' '{gsub(/ /,"",$2); print $2}' | paste -sd'|' -)"
+ck ac11-every-kind-has-detection-start-end 4 "$(printf '%s\n' "$KT" | awk -F'|' 'NF>=7 && length($4)>10 && length($5)>5 && length($6)>5 {n++} END {print n+0}')"
+has ac11-limits-wait "$HA" 'a role'"'"'s failure notice `failed … You'"'"'ve hit your … limit`'
+has ac11-stalled-watchdog "$HA" 'the stream watchdog, `no progress for 600s`'
+has ac11-interrupted-sleep "$HA" 'a `stalled` gap with a sleep inside it in `pmset -g log`'
+has ac11-stall-start-from-transcript "$HA" 'the `timestamp` of the stopped transcript'"'"'s last entry before the gap'
+has ac11-one-wait-one-kind "$HA" 'A stretch that changes cause midway (a stall, then a limit hit on the resume) is two entries, back to back.'
 has ac11-touches "$HA" '| Time (UTC) | Kind | What |'
 has ac11-as-it-happens "$SK" 'Every wait goes to `## Waits` and every touch the person makes to `## Person'"'"'s touches`, as it happens'
 has ac11-skill-stamps-each-stage "$SK" '1. Stamp `date -u +%FT%TZ` and open the stage'"'"'s row in the stage log.'
 has ac11-skill-close-row-peak "$SK" 'close the row, with the agent ids and the completion notice'"'"'s peak context'
-has ac11-interruption-limits-wait "$SK" 'open a `limits` wait in `## Waits`'
+has ac11-interruption-wait-kinds "$SK" '`limits` for a usage limit, `stalled` for no progress (the stream watchdog), `interrupted` for a server or connection error or a machine sleep'
+has ac11-interruption-names-agent "$SK" 'with the stopped agent in its `Agent` column (`lead` for yourself)'
+# v2 (#45): done, then stopped -- in hansei.md and in the run skill's Interruptions
+has done-then-stopped-heading "$HA" '### Done, then stopped'
+has done-then-stopped-no-resume "$HA" 'and do **not** resume or respawn the agent'
+has done-then-stopped-commits-on-branch "$HA" '(`git branch --contains <sha>` lists it)'
+has done-then-stopped-paths-clean "$HA" 'the role'"'"'s paths have no uncommitted changes in the worktree'
+has done-then-stopped-else-resume "$HA" 'When either check fails, it is an ordinary interruption: resume the agent.'
+has done-then-stopped-skill "$SK" '**Done, then stopped.** When the agent stalled or failed after writing a complete result with `Status: done`'
+has done-then-stopped-skill-no-resume "$SK" 'do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the row'"'"'s Notes'
 
 # --- AC-13: cross-check written in, before posting
 has ac13-git-evidence "$HA" "git log item/<id> --format='%cI %s'"
@@ -72,7 +90,7 @@ has ac13-largest-gap "$HA" 'names the largest gap across rows'
 before ac13-cross-check-before-post "$SK" '2. Cross-check the stage log against git and the tracker' '4. Fill the hansei template'
 
 # --- AC-14: marker, header, seven measures in fixed order
-ck ac14-marker-first-line '<!-- factory:hansei v1 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
+ck ac14-marker-first-line '<!-- factory:hansei v2 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
 ck ac14-marker-regex-matches 1 "$(printf '%s\n' "$TEMPLATE" | sed -n 1p | grep -Ec '^<!-- factory:hansei v([0-9]+) -->$')"
 has ac14-find-hansei-op "$TP" "select(.body | startswith(\"<!-- factory:hansei v\")) | .id"
 for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex>' '- active overrides: <none | name (since YYYY-MM-DD); …>' '- stage-log cross-check: largest gap <N>m (<row>: <evidence>)'; do
@@ -85,13 +103,30 @@ has ac14-overrides-none "$HA" '`none` when the project'"'"'s `docs/agents/factor
 EXAMPLE="$(block_after "$HA" '### Worked example')"
 keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z-]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
 ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
-ck ac14-example-marker '<!-- factory:hansei v1 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
+ck ac14-example-marker '<!-- factory:hansei v2 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
+ck ac14-no-v1-marker-left 0 "$(grep -c 'factory:hansei v1 -->' "$HA" "$SK" "$TP" | awk -F: '{s+=$2} END {print s+0}')"
+has ac14-v1-v2-not-compared "$HA" 'never compare measure 1 or 2 across v1 and v2'
 
 # --- AC-15: each measure says what is counted and where it is read
 MT="$(awk '/^### Measures$/ {f=1; next} f && /^\| [1-7] \|/ {print} f && /^Token script exits/ {exit}' "$HA")"
 ck ac15-seven-rows 7 "$(printf '%s\n' "$MT" | grep -c .)"
 ck ac15-every-row-has-counted-and-source 7 "$(printf '%s\n' "$MT" | awk -F'|' 'NF>=6 && length($4)>10 && length($5)>3 {n++} END {print n+0}')"
-has ac15-m1-split "$HA" '**agent working** = total − both waits, so the three parts add up to the total'
+has ac15-m1-split "$HA" '**agent working** = total − the four waits, so agent working + person + limits + stalled + interrupted = total.'
+ck ac15-m1-template-line 1 "$(printf '%s\n' "$TEMPLATE" | grep -cxF '1. lead time: total <dur>; agent working <dur>; waiting for the person <dur>; waiting on limits <dur>; stalled <dur>; interrupted <dur>')"
+has ac15-m1-overlap-order "$HA" 'across kinds to the kind that comes first in this line'"'"'s order (person, limits, stalled, interrupted)'
+# measure 2 (v2, #46): the FPY grammar and the severity rule
+has ac15-m2-fpy-grammar "$HA" '`<fpy>`: `pass first time` | `pass first time (<n> low)` | `failed first time` | `n/a (did not run)` | `not captured (<reason>)`.'
+has ac15-m2-pass-needs-no-minor "$HA" '**Pass first time** = the first verdict is `pass` **and** that run lists no finding at or above minor.'
+has ac15-m2-below-minor "$HA" 'Below minor means a severity of `low`, `info`, `trivial` or `note`'
+has ac15-m2-no-severity-fails-closed "$HA" 'and a finding with no severity, counts as at or above minor'
+has ac15-m2-failed "$HA" '**Failed first time** = the first verdict is not `pass`, or it lists a finding at or above minor, or (demo) any criterion failed.'
+# measure 5 (v2): truncated transcripts read "not captured", by either signal
+has ac15-m5-truncated "$HA" 'the role'"'"'s spend then reads `not captured (transcript truncated by <kind>)`, never a number'
+has ac15-m5-signal-notice "$HA" 'names one of the role'"'"'s agents (or `lead`) in its `Agent` column'
+has ac15-m5-signal-require-end "$HA" '`token-spend.sh --require-end` exits 6 for one of the role'"'"'s transcripts'
+has ac15-m5-unlogged "$HA" '`<kind>` is then `unlogged`'
+has ac15-m5-exit6-row "$HA" '| 6 | `not captured (transcript truncated by <kind>)`'
+has ac15-m5-require-end-at-close "$HA" 'At close pass `--require-end` for every role transcript (never for the Lead'"'"'s own session, still running).'
 has ac15-m2-na "$HA" '`n/a (did not run)` when the stage was skipped'
 has ac15-m3-overturned "$HA" 'two-way decisions overturned by a `Source: lead` feedback brief'
 has ac15-m5-script "$HA" 'bash "<plugin root>/scripts/token-spend.sh" <transcripts>'
@@ -111,9 +146,52 @@ has ac16-label-script-fails "$HA" 'When the script fails, each reads `not captur
 ck ac16-only-list-heads-end-in-colon "5. tokens:|7. doors:" "$(printf '%s\n' "$EXAMPLE" | grep -E ':[[:space:]]*$' | paste -sd'|' -)"
 
 # --- worked examples add up
-# lead time: 11:40Z -> 16:13Z = 273m = 4h33m; held person W1 31m + W3 20m = 51m; limits W2 15m; working 273-51-15 = 207 = 3h27m
-has example-lead-time "$HA" '1. lead time: total 4h33m; agent working 3h27m; waiting for the person 51m; waiting on limits 15m'
-ck example-arithmetic "273 51 15 207" "$(( (16*60+13)-(11*60+40) )) $(( (12*60+41-12*60-10) + (16*60+13-15*60-53) )) $(( 13*60+20-13*60-5 )) $(( 273-51-15 ))"
+# lead time, computed from the stage-log example (section 4) and compared with the record example's line 1:
+# total = Start item start -> Merge approval end; each kind = its held waits; agent working = total - the four
+hm() { echo "$1" | sed -E 's/.*T([0-9]{2}):([0-9]{2})Z.*/\1 \2/' | awk '{print $1*60+$2}'; }
+dur() { if [ "$1" -ge 60 ]; then echo "$(($1 / 60))h$(printf '%02d' $(($1 % 60)))m"; else echo "${1}m"; fi; }
+WT="$(awk '/^## Waits$/ {f++} f==2 && /^\| W[0-9]+ \|/ {print}' "$HA")"
+ck example-waits-rows 5 "$(printf '%s\n' "$WT" | grep -c .)"
+SL1="$(awk '/^## Stage log$/ {f++} f==2 && /^\| [0-9]+ \|/ {print}' "$HA")"
+t0="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Start item/ {print $6}')")"
+t1="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Merge approval/ {print $7}')")"
+tot=$((t1 - t0))
+kindsum() { s=0; while IFS='|' read -r _ id kind ag st en held _r; do
+    [ "$(echo $kind)" = "\`$1\`" ] || [ "$(echo $kind)" = "$1" ] || continue
+    [ "$(echo $held)" = yes ] || continue
+    s=$((s + $(hm "$en") - $(hm "$st"))); done <<EOT
+$WT
+EOT
+  echo $s; }
+p=$(kindsum person); l=$(kindsum limits); st=$(kindsum stalled); it=$(kindsum interrupted)
+w=$((tot - p - l - st - it))
+want_m1="1. lead time: total $(dur $tot); agent working $(dur $w); waiting for the person $(dur $p); waiting on limits $(dur $l); stalled $(dur $st); interrupted $(dur $it)"
+ck example-lead-time-from-log "$want_m1" "$(printf '%s\n' "$EXAMPLE" | grep '^1\. lead time:')"
+ck example-lead-time-value "1. lead time: total 4h41m; agent working 3h06m; waiting for the person 51m; waiting on limits 15m; stalled 11m; interrupted 18m" "$want_m1"
+ck example-five-parts-add-up "$tot" "$((w + p + l + st + it))"
+ck example-has-stall-and-interruption "1 1" "$([ $st -gt 0 ] && echo 1 || echo 0) $([ $it -gt 0 ] && echo 1 || echo 0)"
+# no two held waits overlap in the example (the text claims so; an overlap would double-count)
+ov=0; prev_end=0
+for r in $(printf '%s\n' "$WT" | awk -F'|' '$7 ~ /yes/ {print $5 "|" $6}' | sed 's/ //g' | sort); do
+  s="$(hm "${r%%|*}")"; e="$(hm "${r##*|}")"; [ "$s" -lt "$prev_end" ] && ov=$((ov + 1)); [ "$e" -gt "$prev_end" ] && prev_end=$e
+done
+ck example-held-waits-do-not-overlap 0 "$ov"
+# measure 5: every stalled/interrupted wait's agent marks that role's spend as truncated by that kind
+bad=0
+while IFS='|' read -r _ id kind ag _rest; do
+  k="$(echo $kind | tr -d '`')"; a="$(echo $ag)"
+  case "$k" in stalled|interrupted) ;; *) continue ;; esac
+  role="$(printf '%s\n' "$SL1" | awk -F'|' -v a="$a" '$5 ~ a {gsub(/ /,"",$4); print $4; exit}')"
+  printf '%s\n' "$EXAMPLE" | grep -qF "   - $role: spend not captured (transcript truncated by $k)" || { bad=$((bad + 1)); echo "     $id $k $a ($role) not marked truncated"; }
+done <<EOT
+$WT
+EOT
+ck example-truncated-roles-match-waits 0 "$bad"
+# measure 2: the security row's notes ("2 low", verdict pass) give "pass first time (2 low)"; QA's first run had a finding
+ck example-fpy "2. first-pass yield: qa failed first time; security pass first time (2 low); acceptance demo n/a (did not run)" "$(printf '%s\n' "$EXAMPLE" | grep '^2\. first-pass yield:')"
+ck example-security-row-2-low 1 "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /^ Security $/ && $11 ~ /pass/ && $12 ~ /2 low/' | grep -c .)"
+# done, then stopped shows in the example: the docs-writer row
+ck example-done-then-stalled-row 1 "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Documentation/ && $11 ~ /done/ && $12 ~ /done, then stalled/' | grep -c .)"
 # every token line: total = i + w + r + o
 bad=0
 while IFS= read -r l; do

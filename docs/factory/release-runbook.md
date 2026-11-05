@@ -20,12 +20,12 @@ Read-only; none of these touch the installed plugin.
 1. `claude plugin validate .` passes (four warnings for plugins without a version: wayfinding, toolkit, discover, design; intentional, the factory has none).
 2. `claude plugin validate ./plugins/factory` and `./plugins/factory/skills` pass with no warning.
 3. `bash plugins/factory/scripts/check-bump.sh` in the branch's worktree, after `git fetch origin main`: `pass: minor bump needed, 0.0.0 -> 1.0.0`, exit 0.
-4. `bash tests/run.sh` prints `ALL PASSED`. A tag waits while any named skip remains in the suite (today QA v2 F1 to F3); the Lead tags only when none is left, or the person accepts them by name.
+4. `bash tests/run.sh` prints `ALL PASSED`. A tag waits while the suite reports any named skip; the Lead tags only when none is left, or the person accepts them by name.
 5. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 1.0.0` and both fingerprints. Note them; any later change to either under the same release is a forgotten bump.
 
 ## Tag (the Lead, after the person approved the merge)
 
-Run the bump check once more on the branch, then merge (PR #40, by number; the merge style is still `--merge`, which keeps `work/` in history: open as #48, decide before the merge), then tag the PR's merge commit (not `origin/main`, which may have moved):
+Run the bump check once more on the branch, then merge (PR #40, by number; the merge style is `--merge`, per ADR 0013), then tag the PR's merge commit (not `origin/main`, which may have moved):
 
 ```
 git fetch origin main

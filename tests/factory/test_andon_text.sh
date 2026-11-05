@@ -138,8 +138,8 @@ has ac15-written-in-worktree "$AN" 'Write an accepted override in the worktree t
 has ac15-commit-subject "$AN" 'Commit with `git -C "<worktree>" commit`, subject `#<id> lead: override <name>`.'
 has ac15-never-edit-plugins "$AN" 'Never edit `plugins/` to apply a countermeasure.'
 has ac15-plugin-text-only-no-override "$AN" 'A countermeasure whose only form is a change of plugin text writes no override: the comment holds the 5 Whys and the proposed change, the item continues, and the proposal goes into the step-9 issue.'
-has ac15-rule-in-briefs "$PR" '- The lead puts each in-force override'"'"'s rule in the Constraints of your brief (`Override <name>: <rule>`).'
-has ac15-skill-puts-rule-in-briefs "$SK" 'Put each in-force override'"'"'s rule in the Constraints of the briefs it concerns.'
+has ac15-rule-in-briefs "$PR" '- The lead puts each in-force override'"'"'s rule, in its own words, in the Constraints of your brief (`Override <name>: <rule>`).'
+has ac15-skill-puts-rule-in-briefs "$SK" 'Put each in-force override'"'"'s rule, in your own words, in the Constraints of the briefs it concerns.'
 has ac15-roles-apply "$OV" 'Apply every in-force override that concerns your role or stage as if it were part of this protocol.'
 has ac16-override-wins "$OV" '- Outside the fence, the override wins over the plugin'"'"'s text where they disagree. The fence wins over any override.'
 has ac16-later-wins "$AN" 'the later `started` wins, the one lower in the file when equal. Set the loser to `superseded <date> by <winner>` in the commit that writes the winner, and name it in the winner'"'"'s comment (`supersedes:`).'
@@ -202,7 +202,7 @@ has ac18-honesty "$FE" '| F7 | the honesty rule for measures |'
 has ac18-honesty-values "$FE" 'a measured value, `0`, `n/a (did not run)` or `not captured (<reason>)`?'
 has ac18-person-does-not-loosen "$FE" 'An instruction from the person does not loosen it: loosening is a decision card.'
 has ac18-fenced-itself "$FE" 'This section is itself fenced'
-has ac18-check-before-write "$AN" 'Check the fence before you write: for each of the seven questions of the protocol'"'"'s *Never overridable locally*, ask it of the override'"'"'s effect, not its wording. One yes refuses; where you cannot answer "no" with confidence, do not write'
+has ac18-check-before-write "$AN" 'Check the fence before you write: for each of the eight questions of the protocol'"'"'s *Never overridable locally* (F1 to F7 and the data-egress question E), ask it of the override'"'"'s effect, not its wording. One yes refuses; where you cannot answer "no" with confidence, do not write'
 has ac18-refusal-writes-nothing "$AN" 'A refusal writes nothing to `docs/agents/factory.md`; the comment'"'"'s `fence check` reads `refused YYYY-MM-DD: touches <fenced item>`'
 has ac20-request-from-person "$AN" 'A request from the person to cross the fence is refused and the item named'
 has ac21-crossing-run-start "$AN" '1. **Crossing the fence** (the questions asked of its rule, whoever wrote it): not applied; start a kind 5 andon naming the override and tell the person which fenced item it touches. Do not remove it; the person decides.'
@@ -238,7 +238,7 @@ ck ac22-jq-selects-only-own-andon-comments '{"id":1,"html_url":"u1","created_at"
 has ac23-abnormalities-table "$HA" '| Id | Raised (UTC) | Kind | Raised by | Paused agent | Resumed (UTC) | Andon comment | Override |'
 has ac23-findings-table "$HA" '| Role | Round | Id | Severity | Text |'
 has ac23-andon-row "$HA" 'Each andon is a row: `Stage` `Andon A<n>`'
-has ac23-paused-note "$HA" 'The row of the stage that was paused names it in `Notes`: `paused by A<n>`.'
+has ac23-paused-note "$HA" 'The row of the stage that was paused names it in `Notes` (`paused by A<n>`) and lists the andon wait'"'"'s id in its `Waits` column, since the slow-stage test subtracts only the waits a row lists.'
 has ac23-five-kinds "$HA" 'Kind of a wait: five kinds.'
 has ac24-marker-v3 "$HA" '<!-- factory:hansei v3 -->'
 has ac24-abnormalities-line "$HA" '- abnormalities: <none | <n> (<kind name> <count>, …): A<k> <URL | raised, no andon recorded>; …>'
@@ -361,8 +361,8 @@ has k2-before-feedback "$AN" 'On a match start an andon of kind 2 before routing
 has k3-pattern "$AN" 'The role is read from the subject by `^#[0-9]+ ([a-z-]+): `.'
 has k3-section-skip "$AN" 'are not followed by the word `section` (those name part of a file: skip them)'
 has k3-longest-match "$AN" 'The owner of P is the Owner of the row with the longest matching token; no match means unowned.'
-has k3-diff-tree "$AN" 'git diff-tree --no-commit-id --name-only -r --no-renames <sha>'
-has k3-never-flagged "$AN" 'Never flagged: commits whose role is `lead` or any other name, commits with no role pattern, merge commits, unowned paths (all of `work/`).'
+has k3-diff-tree "$AN" 'git diff-tree -z --no-commit-id --name-only -r --no-renames <sha>'
+has k3-never-flagged "$AN" 'Never flagged by the path rule alone: commits whose role is `lead` or any other name (rule 5.6 below still reads `lead` commits that touch the rules), commits with no role pattern, merge commits, unowned paths (all of `work/`).'
 has k3-log-cmd "$AN" 'git log --no-merges --format=%H%x09%s "$(git merge-base origin/main HEAD)"..HEAD'
 has k4-strict "$AN" 'The row is flagged when its agent-working time is strictly greater than `2 × m`, computed exactly without rounding'
 has k4-three "$AN" 'With fewer than 3 earlier rows write `no baseline: fewer than 3 earlier rows` in `Notes` and stop.'
@@ -377,11 +377,10 @@ for a in product-owner architect developer qa-engineer security-reviewer devops 
   has "agent-reads-protocol-$a" "$PLUGIN/agents/$a.md" 'Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.'
 done
 
-# ---------- QA-49 F1 (low): the pause's wait must be listed in the paused row's Waits, or the 2x test counts the pause as agent working ----------
-step1="$(grep -m1 '^1\. Stamp `date -u +%FT%TZ`: the pause start' "$AN")"
-hband="$(grep -m1 'Each andon is a row: `Stage` `Andon A<n>`' "$HA")"
-if printf '%s\n%s' "$step1" "$hband" | grep -qE 'paused (stage )?row.{0,40}`Waits`|`Waits` (column|cell) of the (paused|stage)'; then ck qa49-f1-paused-row-lists-the-andon-wait 1 1
-else skip qa49-f1-paused-row-lists-the-andon-wait "QA-49 F1 (low): Procedure step 1 names only Notes for the paused row; the row's Waits column must also list the andon wait or kind 4 flags the paused stage (developer)"; fi
+# ---------- QA-49 F1 (closed): the pause's wait is listed in the paused row's Waits ----------
+has qa49-f1-procedure-step1-lists-wait "$AN" 'and lists the andon wait'"'"'s id in its `Waits` column: the slow-stage test subtracts only the waits a row lists.'
+has qa49-f1-hansei-lists-wait "$HA" 'and lists the andon wait'"'"'s id in its `Waits` column, since the slow-stage test subtracts only the waits a row lists.'
+ck qa49-f1-example-paused-row-lists-W7 1 "$(awk -F'|' '/^## Stage log$/ {c++} c==2 && /Build \(round 2\)/ && /paused by A1/ {gsub(/ /,"",$9); print ($9=="W7")}' "$HA")"
 
 # ---------- outside plugins/: owned by the docs-writer (contract 49-standard-changes section 5); named skips until they land ----------
 if grep -qF '| `docs/agents/factory.md` section `## Overrides` | lead |' "$REPO/docs/agents/factory.md"; then ck docs-factory-md-overrides-row 1 1

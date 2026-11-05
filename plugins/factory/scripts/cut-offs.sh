@@ -49,10 +49,10 @@ if [ "$have_sleep" = 1 ]; then
     sleep_text="$(cat)" || { echo "cut-offs: sleep log unreadable" >&2; exit 3; }
   else
     if [ ! -r "$sleep_log" ] || [ ! -f "$sleep_log" ]; then
-      echo "cut-offs: sleep log $(basename "$sleep_log") unreadable" >&2
+      echo "cut-offs: sleep log $(basename -- "$sleep_log") unreadable" >&2
       exit 3
     fi
-    sleep_text="$(cat "$sleep_log")" || { echo "cut-offs: sleep log $(basename "$sleep_log") unreadable" >&2; exit 3; }
+    sleep_text="$(cat "$sleep_log")" || { echo "cut-offs: sleep log $(basename -- "$sleep_log") unreadable" >&2; exit 3; }
   fi
 fi
 
@@ -66,7 +66,7 @@ set -- "${args[@]}"
 
 for f in "$@"; do
   if [ ! -r "$f" ] || [ ! -f "$f" ] || ! jq -se 'all(.[]; type == "object")' "$f" >/dev/null 2>&1; then
-    echo "cut-offs: transcript $(basename "$f") unreadable" >&2
+    echo "cut-offs: transcript $(basename -- "$f") unreadable" >&2
     exit 3
   fi
 done
@@ -82,7 +82,7 @@ def mark:
   elif .type == "assistant" and (.isApiErrorMessage == true or ((.error // null) | type) == "string"
                                  or (txt | test("^(API Error|You.ve hit your)")))
     then [ (if (.error // "") == "rate_limit" or (txt | test("^You.ve hit your")) then "limits" else "interrupted" end),
-           ("api-error:" + ((.error // "unknown") | tostring)) ]
+           ("api-error:" + ((.error // "unknown") | tostring | if test("^[a-z_]+$") then . else "other" end)) ]
   elif .type == "system" and (.error // null) != null then ["interrupted", "api-retry"]
   else null end;
 def rank: if . == "limits" then 0 elif . == "interrupted" then 1 else 2 end;
@@ -136,9 +136,9 @@ def rank: if . == "limits" then 0 elif . == "interrupted" then 1 else 2 end;
 
 result=""
 for f in "$@"; do
-  out="$(jq -rs --arg since "$since" --arg until "$until_" --arg name "$(basename "$f")" \
+  out="$(jq -rs --arg since "$since" --arg until "$until_" --arg name "$(basename -- "$f")" \
            --rawfile sl <(printf '%s\n' "$sleep_text") "$prog" "$f" 2>/dev/null)" || {
-    echo "cut-offs: transcript $(basename "$f") unreadable" >&2
+    echo "cut-offs: transcript $(basename -- "$f") unreadable" >&2
     exit 3
   }
   [ -z "$out" ] || result="${result}${out}"$'\n'

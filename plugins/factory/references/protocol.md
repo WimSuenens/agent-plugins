@@ -37,6 +37,8 @@ An ADR, requirement, or doc that lands on main never cites a path under `work/`,
 
 Files in `work/<id>/` (or `work/frontier-<id>/`) are named `NN-<type>-<role>.md`; NN counts up per folder.
 
+Paths in a message file are worktree-relative (`plugins/factory/agents/developer.md`), relative to the repo's parent for another worktree (`../wt/<id>`), or start with `~/` for anything under the home directory (`~/.claude/plugins/cache/...`). Never write an absolute path under the home directory: `work/` is merged into the project's history with every commit and stays there for good. This covers every message type, the lead state included, and commands in a message (`~/` or `"$HOME"/...`). A spawn prompt is chat, not a file, and is outside the rule.
+
 Brief (lead → role):
 
     # Brief: <role> — <id>

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Token spend of one role (or the lead) from Claude Code transcripts.
-# Usage: bash token-spend.sh [--since <UTC time>] [--until <UTC time>] <transcript.jsonl>...
+# Usage: bash token-spend.sh [--since <UTC time>] [--until <UTC time>] [--require-end] [--] <transcript.jsonl>...
 # Times: YYYY-MM-DDTHH:MMZ or YYYY-MM-DDTHH:MM:SSZ, compared as epoch seconds.
 # Stdout: spend <total> (input <i>, cache write <w>, cache read <r>, output <o>); peak <p>; messages <n>
-# Exit: 0 ok; 2 bad arguments; 3 a file is missing, unreadable or not JSON; 4 jq missing; 5 no message in window.
+# --require-end: a transcript must show a run that ended by itself (no "[Request interrupted" user entry; last assistant/user entry is a final reply or the SubagentHandback result). Not for the lead's own session.
+# Exit: 0 ok; 2 bad arguments; 3 a file is missing, unreadable or not JSON; 4 jq missing; 5 no message in window; 6 --require-end and a transcript is truncated.
 # See contracts/39-plugin-scripts.md section 3 in the repo that hosts the factory.
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -13,17 +14,19 @@ fi
 
 since=""
 until_=""
+require_end=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --since) since="${2:-}"; shift 2 || { echo "token-spend: --since needs a time" >&2; exit 2; } ;;
     --until) until_="${2:-}"; shift 2 || { echo "token-spend: --until needs a time" >&2; exit 2; } ;;
+    --require-end) require_end=1; shift ;;
     --) shift; break ;;
     -*) echo "token-spend: unknown option $1" >&2; exit 2 ;;
     *) break ;;
   esac
 done
 if [ $# -eq 0 ]; then
-  echo "usage: token-spend.sh [--since T] [--until T] <transcript.jsonl>..." >&2
+  echo "usage: token-spend.sh [--since T] [--until T] [--require-end] [--] <transcript.jsonl>..." >&2
   exit 2
 fi
 
@@ -53,6 +56,28 @@ for f in "$@"; do
     exit 3
   fi
 done
+
+if [ "$require_end" = 1 ]; then
+  for f in "$@"; do
+    if ! jq -se '
+      def txt: if (.message.content | type) == "string" then .message.content
+               else ([.message.content[]? | select(.type == "text") | .text] | join("")) end;
+      def blocks: (.message.content | if type == "array" then .[] else empty end);
+      [ .[] | select(.type == "assistant" or .type == "user") ] as $m
+      | [ $m[] | select(.type == "assistant") | blocks | select(.type == "tool_use" and .name == "SubagentHandback") | .id ] as $hand
+      | ($m | last) as $l
+      | (([ $m[] | select(.type == "user" and (txt | startswith("[Request interrupted"))) ] | length) == 0)
+        and ($l != null)
+        and (
+          ($l.type == "assistant" and ([ $l | blocks | select(.type == "tool_use") ] | length) == 0)
+          or ($l.type == "user" and ([ $l | blocks | select(.type == "tool_result" and (.tool_use_id as $t | $hand | index($t))) ] | length) > 0)
+        )
+    ' "$f" >/dev/null 2>&1; then
+      echo "token-spend: transcript $(basename "$f") truncated" >&2
+      exit 6
+    fi
+  done
+fi
 
 out="$(jq -rs --arg since "$since" --arg until "$until_" '
   def epoch: sub("\\.[0-9]+"; "") | fromdateiso8601;

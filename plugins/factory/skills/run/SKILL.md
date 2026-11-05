@@ -199,7 +199,7 @@ The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md
 3. Total the token spend per role with `scripts/token-spend.sh`.
 4. Fill the hansei template, measure 7 reading `pending resurvey`, and post it (*Post hansei*) on the slice ticket, before `work/<id>/` goes. Write `hansei: <comment URL> (measure 7 pending)` into the map's Factory run section.
 5. When the item had an Environment stage, brief devops to tear down the resources in the lead state's **Shared resources** list.
-6. The last commit on `item/<id>` removes `work/<id>/`; the tracker holds the stage summaries, the hansei record and the ADRs hold the decisions. The record is posted before this commit.
+6. The last commit on `item/<id>` removes `work/<id>/`, after one commit of the lead state. First that commit: `git add -A work/<id>`, then, when `git diff --cached --quiet` exits 1, `git commit -m "#<id> lead: close"`. Then `git rm -r -q work/<id>`, `rm -rf work/<id>` for untracked leftovers (ignored files), and `git commit -m "#<id> lead: remove work/"`. No `-f` is needed. The tracker holds the stage summaries, the hansei record and the ADRs hold the decisions. The record is posted before this commit (and before the lead-state commit).
 7. Merge the PR and remove the worktree and branch (*Merge PR*, which also tags a factory release), and set `Factory status` to Done. When the merge fails, keep the worktree and put the failure to the person.
 8. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
 9. Fill measure 7 (*Edit hansei*): one line per Under test line, `confirmed`, `contradicted` or `not exercised`. Remove the `hansei:` pointer from the Factory run section. If the person stops the run after the record is posted and before this edit, edit measure 7 to `not captured (run stopped before the resurvey)` first; a later session that finds the pointer still in the Factory run section does the same.
@@ -227,10 +227,11 @@ This is the only instruction that names `--repo WimSuenens/agent-plugins`. Every
 
 A role agent can stop mid-task on a usage or session limit (HTTP 429), often two parallel agents at once.
 
-1. Note the interruption in the lead state (or the Factory run section, in a frontier round): which agent, when, its last commit. In an item, also open a `limits` wait in `## Waits` (from the failure notice); the resume closes it.
-2. After the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
-3. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
-4. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it.
+1. Note the interruption in the lead state (or the Factory run section, in a frontier round): which agent, when, its last commit. In an item, also open a wait in `## Waits` from the failure notice, with the stopped agent in its `Agent` column (`lead` for yourself): `limits` for a usage limit, `stalled` for no progress (the stream watchdog), `interrupted` for a server or connection error or a machine sleep. The resume, the respawn or the accepted result closes it; `hansei.md` gives the detection rules and how to take the start time from the stopped transcript.
+2. **Done, then stopped.** When the agent stalled or failed after writing a complete result with `Status: done` whose commits are all on `item/<id>`, and its role's paths are clean, accept it as a completion after the usual Done-list check: do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the row's Notes (`hansei.md`, *Done, then stopped*).
+3. Otherwise, after the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
+4. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
+5. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it.
 
 ## Context
 

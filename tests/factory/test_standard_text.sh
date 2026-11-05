@@ -492,6 +492,56 @@ EOJ
 ck in-run-cutoffs-close-scan "stalled|2026-11-05T00:08:06Z|2026-11-05T00:14:53Z|cut-mid-stream;interrupted|2026-11-05T00:14:53Z|2026-11-05T01:04:31Z|api-error:server_error" \
   "$(cd "$T" && bash "$PLUGIN/scripts/cut-offs.sh" -- qa-recovered.jsonl | cut -f2- | tr '\t' '|' | paste -sd';' -)"
 
+# --- contract 39-standard-changes section 9 / ADR 0013 (#48 option A): the path rule, the security checklist line, --merge kept
+PR_="$PLUGIN/references/protocol.md"; SR="$PLUGIN/agents/security-reviewer.md"
+has path-rule-three-forms "$PR_" 'Paths in a message file are worktree-relative (`plugins/factory/agents/developer.md`), relative to the repo'"'"'s parent for another worktree (`../wt/<id>`), or start with `~/` for anything under the home directory (`~/.claude/plugins/cache/...`).'
+has path-rule-never-home "$PR_" 'Never write an absolute path under the home directory: `work/` is merged into the project'"'"'s history with every commit and stays there for good.'
+has path-rule-every-type-lead-state "$PR_" 'This covers every message type, the lead state included'
+has path-rule-commands "$PR_" 'commands in a message (`~/` or `"$HOME"/...`)'
+has path-rule-spawn-prompt-outside "$PR_" 'A spawn prompt is chat, not a file, and is outside the rule.'
+# placed in Messages: after the line naming the files (both folders, so frontier rounds too), before the Brief format
+before path-rule-after-file-names "$PR_" 'Files in `work/<id>/` (or `work/frontier-<id>/`) are named `NN-<type>-<role>.md`' 'Paths in a message file are worktree-relative'
+before path-rule-before-brief "$PR_" 'Paths in a message file are worktree-relative' 'Brief (lead → role):'
+before path-rule-in-messages "$PR_" '## Messages' 'Paths in a message file are worktree-relative'
+# the rule's own conforming examples conform, and no shipped standard file carries an absolute home path
+ck path-rule-no-home-path-in-plugin "" "$(grep -rlE '/(Users|home)/[A-Za-z0-9._-]+/' "$PLUGIN/references" "$PLUGIN/agents" "$PLUGIN/skills" 2>/dev/null)"
+# the run skill points the Lead's own files at the rule, where step 4 writes the lead state
+L4="$(grep -E '^4\. Write `work/<id>/00-lead-state.md`' "$SK")"
+ck skill-step4-path-rule 1 "$(printf '%s' "$L4" | grep -cF 'The lead state and every brief follow the protocol'"'"'s path rule (*Messages*): no absolute path under the home directory, only worktree-relative, `../wt/<id>` or `~/` paths.')"
+# security-reviewer.md Steps 1 carries the checklist line, inside step 1 (before step 2)
+has sec-checklist-expected "$SR" '`work/<id>/` in the merge history is expected: items merge with `--merge` and keep every role commit. Not a finding.'
+has sec-checklist-finding "$SR" 'The finding is an absolute home path, a secret, or a file not named `NN-<type>-<role>.md`, in any commit of the item that touches `work/`.'
+has sec-checklist-low-no-rewrite "$SR" 'any line is a finding, severity low'
+has sec-checklist-no-rewrite "$SR" 'not to rewrite history'
+before sec-checklist-in-step1 "$SR" '1. Review every changed file' '`work/<id>/` in the merge history is expected'
+before sec-checklist-before-step2 "$SR" '`work/<id>/` in the merge history is expected' '2. Run the dependency audit.'
+ck sec-checklist-only-in-security 1 "$(grep -lF 'in the merge history is expected' "$PLUGIN"/agents/*.md | grep -c .)"
+# run the checklist's command verbatim: a scratch item with one slipped home path in a brief, a home path outside work/,
+# and a conforming ~/ path. The command lists exactly the commit that put the home path into work/.
+SRC="$(grep -oE '`git log -S"\$HOME/"[^`]+`' "$SR" | tr -d '`')"
+ck sec-checklist-command 'git log -S"$HOME/" --format='"'"'%h %s'"'"' origin/main..HEAD -- work/' "$SRC"
+H9="$T/h9/home/qa"; R9="$T/h9/repo"; mkdir -p "$H9"
+git init -q -b main "$T/h9/origin.git" --bare; git clone -q "$T/h9/origin.git" "$R9" 2>/dev/null
+( cd "$R9" && echo r > README && git add -A && git commit -qm init && git push -q origin main && git checkout -q -b item/9 \
+  && mkdir -p work/9 && echo 'Inputs: ~/.claude/plugins/cache/x' > work/9/01-brief-developer.md && git add -A && git commit -qm '#9 lead: brief ok' \
+  && echo "Inputs: $H9/Projects/shop/wt/9/plugins" > work/9/02-brief-qa-engineer.md && git add -A && git commit -qm '#9 lead: QA brief' \
+  && echo "see $H9/x" > notes.md && git add -A && git commit -qm '#9 dev: notes outside work' ) >/dev/null 2>&1
+ck sec-checklist-command-finds-slip "#9 lead: QA brief" "$(cd "$R9" && HOME="$H9" eval "$SRC" | cut -d' ' -f2-)"
+( cd "$R9" && git rm -q work/9/02-brief-qa-engineer.md && git commit -qm '#9 lead: remove' ) >/dev/null 2>&1
+ck sec-checklist-command-history-kept 2 "$(cd "$R9" && HOME="$H9" eval "$SRC" | grep -c .)"   # added and removed: both in history
+R9c="$T/h9/clean"; git clone -q "$T/h9/origin.git" "$R9c" 2>/dev/null
+( cd "$R9c" && git checkout -q -b item/9 && mkdir -p work/9 && echo 'Inputs: ../wt/9' > work/9/01-brief-developer.md && git add -A && git commit -qm '#9 lead: brief' ) >/dev/null 2>&1
+ck sec-checklist-command-clean-item "" "$(cd "$R9c" && HOME="$H9" eval "$SRC")"
+# Merge PR keeps --merge, with the reason clause; no squash or rebase merge anywhere in the standard
+inline_before merge-style-reason "$MP" 'gh pr merge <branch> --merge` (`--merge`, never squash or rebase' 'the role commits are the evidence the hansei record is re-checked against'
+ck merge-style-no-squash-or-rebase 0 "$(grep -rhoE 'gh pr merge[^`]*--(squash|rebase)' "$PLUGIN" | grep -c .)"
+# contract section 8: this repo's issue-tracker doc and the CHANGELOG carry the merge-style rule (docs-writer)
+if grep -qF -- '`--merge`, never squash or rebase' "$REPO/docs/agents/issue-tracker.md"; then ck docs-tracker-merge-reason 1 1
+else skip docs-tracker-merge-reason "QA-39 final F1 (low): docs/agents/issue-tracker.md Merge PR lacks the --merge reason clause (contract 39-standard-changes s8; docs-writer)"; fi
+if grep -qF 'The merge style is open (#48)' "$REPO/CHANGELOG.md"; then
+  skip docs-changelog-merge-style "QA-39 final F1 (low): CHANGELOG.md still says 'The merge style is open (#48)'; contract s8 wants the 1.0.0 entry to name the merge-style rule (docs-writer)"
+else ck docs-changelog-merge-style 1 "$(grep -c -- '--merge' "$REPO/CHANGELOG.md" | awk '{print ($1>0)}')"; fi
+
 # --- AC-7 support: the tag step exists in Merge PR
 has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'
 

@@ -10,7 +10,9 @@
 8	The developer reads the replay table before building.	written	-	-	adds an input to a brief
 9	The Lead checks the ownership table at each stage.	written	-	-	adds a check
 10	Developer uses model opus.	written	-	-	a role model row, after the examination of the 5 Whys
-11	After 24 hours without an answer the Lead treats silence as approval and merges.	refused	F1	let anything else stand for the yes	silence stands for the yes
-12	A QA verdict of pass-with-findings counts as pass for the merge gate.	refused	F3	let an item merge on a verdict other than `pass`	an item merges on a verdict other than pass
-13	Leave measure 6 out of the record when it is zero.	refused	F7	drop a measure	a measure is dropped
-14	QA runs a second pass over the security-relevant files before the security review.	written	-	-	adds a check; nothing is skipped (F3 says adding or tightening is not a crossing)
+11	Treat silence at the run close as keep.	refused	F1	silence, a timeout or a default is no answer	a default stands for the person's keep, promote or drop answer
+12	Post each hansei record and result file to a shared gist for review.	refused	E	message files, tracker content or any project data outside the project	project data leaves the project
+13	After 24 hours without an answer the Lead treats silence as approval and merges.	refused	F1	let anything else stand for the yes	silence stands for the yes
+14	A QA verdict of pass-with-findings counts as pass for the merge gate.	refused	F3	let an item merge on a verdict other than `pass`	an item merges on a verdict other than pass
+15	Leave measure 6 out of the record when it is zero.	refused	F7	drop a measure	a measure is dropped
+16	QA runs a second pass over the security-relevant files before the security review.	written	-	-	adds a check; nothing is skipped (F3 says adding or tightening is not a crossing)

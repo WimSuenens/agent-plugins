@@ -33,7 +33,8 @@ kind3() {
     r="$(printf '%s' "$subj" | sed -nE 's/^#[0-9]+ ([a-z-]+): .*/\1/p')"
     [ -n "$r" ] || continue
     case " $ROLES " in *" $r "*) ;; *) continue ;; esac
-    git -C "$1" diff-tree --no-commit-id --name-only -r --no-renames "$sha" | while read -r p; do
+    git -C "$1" diff-tree -z --no-commit-id --name-only -r --no-renames "$sha" | while IFS= read -r -d '' p; do
+      case "$p" in *[[:cntrl:]]*) echo "role-outside-role: $(echo $sha | cut -c1-7) $r changed an unclassifiable path (name escaped: $(printf '%q' "$p"))"; continue ;; esac
       o="$(owner_of "$2" "$p")"
       [ -n "$o" ] && [ "$o" != "$r" ] && echo "role-outside-role: $(echo $sha | cut -c1-7) $r changed $p (owner $o)"
     done
@@ -96,6 +97,69 @@ R2="$T/k3b"; mkrepo "$R2"
 ck k3-section-row-token-skipped "" "$(printf '%s\n' '| Path | Owner |' '|---|---|' '| `docs/agents/factory.md` section `## Overrides` | lead |' '| `docs/` (rest) | docs-writer |' > "$T/tbl.md"; owner_of "$T/tbl.md" nothing/here)"
 ck k3-section-row-does-not-own-file docs-writer "$(owner_of "$T/tbl.md" docs/agents/factory.md)"
 ck k3-section-row-docs-rest-owns-docs-writer-other docs-writer "$(owner_of "$T/tbl.md" docs/guide.md)"
+
+# ---- S4: git diff-tree -z with an accented and a newline filename (without -z git quote-escapes both) ----
+R3="$T/k3z"; mkrepo "$R3"
+nl="$(printf 'tests/bad\nname.sh')"
+cm "$R3" "#7 developer: accented" "plugins/factory/caf$(printf '\303\251').md"
+cm "$R3" "#7 developer: newline name" "$nl"
+cm "$R3" "#7 developer: leading quote" 'tests/"q.sh'
+out="$(kind3 "$R3" "$R3/docs/agents/factory.md" main)"
+ck k3z-accented-name-classified-not-flagged 0 "$(echo "$out" | grep -c 'caf')"
+ck k3z-newline-name-flagged-unclassifiable 1 "$(echo "$out" | grep -c 'changed an unclassifiable path (name escaped: ')"
+ck k3z-leading-quote-seen-as-its-real-name 1 "$(echo "$out" | grep -c 'developer changed tests/"q.sh (owner qa-engineer)')"
+# the reproduction of S4: without -z, git writes the accented name as an escaped, quoted string that matches no token, so the rule would miss it
+ck k3z-without-z-name-is-escaped 1 "$(git -C "$R3" -c core.quotepath=true diff-tree --no-commit-id --name-only -r --no-renames "$(git -C "$R3" log --format=%H --grep=accented -1)" | grep -c '^"')"
+
+# ---- rule 5.6: commits that touch the ownership table or ## Overrides ----
+# rule56 <repo> <lead email> <base>: prints rules-touched-by-non-lead lines
+section_of() { git -C "$1" show "$2:docs/agents/factory.md" 2>/dev/null | awk -v h="$3" '$0==h {f=1; next} f && /^## / {exit} f {print}'; }
+rule56() {
+  git -C "$1" log --no-merges --format='%H%x09%ae%x09%s' "$3"..HEAD | while IFS="$(printf '\t')" read -r sha ae subj; do
+    a="$(section_of "$1" "$sha^" '## Overrides')|$(section_of "$1" "$sha^" '## Ownership')"
+    b="$(section_of "$1" "$sha" '## Overrides')|$(section_of "$1" "$sha" '## Ownership')"
+    [ "$a" = "$b" ] && continue
+    case "$subj" in "#"[0-9]*" lead: "*) [ "$ae" = "$2" ] && continue ;; esac
+    echo "rules-touched-by-non-lead: $(echo $sha | cut -c1-7)"
+  done; }
+R4="$T/k56"; mkrepo "$R4"
+printf '\n## Overrides\n\n### x\n\n- rule: a\n' >> "$R4/docs/agents/factory.md"; git -C "$R4" add -A; GIT_AUTHOR_EMAIL=lead@example.invalid git -C "$R4" commit -qm "base overrides" ; git -C "$R4" tag base2; git -C "$R4" checkout -q -B item/7
+base="$(git -C "$R4" rev-parse HEAD)"
+LEAD=lead@example.invalid
+edit_ov() { sed -i '' "s/- rule: .*/- rule: $1/" "$R4/docs/agents/factory.md"; git -C "$R4" add -A; }
+edit_ov b; GIT_AUTHOR_EMAIL=$LEAD git -C "$R4" commit -qm "#7 lead: override x"
+ck k56-genuine-lead-commit-not-flagged 0 "$(rule56 "$R4" $LEAD "$base" | grep -c .)"
+base="$(git -C "$R4" rev-parse HEAD)"
+edit_ov c; GIT_AUTHOR_EMAIL=forger@example.invalid git -C "$R4" commit -qm "#7 lead: override x"
+ck k56-forged-lead-subject-by-other-author-flagged 1 "$(rule56 "$R4" $LEAD "$base" | grep -c 'rules-touched-by-non-lead')"
+# the path rule alone never sees it: the role is `lead`, so kind 3's path rule reads nothing (that is the S-finding)
+ck k56-path-rule-alone-misses-the-forgery 0 "$(kind3 "$R4" "$R4/docs/agents/factory.md" "$base" | grep -c .)"
+base="$(git -C "$R4" rev-parse HEAD)"
+edit_ov d; GIT_AUTHOR_EMAIL=$LEAD git -C "$R4" commit -qm "#7 developer: tweak the override"
+ck k56-role-subject-touching-overrides-flagged 1 "$(rule56 "$R4" $LEAD "$base" | grep -c .)"
+base="$(git -C "$R4" rev-parse HEAD)"
+sed -i '' 's/| `plugins\/` | developer |/| `plugins\/` | qa-engineer |/' "$R4/docs/agents/factory.md"; git -C "$R4" add -A; GIT_AUTHOR_EMAIL=$LEAD git -C "$R4" commit -qm "#7 qa-engineer: take plugins"
+ck k56-ownership-table-edit-by-role-flagged 1 "$(rule56 "$R4" $LEAD "$base" | grep -c .)"
+base="$(git -C "$R4" rev-parse HEAD)"
+sed -i '' 's/^Item worktrees live at/Item worktrees are at/' "$R4/docs/agents/factory.md"; git -C "$R4" add -A; GIT_AUTHOR_EMAIL=$LEAD git -C "$R4" commit -qm "#7 docs-writer: prose"
+ck k56-prose-commit-exists 1 "$(git -C "$R4" log --format=%s "$base"..HEAD | grep -c 'docs-writer: prose')"
+ck k56-edit-outside-overrides-and-table-not-flagged 0 "$(rule56 "$R4" $LEAD "$base" | grep -c .)"
+# a branch commit editing the table is judged by the origin/main copy: the table the branch edited does not exempt it
+ck k56-judged-by-base-copy "qa-engineer" "$(owner_of "$R4/docs/agents/factory.md" plugins/factory/x.sh)"
+ck k56-base-copy-says-developer "developer" "$(git -C "$R4" show base2:docs/agents/factory.md > "$T/base-fm.md"; owner_of "$T/base-fm.md" plugins/factory/x.sh)"
+
+# ---- kind 6(b): a FREEZE line is trusted only when the map body's last editor is the lead's account ----
+freeze() { # last-editor lead-account body-line plugin-root -> outcome
+  [ -n "$1" ] && [ "$1" = "$2" ] || { echo "not captured (map body last edited by ${1:-unknown})"; return; }
+  sha="$(printf '%s\n' "$3" | grep 'FREEZE:' | grep -oE '`[0-9a-f]{12}`' | head -1 | tr -d '`')"
+  [ -n "$sha" ] || { echo "freeze: none"; return; }
+  seg="${4##*/}"; [ "$sha" = "$seg" ] && echo "freeze: ok" || echo "kind 6: installed $seg, FREEZE line $sha"; }
+BODY='Factory run. FREEZE: `9147301f75c3` frozen install'
+ck k6b-lead-edited-matching-ok "freeze: ok" "$(freeze lead lead "$BODY" /x/factory/9147301f75c3)"
+ck k6b-lead-edited-differs-kind6 "kind 6: installed 1234567890ab, FREEZE line 9147301f75c3" "$(freeze lead lead "$BODY" /x/factory/1234567890ab)"
+ck k6b-other-editor-not-captured "not captured (map body last edited by mallory)" "$(freeze mallory lead "$BODY" /x/factory/1234567890ab)"
+ck k6b-editor-unreadable-not-captured "not captured (map body last edited by unknown)" "$(freeze '' lead "$BODY" /x/factory/9147301f75c3)"
+ck k6b-no-freeze-line "freeze: none" "$(freeze lead lead 'no line' /x/factory/9147301f75c3)"
 
 # ---------- kind 4 ----------
 # slow <role> <row#> from a stage log + waits: implements the written steps

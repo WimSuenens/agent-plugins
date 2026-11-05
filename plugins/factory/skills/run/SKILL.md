@@ -365,7 +365,7 @@ When the person stops the run before step 10 nothing is written; the run-start c
 
 ### The comment
 
-One comment on the slice ticket in the project's own tracker (no `--repo`; nothing goes to `WimSuenens/agent-plugins`); for a frontier round, on the frontier ticket being worked. Post once, never edit. A reader that meets an unknown version skips the comment and says so. Fixed lines, fixed order:
+One comment on the slice ticket in the project's own tracker (nothing goes to the plugin's repository); for a frontier round, on the frontier ticket being worked. Post once, never edit. A reader that meets an unknown version skips the comment and says so. Fixed lines, fixed order:
 
 ```
 <!-- factory:andon v1 -->

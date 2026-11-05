@@ -383,6 +383,12 @@ hband="$(grep -m1 'Each andon is a row: `Stage` `Andon A<n>`' "$HA")"
 if printf '%s\n%s' "$step1" "$hband" | grep -qE 'paused (stage )?row.{0,40}`Waits`|`Waits` (column|cell) of the (paused|stage)'; then ck qa49-f1-paused-row-lists-the-andon-wait 1 1
 else skip qa49-f1-paused-row-lists-the-andon-wait "QA-49 F1 (low): Procedure step 1 names only Notes for the paused row; the row's Waits column must also list the andon wait or kind 4 flags the paused stage (developer)"; fi
 
+# ---------- outside plugins/: owned by the docs-writer (contract 49-standard-changes section 5); named skips until they land ----------
+if grep -qF '| `docs/agents/factory.md` section `## Overrides` | lead |' "$REPO/docs/agents/factory.md"; then ck docs-factory-md-overrides-row 1 1
+else skip docs-factory-md-overrides-row "QA-49 O3: this repo's docs/agents/factory.md has no '| \`docs/agents/factory.md\` section \`## Overrides\` | lead |' ownership row yet (docs-writer, contract 49-standard-changes section 5)"; fi
+if grep -qE '^## .*1\.1\.0' "$REPO/CHANGELOG.md"; then ck docs-changelog-1.1.0 1 1
+else skip docs-changelog-1.1.0 "QA-49 O3: CHANGELOG.md has no 1.1.0 entry yet (docs-writer)"; fi
+
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
 ck ac29-version-is-minor-above-1.0.0 "1.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"

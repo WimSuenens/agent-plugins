@@ -10,7 +10,7 @@
 
 ## Running agents
 
-none (architect ad1af84adc138ccf9 finished, c3b8225)
+- developer, work/49/05-brief-developer.md, handle pending
 
 ## Carry-overs (from #39, map #34)
 
@@ -28,6 +28,7 @@ none (architect ad1af84adc138ccf9 finished, c3b8225)
 | 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51Z | ~1m | - | - | done | board at Backlog, worktree + work/49 created |
 | 2 | Requirement | product-owner | aa940c1d056ef54db | 2026-11-05T22:55Z | 2026-11-05T22:59Z | 4m | - | 84629 (subagent_tokens, peak context; spend not captured) | done | 30 ACs, 8 decisions, no card; 19 tool uses |
 | 3 | Contracts and ADRs | architect | ad1af84adc138ccf9 | 2026-11-05T23:11Z | 2026-11-05T23:21Z | 10m | - | 184318 (subagent_tokens, peak context; spend not captured) | done | 5 contracts, no ADR, 12 decisions, 44 tool uses |
+| 4 | Build | developer | pending | 2026-11-05T23:28Z | | | - | | | |
 
 ## Waits
 

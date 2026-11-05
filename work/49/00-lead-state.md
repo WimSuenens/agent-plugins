@@ -10,8 +10,8 @@
 
 ## Running agents
 
-- qa-engineer, work/49/07-brief-qa-engineer.md, handle pending
-- security-reviewer, work/49/07-brief-security-reviewer.md, handle pending
+- qa-engineer, work/49/07-brief-qa-engineer.md, handle a0b6ee3a034e26d7e
+- security-reviewer, work/49/07-brief-security-reviewer.md, handle a38eb60ee88a63e43
 
 ## Carry-overs (from #39, map #34)
 
@@ -31,8 +31,8 @@
 | 3 | Contracts and ADRs | architect | ad1af84adc138ccf9 | 2026-11-05T23:11Z | 2026-11-05T23:21Z | 10m | - | 184318 (subagent_tokens, peak context; spend not captured) | done | 5 contracts, no ADR, 12 decisions, 44 tool uses |
 | 4 | Build | developer | a9399ddf9aa504a15 | 2026-11-05T23:28Z | 2026-11-05T23:33Z | 5m | - | 125458 (subagent_tokens, peak context; spend not captured) | done | 6 commits; 17 #39 tests fail by design, routed to QA; bump check pass |
 | 5 | Open PR | lead | - | 2026-11-05T23:34Z | 2026-11-05T23:35Z | 1m | - | - | pass | check-bump: minor 1.0.0 -> 1.1.0 |
-| 6 | QA | qa-engineer | pending | 2026-11-05T23:36Z | | | - | | | |
-| 7 | Security | security-reviewer | pending | 2026-11-05T23:36Z | | | - | | | |
+| 6 | QA | qa-engineer | a0b6ee3a034e26d7e | 2026-11-05T23:36Z | | | - | | | |
+| 7 | Security | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:36Z | | | - | | | |
 
 ## Waits
 

@@ -2,7 +2,7 @@
 
 Reviewer: security-reviewer · Branch `item/39` against `main` (diff `main...item/39`, head `4774b97`) · 2026-11-04
 
-**Verdict: pass** (re-verified at `34ac83c`, and again at `dd57082` after `9ee1cdc`). No critical, high or medium findings. L1–L7 and the residual L1a are fixed. The session-id rationale for L5 is accepted.
+**Verdict: pass** (re-verified at `34ac83c`, again at `dd57082` after `9ee1cdc`, and the schema v2 changes at `5e5b9f1`). No critical, high or medium findings. L1–L7 and the residual L1a are fixed. The session-id rationale for L5 is accepted, and it covers agent ids too. Schema v2 adds three low findings, L8–L10, which do not block the merge.
 
 ## Scope
 
@@ -123,3 +123,51 @@ Also read in `9ee1cdc`:
 - `bash tests/run.sh`: ALL PASSED.
 
 Verdict after re-verify: **pass**. No finding is open, so the merge is not blocked.
+
+## Schema v2 review
+
+Reviewed 2026-11-05 at `5e5b9f1`: the changes since `dd57082`, which are the contracts from `9f7825b`, the build `187b5a9` and later, and the devops runbook `25f8978`. The probes ran on throwaway files and repos in the scratchpad. Nothing in the repo or under `~/.claude` was changed.
+
+Files reviewed: `plugins/factory/scripts/token-spend.sh`, `plugins/factory/references/hansei.md`, `plugins/factory/skills/run/SKILL.md`, `contracts/39-hansei-record.md`, `contracts/39-plugin-scripts.md`, `contracts/39-stage-log.md`, `contracts/39-standard-changes.md`, `docs/requirements/39-hansei-record.md`, `docs/factory/release-runbook.md`, and `tests/factory/*` (read for what they pin).
+
+Dependency audit: no manifest or lockfile changed. The only new runtime tool is `pmset`, which ships with macOS and is only read. The secrets grep of the added lines (outside `work/`, `tests/`, `reviews/`) found no token, key or `/Users/` path.
+
+### token-spend.sh `--require-end` (exit 6): no finding
+
+- **Option handling.** These cases were probed: `--require-end` with no file (usage, exit 2), `--require-end=1` (unknown option, exit 2), `--since --require-end` (bad time, exit 2), a repeated flag (accepted), a flag after the file (read as a file named `--require-end`, exit 3), and `-- -n.jsonl` (read as `./-n.jsonl`). Exit 3 is checked before exit 6, as the contract says: a missing file next to a truncated one gives exit 3.
+- **Ending check.** The test files were: a final reply (exit 0), a final `SubagentHandback` and its result (0), a trailing `tool_use` (6), a `[Request interrupted` user entry (6), a `tool_result` for a non-handback tool (6), only non-message entries (6), and a user entry with an object as `content` (6, because the jq error counts as truncated). Each case either passes a complete run or fails closed. A false exit 6 only turns spend into `not captured`, never into a wrong number. A role cannot fake an interrupted entry, because only `type == "text"` blocks of user entries are matched, not tool results.
+- **Messages.** stderr names the file by basename only (`/…/Users/someone/private/-agent-x.jsonl` gives `transcript -agent-x.jsonl truncated`). A name such as `$(id).jsonl` is printed as is and never evaluated. The record keeps only `not captured (transcript truncated by <kind>)`, and no file name reaches it.
+
+### Agent ids in `## Waits` and committed history: accepted
+
+The new `Agent` column, and the `Agents` column already there, hold agent handles. Like session ids (L5), these are random ids that only locate a transcript on the machine that wrote it, and they grant no access. They reach the public record only through an exit-3 reason (`transcript agent-<id>.jsonl unreadable`), and that exposes nothing usable. No finding.
+
+### L8 — `SKILL.md` step 8.6, `hansei.md` close order step 1, `contracts/39-hansei-record.md:135` — low — `git add -A work/<id>` puts every untracked file into permanent history
+
+The close commit stages everything under `work/<id>/`, not just the lead state and the message files. Any stray file there goes into the `#<id> lead: close` commit, and *Merge PR*'s `--merge` keeps it in the project's history for good, even after `work/` is removed. That could be a scratch dump, a copied transcript, or an `.env` a role made for a test. Reproduced: an untracked `work/39/scratch.env` was staged next to `00-lead-state.md`. Before v2, a file reached history only when its owner committed it on purpose.
+
+Fix: stage only the protocol's files. That means `git add -- work/<id>/[0-9][0-9]-*.md` (lead state, briefs, results, feedback, questions), then `git add -u -- work/<id>` for changes to tracked files. Leave anything else to the `rm -rf` that follows. Or, before staging, run `git status --porcelain --untracked-files=all -- work/<id>` and put any non-message file to the person.
+
+### L9 — the same step — low — `rm -rf work/<id>` depends on the working directory and follows a symlinked `work`
+
+- The step does not say where the commands run (compare step 6.1, "in the item worktree"). The Lead's shell starts in the main checkout. A `cd` into `../wt/<id>`, which is outside that directory, does not persist to the next call. A bare `rm -rf work/<id>` then runs against the main checkout's `work/<id>`, not the worktree's. The damage stays inside the project clone, but it is the wrong tree.
+- `rm` follows a symlinked parent directory. Reproduced: in a repo with a committed `work -> ../outside`, `git rm -r work/39` fails (pathspec did not match), and the separate `rm -rf work/39` then deletes `../outside/39` with its contents. This needs a symlink committed on the branch, so it is unlikely. It is the one way the step can reach outside the worktree.
+
+Fix: use the worktree's absolute path from the lead state, and check the id and the path first:
+`case "<id>" in ''|*[!0-9]*) stop;; esac; w="<worktree>"; [ -L "$w/work" ] || [ -L "$w/work/<id>" ] && stop; git -C "$w" rm -r -q -- "work/<id>" && rm -rf -- "$w/work/<id>"`. With `&&`, the `rm` never runs when `git rm` fails.
+
+### L10 — `hansei.md` wait kinds (`interrupted` row) and `contracts/39-stage-log.md:95` — low — the documented `pmset` filter brings in activity data that can end up in the record
+
+`pmset -g log | grep -E ' (Sleep|Wake) '` matches far more than sleep and wake events. On this machine it matched about 4,800 lines: `Assertions` lines with PIDs and process names, `Wake Requests` lines with the uid and launchd service names, client-ack delay lines naming drivers and Bluetooth, battery charge, and the local timezone offset. Only 745 of those lines were `Sleep` or `Wake` events. Nothing says what the Lead may copy. A raw line pasted into a wait's `What` cell is committed in the lead state and stays in `--merge` history, which is public for this repo. The worked example copies only times (`pmset shows sleep 13:53Z–14:08Z`), which is fine.
+
+Fix: give the exact filter and a copy rule. Use `pmset -g log | awk -F'\t' '$1 ~ /^[0-9-]+ [0-9:]+ [+-][0-9]+ (Sleep|Wake) *$/ {print $1}'`, which prints only `<local time> <offset> Sleep|Wake` (verified: only Sleep and Wake lines). Add the rule: "Copy only the UTC start and end of the sleep into `What`, never a pmset line." This also means the Lead converts the `+0100` offset to UTC, which is a correctness point for QA.
+
+### I3 — `docs/factory/release-runbook.md`, *Tag* — informational
+
+The tag step takes the merge commit from `gh pr view item/39`, which picks the PR by branch name, while the post-merge check uses `gh pr view 40`. If the lookup found the wrong PR or none, `--jq .mergeCommit.oid` would print nothing, and `git tag factory-v1.0.0 ""` fails, so no wrong tag is made. The post-merge checks (`rev-parse` equals PR 40's merge commit, `merge-base --is-ancestor`) would catch a wrong commit anyway. Using the PR number in both places is more robust.
+
+### Note for the lead (not a security finding)
+
+`bash tests/run.sh` at `5e5b9f1` reports FAILURES in `test_standard_text.sh` (ac11, ac14, ac15, example-lead-time). These are v1 text pins that the v2 wording replaced. That is QA's area, and QA is re-verifying in parallel.
+
+Verdict after the schema v2 review: **pass**. L8–L10 are low and do not block the merge. The developer should fix them in the same round if there is one, since L8 and L10 are about what reaches permanent public history.

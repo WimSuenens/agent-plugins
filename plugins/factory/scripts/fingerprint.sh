@@ -6,7 +6,7 @@
 
 root="${1:-}"
 if [ -z "$root" ] || [ ! -f "$root/skills/run/SKILL.md" ] || [ ! -f "$root/.claude-plugin/plugin.json" ]; then
-  echo "fingerprint: not a factory plugin root: $(basename "${root:-.}")" >&2
+  echo "fingerprint: not a factory plugin root: $(basename -- "${root:-.}")" >&2
   exit 2
 fi
 root="${root%/}"
@@ -26,7 +26,7 @@ if [ -z "$version" ] && grep -Eq '"version"[[:space:]]*:' "$root/.claude-plugin/
   echo "fingerprint: version in plugin.json is empty, not MAJOR.MINOR.PATCH" >&2
   exit 2
 elif [ -z "$version" ]; then
-  name="$(basename "$root")"
+  name="$(basename -- "$root")"
   release="$name (pre-release install, no semver)"
 else
   if ! printf '%s' "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then

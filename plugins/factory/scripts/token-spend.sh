@@ -52,7 +52,7 @@ set -- "${args[@]}"
 
 for f in "$@"; do
   if [ ! -r "$f" ] || [ ! -f "$f" ] || ! jq -se 'all(.[]; type == "object")' "$f" >/dev/null 2>&1; then
-    echo "token-spend: transcript $(basename "$f") unreadable" >&2
+    echo "token-spend: transcript $(basename -- "$f") unreadable" >&2
     exit 3
   fi
 done
@@ -67,7 +67,7 @@ if [ "$require_end" = 1 ]; then
       exit "$rc"
     fi
     if [ "$rc" -ne 0 ] || printf '%s\n' "$all" | awk -F'\t' '$2 != "limits" && $5 != "silent-gap" && NF >= 5 {f=1} END {exit !f}'; then
-      echo "token-spend: transcript $(basename "$f") truncated" >&2
+      echo "token-spend: transcript $(basename -- "$f") truncated" >&2
       exit 6
     fi
     if ! jq -se '
@@ -81,7 +81,7 @@ if [ "$require_end" = 1 ]; then
           or ($l.type == "user" and ([ $l | blocks | select(.type == "tool_result" and (.tool_use_id as $t | $hand | index($t))) ] | length) > 0)
         )
     ' "$f" >/dev/null 2>&1; then
-      echo "token-spend: transcript $(basename "$f") truncated" >&2
+      echo "token-spend: transcript $(basename -- "$f") truncated" >&2
       exit 6
     fi
   done

@@ -10,3 +10,6 @@ Decisions:
 - Lead-state pointer placed in run/SKILL.md step 4 (covers briefs too) / rejected: a second line at the briefs step / undo: move the sentence.
 Open questions: none (security: token-spend.sh and fingerprint.sh still call basename without --, same L12 class)
 Tests QA must move (test_standard_text.sh): close-C6-* and close-H6-* (symlink-guard-before-add, add-nn-before-add-u, add-before-commit, commit-staged-only, lead-state-before-rm, rm-chain): expect "${w:?}", the ':(glob)work/<id>/[0-9][0-9]-*.md' pathspec, and `git clean -f -d -x -q` plus `[ ! -e` instead of `rm -rf`; close-ha-commit-before-rm, close-step1-four-commands, close-run-clean, close-run-work-gone, close-run-commits, close-run-lead-state-in-history (the extracted close commands use "$w" and rm -rf). Also flip sleep-wake-inside-alone-not-asleep in test_cut_offs.sh to expect `interrupted`.
+
+## Lead overturn: basename -- in all scripts
+Decision "basename -- in cut-offs.sh only" overturned (Source: lead). `basename --` now in every basename call of fingerprint.sh and token-spend.sh too; behaviour otherwise unchanged. test_fingerprint.sh 77, test_token_spend.sh 93, test_cut_offs.sh 62 (1 skipped) pass; test_standard_text.sh failures are the close-* assertions listed above (fail=1 counter, same cause).

@@ -32,7 +32,7 @@
 | 4 | Build | developer | a9399ddf9aa504a15 | 2026-11-05T23:28Z | 2026-11-05T23:33Z | 5m | - | 125458 (subagent_tokens, peak context; spend not captured) | done | 6 commits; 17 #39 tests fail by design, routed to QA; bump check pass |
 | 5 | Open PR | lead | - | 2026-11-05T23:34Z | 2026-11-05T23:35Z | 1m | - | - | pass | check-bump: minor 1.0.0 -> 1.1.0 |
 | 6 | QA | qa-engineer | a0b6ee3a034e26d7e | 2026-11-05T23:36Z | | | - | | | |
-| 7 | Security | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:36Z | | | - | | | |
+| 7 | Security | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:36Z | 2026-11-05T23:35Z | ~ | - | pending notice | pass | 0 critical/high, 3 medium (S1-S3), 2 low (S4,S5); fixes held for one feedback round with QA's |
 
 ## Waits
 

@@ -61,7 +61,10 @@ The acceptance demo ran in a scratch project, with the item's plugin loaded by `
 
 From the verdicts on #39 (QA [reviews/qa-39.md](reviews/qa-39.md), security [reviews/security-39.md](reviews/security-39.md)) and from the acceptance demo:
 
-- **`--require-end` and a server error mid-run.** `token-spend.sh --require-end` does not yet exit 6 for a transcript in which a server error (an API-error entry) interrupted the run and the run then went on. The test for it is a named skip in `tests/factory/test_token_spend.sh` until the fix lands. When the Lead has logged the `interrupted` wait for that agent, measure 5 still reads its spend as `not captured`.
+- **Three schema v2 checks are open** (QA's v2 findings F1 to F3). Their tests are named skips in `tests/factory/`, so `tests/run.sh` prints `ALL PASSED` with them in place:
+  - F1: a stall's start is read from the notice's interrupt marker, not from the stopped transcript's last entry before the gap, so each stall loses its watchdog window to agent working (measure 1).
+  - F2: the Lead's own stop on an API error is not detected by the `stalled` or `interrupted` rules (measure 1 and the Lead's spend).
+  - F3: `token-spend.sh --require-end` does not exit 6 for an API-error entry in the middle of a run. When the Lead has logged the `interrupted` wait for that agent, measure 5 still reads its spend as `not captured`.
 - **Escaped defects** (measure 4) read `not captured` in schema v2. Tracing them back to an item is deferred.
 - **Calibration, not baseline.** Items run on the frozen install `9147301f75c3` are recorded as `calibration (pre-baseline)`. Their numbers show what capture costs and are never used as a before. The baseline opens with the first item run on 1.0.0.
 - **Fingerprints move with any edit** to the files they cover. A record made before a change keeps the old values, so compare fingerprints only between records that carry them.

@@ -1,7 +1,7 @@
 # Lead state — #39 Hansei record end to end, shipped as release 1.0.0
 
 - Map: #34 · Board item: PVTI_lAHOBIbaa84BqOBFzhGGBlg
-- Status: Ready to deploy — acceptance demo in factory-sandbox
+- Status: Ready to deploy — AC-17 failed at the demo; fix round (contract first, then code) for #44–#47
 - Next step: QA (brief 09) + security (brief 10) in parallel; architect contract alignment (feedback 11)
 - Freeze: factory install 9147301f75c3 — checked at item start 2026-11-04T20:52Z: installed_plugins.json factory version = 9147301f75c3 ✔
 - Open questions: demo host project for the human-only ACs (asked the person 21:0xZ: create empty repo, e.g. factory-sandbox); tag factory-v1.0.0 created by the Lead in Merge PR
@@ -10,7 +10,7 @@
 
 ## Running agents
 
-- factory-sandbox session (peer) — demo brief
+- architect — feedback 37 (then developer)
 
 ## Stage log (manual, calibration — ADR 0012)
 
@@ -37,9 +37,11 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | QA re-check round 3 | qa-engineer | 21:43Z | 21:47Z | 4m30s | none | 59,505 | pass | 340 pass; 1 contract note → architect |
 | Contract note | architect | 21:48Z | 21:49Z | 51s | none | 23,588 | done | rework loop 7 (source: qa observation) |
 | Delivery prep | devops | 21:52Z | 21:54Z | 1m48s | none | 44,808 | done | rollback untested (freeze) |
-| Acceptance demo | person + factory-sandbox | 21:38Z | | | person; sandbox limits 22:02Z→23:49Z; overnight sleep | | | restart at ~21:55Z (stale skill text); sandbox item #2 W1–W4 |
+| Acceptance demo | person + factory-sandbox | 21:38Z | 07:2xZ(+1d) | ~9h45m | person; sandbox limits 22:02Z→23:49Z; overnight sleep | | | restart at ~21:55Z (stale skill text); sandbox item #2 W1–W4; AC-17 FAIL, others pass |
 
 ## Person's touches
+
+- 07:1xZ — demo verdicts; AC-17 judged fail (chose A); instructed sandbox to file step-9 issues #41–#48
 
 - ~21:55Z — restarted sandbox session; approved push of sandbox main; /factory:run step 1 destination confirmed (sandbox)
 
@@ -68,6 +70,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 - Sandbox demo: wait kinds "stall" (600s stream watchdog) and "interrupted" (machine sleep → server_error) aren't named in hansei.md; the sandbox Lead logged them as their own kinds.
 - Sandbox demo: Interruptions doesn't cover a stalled agent that already wrote a complete `done` result (it assumes `working` or no result).
 - Worktree collision across projects in a shared `../wt/`; the person proposes `.claude/worktrees/<id>` per project — the person: leave the location as is until the run's close (2026-11-05).
+
+- Countermeasure tried locally this round: contract-text fixes before code fixes (from the drift in rework loop 5).
 
 ## Interruptions
 

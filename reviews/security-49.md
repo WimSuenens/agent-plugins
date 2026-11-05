@@ -5,7 +5,7 @@ Dependency audit: ran; no dependency manifest or lockfile in the diff, nothing t
 Secrets and home paths: `git grep` over HEAD finds no tokens; the only `/Users/` and `/home/` hits are fictional fixtures (`alice`, `someone`) and test sandboxes. The hansei example writes the plugin root as `~/...`.
 pmset/transcript: no change to `cut-offs.sh` or its sleep-log handling; the record is specified to carry no transcript content or 5 Whys text. Not re-reviewed beyond that.
 
-Verdict: **pass** (no critical or high). Three medium and two low findings; fixes recommended before or in the next slice, none blocks the merge.
+Verdict (round 1): **pass** (no critical or high). Round 2 re-verification is at the end; final verdict there. Three medium and two low findings; fixes recommended before or in the next slice, none blocks the merge.
 
 ## Fence crossing: result
 
@@ -43,3 +43,20 @@ Required fix: take the `FREEZE:` line the Lead itself wrote (the last one by the
 - The andon comment lookup filters on `.user.login == me`, so a spoofed comment cannot be read as the Lead's (the earlier gap, now closed).
 - The andon comment goes to the project's own tracker, with no `--repo`; only step 9 names `WimSuenens/agent-plugins`.
 - Re-verification after fixes: not yet due; the developer fixes S1-S5 or records why not, then I re-run the kind 3 reproduction and re-read the changed lines.
+
+## Round 2: re-verification (feedback 13; fixes in commits ed2af7a and 8f15d25)
+
+| Finding | Result | Evidence |
+|---|---|---|
+| S1 forged `lead` commit, self-attested check | **fixed in part, residual low** | Rule 5.6 now flags any non-merge commit that changes the `## Overrides` text or the ownership table unless the subject starts `#<id> lead: ` and the author is the Lead's git user. The table is read from `origin/main`. Each in-force rule is re-read, shown in the stage summary, and passed on in the Lead's words. Original reproduction (a role commits `#49 lead: override x`): flagged only when git identities differ. Here all 52 branch commits carry one identity (`git log --format=%an <%ae>`), so the author test cannot separate roles; the text says so and falls back to the subject test, which the forger passes. What remains is the re-read plus display to the person before the first brief. That is not an approval, so a non-crossing harmful rule is shown, not stopped. Accepted as low: it needs an agent already acting against its brief, and the fence still holds. |
+| S2 data egress, verbatim untrusted text | **fixed** | Question E (eight questions, seven fenced items) is in the protocol and the run skill; `seen`, `where to look`, evidence, 5 Whys causes and `standard change proposed` must be paraphrased with no secrets, absolute paths or instruction-like text; the override rule goes into briefs in the Lead's words. |
+| S3 settle-round answers, `promote chosen` | **fixed** | F1 now covers the keep/promote/drop answer and the settle PR merge (silence, timeout or default is no answer); every `done` stage summary lists `promote chosen, still in force`. |
+| S4 quote-escaped paths | **fixed** | `git diff-tree -z` reproduced in the scratch repo: the output is NUL-separated, `plugins/é.md` and `plugins/x<newline>y.md` come out raw; control-character or undecodable paths now flag the commit instead of reading as unowned. |
+| S5 FREEZE line parsing | **fixed** | The `FREEZE:` line is trusted only when the map body's last editor (or author) equals `gh api user --jq .login`; otherwise `not captured (map body last edited by <login>)`, neither pass nor kind 6. |
+
+New problems in the added text:
+- N1 low: the unclassifiable-path flag and `role-outside-role ... changed <P>` put a path into `seen`. The path is a pointer and `%q` escapes control characters, but a long plain file name that reads as an instruction would be pasted. Fix when next touched: say that a path in `seen` longer than a normal name, or containing spaces and sentence text, is given as the sha plus "path escaped" only.
+- N2 low: the S5 check compares logins, so when the person and the Lead share one GitHub account (the usual setup here) an edit by the person counts as the Lead's. No added exposure over the previous text; noted as a limit.
+- No new secrets or home paths in the added lines.
+
+Final verdict: **pass**. No critical or high findings. S2-S5 fixed; S1 reduced to a low residual (single git identity); N1 and N2 low, optional.

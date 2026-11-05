@@ -1,0 +1,10 @@
+# AC-3 control pairs for the kind 2 replay, chosen from #39's other findings BEFORE the rule was applied.
+# Columns (tab separated): control | finding A (Role Round Id) | finding B (Role Round Id) | why they are different types
+# Neither pair is a repeat by the written rule: each is the same file or step with another cause, or different files with a similar-sounding cause.
+C1	qa-engineer 1 F3	security-reviewer 1 L4	same file (fingerprint.sh), other cause: F3 is a version string not validated, L4 is a read error not reported; one fix closes only one
+C2	qa-engineer 2 F5	security-reviewer 1 L1	both are a "too lax input check", but on other inputs in other places (a tag's semver in Merge PR, a quoted path in check-bump.sh); one fix cannot close both
+C3	security-reviewer 4 L10	qa-engineer 4 F2	same hansei.md wait-kind table, `interrupted` row, other cause: L10 is a data-privacy filter, F2 is a missing detection rule for the Lead's own sleep
+C4	qa-engineer 5 F5	security-reviewer 5 L12	same file (cut-offs.sh) and the same sleep code, other cause: F5 counts a lone Wake as asleep, L12 is a name starting with a dash
+C5	security-reviewer 4 L9	security-reviewer 5 L8a	same close step in SKILL.md/hansei.md, other cause: L9 is how work/<id> is removed (cwd, symlink), L8a is which files are staged (a pathspec matching /)
+C6	qa-engineer 6 F1	security-reviewer 6 L14	both are wording in docs, but of other files and facts: F1 is a missing merge-style rule in the tracker doc and CHANGELOG, L14 is ADR 0013 saying "one home path"
+C7	security-reviewer 1 L3	qa-engineer 4 F3	different files, objects and causes: L3 is a record planted by another commenter (Find hansei), F3 is self-recovered cut-offs invisible to measures 1 and 5

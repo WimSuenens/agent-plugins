@@ -1,4 +1,4 @@
-# Contract 39 — Hansei record (schema v1)
+# Contract 39 — Hansei record (schema v2)
 
 Slice [#39](https://github.com/WimSuenens/agent-plugins/issues/39) · Requirement [39-hansei-record](../docs/requirements/39-hansei-record.md) · ADRs [0011](../docs/adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [0012](../docs/adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md)
 
@@ -15,21 +15,22 @@ The record template and the field definitions below are written into a new stand
 The body's **first line** is exactly:
 
 ```
-<!-- factory:hansei v1 -->
+<!-- factory:hansei v2 -->
 ```
 
 - Regex a reader uses to find a record of any schema: `^<!-- factory:hansei v([0-9]+) -->$` on the first line of a comment body.
 - A script finds the record without reading the rest, counting only comments by the account that posts records (the marker alone is not proof: anyone who can comment on the ticket can type it):
   `me="$(gh api user --jq .login)"; gh api "repos/{owner}/{repo}/issues/<id>/comments" --paginate --jq '.[] | select(.user.login == "'"$me"'" and (.body | startswith("<!-- factory:hansei v"))) | {id, html_url, created_at}'` (`gh api --jq` takes no `--arg`, so the login is spliced into the filter; a GitHub login holds only letters, digits and `-`, so it cannot break out of the string).
 - The HTML comment is invisible on GitHub; the visible heading on line 2 carries the item for a human.
-- **Schema version.** `v1` is this contract. Any change to a field's key, order, grammar or meaning bumps it (`v2`, …). Adding gemba, A3 or andon fields later is a new version. A reader that meets an unknown version skips the record and says so; it never guesses.
+- **Schema version.** `v2` is this contract. Any change to a field's key, order, grammar or meaning bumps it (`v3`, …). Adding gemba, A3 or andon fields later is a new version. A reader that meets an unknown version skips the record and says so; it never guesses.
+- **v1 → v2** (the AC-17 fix round, before release 1.0.0 was tagged): measure 1 gains `stalled` and `interrupted`, and `agent working` no longer includes that time, so a v1 `agent working` and a v2 one measure different things; `<fpy>` gains `pass first time (<n> low)`, and "pass first time" is defined by severity (§4). Both are meaning and grammar changes, hence the bump. Only the acceptance demo's record (factory-sandbox #2) was ever written in v1; release 1.0.0 writes v2. A reader never compares measure 1 or 2 across the two versions.
 
 ## 3. Layout
 
 Fixed lines, fixed order. Every line below is always present. Angle brackets are filled in; nothing else changes.
 
 ```
-<!-- factory:hansei v1 -->
+<!-- factory:hansei v2 -->
 ## Hansei: #<id> <slice title>
 
 - series: <release | calibration (pre-baseline)>
@@ -42,7 +43,7 @@ Fixed lines, fixed order. Every line below is always present. Angle brackets are
 
 ### Measures
 
-1. lead time: total <dur>; agent working <dur>; waiting for the person <dur>; waiting on limits <dur>
+1. lead time: total <dur>; agent working <dur>; waiting for the person <dur>; waiting on limits <dur>; stalled <dur>; interrupted <dur>
 2. first-pass yield: qa <fpy>; security <fpy>; acceptance demo <fpy>
 3. rework: feedback briefs product-owner <n>, architect <n>, developer <n>, qa-engineer <n>, security-reviewer <n>, devops <n>, docs-writer <n>; overturned two-way decisions <n>
 4. escaped defects: not captured (tracing deferred until the first defect found in a merged item)
@@ -78,7 +79,7 @@ Formats:
 
 - `<dur>`: whole minutes, rounded to the nearest minute, as `<h>h<mm>m` from one hour (`3h07m`) or `<m>m` below it (`42m`, `0m`).
 - `<n>`: a plain integer, no separators.
-- `<fpy>`: `pass first time` | `failed first time` | `n/a (did not run)` | `not captured (<reason>)`.
+- `<fpy>`: `pass first time` | `pass first time (<n> low)` | `failed first time` | `n/a (did not run)` | `not captured (<reason>)`. The `(<n> low)` form is used when the first verdict passed with `<n>` ≥ 1 findings below minor (§4, measure 2); with none, the plain form.
 - `<tok>`: `<total> (input <i>, cache write <w>, cache read <r>, output <o>)`, plain integers, `total = i + w + r + o`. Or `n/a (did not run)` / `not captured (<reason>)` for the whole slot.
 - Times anywhere in the record: UTC, `YYYY-MM-DDTHH:MMZ`.
 
@@ -103,11 +104,11 @@ The label is copied from the lead state, as computed at item start. The record n
 
 | # | Key | Counted | Source |
 |---|---|---|---|
-| 1 | `lead time` | **total** = approval time − start of the `Start item` row. **waiting for the person** and **waiting on limits** = the item-held waits of that kind (stage log `## Waits`, `held item: yes`), overlaps counted once. **agent working** = total − both waits, so the three parts add up to the total. | stage log |
-| 2 | `first-pass yield` | per stage (QA, security, acceptance demo): the stage's **first** verdict. `pass first time` when it was `pass`; `failed first time` when it had findings or a failed criterion; `n/a (did not run)` when the stage was skipped. | QA and security results, demo outcome, in `work/<id>/` |
+| 1 | `lead time` | **total** = approval time − start of the `Start item` row. **waiting for the person**, **waiting on limits**, **stalled**, **interrupted** = the item-held waits of that kind (stage log `## Waits`, `held item: yes`; kinds and how each is detected in [39-stage-log](39-stage-log.md) §3). Overlaps are counted once: within a kind as one stretch, and across kinds to the kind that comes first in this line's order (person, limits, stalled, interrupted). **agent working** = total − the four waits, so agent working + person + limits + stalled + interrupted = total. | stage log |
+| 2 | `first-pass yield` | per stage (QA, security, acceptance demo), from the stage's **first** run only. **Pass first time** = the first verdict is `pass` **and** that run lists no finding at or above minor. Below minor means a severity of `low`, `info`, `trivial` or `note`; every other severity (`minor`, `medium`, `major`, `high`, `critical`, `blocker`), and a finding with no severity, counts as at or above minor. Written `pass first time` with no finding below minor either, `pass first time (<n> low)` with `<n>` findings below minor, whether or not the Lead routed them as feedback. **Failed first time** = the first verdict is not `pass`, or it lists a finding at or above minor, or (demo) any criterion failed. `n/a (did not run)` when the stage was skipped. | QA and security results, demo outcome, in `work/<id>/` |
 | 3 | `rework` | per role, the number of feedback briefs that role received (any `Source`); then the number of two-way decisions overturned by a `Source: lead` feedback brief. Roles that ran and got none read `0`; roles that never ran read `0` too (a count of briefs received is known to be zero). | `work/<id>/NN-feedback-*.md` |
-| 4 | `escaped defects` | always `not captured (tracing deferred until the first defect found in a merged item)` in v1 | deferred (map, Deferred) |
-| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `message.usage` summed over every transcript of that role's agents on this item (resumes and feedback rounds included), one count per distinct `message.id`; for the Lead, its main-session transcript(s) between the `Start item` start and approval. **peak context**: the largest `<subagent_tokens>` (background) or `totalTokens` (foreground) across that role's completion notices; for the Lead, the `peak` the spend script reports over the same window. A role with no agent on this item: `n/a (did not run)` for both. | `scripts/token-spend.sh` ([39-plugin-scripts](39-plugin-scripts.md) §3); completion notices logged in the stage log |
+| 4 | `escaped defects` | always `not captured (tracing deferred until the first defect found in a merged item)` in v2 | deferred (map, Deferred) |
+| 5 | `tokens` | per role, the Lead first, fixed role order. **spend**: `message.usage` summed over every transcript of that role's agents on this item (resumes and feedback rounds included), one count per distinct `message.id`; for the Lead, its main-session transcript(s) between the `Start item` start and approval. **Truncated transcripts**: a transcript cut by a stall or an interruption lost the request in flight, so its sum is short by an unknown amount; the role's spend then reads `not captured (transcript truncated by <kind>)`, never a number, `<kind>` being `stalled` or `interrupted`. The Lead recognises truncation by either of two signals: (a) **the notice**: a `stalled` or `interrupted` wait in `## Waits` names one of the role's agents (or `lead`) in its `Agent` column; `<kind>` is that wait's kind (the earliest, when there are several); (b) **the transcript**: `token-spend.sh --require-end` exits 6 for one of the role's transcripts ([39-plugin-scripts](39-plugin-scripts.md) §3), with no such wait logged; `<kind>` is then `unlogged`. **peak context**: the largest `<subagent_tokens>` (background) or `totalTokens` (foreground) across that role's completion notices that carried one; `not captured (failure notice carried no token count)` when none did; for the Lead, the `peak` the spend script reports over the same window, or `not captured (transcript truncated by <kind>)` when its spend reads so. A role with no agent on this item: `n/a (did not run)` for both. | `scripts/token-spend.sh` ([39-plugin-scripts](39-plugin-scripts.md) §3); completion notices logged in the stage log |
 | 6 | `person's touches` | counts of the touches list by kind: `decision card` (an answered card), `demo` (a demo the person ran), `approval` (a merge or production yes), `overturn` (a two-way decision the person overturned), `other` (anything else the person did for the item) | stage log `## Person's touches` |
 | 7 | `doors` | per **Under test** line of the slice frame, in frame order, named by its link text: `confirmed`, `contradicted`, or `not exercised`, as the resurvey found. `pending resurvey` from posting to the edit; `not captured (run stopped before the resurvey)` when the resurvey never happens. | the resurvey (step 8) |
 
@@ -130,7 +131,11 @@ Step 8 of `skills/run/SKILL.md` runs in this order. The numbers are the contract
 3. Total token spend per role ([39-plugin-scripts](39-plugin-scripts.md) §3).
 4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*. Write `hansei: <comment URL> (measure 7 pending)` into the map's **Factory run** section, because `work/<id>/` is about to go and the map is what survives.
 5. Environment teardown, when the item had one.
-6. The last commit on `item/<id>` removes `work/<id>/`. The record's `created_at` is earlier than this commit (AC-18).
+6. Remove `work/<id>/`, in this order, which never meets a dirty file:
+   1. Commit the lead state: `git add -A work/<id>` then, when anything is staged (`git diff --cached --quiet` exits 1), `git commit -m "#<id> lead: close"`. This takes the close rows, the approval touch, the record URL and any brief or result not yet committed, so the index and the work tree agree.
+   2. `git rm -r -q work/<id>`, then `rm -rf work/<id>` for what git does not track (ignored files such as `.DS_Store`), then `git commit -m "#<id> lead: remove work/"`. This is the last commit on `item/<id>`.
+
+   No `-f` is needed: after 6.1 nothing under `work/<id>/` differs from `HEAD`. The record was posted at step 4, so its `created_at` is earlier than both commits (AC-18): the record is always posted before `work/` is removed.
 7. *Merge PR* (with the release tag, [39-standard-changes](39-standard-changes.md) §5), board to Done.
 8. Resurvey with the frame's **Under test** list.
 9. *Edit hansei*: measure 7 gets one line per Under test line. Remove the `hansei:` pointer from the Factory run section.
@@ -139,10 +144,10 @@ When the person stops the run between 4 and 8, the Lead edits measure 7 to `not 
 
 ## 7. Worked example
 
-A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edit; its stage log is the worked example in [39-stage-log](39-stage-log.md) §5. QA failed once, security passed, no demo, no devops stage, one decision card, one overturn, one limit hit.
+A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edit; its stage log is the worked example in [39-stage-log](39-stage-log.md) §5. QA failed once, security passed with two low findings, no demo, no devops stage, one decision card, one overturn, one limit hit, one machine sleep during the build, and a docs-writer that stalled after writing its `done` result.
 
 ```
-<!-- factory:hansei v1 -->
+<!-- factory:hansei v2 -->
 ## Hansei: #12 Export a report as CSV
 
 - series: release
@@ -155,19 +160,19 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
 
 ### Measures
 
-1. lead time: total 4h33m; agent working 3h27m; waiting for the person 51m; waiting on limits 15m
-2. first-pass yield: qa failed first time; security pass first time; acceptance demo n/a (did not run)
+1. lead time: total 4h41m; agent working 3h06m; waiting for the person 51m; waiting on limits 15m; stalled 11m; interrupted 18m
+2. first-pass yield: qa failed first time; security pass first time (2 low); acceptance demo n/a (did not run)
 3. rework: feedback briefs product-owner 0, architect 0, developer 1, qa-engineer 0, security-reviewer 0, devops 0, docs-writer 0; overturned two-way decisions 1
 4. escaped defects: not captured (tracing deferred until the first defect found in a merged item)
 5. tokens:
    - lead: spend 2841177 (input 1204, cache write 210338, cache read 2601870, output 27765); peak context 96412
    - product-owner: spend 301554 (input 88, cache write 41230, cache read 254101, output 6135); peak context 53942
    - architect: spend 612090 (input 140, cache write 70221, cache read 530417, output 11312); peak context 81277
-   - developer: spend 1466997 (input 302, cache write 120554, cache read 1321874, output 24267); peak context 138578
+   - developer: spend not captured (transcript truncated by interrupted); peak context 141210
    - qa-engineer: spend 520336 (input 97, cache write 64010, cache read 447880, output 8349); peak context 70114
    - security-reviewer: spend not captured (transcript agent-a41f09.jsonl unreadable); peak context 48820
    - devops: spend n/a (did not run); peak context n/a (did not run)
-   - docs-writer: spend 120774 (input 31, cache write 30215, cache read 87790, output 2738); peak context 31006
+   - docs-writer: spend not captured (transcript truncated by stalled); peak context not captured (failure notice carried no token count)
 6. person's touches: decision cards 1; demos 0; approvals 1; overturns 1; other 0
 7. doors:
    - Measures: confirmed
@@ -176,12 +181,14 @@ A fictional item #12 in a scratch project, factory 1.0.0, after the resurvey edi
 
 Before the resurvey edit, the same comment read `7. doors: pending resurvey` with no sub-lines.
 
+How the new v2 values follow from the stage log: W3 (`interrupted`, developer `c44a10`) and W4 (`stalled`, docs-writer `e90b55`) are held waits, so they are measure 1's 18m and 11m, and agent working is 4h41m − 51m − 15m − 11m − 18m = 3h06m. The same two waits name those agents, so both roles' spend reads `not captured (transcript truncated by …)` (signal a). The developer's peak is its round-2 notice (141210), the largest that carried a count; the docs-writer's only notice was the failure notice. The security review's first run passed with two `low` findings, hence `pass first time (2 low)`; a single `medium` there would have made it `failed first time`.
+
 ### Worked example: this item's own calibration record (AC-22)
 
 #39 runs on the frozen install, which has no template; the Lead writes the record by hand from this contract, running the branch's `scripts/fingerprint.sh` against the frozen install root. Its header reads (fingerprints computed on 2026-11-04 over `~/.claude/plugins/cache/wimsuenens/factory/9147301f75c3`):
 
 ```
-<!-- factory:hansei v1 -->
+<!-- factory:hansei v2 -->
 ## Hansei: #39 Hansei record end to end, shipped as release 1.0.0
 
 - series: calibration (pre-baseline)
@@ -193,7 +200,7 @@ Before the resurvey edit, the same comment read `7. doors: pending resurvey` wit
 - stage-log cross-check: …
 ```
 
-Its measures follow the v1 layout. Where the manual stage log lacks a figure (for example spend, if the Lead recorded only peak context), the value reads `not captured (<reason>)`, and the resurvey lists those fields (AC-22).
+Its measures follow the v2 layout. Where the manual stage log lacks a figure (for example spend, if the Lead recorded only peak context), the value reads `not captured (<reason>)`, and the resurvey lists those fields (AC-22).
 
 ## 8. Acceptance criteria → contract
 

@@ -10,7 +10,8 @@
 
 ## Running agents
 
-- developer (round 2), work/49/11-feedback-developer.md, handle a9399ddf9aa504a15 (resumed)
+- qa-engineer (round 2), work/49/13-feedback-qa-engineer.md, handle a0b6ee3a034e26d7e (resumed)
+- security-reviewer (round 2), work/49/13-feedback-security-reviewer.md, handle a38eb60ee88a63e43 (resumed)
 
 ## Carry-overs (from #39, map #34)
 
@@ -32,7 +33,9 @@
 | 5 | Open PR | lead | - | 2026-11-05T23:34Z | 2026-11-05T23:35Z | 1m | - | - | pass | check-bump: minor 1.0.0 -> 1.1.0 |
 | 6 | QA | qa-engineer | a0b6ee3a034e26d7e | 2026-11-05T23:35Z | 2026-11-05T23:50Z | 15m | - | 234836 (subagent_tokens, peak context; spend not captured) | pass | 909 pass, 1 named skip (F1); AC-3: 5/5 flagged, 0/7 controls; 8 human-only criteria |
 | 8 | Contracts and ADRs (round 2) | architect | ad1af84adc138ccf9 | 2026-11-05T23:50Z | 2026-11-05T23:52Z | ~ | - | pending notice | done | S1-S5, QA F1/O1/O2 applied; 8 fence questions (E data egress), no ADR change; Question: E as 8th fenced item? lead kept E a question (two-way) |
-| 9 | Build (round 2) | developer | a9399ddf9aa504a15 | 2026-11-05T23:52Z | | | - | | | |
+| 9 | Build (round 2) | developer | a9399ddf9aa504a15 | 2026-11-05T23:52Z | 2026-11-05T23:54Z | ~ | - | pending notice | done | contract section 10 applied; 6 tests to QA; standard 683cfb53... |
+| 10 | QA (round 2) | qa-engineer | a0b6ee3a034e26d7e | 2026-11-05T23:54Z | | | - | | | |
+| 11 | Security (round 2) | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:54Z | | | - | | | |
 | 7 | Security | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:35Z | 2026-11-05T23:35Z | ~2m | - | 65906 (subagent_tokens, peak context; spend not captured) | pass | 0 critical/high, 3 medium (S1-S3), 2 low (S4,S5); fixes held for one feedback round with QA's |
 
 ## Waits

@@ -244,7 +244,7 @@ An entry is a **marker** when the first matching row holds (text = a string `mes
 |---|---|---|---|
 | 1 | `user` whose text contains `cut off mid-stream` | `cut-mid-stream` | `stalled` |
 | 2 | `user` whose text starts with `[Request interrupted` | `request-interrupted` | `stalled` |
-| 3 | `assistant` with `isApiErrorMessage == true`, **or** a string `error` field, **or** text matching `^(API Error\|You.ve hit your)` | `api-error:<error, or unknown>` | `limits` when `error == "rate_limit"` or the text starts `You've hit your`; else `interrupted` |
+| 3 | `assistant` with `isApiErrorMessage == true`, **or** a string `error` field, **or** text matching `^(API Error\|You.ve hit your)` | `api-error:<error, or unknown, or other>` (the `error` value only when it matches `^[a-z_]+$`; any other string reads `other`, I4) | `limits` when `error == "rate_limit"` or the text starts `You've hit your`; else `interrupted` |
 | 4 | `system` with a non-null `error` field (Claude Code's own retry after a dropped connection, `subtype: api_error`) | `api-retry` | `interrupted` |
 
 The test in jq, normative (the developer copies it):
@@ -258,7 +258,7 @@ def mark:
   elif .type == "assistant" and (.isApiErrorMessage == true or ((.error // null) | type) == "string"
                                  or (txt | test("^(API Error|You.ve hit your)")))
     then [ (if (.error // "") == "rate_limit" or (txt | test("^You.ve hit your")) then "limits" else "interrupted" end),
-           ("api-error:" + ((.error // "unknown") | tostring)) ]
+           ("api-error:" + ((.error // "unknown") | tostring | if test("^[a-z_]+$") then . else "other" end)) ]
   elif .type == "system" and (.error // null) != null then ["interrupted", "api-retry"]
   else null end;
 ```
@@ -269,7 +269,7 @@ def mark:
 - **End**: the `timestamp` of the first `assistant` entry **after** the marker that is not itself a marker (the agent producing output again, whether it recovered by itself or the Lead resumed it). `open` when there is none: the run stopped there, and the Lead's own action ends the wait ([39-stage-log](39-stage-log.md) §3).
 - **One gap per start.** Markers whose start is the same entry form one gap (a sleep error, then a retry, then a cut-off). Its kind is the strongest of theirs, in the order `limits`, `interrupted`, `stalled`; its markers are listed, sorted and comma-separated.
 - **Silent gap** (the fail-closed net, below): a `user` entry carrying a `tool_result` block, followed by an `assistant` entry as the next `user`/`assistant` entry, 600 s or more later, with no marker between. After a tool result the model must answer; ten minutes of nothing is the watchdog's own window. Kind `stalled`, marker `silent-gap`, start the tool result, end the assistant entry. A gap after an assistant's end-of-turn text or after a new prompt is idle time, not a silent gap, and is never reported.
-- **Sleep.** With `--sleep-log`, a `stalled` gap whose machine was asleep at any moment of [start, end] (end = the last marker's time when `open`) is reported as `interrupted`: a `Sleep` line inside the gap, or the last `Sleep`/`Wake` line before the start is `Sleep`. The log is the output of the exact filter `pmset -g log | awk -F'\t' '$1 ~ /^[0-9-]+ [0-9:]+ [+-][0-9]+ (Sleep|Wake) *$/ {print $1}'` (only `<local date> <local time> <offset> Sleep|Wake`; `DarkWake` and every other pmset line are left out), piped in with `--sleep-log -`. Each line's offset is applied, so the comparison is in UTC. Lines that don't match `YYYY-MM-DD HH:MM:SS ±HHMM Sleep|Wake` are skipped and never echoed. An unreadable `--sleep-log` file is exit 3. `limits` and `interrupted` gaps keep their kind. Without the option, no gap changes kind (the rule in [39-stage-log](39-stage-log.md) §3 then says the notice alone decides).
+- **Sleep.** With `--sleep-log`, a `stalled` gap whose machine was asleep at any moment of [start, end] (end = the last marker's time when `open`) is reported as `interrupted`: a `Sleep` or `Wake` line inside the gap, or the last `Sleep`/`Wake` line before the start is `Sleep`. A `Wake` inside the gap counts on its own (QA F5): the machine was asleep just before it, so at some moment after the start, even when the log lost the matching `Sleep` (a rotated head). The log is the output of the exact filter `pmset -g log | awk -F'\t' '$1 ~ /^[0-9-]+ [0-9:]+ [+-][0-9]+ (Sleep|Wake) *$/ {print $1}'` (only `<local date> <local time> <offset> Sleep|Wake`; `DarkWake` and every other pmset line are left out), piped in with `--sleep-log -`. Each line's offset is applied, so the comparison is in UTC. Lines that don't match `YYYY-MM-DD HH:MM:SS ±HHMM Sleep|Wake` are skipped and never echoed. An unreadable `--sleep-log` file is exit 3. `limits` and `interrupted` gaps keep their kind. Without the option, no gap changes kind (the rule in [39-stage-log](39-stage-log.md) §3 then says the notice alone decides).
 
 ### Output
 

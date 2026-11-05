@@ -37,7 +37,7 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 | QA re-check round 3 | qa-engineer | 21:43Z | 21:47Z | 4m30s | none | 59,505 | pass | 340 pass; 1 contract note → architect |
 | Contract note | architect | 21:48Z | 21:49Z | 51s | none | 23,588 | done | rework loop 7 (source: qa observation) |
 | Delivery prep | devops | 21:52Z | 21:54Z | 1m48s | none | 44,808 | done | rollback untested (freeze) |
-| Acceptance demo | person + factory-sandbox | 21:3xZ | | | person | | | |
+| Acceptance demo | person + factory-sandbox | 21:38Z | | | person; sandbox limits 22:02Z→23:49Z; overnight sleep | | | restart at ~21:55Z (stale skill text); sandbox item #2 W1–W4 |
 
 ## Person's touches
 
@@ -64,6 +64,10 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 
 - Sandbox demo: after setup, only `wayfinder:slice` existed; `wayfinder:map/research/prototype/grilling/task` had to be created by hand — setup-wayfinding (or setup-factory) may not create all labels.
 - Sessions keep skill text read at start, even with --plugin-dir (release-note item).
+
+- Sandbox demo: wait kinds "stall" (600s stream watchdog) and "interrupted" (machine sleep → server_error) aren't named in hansei.md; the sandbox Lead logged them as their own kinds.
+- Sandbox demo: Interruptions doesn't cover a stalled agent that already wrote a complete `done` result (it assumes `working` or no result).
+- Worktree collision across projects in a shared `../wt/`; the person proposes `.claude/worktrees/<id>` per project (local override pending the person's yes).
 
 ## Interruptions
 

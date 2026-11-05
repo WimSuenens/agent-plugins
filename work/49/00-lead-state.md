@@ -1,7 +1,7 @@
 # Lead state: #49 Andon
 
 - **Board item id:** PVTI_lAHOBIbaa84BqOBFzhGaUn0
-- **Status:** Designed
+- **Status:** In review
 - **Map:** #34 (Lean factory run), run step 5 done; next is step 6
 - **Branch / worktree:** `item/49` at `../wt/49`
 - **Next step:** Build (developer), tracer bullet first; QA fixtures + AC-3 replay alongside
@@ -10,7 +10,8 @@
 
 ## Running agents
 
-- developer, work/49/05-brief-developer.md, handle a9399ddf9aa504a15
+- qa-engineer, work/49/07-brief-qa-engineer.md, handle pending
+- security-reviewer, work/49/07-brief-security-reviewer.md, handle pending
 
 ## Carry-overs (from #39, map #34)
 
@@ -28,7 +29,10 @@
 | 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51Z | ~1m | - | - | done | board at Backlog, worktree + work/49 created |
 | 2 | Requirement | product-owner | aa940c1d056ef54db | 2026-11-05T22:55Z | 2026-11-05T22:59Z | 4m | - | 84629 (subagent_tokens, peak context; spend not captured) | done | 30 ACs, 8 decisions, no card; 19 tool uses |
 | 3 | Contracts and ADRs | architect | ad1af84adc138ccf9 | 2026-11-05T23:11Z | 2026-11-05T23:21Z | 10m | - | 184318 (subagent_tokens, peak context; spend not captured) | done | 5 contracts, no ADR, 12 decisions, 44 tool uses |
-| 4 | Build | developer | a9399ddf9aa504a15 | 2026-11-05T23:28Z | | | - | | | |
+| 4 | Build | developer | a9399ddf9aa504a15 | 2026-11-05T23:28Z | 2026-11-05T23:33Z | 5m | - | 125458 (subagent_tokens, peak context; spend not captured) | done | 6 commits; 17 #39 tests fail by design, routed to QA; bump check pass |
+| 5 | Open PR | lead | - | 2026-11-05T23:34Z | 2026-11-05T23:35Z | 1m | - | - | pass | check-bump: minor 1.0.0 -> 1.1.0 |
+| 6 | QA | qa-engineer | pending | 2026-11-05T23:36Z | | | - | | | |
+| 7 | Security | security-reviewer | pending | 2026-11-05T23:36Z | | | - | | | |
 
 ## Waits
 

@@ -308,6 +308,51 @@ ck post-hansei-rm 1 "$(printf '%s' "$PH" | grep -cF 'rm -f "$rec"')"
 inline_before post-hansei-mktemp-before-post "$PH" 'rec="$(mktemp)"' '--body-file "$rec"'
 inline_before post-hansei-post-before-rm "$PH" '--body-file "$rec"' 'rm -f "$rec"'
 
+# --- v2 close order (#47): commit the lead state, then git rm -r without -f, then commit; record posted before both
+C6="$(grep -F '6. The last commit on `item/<id>` removes `work/<id>/`' "$SK")"
+ck close-step6-one-bullet 1 "$(printf '%s\n' "$C6" | grep -c .)"
+inline_before close-add-before-commit "$C6" 'git add -A work/<id>' 'git commit -m "#<id> lead: close"'
+inline_before close-commit-staged-only "$C6" 'when `git diff --cached --quiet` exits 1' 'git commit -m "#<id> lead: close"'
+inline_before close-lead-state-before-rm "$C6" 'git commit -m "#<id> lead: close"' 'git rm -r -q work/<id>'
+inline_before close-rm-before-untracked "$C6" 'git rm -r -q work/<id>' 'rm -rf work/<id>'
+inline_before close-untracked-before-last-commit "$C6" 'rm -rf work/<id>' 'git commit -m "#<id> lead: remove work/"'
+ck close-no-force-git-rm 0 "$(grep -cE 'git rm -[a-z]*f' "$SK" "$HA" | awk -F: '{s+=$2} END {print s+0}')"
+has close-posted-before-lead-state-commit "$SK" 'It is posted before the lead-state commit too.'
+# hansei.md section 5 repeats the same order
+before close-ha-commit-before-rm "$HA" 'git commit -m "#<id> lead: close"' 'git rm -r -q work/<id>'
+before close-ha-post-before-remove "$HA" '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*' '6. Remove `work/<id>/`, in this order:'
+# run the close order in a scratch repo: a dirty lead state, an untracked brief and an ignored file -- no step fails, work/ is gone
+CR="$T/close"; mkdir -p "$CR/work/12"; ( cd "$CR" && git init -q && echo '.DS_Store' > .gitignore && echo a > work/12/00-lead-state.md && git add -A && git commit -qm init \
+  && echo 'close rows' >> work/12/00-lead-state.md && echo b > work/12/09-brief-docs-writer.md && echo x > work/12/.DS_Store \
+  && git add -A work/12 && { git diff --cached --quiet; [ $? = 1 ] && git commit -qm "#12 lead: close"; } \
+  && git rm -r -q work/12 && rm -rf work/12 && git commit -qm "#12 lead: remove work/" ) >/dev/null 2>&1
+ck close-order-runs-clean 0 $?
+ck close-order-work-gone "no" "$([ -e "$CR/work/12" ] && echo yes || echo no)"
+ck close-order-lead-state-in-history "close rows" "$(cd "$CR" && git show HEAD~1:work/12/00-lead-state.md 2>/dev/null | tail -1)"
+ck close-order-last-commit-removes-work "#12 lead: remove work/" "$(cd "$CR" && git log -1 --format=%s)"
+
+# --- v2 (#44): the stall/interruption start, taken with hansei.md's own command, is the stopped transcript's last
+# entry before the gap. Fixture: the acceptance demo's developer transcript shape (factory-sandbox #2, agent a37df…):
+# the watchdog notice arrived at 00:05:54 and wrote "[Request interrupted by user]" at that same moment; the last
+# entry before the gap is the tool result at 23:50:46. Wanted start: 2026-11-04T23:50Z (stall 15m, not ~0m).
+SC="$(grep -oE 'from the stopped agent'"'"'s transcript \(`[^`]+`' "$HA" | sed -E 's/.*\(`//; s/`$//')"
+ck stall-start-command-present 1 "$([ -n "$SC" ] && echo 1)"
+cat > "$T/dev-stalled.jsonl" <<'EOJ'
+{"type":"assistant","timestamp":"2026-11-04T23:50:41.956Z","message":{"id":"d0","content":[{"type":"thinking","thinking":""}]}}
+{"type":"assistant","timestamp":"2026-11-04T23:50:45.512Z","message":{"id":"d1","content":[{"type":"tool_use","id":"t1","name":"Bash","input":{}}]}}
+{"type":"user","timestamp":"2026-11-04T23:50:46.823Z","message":{"content":[{"tool_use_id":"t1","type":"tool_result","content":"ok"}]}}
+{"type":"user","timestamp":"2026-11-05T00:05:54.064Z","message":{"content":[{"type":"text","text":"[Request interrupted by user]"}]}}
+EOJ
+got="$(cd "$T" && eval "$(printf '%s' "$SC" | sed "s|<transcript>|dev-stalled.jsonl|")" 2>/dev/null | sed -E 's/:[0-9]{2}(\.[0-9]+)?Z$/Z/')"
+if [ "$got" = "2026-11-04T23:50Z" ]; then ck stall-start-is-last-entry-before-gap "2026-11-04T23:50Z" "$got"
+else skip stall-start-is-last-entry-before-gap "QA-39 v2 F1: hansei.md's command gives $got (the notice's interrupt marker), want 2026-11-04T23:50Z; each stall loses its watchdog window to agent working (architect, then developer)"; fi
+
+# --- v2 (#44), the Lead's own interruption in the demo: the session's last entry was the assistant line
+# "API Error: Your computer went to sleep mid-response." (isApiErrorMessage, error server_error), and the person's
+# "continue" set it going about 5h after its last working entry (01:43Z to 06:49Z). hansei.md's detection for the Lead names only a tool result or "[Request interrupted".
+if grep -qF 'API Error' "$HA"; then ck lead-api-error-detected 1 1
+else skip lead-api-error-detected "QA-39 v2 F2: hansei.md's stalled/interrupted detection for the Lead does not name an API-error last entry (the demo's 5h Lead interruption) (architect, then developer)"; fi
+
 # --- AC-7 support: the tag step exists in Merge PR
 has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'
 

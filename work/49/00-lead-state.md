@@ -1,16 +1,16 @@
 # Lead state: #49 Andon
 
 - **Board item id:** PVTI_lAHOBIbaa84BqOBFzhGaUn0
-- **Status:** Ready
+- **Status:** Designed
 - **Map:** #34 (Lean factory run), run step 5 done; next is step 6
 - **Branch / worktree:** `item/49` at `../wt/49`
-- **Next step:** Architect result, then Build
+- **Next step:** Build (developer), tracer bullet first; QA fixtures + AC-3 replay alongside
 - **Open questions:** none (override location, sandbox project, release tag answered 2026-11-05)
 - **Calibration:** frozen factory `9147301f75c3` (installed sha checked at item start: matches the FREEZE line on #34). No `/plugin marketplace update`, no `/reload-plugins`. Pre-release standard has no fingerprint script and no `## Label`; this log is manual.
 
 ## Running agents
 
-- architect, work/49/03-brief-architect.md, handle pending
+none (architect ad1af84adc138ccf9 finished, c3b8225)
 
 ## Carry-overs (from #39, map #34)
 
@@ -27,7 +27,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51Z | ~1m | - | - | done | board at Backlog, worktree + work/49 created |
 | 2 | Requirement | product-owner | aa940c1d056ef54db | 2026-11-05T22:55Z | 2026-11-05T22:59Z | 4m | - | 84629 (subagent_tokens, peak context; spend not captured) | done | 30 ACs, 8 decisions, no card; 19 tool uses |
-| 3 | Contracts and ADRs | architect | pending | 2026-11-05T23:11Z | | | W1 | | | |
+| 3 | Contracts and ADRs | architect | ad1af84adc138ccf9 | 2026-11-05T23:11Z | 2026-11-05T23:21Z | 10m | - | 184318 (subagent_tokens, peak context; spend not captured) | done | 5 contracts, no ADR, 12 decisions, 44 tool uses |
 
 ## Waits
 

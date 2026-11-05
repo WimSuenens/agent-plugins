@@ -97,6 +97,8 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 - Same finding twice: QA F4 = security L11 (guard variable across Bash calls).
 - AC-17 PASS on QA's word (round 5); demo re-run not demanded.
 
+- Deferred to run-close feedback: extend the no-home-path rule to every committed file with a git grep check (security L13 root cause, I5); chain close step 6.1 with || exit 1 (I6).
+
 ## Interruptions
 
 - none; fan-out parallel

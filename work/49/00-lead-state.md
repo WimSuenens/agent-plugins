@@ -4,13 +4,13 @@
 - **Status:** Ready
 - **Map:** #34 (Lean factory run), run step 5 done; next is step 6
 - **Branch / worktree:** `item/49` at `../wt/49`
-- **Next step:** Contracts and ADRs (architect), after the person's read of the requirement decisions
-- **Open questions:** none
+- **Next step:** Architect result, then Build
+- **Open questions:** none (override location, sandbox project, release tag answered 2026-11-05)
 - **Calibration:** frozen factory `9147301f75c3` (installed sha checked at item start: matches the FREEZE line on #34). No `/plugin marketplace update`, no `/reload-plugins`. Pre-release standard has no fingerprint script and no `## Label`; this log is manual.
 
 ## Running agents
 
-none (product-owner aa940c1d056ef54db finished, d78bd99)
+- architect, work/49/03-brief-architect.md, handle pending
 
 ## Carry-overs (from #39, map #34)
 
@@ -27,14 +27,17 @@ none (product-owner aa940c1d056ef54db finished, d78bd99)
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51Z | ~1m | - | - | done | board at Backlog, worktree + work/49 created |
 | 2 | Requirement | product-owner | aa940c1d056ef54db | 2026-11-05T22:55Z | 2026-11-05T22:59Z | 4m | - | 84629 (subagent_tokens, peak context; spend not captured) | done | 30 ACs, 8 decisions, no card; 19 tool uses |
+| 3 | Contracts and ADRs | architect | pending | 2026-11-05T23:11Z | | | W1 | | | |
 
 ## Waits
 
 | Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |
 |---|---|---|---|---|---|---|
+| W1 | person | - | 2026-11-05T22:59Z | 2026-11-05T23:09Z | yes | three questions after the requirement (sandbox project, override location, release tag) |
 
 ## Person's touches
 
 | Time (UTC) | Kind | What |
 |---|---|---|
 | 2026-11-05T22:41Z | other | started run at step 5 (item #49), set carry-overs |
+| 2026-11-05T23:09Z | other | confirmed all three answers (sandbox #10, worktree + ownership row, tag by merge step) |

@@ -71,7 +71,7 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 
-**Status: the acceptance demo ran in a scratch project.** Every human-only criterion passed except AC-17, which measured stalls and machine sleep as agent work. AC-17 was fixed in schema v2 and is accepted on QA's verification of the fix, without a demo re-run. The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0012 (0006 superseded by 0007) in [docs/adr/](docs/adr/), all provisional.
+**Status: the acceptance demo ran in a scratch project.** Every human-only criterion passed except AC-17, which failed there: lead time counted stalls and machine sleep as agent work. AC-17 was fixed in schema v2 (cut-off detection, measured from the transcripts). QA checked the fix by replaying the demo's own transcripts through the scripts and accepted AC-17 on that replay, without a demo re-run. The close step's live-session check is still open; see [CHANGELOG.md](CHANGELOG.md) under *Known limitations*. The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0013 (0006 superseded by 0007) in [docs/adr/](docs/adr/), each with the status line it carries there.
 
 **Feedback goes to this repo's issues** with the `plugin:factory` label — use the *Factory feedback* template, or let `/factory:run` draft the issue at the end of an item. It posts only what you approve, and leaves your project's code and names out.
 
@@ -90,13 +90,14 @@ A value that could not be captured reads `not captured (<reason>)`. It is never 
 
 The data lives in the project's own tracker (the record, the stage summaries, the decisions) and in `work/<id>/` while the item runs. Nothing is aggregated yet; the baseline is a later slice. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md) and [contracts/39-stage-log.md](contracts/39-stage-log.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
 
-The three scripts behind the labels, the bump check and the spend are described in [contracts/39-plugin-scripts.md](contracts/39-plugin-scripts.md). Run from the repo root:
+The four scripts behind the labels, the bump check, the spend and the cut-offs are described in [contracts/39-plugin-scripts.md](contracts/39-plugin-scripts.md). Run from the repo root:
 
 ```bash
 bash plugins/factory/scripts/fingerprint.sh plugins/factory          # release, standard and tooling lines
 bash plugins/factory/scripts/check-bump.sh                           # in the branch's worktree, after git fetch origin main
 bash plugins/factory/scripts/token-spend.sh -- <transcript.jsonl>... # spend and peak context; needs jq
 bash plugins/factory/scripts/token-spend.sh --require-end -- <role transcript.jsonl>...  # exit 6 when a transcript was cut off
+bash plugins/factory/scripts/cut-offs.sh -- <transcript.jsonl>...    # one line per stall, interruption or limit gap; prints nothing for a clean transcript; needs jq
 ```
 
 ### Versions and updates
@@ -293,10 +294,11 @@ The `factory` plugin, on macOS with gh `2.94.0`:
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.0.0` and the standard and tooling fingerprints |
 | `bash plugins/factory/scripts/check-bump.sh` on `item/39` | `pass: minor bump needed, 0.0.0 -> 1.0.0` (main has no version yet) |
 | `bash plugins/factory/scripts/token-spend.sh -- <PO transcript of #39>` | `spend 387472 …; peak 53942; messages 11`, the figures the contract records |
-| `bash tests/run.sh` | the factory's script and standard-text tests; the verdict on the release commit is in [reviews/qa-39.md](reviews/qa-39.md) |
+| `bash tests/run.sh` | the factory's script and standard-text tests: `ALL PASSED`, with no named skip, on 2026-11-05 at the docs commit. The QA verdict is in [reviews/qa-39.md](reviews/qa-39.md) |
+| `bash plugins/factory/scripts/cut-offs.sh -- <PO transcript of #39>` | prints nothing (no gap in that transcript), exit 0 |
 | `guard-memory.sh` against twelve sample inputs, with and without `jq` | every input allowed or blocked as intended |
 | `gh project` flags used by the setup and the tracker patch | present in `--help` |
-| acceptance demo, in a scratch project, `claude --plugin-dir` | every human-only criterion passed except AC-17, fixed in schema v2 |
+| acceptance demo, in a scratch project, `claude --plugin-dir` | every human-only criterion passed except AC-17, which failed there; fixed in schema v2 and verified by replay of the demo's transcripts |
 
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 

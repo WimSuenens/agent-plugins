@@ -1,6 +1,6 @@
 # Factory reference (release 1.0.0)
 
-One entry per contract that governs the factory, with the file that implements it and the acceptance criteria it answers. The contracts are the source; this page only points at them. Requirements and decisions: [docs/requirements/39-hansei-record.md](../requirements/39-hansei-record.md), [ADR 0011](../adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md).
+One entry per contract that governs the factory, with the file that implements it and the acceptance criteria it answers. The contracts are the source; this page only points at them. Requirements and decisions: [docs/requirements/39-hansei-record.md](../requirements/39-hansei-record.md), [ADR 0011](../adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md), [ADR 0013](../adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md).
 
 ## Contracts
 
@@ -18,19 +18,19 @@ One entry per contract that governs the factory, with the file that implements i
 - **Implemented in**: `plugins/factory/references/hansei.md` sections 1, 2 and 4; `plugins/factory/skills/run/SKILL.md` steps 5 and 6 and *Interruptions*.
 - **Acceptance criteria**: AC-6, AC-11, AC-12, AC-13.
 
-### 39-plugin-scripts: the three scripts
+### 39-plugin-scripts: the four scripts
 
 - **Contract**: [contracts/39-plugin-scripts.md](../../contracts/39-plugin-scripts.md)
-- **Governs**: the exact stdout lines and exit codes of each script; the two fingerprints and their file sets (standard: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`; tooling: `hooks/` and `scripts/`, recursively); the bump check's levels and refusal text (a file name with a newline counts as standard work); the token-spend window, the peak rule, and `--require-end` (exit 6 for a transcript that was cut off: a `[Request interrupted` entry, or no final reply at its end).
-- **Implemented in**: `plugins/factory/scripts/fingerprint.sh`, `plugins/factory/scripts/check-bump.sh`, `plugins/factory/scripts/token-spend.sh`. All are bash 3.2 compatible; `token-spend.sh` also needs `jq`.
-- **Acceptance criteria**: AC-2 to AC-5, AC-8 to AC-10, AC-16.
+- **Governs**: the exact stdout lines and exit codes of each script; the two fingerprints and their file sets (standard: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`; tooling: `hooks/` and `scripts/`, recursively); the bump check's levels and refusal text (a file name with a newline counts as standard work); the token-spend window, the peak rule, and `--require-end` (exit 6 for a transcript that was cut off: a `[Request interrupted` entry, or no final reply at its end); the cut-offs of a transcript (§4: one line per gap of kind `limits`, `stalled` or `interrupted`, with its start, read from the transcript and the optional sleep log).
+- **Implemented in**: `plugins/factory/scripts/fingerprint.sh`, `plugins/factory/scripts/check-bump.sh`, `plugins/factory/scripts/token-spend.sh`, `plugins/factory/scripts/cut-offs.sh`. All are bash 3.2 compatible; `token-spend.sh` and `cut-offs.sh` also need `jq`.
+- **Acceptance criteria**: AC-2 to AC-5, AC-8 to AC-10, AC-16; `cut-offs.sh` is the evidence for AC-11 (its tests) and AC-17 (the replay of the demo's transcripts).
 
 ### 39-standard-changes: where each rule lives
 
 - **Contract**: [contracts/39-standard-changes.md](../../contracts/39-standard-changes.md)
-- **Governs**: which file under `plugins/factory/` carries which rule (the table at the top of the contract); the release in `plugin.json`; the bump check in *Open PR*, in the frontier round's PR and in *Merge PR*; the release tag in *Merge PR*; the fallback for projects set up before 1.0.0; the rule that no measurement is written to this repo.
-- **Implemented in**: `plugins/factory/.claude-plugin/plugin.json`, `plugins/factory/references/hansei.md`, `plugins/factory/skills/run/SKILL.md`, the tracker patch in `plugins/factory/skills/setup-factory-skill/references/`.
-- **Acceptance criteria**: AC-1, AC-7, AC-8, AC-10, AC-20, AC-21.
+- **Governs**: which file under `plugins/factory/` carries which rule (the table at the top of the contract); the release in `plugin.json`; the bump check in *Open PR*, in the frontier round's PR and in *Merge PR*; the release tag in *Merge PR*; the fallback for projects set up before 1.0.0; the rule that no measurement is written to this repo; the merge style (`--merge`, kept, with its reason) and the path rule for message files (§9, [ADR 0013](../adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md)): worktree-relative or `~/` paths in `work/`, and the security checklist line that goes with it.
+- **Implemented in**: `plugins/factory/.claude-plugin/plugin.json`, `plugins/factory/references/hansei.md`, `plugins/factory/references/protocol.md` (*Messages*), `plugins/factory/skills/run/SKILL.md`, `plugins/factory/agents/security-reviewer.md` (step 1), the tracker patch in `plugins/factory/skills/setup-factory-skill/references/`.
+- **Acceptance criteria**: AC-1, AC-7, AC-8, AC-10, AC-20, AC-21; the path rule and the merge style answer ADR 0013 (no AC number).
 
 ## Maintainer procedure: changing the factory
 

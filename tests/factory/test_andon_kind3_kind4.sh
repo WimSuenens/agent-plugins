@@ -161,4 +161,8 @@ printf '1 B developer 0 30 -\n2 B developer 100 141 -\n3 B developer 200 250 -\n
 ck k4-even-median-exactly-2x-not-flagged "not flagged" "$(slowcheck "$T/sl" "$T/wl" 5)"
 printf '1 B developer 0 30 -\n2 B developer 100 141 -\n3 B developer 200 250 -\n4 B developer 300 360 -\n5 B developer 400 492 -\n' > "$T/sl"
 ck k4-even-median-just-over-no-rounding "slow: 92 against median 45.5 of 4 earlier rows" "$(slowcheck "$T/sl" "$T/wl" 5)"
+# QA-49 F1: a 60m andon pause inside a 90m row. Listed in the row's Waits it is excluded (30m working); left out (Notes only) the row reads 90m and is flagged.
+printf 'W9 andon yes 320 380\n' > "$T/wl"
+mkdev 90 W9; ck k4-f1-pause-listed-in-waits-not-flagged "not flagged" "$(slowcheck "$T/sl" "$T/wl" 4)"
+mkdev 90 -;  ck k4-f1-pause-only-in-notes-flagged-falsely "slow: 90 against median 40 of 3 earlier rows" "$(slowcheck "$T/sl" "$T/wl" 4)"
 done_

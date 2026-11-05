@@ -1,4 +1,0 @@
-# Feedback: devops — 39
-Source: docs-writer (work/39/48-result-docs-writer.md, runbook proposals), security (I3)
-Findings in docs/factory/release-runbook.md: l.81 `v1` → `v2`; l.52 and roll-forward step 5: restart open sessions instead of `/reload-plugins`; add a facts bullet "an open session keeps the factory skill text it read at start"; name token-spend exit 6 in the monitoring row; the release check says a tag waits while any named skip remains; use the PR number (40) in both the tag step and the post-merge check (security I3); note that the merge style is still `--merge` and open as #48.
-Re-verify: the tag commands still match contracts/39-standard-changes.md. Commit `#39 devops: runbook for schema v2`; result `work/39/58-result-devops.md`. QA and security commit in parallel; touch only your paths; retry on index.lock. Freeze rules as before.

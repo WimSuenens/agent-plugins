@@ -4,24 +4,24 @@ One entry per contract that governs the factory, with the file that implements i
 
 ## Contracts
 
-### 39-hansei-record: the hansei record (schema v1)
+### 39-hansei-record: the hansei record (schema v2)
 
 - **Contract**: [contracts/39-hansei-record.md](../../contracts/39-hansei-record.md)
-- **Governs**: the record posted on the slice ticket at merge approval, edited once after the resurvey. First line `<!-- factory:hansei v1 -->`; fixed key-value layout; the value grammar (a measured value, `0`, `n/a (did not run)`, `not captured (<reason>)`, `pending resurvey`); the seven measures and their sources; the tracker operations *Find hansei*, *Post hansei* and *Edit hansei*; the order of the close.
-- **Implemented in**: `plugins/factory/references/hansei.md` (template and field rules); `plugins/factory/skills/run/SKILL.md` step 8 (close order); `plugins/factory/skills/setup-factory-skill/references/issue-tracker-github.factory.md` (the three tracker operations, copied into a project's `docs/agents/issue-tracker.md` by setup step 6).
+- **Governs**: the record posted on the slice ticket at merge approval, edited once after the resurvey. First line `<!-- factory:hansei v2 -->`; the reader's rule for the marker, and the rule that a reader skips a version it does not know; the fixed key-value layout; the value grammar (a measured value, `0`, `n/a (did not run)`, `not captured (<reason>)`, `pending resurvey`); the seven measures and their sources. Measure 1 is split into five parts that add up to the total (agent working, person, limits, stalled, interrupted). Measure 2 has `pass first time (<n> low)`, where the findings below minor are `low`, `info`, `trivial` or `note`. Measure 5 reads `not captured (transcript truncated by <kind>)` for a cut transcript. The tracker operations *Find hansei*, *Post hansei* and *Edit hansei*; the order of the close.
+- **Implemented in**: `plugins/factory/references/hansei.md` (template, field rules, measure rules); `plugins/factory/skills/run/SKILL.md` step 8 (close order) and *Interruptions*; `plugins/factory/skills/setup-factory-skill/references/issue-tracker-github.factory.md` (the three tracker operations, copied into a project's `docs/agents/issue-tracker.md` by setup step 6).
 - **Acceptance criteria**: AC-14 to AC-22 (contract section 8).
 
 ### 39-stage-log: the stage log in the lead state
 
 - **Contract**: [contracts/39-stage-log.md](../../contracts/39-stage-log.md)
-- **Governs**: four sections the lead adds to `work/<id>/00-lead-state.md`, in order: `## Label` (written once at item start: plugin root, release, standard and tooling fingerprints, dependency versions, lead session ids), `## Stage log` (one row per stage, UTC times from `date -u`), `## Waits` (waits on the person and on usage limits, with whether they held the item), `## Person's touches`. The cross-check against git commit times and stage-summary comment times.
-- **Implemented in**: `plugins/factory/references/hansei.md` sections 1 and 2; `plugins/factory/skills/run/SKILL.md` steps 5 and 6.
+- **Governs**: four sections the lead adds to `work/<id>/00-lead-state.md`, in order: `## Label` (written once at item start: plugin root, release, standard and tooling fingerprints, dependency versions, lead session ids), `## Stage log` (one row per stage, UTC times from `date -u`), `## Waits` (each wait with its kind, the agent it stopped, and whether it held the item), `## Person's touches`. The four wait kinds are `person`, `limits`, `stalled` and `interrupted`, with how each is detected and where its start and end come from. *Done, then stopped*: an agent that stops after a complete `done` result is accepted, not resumed, when its commits are on the item branch and its paths are clean. The cross-check against git commit times and stage-summary comment times.
+- **Implemented in**: `plugins/factory/references/hansei.md` sections 1, 2 and 4; `plugins/factory/skills/run/SKILL.md` steps 5 and 6 and *Interruptions*.
 - **Acceptance criteria**: AC-6, AC-11, AC-12, AC-13.
 
 ### 39-plugin-scripts: the three scripts
 
 - **Contract**: [contracts/39-plugin-scripts.md](../../contracts/39-plugin-scripts.md)
-- **Governs**: the exact stdout lines and exit codes of each script; the two fingerprints and their file sets (standard: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`; tooling: `hooks/` and `scripts/`, recursively); the bump check's levels and refusal text; the token-spend window and peak rule.
+- **Governs**: the exact stdout lines and exit codes of each script; the two fingerprints and their file sets (standard: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`; tooling: `hooks/` and `scripts/`, recursively); the bump check's levels and refusal text (a file name with a newline counts as standard work); the token-spend window, the peak rule, and `--require-end` (exit 6 for a transcript that was cut off: a `[Request interrupted` entry, or no final reply at its end).
 - **Implemented in**: `plugins/factory/scripts/fingerprint.sh`, `plugins/factory/scripts/check-bump.sh`, `plugins/factory/scripts/token-spend.sh`. All are bash 3.2 compatible; `token-spend.sh` also needs `jq`.
 - **Acceptance criteria**: AC-2 to AC-5, AC-8 to AC-10, AC-16.
 
@@ -42,7 +42,8 @@ Use this when a change touches anything under `plugins/factory/`.
 4. Run the suite: `bash tests/run.sh`. It prints `ALL PASSED` when every check holds.
 5. Run `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills`.
 6. Open the PR. The lead runs the same bump check before `gh pr create`, so a PR that fails it does not open.
-7. After the person's merge approval, the lead runs the check again, merges, and tags `factory-v<version>` on the merge commit, unless that tag exists. To tag by hand: `git tag factory-v<version> <merge-commit>` and `git push origin factory-v<version>`.
+7. After the person's merge approval, the lead runs the check again, merges, and tags `factory-v<version>` on the merge commit, unless that tag exists. To tag by hand: `git tag factory-v<version> <merge-commit>` and `git push origin factory-v<version>`. The release steps and the checks after the tag are in [release-runbook.md](release-runbook.md).
 8. Add an entry for the item to [CHANGELOG.md](../../CHANGELOG.md).
+9. After a release, restart any Claude Code session that runs the factory: a session keeps the skill text it read when it started.
 
 Running the factory itself is in [plugins/factory/skills/run/SKILL.md](../../plugins/factory/skills/run/SKILL.md). Setting up a project is `/factory:setup-factory-skill`, and the project's tracker commands are in its `docs/agents/issue-tracker.md` under `## Factory operations`.

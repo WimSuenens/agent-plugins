@@ -2,7 +2,7 @@
 
 Reviewer: security-reviewer · Branch `item/39` against `main` (diff `main...item/39`, head `4774b97`) · 2026-11-04
 
-**Verdict: pass** (re-verified at `34ac83c`, again at `dd57082` after `9ee1cdc`, and the schema v2 changes at `5e5b9f1`). No critical, high or medium findings. L1–L7 and the residual L1a are fixed. The session-id rationale for L5 is accepted, and it covers agent ids too. Schema v2 adds three low findings, L8–L10, which do not block the merge.
+**Verdict: pass** (re-verified at `34ac83c`, `dd57082`, `5e5b9f1`, and round 5 at `c20992e`). No critical, high or medium findings. L1–L10 and L1a are fixed. Session and agent ids are accepted (L5). Open, all low and non-blocking: L8a, L11, L12; informational I1–I4.
 
 ## Scope
 
@@ -171,3 +171,59 @@ The tag step takes the merge commit from `gh pr view item/39`, which picks the P
 `bash tests/run.sh` at `5e5b9f1` reports FAILURES in `test_standard_text.sh` (ac11, ac14, ac15, example-lead-time). These are v1 text pins that the v2 wording replaced. That is QA's area, and QA is re-verifying in parallel.
 
 Verdict after the schema v2 review: **pass**. L8–L10 are low and do not block the merge. The developer should fix them in the same round if there is one, since L8 and L10 are about what reaches permanent public history.
+
+## Re-verify, round 5
+
+Re-verified 2026-11-05 at `c20992e` (developer `cf700de`, `c20992e`; HEAD `9053427` adds only the devops runbook and lead files). The probes ran on throwaway files and repos in the scratchpad. Nothing in the repo or under `~/.claude` was changed, and real transcripts were only read.
+
+Files reviewed: `plugins/factory/scripts/cut-offs.sh` (new), `plugins/factory/scripts/token-spend.sh`, `plugins/factory/references/hansei.md`, `plugins/factory/skills/run/SKILL.md`, and the matching parts of `contracts/39-plugin-scripts.md` §4, `contracts/39-stage-log.md` and `contracts/39-hansei-record.md`.
+
+Dependency audit: no manifest or lockfile changed. `cut-offs.sh` uses only `jq` (1.8.1 here), `bash`, `basename` and `cat`. The secrets grep of the added lines (outside `work/`, `tests/`, `reviews/`) found no token, key or `/Users/` path.
+
+### cut-offs.sh: no finding above low
+
+- **Options.** `--since`/`--until` with no value or a bad shape: exit 2. Unknown option: exit 2, named. `-n.jsonl` without `--`: unknown option, exit 2. With `--` it is read as `./-n.jsonl`. `--sleep-log` with no value: exit 2. A directory, `/dev/null` or a missing file as sleep log: exit 3, basename only.
+- **File names.** `$(id).jsonl` is printed as is and never evaluated. Names with a tab or a newline are escaped by `@tsv` (`x\tlimits\tsilent-gap\ty.jsonl`), so a name cannot add fields or lines to stdout.
+- **Malformed input.** Non-JSON, a JSON array, and an entry with no `timestamp`: exit 3, `transcript <basename> unreadable`, empty stdout. jq's own stderr is dropped, so no transcript text reaches stderr.
+- **Sleep log.** `/etc/passwd`, 3,000 raw `pmset -g log` lines and one valid line were piped in together. Only the valid line counted: its `+0100` offset was applied, and it turned the gap `interrupted`. No sleep-log text reached stdout or stderr.
+- **What the output can carry into the record.** The fields are basename, a fixed kind, two ISO times and the markers. The markers are fixed strings, except `api-error:<.error>`, which copies the transcript's `.error` value (I4).
+
+### token-spend.sh `--require-end` rule 1 (`2>&1` merge): no finding
+
+Merging cut-offs.sh's stderr into its stdout cannot hide a cut-off. On exit 3 or 4 the script stops before the awk test. On exit 0, stderr is empty. A stdout line is counted only with five fields, and the kind and marker fields are fixed strings, while the name field is `@tsv`-escaped. Any other non-zero exit is exit 6 (fails closed). Probed: a spoofed `x<TAB>limits<TAB>silent-gap<TAB>y.jsonl` name and an `n<LF>limits.jsonl` name holding a cut-off still give exit 6. The re-prefixed exit 3 message still names only the basename. `-- -n.jsonl` and `$(id).jsonl` both pass through.
+
+| Finding | Status | Evidence |
+|---|---|---|
+| L8 | fixed, residual L8a | A scratch repo with item worktree `wt/39`, a shell in the main checkout, and the commands from hansei.md §5 step 6 as written. `scratch.env` (untracked) and `.DS_Store` (ignored) were not staged, and `rm -rf` deleted them. The close commit held only `00-lead-state.md` (changed) and `02-result-x.md` (new). See L8a for a directory named like a message. |
+| L9 | fixed, residual L11 | The guard found the worktree through `git worktree list --porcelain` from the main checkout. A committed `work -> ../../outside` and a committed `work/39 -> …/outside/39` both stop the guard, and `outside/39/precious` survives. The `&&` chain is in place. See L11 for the case where the variable is not set. |
+| L10 | fixed | hansei.md, contract 39-stage-log and contract 39-plugin-scripts §4 give the exact `awk` filter and the rule to copy only UTC times. On this machine the filter prints 749 lines, and none of them is anything other than `<date> <time> <offset> Sleep\|Wake`. cut-offs.sh never echoes a sleep-log line. |
+
+### L8a — hansei.md §5 step 6.1, SKILL.md 8.6, contract 39-hansei-record — low — the pathspec `*` also matches `/`
+
+`git add -- "work/<id>/[0-9][0-9]-*.md"` is a git pathspec glob, and there `*` crosses directories. A directory `work/39/03-dump/` with a `transcript.md` inside gets staged, as does `99-x.env.md`. Reproduced: `work/39/03-dump/transcript.md` was in the `#39 lead: close` commit. A role would have to create a directory named like a message, so this is unlikely.
+
+Fix: add the `glob` magic, so `*` stays within one level: `git -C "$w" add -- ':(glob)work/<id>/[0-9][0-9]-*.md'`. Verified: it stages `00-lead-state.md` and `03-dump.md`, but not `03-dump/transcript.md` or `x.env`.
+
+### L11 — the same step — low — `$w` does not survive between the Lead's shell calls
+
+The guard sets `w`, and steps 6.1 and 6.2 use `"$w"`. The Lead's Bash tool keeps no variables from one call to the next, and nothing says the guard and the steps must run in one call. When `w` is empty, `git -C ""` runs in the current directory, which is the main checkout, and `rm -rf -- "$w/work/<id>"` becomes `rm -rf -- /work/<id>`. The `&&` after `git rm` stops the `rm` in the usual case, because `work/<id>` does not exist on main. Without that check, the step would reach outside the worktree, and `git -C "" add`/`commit` would run against the main checkout. Reproduced without deleting anything: with `w=""` from the main checkout, `git -C "$w" rev-parse --show-toplevel` prints the main checkout, and the `rm` target is `/work/39`. Claude Code's own safety check refused to run this `rm` line in my probe (variable that could be empty). The Lead's close may be stopped the same way and need a person prompt.
+
+Fix: run the guard and steps 6.1–6.2 as one shell call (say so in the text), and write `"${w:?}"` in every use so that an empty value stops the command. Or have the Lead substitute the resolved absolute path into each command, so no variable is left.
+
+### L12 — `plugins/factory/scripts/cut-offs.sh:52,55` — low — `basename` on a sleep-log name that starts with `-`
+
+`--sleep-log -x` gives `basename: illegal option -- x` and `cut-offs: sleep log  unreadable`, exit 3, and the name is lost (the same pattern as L7). The value is the Lead's own argument, so this cannot be exploited.
+
+Fix: `basename -- "$sleep_log"`, or apply the same `./` prefix as for transcripts.
+
+### I4 — cut-offs.sh `mark`, hansei.md *Cut-offs at close* step 2 — informational
+
+`api-error:` + `(.error | tostring)` copies the transcript's `.error` value into the markers, and hansei.md puts the markers into `What` (`found at close: <markers>`), which is committed. Claude Code writes `.error`, and the values found in this machine's recent transcripts are `rate_limit` and `server_error`. A hand-made `.error` of `x\ty\n/Users/secret/path` comes out `@tsv`-escaped but whole. This is not exploitable, but it goes against the contract's "no message text, no path". A cheap hardening is `if test("^[a-z_]+$") then . else "other" end`.
+
+### Notes for the lead (not security findings)
+
+- **False cut-off markers (correctness, QA's area).** The marker test also matches text that the agent or the brief wrote. A role's first user entry (its brief) containing `cut off mid-stream` produces a `stalled` line, and `token-spend.sh --require-end` then exits 6. An assistant reply starting with `API Error` produces an `interrupted` line. Reproduced with both. Both fail closed: spend reads `not captured`, and the close scan adds a short wait. Briefs for this very feature will quote that phrase, though. Matching only Claude Code's synthetic entries (for example `isApiErrorMessage`, or the exact notice text) would avoid it.
+- `--until 2026-11-05T25:99Z` passes the shape check. On a transcript with a gap, jq then fails and the script reports `transcript … unreadable`, exit 3, instead of a bad time, exit 2.
+- `bash tests/run.sh` at `9053427` still ends `FAILURES` (the text pins QA is moving). `test_token_spend.sh`: 84 passed.
+
+Verdict after round 5: **pass**. No critical, high or medium finding. L8–L10 are fixed. L8a, L11 and L12 are low and do not block the merge. L11 is the one to fix in a next developer round, because it decides where an `rm -rf` lands.

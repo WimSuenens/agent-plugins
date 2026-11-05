@@ -2,7 +2,7 @@
 
 Reviewer: security-reviewer · Branch `item/39` against `main` (diff `main...item/39`, head `4774b97`) · 2026-11-04
 
-**Verdict: pass** (re-verified at `34ac83c`, `dd57082`, `5e5b9f1`, and round 5 at `c20992e`). No critical, high or medium findings. L1–L10 and L1a are fixed. Session and agent ids are accepted (L5). Open, all low and non-blocking: L8a, L11, L12; informational I1–I4.
+**Verdict: pass** (re-verified at `34ac83c`, `dd57082`, `5e5b9f1`, round 5 at `c20992e`, and the final round at `79e191c`). No critical, high or medium findings. L1–L12, L1a and L8a are fixed, and so is I4. Session and agent ids are accepted (L5). Open, low and non-blocking: L13 (a home path in `reviews/qa-39.md`) and the checklist hit L14; informational I1–I3, I5, I6.
 
 ## Scope
 
@@ -227,3 +227,53 @@ Fix: `basename -- "$sleep_log"`, or apply the same `./` prefix as for transcript
 - `bash tests/run.sh` at `9053427` still ends `FAILURES` (the text pins QA is moving). `test_token_spend.sh`: 84 passed.
 
 Verdict after round 5: **pass**. No critical, high or medium finding. L8–L10 are fixed. L8a, L11 and L12 are low and do not block the merge. L11 is the one to fix in a next developer round, because it decides where an `rm -rf` lands.
+
+## Re-verify, final round
+
+Re-verified 2026-11-05 at `79e191c` (developer `57b7592`, `0762ef2`; architect `dbfc448`, `ce920d4`; QA `79e191c`). The probes ran on throwaway repos in the scratchpad, each with a main checkout, an item worktree `wt/39` and an `outside/` directory next to them. Nothing in this worktree, the main checkout or `~/.claude` was changed.
+
+Files reviewed: `plugins/factory/skills/run/SKILL.md` (step 8.6), `plugins/factory/references/hansei.md` (§5 step 6), `plugins/factory/references/protocol.md` (*Messages*), `plugins/factory/agents/security-reviewer.md`, `plugins/factory/scripts/{cut-offs,fingerprint,token-spend}.sh`, `plugins/factory/skills/setup-factory-skill/references/issue-tracker-github.factory.md` (*Merge PR*), `docs/adr/0013-*.md`, `contracts/39-hansei-record.md`, `contracts/39-standard-changes.md` §9.
+
+Dependency audit: no manifest or lockfile changed and no new runtime tool. `git clean` is part of git. The secrets grep of the added lines found no token or key. For home paths, see L13 and L14.
+
+The close was tested as written. The guard block was cut from SKILL.md step 6, `<id>` was set to `39`, and the inline commands for 6.1 and 6.2 followed in one script. It ran from the main checkout under both `bash` and `zsh`, because the Lead's Bash tool runs zsh on this machine.
+
+| Finding | Status | Evidence |
+|---|---|---|
+| L8a | fixed | `':(glob)work/39/[0-9][0-9]-*.md'` staged `00-lead-state.md` (M) and `02-result-x.md` (A) only. `03-dump/transcript.md`, `scratch.env` and the ignored `.DS_Store` were not staged, and `git clean` removed them. The same result came under zsh. |
+| L9 | holds | A committed `work -> ../../outside` and a committed `work/39 -> ../../outside/39` both stop the guard (`close: work/ is a symlink`, rc 1), and `outside/` is untouched. |
+| L11 | fixed | All three texts (SKILL.md, hansei.md, contract) say "one shell call" and write `"${w:?}"` in every use. With `w=""` in the main checkout, `git -C "${w:?}" rm …` stops before git runs: bash `w: parameter null or not set` (rc 127), zsh `w: parameter not set` (rc 1). The rest of the line never runs. The `rm -rf` on a variable is gone, so Claude Code's removal check no longer comes into it. |
+| L12 | fixed | `basename --` is used in every call in all three scripts (no bare `basename` is left). `cut-offs.sh --sleep-log -x` gives `sleep log -x unreadable`, exit 3. `cut-offs.sh -- -missing.jsonl` and `token-spend.sh -- -missing.jsonl` give `transcript -missing.jsonl unreadable`, exit 3. `fingerprint.sh -x` gives `not a factory plugin root: -x`, exit 2. |
+| I4 | fixed | `.error` values `rate_limit` and `server_error` pass through unchanged. These all become `api-error:other`: `"x\ty\n/Users/secret/path"`, the object `{"msg":"/Users/secret"}`, `"Server_Error"` and the number `123`. `null` becomes `api-error:unknown`. No path or text from the transcript reaches the markers. |
+
+### `git clean` in place of `rm -rf`: it cannot reach outside the worktree
+
+- **Symlinks inside `work/39/`.** These were planted untracked: an absolute link to `outside/sub`, a link to `outside/precious`, `deep/out -> outside`, a relative `rel -> ../../../outside`, and `sub/x -> outside/sub` in a subdirectory. Each link was removed and nothing it pointed to was touched. A tracked link `03-tracked-link.md -> outside` (named like a message) was removed by `git rm` as a link, and `outside/` kept every file.
+- **The guard bypassed on purpose.** I ran the commands with `work -> ../../outside` committed. `git clean -f -d -x -q -- work/39` exits 0 and deletes nothing behind the link. `git rm` fails with `pathspec … did not match`, so the `&&` chain stops there. `outside/39/precious` survives. So `git clean` gives a second barrier behind the guard.
+- **Pathspec outside the repo.** `git -C <wt> clean -n -fdx -- ../../outside` is refused (`is outside repository`, rc 128). The id is numeric (the guard checks it), so the pathspec is always `work/<digits>`.
+- **Nested repository.** A `git init` under `work/39/nested` is skipped by `git clean` with one `-f`. Then `[ ! -e ]` stops the chain (rc 1), `git rm` stays staged, `nested/` stays in place, and only the `close` commit exists. This matches the text.
+- **zsh.** The guard's `case` with `*[!0-9]*` behaves the same in zsh (`3x` stops, `39` goes). Run under zsh, the whole script gave the same commits as under bash.
+
+### L13 — `reviews/qa-39.md:199,205` — low — an absolute home path that stays in main's tree
+
+The review names `claude --plugin-dir /Users/<login>/Projects/portfolio/wt/39/plugins/factory` (l.199) and `Plugin root: /Users/<login>/…` (l.205). It was added in `818e300`. Unlike `work/`, `reviews/` is not removed at close, so this lands in the tree of main, and of every clone, not only in history. Neither safeguard covers it. ADR 0013's rule is written for message files in `work/`. The new checklist line limits itself to `-- work/`. The username is the owner's public login, so the exposure is small, which is why this is low.
+
+Fix: QA writes the path as `../wt/39/plugins/factory` or `~/Projects/portfolio/wt/39/plugins/factory` before the merge. That is one edit to its own file, and it also takes the path out of main's tree. For later items, the architect could widen the protocol rule from "a message file" to "any file a role commits" (reviews, contracts, docs). The checklist line could then drop the `-- work/` limit: `git log -S"$HOME/" --format='%h %s' origin/main..HEAD`, plus `git grep -n "$HOME/" HEAD` for what will sit in main's tree.
+
+### L14 — checklist line run on item/39 — low (as the line prescribes)
+
+I ran `git log -S"$HOME/" --format='%h %s' origin/main..HEAD -- work/`. It prints two commits:
+
+- `a3af016 #39 lead: verification briefs, architect feedback` adds `work/39/09-brief-qa-engineer.md:7`. This is the known path that ADR 0013 accepts.
+- `27c8fc3 #39 architect: options for merge style (#48)` adds `work/39/60-options-architect.md:8`, which quotes the same path while it describes it.
+
+The second hit is a quotation of the first and exposes nothing new. But ADR 0013's *Consequences* says #39 has "its one home path (in `work/39/09-brief-qa-engineer.md`)", and there are two files in `work/` (and the review in L13). Fix: no history rewrite (as ADR 0013 says). The architect corrects the ADR sentence to name both files, or words it as "one home path, in the QA brief and quoted in the options file". The lead and the architect keep the rule from now on by quoting such a path as `~/…` or `<home>/…`.
+
+The line works as intended: it found the known path and one more. Its blind spots are covered by I5 and L13.
+
+### Informational
+
+- I5 — `agents/security-reviewer.md`, checklist line. `-S"$HOME/"` matches only the reviewer's own home directory. A home path written on another machine is not found, for example by a second contributor, under `/home/<user>/` on Linux, or by a CI runner. For this single-person setup that is enough. A wider net would be `git log -G'/(Users|home)/[A-Za-z0-9._-]+/' …`, but that needs reading by hand, because placeholders such as `/Users/alice/` in contract 39-standard-changes l.98 also match.
+- I6 — SKILL.md 8.6 and hansei.md §5 step 6.1. The text says the call is "one script that stops at the first failure", but 6.1 is given as prose commands that are not chained. If the Lead writes them on separate lines with no `set -e` or `|| exit 1`, a failed `git add` (an `index.lock`, say) lets the chain go on. `git rm` refuses a modified lead state and stops. But a result file that was never committed is untracked, so `git rm` passes it by and `git clean` deletes it. A message would then be lost from the record's evidence. That is integrity, not reach: nothing outside the worktree is touched. Fix: give 6.1 and 6.2 as one fenced block with `|| exit 1` after each 6.1 command, as the guard already does. I used that form in the probe script, and it closes the gap.
+
+Verdict after the final round: **pass**. No critical, high or medium finding, so nothing blocks the merge. L13 is a one-line edit for QA in a file it owns, and it is worth making before the merge because `reviews/` stays in main's tree. L14 needs an ADR wording fix and no history change.

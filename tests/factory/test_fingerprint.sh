@@ -23,17 +23,17 @@ else
   skip worked-example-84f282e "commit 84f282e not in this clone"
 fi
 
-# --- AC-2: release 1.0.0 from the real branch tree, both as an install path ending in
+# --- AC-2: release 1.1.0 from the real branch tree, both as an install path ending in
 #     a version segment and as a --plugin-dir path ending plugins/factory, without git
 mkdir -p "$T/cache/wimsuenens/factory" "$T/dir/plugins"
-cp -R "$PLUGIN" "$T/cache/wimsuenens/factory/1.0.0"
+cp -R "$PLUGIN" "$T/cache/wimsuenens/factory/1.1.0"
 cp -R "$PLUGIN" "$T/dir/plugins/factory"
-rm -rf "$T/cache/wimsuenens/factory/1.0.0/.git" "$T/dir/plugins/factory/.git"
-inst="$(cd / && bash "$FP" "$T/cache/wimsuenens/factory/1.0.0")"
+rm -rf "$T/cache/wimsuenens/factory/1.1.0/.git" "$T/dir/plugins/factory/.git"
+inst="$(cd / && bash "$FP" "$T/cache/wimsuenens/factory/1.1.0")"
 pdir="$(cd / && bash "$FP" "$T/dir/plugins/factory")"
-ck ac2-install-path-release "release: 1.0.0" "$(line "$inst" 1)"
-ck ac2-plugin-dir-release "release: 1.0.0" "$(line "$pdir" 1)"
-ck ac2-real-plugin-json "1.0.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac2-install-path-release "release: 1.1.0" "$(line "$inst" 1)"
+ck ac2-plugin-dir-release "release: 1.1.0" "$(line "$pdir" 1)"
+ck ac2-real-plugin-json "1.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 
 # --- AC-3: two copies, different absolute paths, different mtimes, separate runs
 touch -t 200001010000 "$T/dir/plugins/factory/references/protocol.md" "$T/dir/plugins/factory/scripts/check-bump.sh"
@@ -92,9 +92,9 @@ out="$(bash "$FP" "$T/c4")"
 ck ac4-outside-keeps-standard "$(line "$base" 2)" "$(line "$out" 2)"
 ck ac4-outside-keeps-tooling "$(line "$base" 3)" "$(line "$out" 3)"
 # plugin.json version change alone: release moves, fingerprints don't
-sed -i '' 's/"version": "1.0.0"/"version": "1.0.1"/' "$T/c4/.claude-plugin/plugin.json"
+sed -i '' 's/"version": "1.1.0"/"version": "1.1.1"/' "$T/c4/.claude-plugin/plugin.json"
 out="$(bash "$FP" "$T/c4")"
-ck ac4-version-moves-release "release: 1.0.1" "$(line "$out" 1)"
+ck ac4-version-moves-release "release: 1.1.1" "$(line "$out" 1)"
 ck ac4-version-keeps-standard "$(line "$base" 2)" "$(line "$out" 2)"
 rm -rf "$T/c4"
 

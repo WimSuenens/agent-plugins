@@ -10,7 +10,7 @@
 
 ## Running agents
 
-none
+- product-owner, work/49/01-brief-product-owner.md, handle pending, last commit see git log
 
 ## Carry-overs (from #39, map #34)
 
@@ -26,6 +26,7 @@ none
 | # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Start item | lead | - | 2026-11-05T22:50Z | 2026-11-05T22:51Z | ~1m | - | - | done | board at Backlog, worktree + work/49 created |
+| 2 | Requirement | product-owner | pending | 2026-11-05T22:55Z | | | - | | | |
 
 ## Waits
 

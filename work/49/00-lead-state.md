@@ -30,8 +30,8 @@
 | 3 | Contracts and ADRs | architect | ad1af84adc138ccf9 | 2026-11-05T23:11Z | 2026-11-05T23:21Z | 10m | - | 184318 (subagent_tokens, peak context; spend not captured) | done | 5 contracts, no ADR, 12 decisions, 44 tool uses |
 | 4 | Build | developer | a9399ddf9aa504a15 | 2026-11-05T23:28Z | 2026-11-05T23:33Z | 5m | - | 125458 (subagent_tokens, peak context; spend not captured) | done | 6 commits; 17 #39 tests fail by design, routed to QA; bump check pass |
 | 5 | Open PR | lead | - | 2026-11-05T23:34Z | 2026-11-05T23:35Z | 1m | - | - | pass | check-bump: minor 1.0.0 -> 1.1.0 |
-| 6 | QA | qa-engineer | a0b6ee3a034e26d7e | 2026-11-05T23:35Z | 2026-11-05T23:50Z | ~ | - | pending notice | pass | 909 pass, 1 named skip (F1); AC-3: 5/5 flagged, 0/7 controls; 8 human-only criteria |
-| 8 | Contracts and ADRs (round 2) | architect | pending | 2026-11-05T23:50Z | | | - | | | feedback from S1-S5, QA F1/O1/O2 |
+| 6 | QA | qa-engineer | a0b6ee3a034e26d7e | 2026-11-05T23:35Z | 2026-11-05T23:50Z | 15m | - | 234836 (subagent_tokens, peak context; spend not captured) | pass | 909 pass, 1 named skip (F1); AC-3: 5/5 flagged, 0/7 controls; 8 human-only criteria |
+| 8 | Contracts and ADRs (round 2) | architect | ad1af84adc138ccf9 | 2026-11-05T23:50Z | | | - | | | feedback from S1-S5, QA F1/O1/O2 |
 | 7 | Security | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:35Z | 2026-11-05T23:35Z | ~2m | - | 65906 (subagent_tokens, peak context; spend not captured) | pass | 0 critical/high, 3 medium (S1-S3), 2 low (S4,S5); fixes held for one feedback round with QA's |
 
 ## Waits

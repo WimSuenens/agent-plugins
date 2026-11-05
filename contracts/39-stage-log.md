@@ -4,6 +4,8 @@ Slice [#39](https://github.com/WimSuenens/agent-plugins/issues/39) · Requiremen
 
 The **stage log** is the Lead's running account of an item, kept in `work/<id>/00-lead-state.md` from the start of the item to the merge approval. The hansei record is computed from it at close. Its format is written into `plugins/factory/references/hansei.md`, next to the record template.
 
+The lead state is committed and merged with `--merge`, so it follows the protocol's path rule: no absolute home path anywhere in it, `~/` or worktree-relative paths only ([39-standard-changes](39-standard-changes.md) §9, [ADR 0013](../docs/adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md)).
+
 The lead state keeps its existing parts (board item id, status, next step, open questions, Running agents, Shared resources). This contract adds four sections, in this order, after them: `## Label`, `## Stage log`, `## Waits`, `## Person's touches`.
 
 ## 1. `## Label`

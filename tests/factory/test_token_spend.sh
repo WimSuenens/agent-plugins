@@ -167,17 +167,46 @@ cp "$T/final.jsonl" "$T/d/--require-end"; ck require-end-name-after-dashdash "$(
 { ubrief 2026-10-28T07:00:00Z; atool 2026-10-28T07:05:34Z s1 ts Edit; ures 2026-10-28T07:05:34.379Z ts
   printf '{"type":"assistant","timestamp":"2026-10-28T07:14:59.900Z","isApiErrorMessage":true,"error":"server_error","message":{"id":"e1","model":"<synthetic>","content":[{"type":"text","text":"API Error: Your computer went to sleep mid-response. The response above may be incomplete."}],"usage":{"input_tokens":0,"output_tokens":0}}}\n'
   atool 2026-10-28T07:15:21Z s2 th2 SubagentHandback; ures 2026-10-28T07:15:22Z th2; } > "$T/sleep-midrun.jsonl"
-RE "$T/sleep-midrun.jsonl" >/dev/null 2>&1; code=$?
-if [ $code = 6 ]; then ck require-end-sleep-mid-run-exit-6 6 $code
-else skip require-end-sleep-mid-run-exit-6 "QA-39 v2 F3: exit $code, want 6 -- a server_error API-error entry mid-run is not read as a cut (architect, then developer)"; fi
+RE "$T/sleep-midrun.jsonl" >/dev/null 2>&1; ck require-end-sleep-mid-run-exit-6 6 $?   # QA-39 v2 F3, fixed in round 5
 # the same for a stream cut that Claude Code recovered by itself: it writes an isMeta user entry "Your response above was
 # cut off mid-stream ..." and the agent goes on (the demo's QA agent a85f55… had three, 00:14Z-00:48Z, with no notice)
 { ubrief 2026-11-05T00:07:00Z; athink 2026-11-05T00:08:06Z c1
   printf '{"type":"user","timestamp":"2026-11-05T00:14:49.000Z","isMeta":true,"message":{"role":"user","content":"Your response above was cut off mid-stream and only your next message is delivered. Write the complete response again from the start — no apology, no mention of the cut-off."}}\n'
   ast 2026-11-05T00:15:00Z c2 "Done."; } > "$T/cut-midstream.jsonl"
-RE "$T/cut-midstream.jsonl" >/dev/null 2>&1; code=$?
-if [ $code = 6 ]; then ck require-end-cut-mid-stream-exit-6 6 $code
-else skip require-end-cut-mid-stream-exit-6 "QA-39 v2 F3: exit $code, want 6 -- a recovered mid-stream cut-off is not read as a cut (architect, then developer)"; fi
+RE "$T/cut-midstream.jsonl" >/dev/null 2>&1; ck require-end-cut-mid-stream-exit-6 6 $?   # QA-39 v2 F3, fixed in round 5
+
+# --- round 5, rule 1 through cut-offs.sh: which lines count. A silent-gap line and a limits line do not; a retry does.
+{ ubrief 2026-11-05T10:00:00Z; atool 2026-11-05T10:00:05Z g1 tg Bash; ures 2026-11-05T10:00:06Z tg; ast 2026-11-05T10:12:00Z g2 "Done."; } > "$T/silent.jsonl"
+ck require-end-silent-gap-only-exit-0 "1|0" "$(bash "$CO" "$T/silent.jsonl" | grep -c silent-gap)|$(RE "$T/silent.jsonl" >/dev/null 2>&1; echo $?)"
+{ ubrief 2026-11-04T22:00:00Z; ast 2026-11-04T22:02:06Z l1 "Working."
+  printf '{"type":"assistant","timestamp":"2026-11-04T22:02:10Z","isApiErrorMessage":true,"error":"rate_limit","message":{"id":"l2","model":"<synthetic>","content":[{"type":"text","text":"You'"'"'ve hit your session limit"}],"usage":{"input_tokens":0,"output_tokens":0}}}\n'
+  ubrief 2026-11-04T23:49:40Z; ast 2026-11-04T23:49:48Z l3 "Done."; } > "$T/limit.jsonl"
+ck require-end-limits-only-exit-0 "limits|0" "$(bash "$CO" "$T/limit.jsonl" | cut -f2)|$(RE "$T/limit.jsonl" >/dev/null 2>&1; echo $?)"
+{ ubrief 2026-11-05T01:00:00Z; ast 2026-11-05T01:05:00Z r1 "Working."
+  printf '{"type":"system","subtype":"api_error","timestamp":"2026-11-05T01:06:00Z","error":{"status":529},"retryAttempt":1}\n'
+  ast 2026-11-05T01:07:00Z r2 "Done."; } > "$T/retry.jsonl"
+RE "$T/retry.jsonl" >/dev/null 2>&1; ck require-end-api-retry-exit-6 6 $?
+# a limit and a cut sharing one start read limits (strongest kind) and pass rule 1, as the contract words it
+{ ubrief 2026-11-04T22:00:00Z; ast 2026-11-04T22:02:06Z k1 "Working."; uint 2026-11-04T22:02:08Z
+  printf '{"type":"assistant","timestamp":"2026-11-04T22:02:10Z","isApiErrorMessage":true,"error":"rate_limit","message":{"id":"k2","model":"<synthetic>","content":[{"type":"text","text":"You'"'"'ve hit your session limit"}]}}\n'
+  ubrief 2026-11-04T23:49:40Z; ast 2026-11-04T23:49:48Z k3 "Done."; } > "$T/limit-cut.jsonl"
+ck require-end-limit-and-cut-one-start "limits|0" "$(bash "$CO" "$T/limit-cut.jsonl" | cut -f2)|$(RE "$T/limit-cut.jsonl" >/dev/null 2>&1; echo $?)"
+# cut-offs.sh exit 3 (an entry with no timestamp) is passed on: exit 3, stdout empty, the stderr line re-prefixed, basename only
+mkdir -p "$T/deep3/x"; { ubrief 2026-11-05T01:00:00Z; printf '{"type":"assistant","message":{"id":"n1","model":"m","content":[{"type":"text","text":"Done."}],"usage":{"input_tokens":1}}}\n'; } > "$T/deep3/x/agent-nots.jsonl"
+out="$(RE "$T/deep3/x/agent-nots.jsonl" 2>"$T/err")"; code=$?
+ck require-end-cut-offs-exit-3-passed-on "3||token-spend: transcript agent-nots.jsonl unreadable" "$code|$out|$(cat "$T/err")"
+bash "$TS" "$T/deep3/x/agent-nots.jsonl" >/dev/null 2>&1; ck no-require-end-no-timestamp-still-sums 0 $?
+# cut-offs.sh exit 4 (jq missing) cannot be reached: token-spend.sh checks jq first and exits 4 itself
+mkdir -p "$T/nojq"; ln -sf "$(command -v basename)" "$T/nojq/basename"
+PATH="$T/nojq" /bin/bash "$TS" --require-end -- "$T/final.jsonl" >/dev/null 2>&1; ck require-end-jq-missing-exit-4 4 $?
+# token-spend.sh calls cut-offs.sh from its own directory: a copy of the scripts elsewhere still works, and without
+# cut-offs.sh beside it --require-end fails (never passes a transcript unchecked)
+mkdir -p "$T/copy"; cp "$TS" "$CO" "$T/copy/"
+RE2() { bash "$T/copy/token-spend.sh" --require-end -- "$@"; }
+ck require-end-copy-own-dir "0 6" "$(RE2 "$T/final.jsonl" >/dev/null 2>&1; echo -n "$? "; RE2 "$T/cut-midstream.jsonl" >/dev/null 2>&1; echo $?)"
+rm -f "$T/copy/cut-offs.sh"; RE2 "$T/final.jsonl" >/dev/null 2>&1; code=$?
+ck require-end-no-cut-offs-script-not-0 1 "$([ $code != 0 ] && echo 1 || echo 0)"
+
 
 # --- contract worked example on the real product-owner transcript of #39, when this machine still has it
 R="$(find "$HOME/.claude/projects" -name 'agent-aff847e3e8c7e5bfa.jsonl' 2>/dev/null | head -1)"

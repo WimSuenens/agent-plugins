@@ -94,6 +94,9 @@ Token figures: "ctx" = completion-notice subagent_tokens (peak context, not spen
 
 - Same finding type twice again: security L12 (basename without --) repeats L7.
 
+- Same finding twice: QA F4 = security L11 (guard variable across Bash calls).
+- AC-17 PASS on QA's word (round 5); demo re-run not demanded.
+
 ## Interruptions
 
 - none; fan-out parallel

@@ -88,7 +88,7 @@ then the check passes without asking for a bump.
 **AC-11 The standard tells the Lead to keep a stage log.**
 Given the new standard,
 when it is read,
-then it tells the Lead to keep a stage log in `work/<id>/00-lead-state.md` with one row per stage (including feedback rounds and the acceptance demo), each with a start and end time in UTC taken from `date -u`, the time spent waiting for the person, the time spent waiting on limits, and the role's token figures. It also keeps a list of the person's touches with times.
+then it tells the Lead to keep a stage log in `work/<id>/00-lead-state.md` with one row per stage (including feedback rounds and the acceptance demo), each with a start and end time in UTC taken from `date -u`, the time spent waiting for the person, the time spent waiting on limits, the time lost to stalls and interruptions (each logged as its own wait kind, naming the agent it hit), and the role's token figures. It also keeps a list of the person's touches with times.
 
 **AC-12 Stage-log times agree with git and the tracker.** **[human-only]** *(Under test: Capture)*
 Given the item run in the demo session with the new standard,
@@ -108,7 +108,7 @@ then it tells the Lead, before posting the hansei comment, to compare the stage 
 Given the new standard (the record template it gives the Lead),
 when it is read,
 then the record:
-- starts with a marker that carries a schema version (e.g. `hansei v1`), which a script can find in the slice ticket's comments without reading the rest;
+- starts with a marker that carries a schema version (`hansei v2`; v1 appeared only in the acceptance demo's record and is not what release 1.0.0 writes), which a script can find in the slice ticket's comments without reading the rest;
 - carries `plugin: factory <semver>`, the fingerprint field(s) from AC-5, and the dependency versions from AC-6;
 - carries the seven measures as named fields in a fixed order, each always present;
 - carries an "Active overrides" field (ADR 0011), which reads "none" when the project's `docs/agents/factory.md` lists none;
@@ -121,11 +121,11 @@ then each of the seven measures says what is counted and where the Lead reads it
 
 | # | Measure | Fields | Source the Lead reads |
 |---|---|---|---|
-| 1 | Lead time | total, from the first stage's start to the person's merge approval, split into agent working / waiting for the person / waiting on limits | stage log |
-| 2 | First-pass yield | QA, security, acceptance demo: each "pass first time", "failed first time", or "n/a" when the stage did not run | results and feedback briefs in `work/<id>/` |
+| 1 | Lead time | total, from the first stage's start to the person's merge approval, split into agent working / waiting for the person / waiting on limits / stalled / interrupted, the five parts adding up to the total | stage log |
+| 2 | First-pass yield | QA, security, acceptance demo, judged on the stage's first run: "pass first time" when the first verdict is pass and that run lists no finding at or above minor (a finding without a severity counts as at or above), written "pass first time (<n> low)" when it lists <n> ≥ 1 findings below minor (low, info, trivial or note); "failed first time" otherwise; "n/a" when the stage did not run | results and feedback briefs in `work/<id>/` |
 | 3 | Rework loops and overturned two-way decisions | count of feedback briefs per role; count of two-way decisions overturned by a `Source: lead` feedback | `work/<id>/` |
 | 4 | Escaped defects | "not captured" until its deferral fires | (deferred) |
-| 5 | Tokens per role | per role, the Lead included: spend summed from transcript `message.usage`, and peak context from the completion notice, each labelled | transcripts, completion notices |
+| 5 | Tokens per role | per role, the Lead included: spend summed from transcript `message.usage`, and peak context from the completion notice, each labelled; spend reads "not captured (transcript truncated by <kind>)" when a stall or interruption cut one of the role's transcripts | transcripts, completion notices |
 | 6 | The person's touches | counts of decision cards, demos, approvals, overturns | stage log's touches list |
 | 7 | Doors confirmed or contradicted | per **Under test** line of the frame: confirmed / contradicted / not exercised | the resurvey (see AC-19) |
 
@@ -142,6 +142,7 @@ Given the item run in the demo session with the new standard,
 when the person reads its hansei comment,
 then every measure except escaped defects holds a value (or "n/a" where the stage did not run) that the person agrees with from what they saw in the session.
 The person notes each field the Lead had to mark "not captured" and why. It is contradicted if any measure other than escaped defects reads "not captured" because the Lead had no way to observe it.
+*Status:* failed at the acceptance demo (record on factory-sandbox #2, schema v1): measure 1 hid stalls and interruptions inside agent working, and token spend from a cut transcript could read as a number (issues #44–#47). The fix is schema v2. By the person's rule, AC-17 is re-judged on QA's word after the fix, against the v2 template and fixtures, unless QA demands a demo re-run.
 
 **AC-18 Posted before work/ is removed.** *(Under test: Capture)*
 Given the new standard's step 8 (close the item),

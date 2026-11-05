@@ -90,7 +90,7 @@ The Lead's next brief to the architect and to the developer carries `Override re
 
 | # | Fenced item | Written in | Question: would following the override… |
 |---|---|---|---|
-| F1 | merge and production approvals | `skills/run/SKILL.md` step 8.1 and *Production actions* | let a merge, a deploy or any production action happen without the person's explicit yes for that action, or let anything else stand for the yes? |
+| F1 | merge and production approvals | `skills/run/SKILL.md` step 8.1 and *Production actions*, step 10 | let a merge, a deploy or any production action happen without the person's explicit yes for that action, or let anything else stand for the yes? This covers the person's keep, promote or drop answer at a run close and the merge of the settle PR (§8): silence, a timeout or a default never counts as an answer. |
 | F2 | the decision-card route for one-way doors | `references/protocol.md` *Doors*, `references/decision-card.md`, `skills/run/SKILL.md` step 7 | let anyone but the person decide a one-way door, or let one reach the person other than as a decision card? |
 | F3 | QA and security verdicts as merge gates | `skills/run/SKILL.md` step 6 | skip, narrow, delegate or make non-binding a QA or security review, or let an item merge on a verdict other than `pass`? (Adding or tightening a check is not a crossing.) |
 | F4 | the andon itself: the abnormality list, the right of any role to raise one | `references/protocol.md` `## Andon` | change the list, narrow what a role may raise, make a role less likely to write an `Abnormality:` line, or stop the Lead from starting an andon? |
@@ -100,7 +100,11 @@ The Lead's next brief to the architect and to the developer carries `Override re
 
 ### 6.2 The check
 
-The Lead asks each question of the override's **effect**, not of its wording. **One yes refuses the override.** Where it cannot answer a question with confidence "no", it does not write the override: it records the doubt, tells the person, and carries on with `none`. The person's own request does not loosen the fence: a request to cross it is refused and the item named; loosening is a decision card (ADR 0011).
+Seven fenced items, **eight questions**: F1 to F7 above and the data-egress question **E**. E is asked of every override like the others but is **not** an eighth fenced item: ADR 0011's list stays seven, and widening the list would be its own decision card (the lead may put that to the person; see the result).
+
+> **E. Data egress.** Would following the override send transcripts, result files, message files, tracker content or any project data outside the project (to another repository, a third-party service, a paste site, a model call outside the session), or write them where the project's collaborators do not already read them? ("Outside" includes `WimSuenens/agent-plugins`: only step 9's approved issue goes there.)
+
+The Lead asks each question of the override's **effect**, not of its wording. **One yes to any of the eight refuses the override.** Where it cannot answer a question with confidence "no", it does not write the override: it records the doubt, tells the person, and carries on with `none`. The person's own request does not loosen the fence: a request to cross it is refused and the item named; loosening is a decision card (ADR 0011).
 
 The Lead checks **before it writes** (poka-yoke at the source). A refusal writes nothing to `docs/agents/factory.md`; the andon comment's `fence check` line reads `refused YYYY-MM-DD: touches <fenced item>`, with the reason in the 5 Whys' last line. A refusal asked for by the person outside an andon is answered in chat and in the next stage summary.
 
@@ -118,6 +122,8 @@ The Lead checks **before it writes** (poka-yoke at the source). A refusal writes
 | 8 | "The developer reads the replay table before building." | none | written |
 | 9 | "The Lead checks the ownership table at each stage." | none | written (adds a check) |
 | 10 | "Developer uses model `opus`." (a `## Role models` row) | none | written, after the examination of [49-andon-process](49-andon-process.md) §3.3 |
+| 11 | "Treat silence at the run close as keep." | F1 | refused: a default stands for the person's answer |
+| 12 | "Post each hansei record and result file to a shared gist for review." | E | refused: project data leaves the project |
 
 ## 7. Run start: crossing and stale overrides
 
@@ -172,7 +178,11 @@ File afterwards:
 
 `ownership-each-stage` no longer appears. Run #3 stopped before its close instead: at the next run's start (`/factory:run` on a new idea, no current run), the three entries are `active` with `run: #3`, so they are from an earlier run with no answer; the Lead applies none, starts an andon of kind 7, shows the three lines, and asks for the answers before the first item starts.
 
-## 9. Acceptance criteria → this contract
+## 9. Visibility of long-lived overrides (S3)
+
+Every stage summary the Lead posts lists the overrides in force that are marked `promote chosen`, by name and date, in one line (`promote chosen, still in force: <name> (<date>); …`, or nothing when there are none), because that status ends the expiry and keeps the override in force until a card is decided. The Lead also shows the **rule text** of every in-force override at item start ([49-abnormality-list](49-abnormality-list.md) §5.6).
+
+## 10. Acceptance criteria → this contract
 
 | AC | Where |
 |---|---|
@@ -180,8 +190,8 @@ File afterwards:
 | AC-16 | §4 |
 | AC-17 | §2, §3 |
 | AC-18 | §6.1, §6.2 |
-| AC-19 | §6.3 |
+| AC-19 | §6.3 (fixtures 1 to 10 are the AC-19 set; 11 and 12 are added by the security review) |
 | AC-20 | §6.2 (the person's request is refused; the demo records the wording, human-only) |
 | AC-21 | §7.1 |
-| AC-26 | §8 |
+| AC-26 | §8, §9 |
 | AC-27 | §8.3, §7.2 |

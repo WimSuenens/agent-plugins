@@ -104,7 +104,7 @@ The reason names both findings and the guard sentence. A new finding that matche
 
 ### 4.5 The replay QA runs (AC-3)
 
-QA (or the developer; never the architect) takes the findings of #39 from its tracker comments and `reviews/qa-39.md`/`reviews/security-39.md` (earlier rounds: `git show` of their commits), and builds fixtures: per finding, `role | round | id | severity | text`, nothing else. Before the replay QA writes down at least five **control pairs** from #39's other findings, each with the reason it is a different type (same file, other cause, and so on). QA must not pick as a control a pair that is itself a repeat by §4.3 (for example L1 and its residual L1a). Then QA fills the signatures from the texts alone and applies §4.3 to every pair. The table in QA's verdict:
+QA (or the developer; never the architect) takes the findings of #39 from its tracker comments and `reviews/qa-39.md`/`reviews/security-39.md` (earlier rounds: `git show` of their commits), and builds fixtures: per finding, `role | round | id | severity | text`, nothing else. Before the replay QA writes down at least five **control pairs** from #39's other findings, each with the reason it is a different type (same file, other cause, and so on). QA must not pick as a control a pair that is itself a repeat by §4.3 (for example L1 and its residual L1a), and must pick controls from different `(Role, Round)` pairs: two findings of the same role and round (security L1 and L4 are both security, round 1) are never compared by the rule (§4.1), so such a pair tests nothing. Then QA fills the signatures from the texts alone and applies §4.3 to every pair. The table in QA's verdict:
 
 | Pair | Clause | Reason line (what the Lead would write) | Expected |
 |---|---|---|---|
@@ -120,14 +120,15 @@ Worked example (the wording of each text is illustrative; QA uses the real title
 | security L12 (final) repeats L7 (round 1) | object differs (`cut-offs.sh`, `token-spend.sh`); trigger "a file name starting with `-`" both; guard "put `--` or `./` before a user-supplied name" both | M1: flagged |
 | QA F4 (round 5) = security L11 (round 5) | object `run/SKILL.md` and `hansei.md` close step; guard "run the guard and the commands in one shell call" both; trigger "variable lost between shell calls" both | M1: flagged |
 | AC-17 stall accounting, demo (round 1) and v2 re-check (round 4) | criterion `AC-17` both; field `measure 1 stalled` both; rounds differ | M2: flagged |
-| Control: security L1 (quoted paths escape the bump classification) and L4 (unreadable file yields a fingerprint) | both are in `plugins/factory/scripts/`; guard differs ("treat a file name literally" against "stop on a read error") | not flagged: same directory, other cause |
+| Control: security L4 (round 1, unreadable file yields a fingerprint) and QA F4 (round 2, token-spend exit 3 leaks jq's error with the absolute path) | different role and round, so compared; object differs (`fingerprint.sh`, `token-spend.sh`); guard differs ("stop on a read error" against "print only the file's basename in an error") | not flagged: both scripts, other cause |
+| (Not a control) security L1 and L4, same role and round | never compared | the rule is silent; do not use |
 
 ## 5. Kind 3, "role outside its role"
 
 ### 5.1 Input
 
 - The commits of the branch: `git log --no-merges --format=%H%x09%s "$(git merge-base origin/main HEAD)"..HEAD` in the item (or frontier) worktree. A role is read from the subject by the pattern `^#[0-9]+ ([a-z-]+): `.
-- The ownership table in `docs/agents/factory.md`, rows `| <Path cell> | <Owner> |`.
+- The ownership table in `docs/agents/factory.md` **as it is on `origin/main`** (`git show origin/main:docs/agents/factory.md`), never the item worktree's copy, so a commit on the branch cannot edit the table it is judged by. Rows `| <Path cell> | <Owner> |`.
 
 ### 5.2 Reading the table
 
@@ -140,15 +141,17 @@ Worked example (the wording of each text is illustrative; QA uses the real title
 
 ### 5.3 The rule
 
-For every commit with a role R in the **seven roles** (`product-owner`, `architect`, `developer`, `qa-engineer`, `security-reviewer`, `devops`, `docs-writer`): list its changed paths with `git diff-tree --no-commit-id --name-only -r --no-renames <sha>` (a rename or move lists both its old and new path; deleted files count). For each path P that has an owner O with `O ≠ R`, the commit is flagged: `role-outside-role: <sha7> <R> changed <P> (owner <O>)`.
+For every commit with a role R in the **seven roles** (`product-owner`, `architect`, `developer`, `qa-engineer`, `security-reviewer`, `devops`, `docs-writer`): list its changed paths with `git diff-tree -z --no-commit-id --name-only -r --no-renames <sha>` (`-z`: NUL-separated, so git does not quote-escape unusual names; a rename or move lists both its old and new path; deleted files count). A path that cannot be classified (it holds a control character, a newline included, or does not decode as text) is **flagged** like a path owned by someone else: `role-outside-role: <sha7> <R> changed an unclassifiable path (name escaped: <printf %q form>)`. For each path P that has an owner O with `O ≠ R`, the commit is flagged: `role-outside-role: <sha7> <R> changed <P> (owner <O>)`.
 
-Never flagged: the commits whose role is `lead`, any other role name, or no role pattern; paths under `work/` (not in the table: unowned), and unowned paths in general; section rows. Merge commits are not read.
+Never flagged by §5.3 alone: the commits whose role is `lead`, any other role name, or no role pattern (but see §5.6, which reads `lead` commits that touch the rules); paths under `work/` (not in the table: unowned), and unowned paths in general; section rows. Merge commits are not read.
 
 ### 5.4 When the Lead applies it
 
 At the end of each role stage, to the commits since the previous check (the stage row's commits); and once more over the whole branch before `Open PR` and at the merge approval. A hit is one abnormality per commit.
 
 ### 5.5 Worked example (AC-4)
+
+(The table in the example is the one on `origin/main`.)
 
 A scratch repo with the table of this repository (`plugins/` developer; `tests/`, `reviews/qa-*` qa-engineer; `docs/requirements/` product-owner; `contracts/`, `docs/adr/` architect; `docs/` and `README.md` docs-writer), and four commits on `item/7`:
 
@@ -160,6 +163,12 @@ A scratch repo with the table of this repository (`plugins/` developer; `tests/`
 | d4 | `#7 lead: remove work/` | `work/7/00-lead-state.md` (deleted) | role `lead`: not read |
 
 Exactly the second commit is flagged.
+
+### 5.6 Commits that touch the rules (S1)
+
+A commit subject is self-attested: a role can write `#7 lead:`. So, **in addition** to §5.3, the Lead flags (kind 3, `rules-touched-by-non-lead: <sha7>`) every non-merge commit on the branch, whatever its subject, that changes either of these in `docs/agents/factory.md`: the text of the `## Overrides` section, or the ownership table (compare the section or the table before and after the commit; any difference counts), unless **both** hold: the subject starts `#<id> lead: ` and the commit's author is the Lead's git user (the `user.email` that `git config user.email` prints in the Lead's session, read at item start and written into the `Start item` row's Notes as its hash-free name only). Where all roles share one git identity the author test cannot tell them apart; the subject test and §5.3 still apply, and the Lead says in the stage summary that the author test could not separate roles. A change to the ownership table by anyone but the Lead is flagged the same way.
+
+Because a flagged commit may carry an override the Lead did not write, the Lead **never applies an override just because it is in the file**. At every item start, and again before the first brief after any commit that changed `## Overrides`, it re-reads each in-force override, shows its **rule text** to the person in the stage summary, and puts it into briefs **in its own words** (a paraphrase that keeps the meaning), never by copying the file's text into a brief verbatim. If a paraphrase cannot be written without changing the meaning, the override is treated as in doubt and not applied ([49-overrides](49-overrides.md) §6.2).
 
 ## 6. Kind 4, "slow stage" (the 2× test)
 
@@ -191,7 +200,7 @@ Developer rows 1–3 (earlier) have agent-working times 30m, 40m, 50m: median 40
 ## 7. Kind 6, "version drift"
 
 - **(a) Fingerprint drift.** At item start (step 5), after `fingerprint.sh`, the Lead finds the most recent **earlier hansei record in the project** (any schema, by `plugin: factory <semver>`) with the same `<semver>` as the running release. It compares `standard` and `tooling`. A difference is kind 6, `seen`: `standard moved under 1.1.0: <old 12 hex> -> <new 12 hex> (record on #<n>)`. With no earlier record for the release there is nothing to compare: the `Start item` row's `Notes` read `drift: no earlier record for <semver>`. A match reads `drift: same as #<n>`. The release is a calibration install without a semver: not tested, Notes `drift: pre-release install`.
-- **(b) Freeze.** The Lead reads the map's Factory run section for a line holding `FREEZE:`. When there is one, it takes the first backticked 12-hex token on that line as the frozen sha, and compares it with the last path segment of the `Plugin root:` line. A difference is kind 6, `seen`: `installed <segment>, FREEZE line <sha>`. With no `FREEZE:` line the project has no freeze and the check is skipped (not an abnormality).
+- **(b) Freeze.** The Lead reads the map's Factory run section for a line holding `FREEZE:`, and trusts it only if the map body was last written by the Lead's own account: it reads the body's last editor (`gh api graphql` on the issue: `userContentEdits(first: 1) { nodes { editor { login } } }`, or the issue `author { login }` when the body was never edited) and compares it with `gh api user --jq .login`. When they differ, or the editor cannot be read, the check reads `not captured (map body last edited by <login>)` in the `Start item` Notes and the Lead tells the person; it is neither a pass nor kind 6. When the editor is the Lead and a line is there, it takes the first backticked 12-hex token on that line as the frozen sha, and compares it with the last path segment of the `Plugin root:` line. A difference is kind 6, `seen`: `installed <segment>, FREEZE line <sha>`. With no `FREEZE:` line the project has no freeze and the check is skipped (not an abnormality).
 
 Both are checked at every item start and, for (b), at the start of a resumed run.
 

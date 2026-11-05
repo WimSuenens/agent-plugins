@@ -166,7 +166,7 @@ Written into *Open PR* in `skills/run/SKILL.md`, and into step 3 for the frontie
 ## 3. `scripts/token-spend.sh` — spend from transcripts
 
 ```
-bash <root>/scripts/token-spend.sh [--since <UTC time>] [--until <UTC time>] [--] <transcript.jsonl>...
+bash <root>/scripts/token-spend.sh [--since <UTC time>] [--until <UTC time>] [--require-end] [--] <transcript.jsonl>...
 ```
 
 `--` ends the options; every argument after it is a transcript, so a file named `-x.jsonl` or `--since` is read as a file. An unknown option before `--` is exit 2 (usage on stderr).
@@ -176,6 +176,11 @@ Needs `jq`. Times are `YYYY-MM-DDTHH:MMZ` or `YYYY-MM-DDTHH:MM:SSZ`; the script 
 - Takes the entries with `type == "assistant"`, a `message.usage`, `message.model` other than `<synthetic>` (the rate-limit stand-in), and a `timestamp` inside the window when one is given.
 - Counts each `message.id` once, keeping its last entry (a streamed message is written in several entries).
 - Sums `input_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`, `output_tokens` over all files given (several transcripts of one role add up). **peak** is the largest single message's sum of the four.
+- **`--require-end`** (for role-agent transcripts; the Lead never passes it for its own session, which is still running when the script reads it). Each file, read whole regardless of `--since`/`--until`, must show a run that ended by itself:
+  1. no entry with `type == "user"` whose message text starts with `[Request interrupted` (what a run cut off and later resumed leaves behind), and
+  2. a final reply at the end: among the entries with `type` `assistant` or `user`, the last one is either an `assistant` entry with no `tool_use` content block, or the `user` entry holding the `tool_result` of the agent's hand-back tool call (`tool_use` named `SubagentHandback`), with nothing after it but entries of other types.
+
+  A file that fails either is **truncated**: exit 6, stdout empty, stderr `token-spend: transcript <basename> truncated`. Exit 3 (unreadable) is checked first, then 6, then 5. Without the option the script never checks endings, so the Lead's own window still sums.
 
 Stdout, one line:
 
@@ -192,6 +197,7 @@ The `spend …` part is the record's `<tok>` slot verbatim; `peak` is the Lead's
 | 3 | a file is missing, unreadable, or holds a line that is not JSON; stderr names that file by basename (`token-spend: transcript agent-a41f09.jsonl unreadable`) | `not captured (transcript <basename> unreadable)` |
 | 4 | `jq` missing | `not captured (jq missing)` |
 | 5 | no assistant message in the window | `not captured (no messages in window)`, never `0` |
+| 6 | with `--require-end`, a transcript is truncated (stderr names it by basename) | `not captured (transcript truncated by <kind>)`, `<kind>` from the `stalled` or `interrupted` wait naming that agent, else `unlogged` ([39-hansei-record](39-hansei-record.md) §4, measure 5) |
 
 Locating transcripts: a role agent's is `~/.claude/projects/<project>/<session id>/subagents/agent-<agent id>.jsonl`, found with `find ~/.claude/projects -name 'agent-<agent id>.jsonl'`; the Lead's is `~/.claude/projects/<project>/<session id>.jsonl` for each id under `lead sessions` in the lead state, with `--since` the `Start item` start and `--until` the approval time. Transcripts are deleted after `cleanupPeriodDays` (30 by default), and those written before Claude Code 2.1.307 may hold placeholder usage (#35), which is why the totals are taken at close.
 
@@ -205,3 +211,13 @@ spend 387472 (input 22, cache write 52402, cache read 316497, output 18551); pea
 ```
 
 The peak equals the `53,942` the completion notice reported, as #35 found; the spend is about 7× it.
+
+At close the Lead passes `--require-end` for every role transcript. A role whose transcript was cut by a stall (here the docs-writer of item #12, which stalled after writing its `done` result, so its file ends on an `assistant` tool call that never got its result):
+
+```
+$ bash "$ROOT/scripts/token-spend.sh" --require-end -- agent-e90b55.jsonl; echo "exit $?"
+token-spend: transcript agent-e90b55.jsonl truncated
+exit 6
+```
+
+The Lead finds W4 (`stalled`, agent `e90b55`) in `## Waits` and writes `spend not captured (transcript truncated by stalled)`. A stalled wait alone already decides it (signal a); the exit 6 catches the truncation nobody logged.

@@ -65,7 +65,7 @@ Rules:
 - The `Start item` row starts the item's lead time. It runs from the start of step 5 to the first brief.
 - A refused *Open PR* (bump check) is an `Open PR` row with `Result` `refused` and the script's message in `Notes`; the next attempt is a new `Open PR` row.
 - `Merge approval` starts when you ask **merge and clean up?** and ends at the person's yes. Its End is the approval time.
-- Each andon is a row: `Stage` `Andon A<n>`, `Role` `lead`, `Agents` the paused agent's id (and the fresh one when the resume was refused; `-` when none was paused), `Start` the pause start, `End` the resume (or the carry-on), `Waits` the andon's wait id, `Result` `done`, `Notes` `kind <n> <name>; override <name|none>`. The row of the stage that was paused names it in `Notes`: `paused by A<n>`. An item with an andon runs through the same stages as one without, plus these rows. Lead rows are never tested by the slow-stage rule.
+- Each andon is a row: `Stage` `Andon A<n>`, `Role` `lead`, `Agents` the paused agent's id (and the fresh one when the resume was refused; `-` when none was paused), `Start` the pause start, `End` the resume (or the carry-on), `Waits` the andon's wait id, `Result` `done`, `Notes` `kind <n> <name>; override <name|none>`. The row of the stage that was paused names it in `Notes` (`paused by A<n>`) and lists the andon wait's id in its `Waits` column, since the slow-stage test subtracts only the waits a row lists. The `Start item` row's `Notes` also record the kind 3 author-test result (`author test: ok` or `author test: one git identity for all roles`) and the freeze check outcome (`freeze: ok`, `freeze: none`, or `freeze: not captured (map body last edited by <login>)`). An item with an andon runs through the same stages as one without, plus these rows. Lead rows are never tested by the slow-stage rule.
 
 ### `## Waits` and `## Person's touches`
 
@@ -331,7 +331,7 @@ The lead state of item #12 at approval, new sections only.
 
 | # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Start item | lead | - | 2026-11-04T11:40Z | 2026-11-04T11:43Z | 3m | - | - | done | label computed; drift: same as #9 |
+| 1 | Start item | lead | - | 2026-11-04T11:40Z | 2026-11-04T11:43Z | 3m | - | - | done | label computed; drift: same as #9; author test: ok; freeze: none |
 | 2 | Requirement | product-owner | a1c9e2 | 2026-11-04T11:43Z | 2026-11-04T11:58Z | 15m | - | 53942 | done | 9 ACs, 2 decisions |
 | 3 | Contracts and ADRs | architect | b7d031 | 2026-11-04T11:58Z | 2026-11-04T12:55Z | 57m | W1 | 81277 | done | 1 card |
 | 4 | Build | developer | c44a10 | 2026-11-04T12:55Z | 2026-11-04T14:46Z | 1h51m | W2, W3 | 138578 | done | resumed after a limit and after a sleep |
@@ -339,7 +339,7 @@ The lead state of item #12 at approval, new sections only.
 | 6 | QA | qa-engineer | d21f77 | 2026-11-04T14:48Z | 2026-11-04T15:10Z | 22m | W6 | 70114 | findings | 1 finding |
 | 7 | Security | security-reviewer | a41f09 | 2026-11-04T14:48Z | 2026-11-04T15:02Z | 14m | - | 48820 | pass | 2 low |
 | 8 | Andon A1 | lead | c44a10 | 2026-11-04T15:11Z | 2026-11-04T15:23Z | 12m | W7 | - | done | kind 2 same-finding-twice; override replay-before-build |
-| 9 | Build (round 2) | developer | c44a10 | 2026-11-04T15:23Z | 2026-11-04T15:30Z | 7m | - | 141210 | done | QA finding fixed; paused by A1 |
+| 9 | Build (round 2) | developer | c44a10 | 2026-11-04T15:23Z | 2026-11-04T15:30Z | 7m | W7 | 141210 | done | QA finding fixed; paused by A1 |
 | 10 | QA (round 2) | qa-engineer | d21f77 | 2026-11-04T15:31Z | 2026-11-04T15:40Z | 9m | - | 74480 | pass | |
 | 11 | Documentation | docs-writer | e90b55 | 2026-11-04T15:41Z | 2026-11-04T16:00Z | 19m | W4 | not captured (failure notice carried no token count) | done | done, then stalled; Done list checked, not resumed |
 | 12 | Andon A2 | lead | - | 2026-11-04T16:01Z | 2026-11-04T16:09Z | 8m | W8 | - | done | kind 3 role-outside-role; override none |

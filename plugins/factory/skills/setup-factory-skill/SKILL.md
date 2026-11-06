@@ -54,6 +54,7 @@ Copy [assets/factory.md](./assets/factory.md) to `docs/agents/factory.md`, repla
 - Set `decision-maker:` to the answer from step 3.
 - When step 4 produced overrides, replace the `None` line under `## Role models` with a `| Role | Model |` table, one row per overridden role, and keep the paragraph that explains the format.
 - Point `src/` and `tests/` in the ownership table at where this repo keeps its code and tests. Look at the directory layout and the test command in the repo's own config; use one row per directory when there are several.
+- Keep the row `` | `docs/agents/factory.md` section `## Overrides` | lead | `` exactly as written, and do not create the `## Overrides` section: the lead adds it with the first override. The word `section` after the path is what lets the role-outside-role check skip the row.
 - Keep the other ownership rows as written unless the repo already uses a different home for that material (an existing `adr/` folder, a `docs/decisions/`, a runbook folder); then point the row there.
 
 **Done when** every path in the ownership table names a directory this repo has, or one the factory will create.

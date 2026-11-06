@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "1.0.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.0.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "1.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.1.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
@@ -45,7 +45,7 @@ has ac8-exit1-logged-refused "$SK" 'log the row with `Result` `refused`'
 has ac8-exit2-no-pr "$SK" 'Exit 2: do not open the PR'
 has ac8-refusal-in-stage-log-format "$HA" 'A refused *Open PR* (bump check) is an `Open PR` row with `Result` `refused`'
 # every instruction that opens a PR must run the check first. PR-opening lines, outside the check's own paragraph:
-pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'check-bump|do not open the PR|opens a PR without this check|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR')"
+pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'check-bump|do not open the PR|opens a PR without this check|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR|once over the whole branch before \*Open PR\* and at the merge approval')"
 if [ -z "$pr_lines" ]; then ck ac8-no-pr-without-check "" ""
 else skip ac8-no-pr-without-check "QA-39 F1: PR opened without the bump check at SKILL.md:$(printf '%s' "$pr_lines" | cut -d: -f1 | tr '\n' ' ')(frontier round end) (developer)"; fi
 # the tracker patch's Open PR bullet is the command the check guards
@@ -61,8 +61,8 @@ has ac11-acceptance-demo-stage "$HA" '`Acceptance demo`, `Delivery`'
 has ac11-waits-kinds "$HA" '| Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |'
 has ac11-waits-agent-column "$HA" '`Agent`: the agent id the wait stopped, `lead` when it stopped the Lead itself, `-` for a `person` wait.'
 KT="$(awk '/^\| Kind \| What it is \| Detected by \| Start \| End \|$/ {f=1; next} f && /^\|---/ {next} f && /^\| `/ {print} f && !/^\|/ {exit}' "$HA")"
-ck ac11-four-wait-kinds-in-order '`person`|`limits`|`stalled`|`interrupted`' "$(printf '%s\n' "$KT" | awk -F'|' '{gsub(/ /,"",$2); print $2}' | paste -sd'|' -)"
-ck ac11-every-kind-has-detection-start-end 4 "$(printf '%s\n' "$KT" | awk -F'|' 'NF>=7 && length($4)>10 && length($5)>5 && length($6)>5 {n++} END {print n+0}')"
+ck ac11-five-wait-kinds-in-order '`person`|`limits`|`stalled`|`interrupted`|`andon`' "$(printf '%s\n' "$KT" | awk -F'|' '{gsub(/ /,"",$2); print $2}' | paste -sd'|' -)"
+ck ac11-every-kind-has-detection-start-end 5 "$(printf '%s\n' "$KT" | awk -F'|' 'NF>=7 && length($4)>10 && length($5)>5 && length($6)>5 {n++} END {print n+0}')"
 has ac11-limits-wait "$HA" 'a role'"'"'s failure notice `failed … You'"'"'ve hit your … limit`'
 has ac11-stalled-watchdog "$HA" 'the stream watchdog, `no progress for 600s`'
 has ac11-interrupted-sleep "$HA" 'a `stalled` gap in which the machine was asleep at any moment is `interrupted`'
@@ -112,7 +112,7 @@ ck pmset-no-loose-grep 0 "$(grep -hE 'pmset[^|]*\| *grep' "$HA" "$SK" | grep -c 
 has pmset-copy-utc-only "$HA" '**Copy only UTC start and end times** of a sleep into `What`'
 
 # --- AC-14: marker, header, seven measures in fixed order
-ck ac14-marker-first-line '<!-- factory:hansei v2 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
+ck ac14-marker-first-line '<!-- factory:hansei v3 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
 ck ac14-marker-regex-matches 1 "$(printf '%s\n' "$TEMPLATE" | sed -n 1p | grep -Ec '^<!-- factory:hansei v([0-9]+) -->$')"
 has ac14-find-hansei-op "$TP" "select(.body | startswith(\"<!-- factory:hansei v\")) | .id"
 for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex>' '- active overrides: <none | name (since YYYY-MM-DD); …>' '- stage-log cross-check: largest gap <N>m (<row>: <evidence>)'; do
@@ -120,12 +120,12 @@ for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex
 done
 ck ac14-seven-measures-in-order "1. lead time|2. first-pass yield|3. rework|4. escaped defects|5. tokens|6. person's touches|7. doors" \
   "$(printf '%s\n' "$TEMPLATE" | grep -E '^[1-7]\. ' | cut -d: -f1 | paste -sd'|' -)"
-has ac14-overrides-none "$HA" '`none` when the project'"'"'s `docs/agents/factory.md` has no `## Overrides` section or it lists none'
+has ac14-overrides-none "$HA" '`none` when the file has no `## Overrides` section or no in-force entry'
 # the worked example follows the template's line keys in the same order
 EXAMPLE="$(block_after "$HA" '### Worked example')"
 keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z-]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
 ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
-ck ac14-example-marker '<!-- factory:hansei v2 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
+ck ac14-example-marker '<!-- factory:hansei v3 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
 ck ac14-no-v1-marker-left 0 "$(grep -c 'factory:hansei v1 -->' "$HA" "$SK" "$TP" | awk -F: '{s+=$2} END {print s+0}')"
 has ac14-v1-v2-not-compared "$HA" 'never compare measure 1 or 2 across v1 and v2'
 
@@ -133,9 +133,9 @@ has ac14-v1-v2-not-compared "$HA" 'never compare measure 1 or 2 across v1 and v2
 MT="$(awk '/^### Measures$/ {f=1; next} f && /^\| [1-7] \|/ {print} f && /^Token script exits/ {exit}' "$HA")"
 ck ac15-seven-rows 7 "$(printf '%s\n' "$MT" | grep -c .)"
 ck ac15-every-row-has-counted-and-source 7 "$(printf '%s\n' "$MT" | awk -F'|' 'NF>=6 && length($4)>10 && length($5)>3 {n++} END {print n+0}')"
-has ac15-m1-split "$HA" '**agent working** = total − the four waits, so agent working + person + limits + stalled + interrupted = total.'
-ck ac15-m1-template-line 1 "$(printf '%s\n' "$TEMPLATE" | grep -cxF '1. lead time: total <dur>; agent working <dur>; waiting for the person <dur>; waiting on limits <dur>; stalled <dur>; interrupted <dur>')"
-has ac15-m1-overlap-order "$HA" 'across kinds to the kind that comes first in this line'"'"'s order (person, limits, stalled, interrupted)'
+has ac15-m1-split "$HA" '**agent working** = total − the five waits, so agent working + person + limits + stalled + interrupted + andon = total.'
+ck ac15-m1-template-line 1 "$(printf '%s\n' "$TEMPLATE" | grep -cxF '1. lead time: total <dur>; agent working <dur>; waiting for the person <dur>; waiting on limits <dur>; stalled <dur>; interrupted <dur>; andon <dur>')"
+has ac15-m1-overlap-order "$HA" 'across kinds to the kind that comes first in this line'"'"'s order (person, limits, stalled, interrupted, andon)'
 # measure 2 (v2, #46): the FPY grammar and the severity rule
 has ac15-m2-fpy-grammar "$HA" '`<fpy>`: `pass first time` | `pass first time (<n> low)` | `failed first time` | `n/a (did not run)` | `not captured (<reason>)`.'
 has ac15-m2-pass-needs-no-minor "$HA" '**Pass first time** = the first verdict is `pass` **and** that run lists no finding at or above minor.'
@@ -169,11 +169,11 @@ ck ac16-only-list-heads-end-in-colon "5. tokens:|7. doors:" "$(printf '%s\n' "$E
 
 # --- worked examples add up
 # lead time, computed from the stage-log example (section 4) and compared with the record example's line 1:
-# total = Start item start -> Merge approval end; each kind = its held waits; agent working = total - the four
+# total = Start item start -> Merge approval end; each kind = its held waits; agent working = total - the five
 hm() { echo "$1" | sed -E 's/.*T([0-9]{2}):([0-9]{2})Z.*/\1 \2/' | awk '{print $1*60+$2}'; }
 dur() { if [ "$1" -ge 60 ]; then echo "$(($1 / 60))h$(printf '%02d' $(($1 % 60)))m"; else echo "${1}m"; fi; }
 WT="$(awk '/^## Waits$/ {f++} f==2 && /^\| W[0-9]+ \|/ {print}' "$HA")"
-ck example-waits-rows 6 "$(printf '%s\n' "$WT" | grep -c .)"
+ck example-waits-rows 8 "$(printf '%s\n' "$WT" | grep -c .)"
 SL1="$(awk '/^## Stage log$/ {f++} f==2 && /^\| [0-9]+ \|/ {print}' "$HA")"
 t0="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Start item/ {print $6}')")"
 t1="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Merge approval/ {print $7}')")"
@@ -185,14 +185,14 @@ kindsum() { s=0; while IFS='|' read -r _ id kind ag st en held _r; do
 $WT
 EOT
   echo $s; }
-p=$(kindsum person); l=$(kindsum limits); st=$(kindsum stalled); it=$(kindsum interrupted)
-w=$((tot - p - l - st - it))
-want_m1="1. lead time: total $(dur $tot); agent working $(dur $w); waiting for the person $(dur $p); waiting on limits $(dur $l); stalled $(dur $st); interrupted $(dur $it)"
+p=$(kindsum person); l=$(kindsum limits); st=$(kindsum stalled); it=$(kindsum interrupted); an=$(kindsum andon)
+w=$((tot - p - l - st - it - an))
+want_m1="1. lead time: total $(dur $tot); agent working $(dur $w); waiting for the person $(dur $p); waiting on limits $(dur $l); stalled $(dur $st); interrupted $(dur $it); andon $(dur $an)"
 ck example-lead-time-from-log "$want_m1" "$(printf '%s\n' "$EXAMPLE" | grep '^1\. lead time:')"
-ck example-lead-time-value "1. lead time: total 4h41m; agent working 3h02m; waiting for the person 51m; waiting on limits 15m; stalled 15m; interrupted 18m" "$want_m1"
+ck example-lead-time-value "1. lead time: total 4h41m; agent working 2h42m; waiting for the person 51m; waiting on limits 15m; stalled 15m; interrupted 18m; andon 20m" "$want_m1"
 # the example holds a wait found at close (W6), and it names its markers
 ck example-found-at-close-wait 1 "$(printf '%s\n' "$WT" | grep -c 'found at close: cut-mid-stream')"
-ck example-five-parts-add-up "$tot" "$((w + p + l + st + it))"
+ck example-five-parts-add-up "$tot" "$((w + p + l + st + it + an))"
 ck example-has-stall-and-interruption "1 1" "$([ $st -gt 0 ] && echo 1 || echo 0) $([ $it -gt 0 ] && echo 1 || echo 0)"
 # no two held waits overlap in the example (the text claims so; an overlap would double-count)
 ov=0; prev_end=0
@@ -237,7 +237,7 @@ while IFS='|' read -r _ n st ro ag s e d _rest; do
 done <<EOT
 $SL
 EOT
-ck example-stage-durations "0 11" "$bad $(printf '%s\n' "$SL" | grep -c .)"
+ck example-stage-durations "0 13" "$bad $(printf '%s\n' "$SL" | grep -c .)"
 
 # --- AC-18: posted after approval and before work/<id>/ goes
 before ac18-approval-before-post "$SK" '1. Once delivery and documentation are done' '4. Fill the hansei template'

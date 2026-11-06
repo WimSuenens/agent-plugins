@@ -1,0 +1,33 @@
+# Signatures a Lead fills from each finding's text alone (contract 49-abnormality-list section 4.2), written by QA after the controls were committed.
+# Columns: Role, Round, Id, object, trigger, guard, criterion, field. A trigger or guard that the one-fix test calls the same is written with the same words.
+# Caveat: the "same condition" and "one fix" judgments are made here by QA reading the text; the test only applies clauses M1 and M2 to them mechanically.
+qa-engineer	1	F1	-	a PR opened in a frontier round	run the bump check before every PR is opened	AC-8	-
+qa-engineer	1	F2	39-plugin-scripts.md	a standard file that cannot be read	stop with an error when a file cannot be read	AC-16	-
+qa-engineer	1	F3	39-plugin-scripts.md	an empty version string	treat an empty version string as an error	-	-
+security-reviewer	1	L1	check-bump.sh	a quoted path	read file names literally, never through quoting	-	-
+security-reviewer	1	L2	SKILL.md	a merge after the PR was opened	re-run the bump check before the merge	-	-
+security-reviewer	1	L3	Find hansei	a record posted by another commenter	accept only records posted by the lead's own account	-	-
+security-reviewer	1	L4	fingerprint.sh	a standard file that cannot be read	stop with an error when a file cannot be read	-	-
+security-reviewer	1	L5	hansei.md	an absolute path in a message or committed text	name files by basename or ~, never an absolute home path	-	-
+security-reviewer	1	L6	Edit hansei	a scratch file written for the hansei comment	write scratch output to a private mktemp file	-	-
+security-reviewer	1	L7	token-spend.sh	a file name starting with a dash	put -- before a user-supplied file name	-	-
+security-reviewer	2	L1a	check-bump.sh	a file name with a newline	read file names literally, never through quoting	-	-
+qa-engineer	2	F4	39-plugin-scripts.md	an absolute path in a message or committed text	name files by basename or ~, never an absolute home path	-	-
+qa-engineer	2	F5	39-standard-changes.md	a version with leading zeros	check versions against strict semver	-	-
+qa-engineer	2	F6	39-hansei-record.md	a scratch file written for the hansei comment	write scratch output to a private mktemp file	-	-
+security-reviewer	4	L8	SKILL.md	an untracked stray file in work/<id>	stage only the message files by name	-	-
+security-reviewer	4	L9	-	a removal run from another directory or through a symlink	remove only inside the worktree, never by a relative path	-	-
+security-reviewer	4	L10	hansei.md	activity data in the pmset output	filter the sleep log to times only	-	-
+qa-engineer	4	F1	hansei.md	the notice time read as the stall start	read the stall start from the entry before the gap	-	-
+qa-engineer	4	F2	hansei.md	the Lead's own sleep interruption	add a detection rule for the Lead's own API-error entry	-	-
+qa-engineer	4	F3	hansei.md	a cut-off the agent recovered from	scan each transcript at close for in-run cut-offs	-	-
+qa-engineer	4	AC-17	-	stall time counted as agent working	read the stall start from the entry before the gap	AC-17	measure 1 agent working
+security-reviewer	5	L8a	hansei.md	a directory named like a message file	use a glob pathspec in which * does not match /	-	-
+security-reviewer	5	L11	-	the variable $w lost between shell calls	run the guard and the commands in one shell call	-	-
+security-reviewer	5	L12	cut-offs.sh	a file name starting with a dash	put -- before a user-supplied file name	-	-
+qa-engineer	5	F4	hansei.md	the variable $w lost between shell calls	run the guard and the commands in one shell call	-	-
+qa-engineer	5	F5	cut-offs.sh	a lone Wake line inside a gap	count a gap as asleep only when a Sleep line is in it	-	-
+security-reviewer	6	L13	qa-39.md	an absolute path in a message or committed text	name files by basename or ~, never an absolute home path	-	-
+security-reviewer	6	L14	0013	an ADR sentence that counts the files wrongly	state the number of files that hold the path correctly	-	-
+qa-engineer	6	F1	issue-tracker.md	a repo doc without the merge-style rule	write the merge-style rule into the repo's own docs	-	-
+demo	1	AC-17	-	stalls and sleep counted as agent working	-	AC-17	measure 1 agent working

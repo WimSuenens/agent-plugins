@@ -57,7 +57,7 @@ def state(s, kind):
     if m:
         return ('nc', m.group(1))
     if s == 'pending resurvey':
-        return ('nc', 'pending resurvey')  # READING: no reason text exists for 'pending resurvey'; the words themselves
+        return ('nc', 'pending resurvey')  # READING (O1: the reason text is the words themselves, spanned like any reason): no reason text exists for 'pending resurvey'; the words themselves
     if kind == 'dur':
         d = dur(s)
         return ('v', d) if d is not None else ('nc', 'unparsed')
@@ -86,11 +86,20 @@ def cut(r):
     return r if len(r) <= 120 else r[:120] + '…'  # READING: 120 characters, then the ellipsis
 
 
+def span(r):
+    """baseline.md section 1: cut first, then neutralise (newline to a space, backtick to ', @ to (at), < to (lt)), then a code span.
+    READING: each reason is its own code span; the fixed 'unreadable <key> line' text is the standard's own and is not spanned."""
+    if r.startswith('unreadable ') and r.endswith(' line'):
+        return r
+    r = cut(r).replace('\n', ' ').replace('`', "'").replace('@', '(at)').replace('<', '(lt)')
+    return '`' + r + '`'
+
+
 def reasons(sts):
     out = []
     for s in sts:
         if s[0] == 'nc':
-            r = cut(s[1])
+            r = span(s[1])
             if r not in out:
                 out.append(r)
     return '; '.join(out)
@@ -144,7 +153,7 @@ def r2(entries, order, unit, scope):
         if o == 'not captured':
             rs = []
             for e in hit:
-                r = cut(e[1])
+                r = span(e[1])
                 if r not in rs:
                     rs.append(r)
             parts.append('not captured %d (%d of %d %s: %s)' % (len(hit), len(hit), L, unit, '; '.join(rs)))
@@ -202,6 +211,17 @@ def parse(c):
                 for lab in ROLES + ['overturned two-way decisions']:
                     if sub.startswith(lab + ' '):
                         r.f[('rw', lab)] = state(sub[len(lab) + 1:], 'cnt')
+    # baseline.md section 1: a measure line that matches none of the forms of section 4 reads `not captured (unreadable <key> line)`
+    def unread(key, labs, mk):
+        for lab in labs:
+            if lab not in [k[1] for k in r.f if k[0] == mk] or any(k[0] == mk and k[1] == lab and v == ('nc', 'unparsed') for k, v in r.f.items()):
+                r.f[(mk, lab)] = ('nc', 'unreadable %s line' % key)
+    if re.search(r'^1\. lead time: ', body, re.M):
+        unread('lead time', LT, 'lt')
+    if re.search(r'^3\. rework: ', body, re.M):
+        unread('rework', ROLES + ['overturned two-way decisions'], 'rw')
+    if re.search(r"^6\. person's touches: ", body, re.M):
+        unread("person's touches", TOUCH, 'tc')
     mm = re.search(r'^4\. escaped defects: (.*)$', body, re.M)
     r.escaped = mm.group(1) if mm else ''
     for role in ['lead'] + ROLES:
@@ -303,6 +323,10 @@ def baseline(records, session, mainpath, a3s):
         elif r.standard != series_std[r.mn]:
             excluded.append('excluded: #%d %s (standard differs under %s; a forgotten version bump, see andon kind 6)' % (r.item, r.url, r.mn))
             continue
+        if r.version == 4 and r.ov_list_v3:
+            # S3: an `active overrides` line outside the extent grammar is skipped and named; the key it carried is not used
+            skipped.append('skipped: #%d %s (active overrides line not in its grammar)' % (r.item, r.url))
+            continue
         if r.version == 3 and r.ov_list_v3:
             excluded.append('excluded: #%d %s (override extent not recorded, schema v3)' % (r.item, r.url))
             continue
@@ -344,7 +368,7 @@ def baseline(records, session, mainpath, a3s):
                 x = m.group(1) if m else r.escaped
                 if x not in rs:
                     rs.append(x)
-            L.append('- escaped defects: not captured (%s)' % '; '.join(rs))
+            L.append('- escaped defects: not captured (%s)' % '; '.join(span(x) for x in rs))
         L.append('- tokens:')
         for role in ['lead'] + ROLES:
             L.append('  - %s: spend %s; peak context %s' % (role, r1(get(('tok', role, 'spend'), 'cnt'), 'cnt', scope), r1(get(('tok', role, 'peak context'), 'cnt'), 'cnt', scope)))
@@ -383,6 +407,8 @@ def baseline(records, session, mainpath, a3s):
             for nme in r.partial:
                 nis.append('#%d %s (%s in force for part of the item)' % (r.item, r.url, nme))
         L.append('- not in any section: ' + ('; '.join(nis) if nis else 'none'))
+        if its and {r.version for r in its} >= {3, 4}:
+            L.append('- records: schema v3 and v4 read together')  # O4: only when the series holds both schemas
         keys = []
         for r in its:
             if not r.partial and r.key not in keys:
@@ -517,14 +543,15 @@ def a3classify(L):
         ov = r.get('overrides', {})
         partial = [n for n, e in ov.items() if e != 'whole']
         key = set(n for n, e in ov.items() if e == 'whole')
-        # 1. other series, calibration, excluded  # READING: 'a record in no section of series' read as 'not in series' (see the verdict)
-        if r.get('calibration') or r.get('excluded') or r['series'] != series:
+        # a3.md section 6, first rule that holds decides: 1 calibration or excluded, 2 during-item (any series),
+        # 3 after-item (run list + X whole item, any series), 4 before-item (the series is tested only here), 5 rest
+        if r.get('calibration') or r.get('excluded'):
             res['neither'].append(r['item'])
         elif ov.get(X) in ('from', 'until'):
             res['during'].append(r['item'])
         elif r.get('in_run') and ov.get(X) == 'whole':
             res['after'].append(r['item'])
-        elif X not in ov and not partial and key == R0:
+        elif r['series'] == series and X not in ov and not partial and key == R0:
             res['before'].append(r['item'])
         else:
             res['neither'].append(r['item'])

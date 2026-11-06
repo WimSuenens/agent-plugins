@@ -35,7 +35,7 @@ run_sc() {  # run_sc <scenario> -> $T/out-<scenario>.md
   [ "$mainf" = "-" ] && mp="-" || mp="$FX/$mainf"
   python3 -I "$PY" body "$T/r-$1.jsonl" "$rel" "$mp" "$T/a-$1.jsonl" > "$T/out-$1.md"
 }
-for s in A B C D E1 E2 F1 F2 G I J K L; do run_sc "$s"; done
+for s in A B C D E1 E2 F1 F2 G I J K L M N S3 S3e S3p; do run_sc "$s"; done
 
 # --- Find records returns the lead's own markers by first line only (AC-2: C39 and C49 are never returned)
 ck ac2-find-records-A "x2 x5 x5d x5e x5f x5c" "$(jq -r '.id' "$T/r-A.jsonl" | while read -r i; do grep -E "	$i	" "$FX/comments.tsv" | cut -f1; done | paste -sd' ' -)"
@@ -56,6 +56,21 @@ while IFS="$(printf '\t')" read -r sc kind text; do
   [ -n "$sc" ] || continue
   chk "$sc" "$kind" "$text"
 done < "$FX/expected.tsv"
+
+# --- S3: text read back is data. Reasons are cut at 120 characters, then neutralised, then put in a code span (baseline.md section 1)
+ck s3-no-at-sign-survives 0 "$(cat "$T/out-S3.md" "$T/out-S3e.md" | grep -c '@')"
+ck s3-no-lt-survives-past-the-marker 0 "$(cat "$T/out-S3.md" "$T/out-S3e.md" | grep -v '^<!-- factory:baseline v1 -->$' | grep -c '<')"
+ck s3-cut-then-neutralise-not-the-other-way 1 "$(grep -c "agent working not captured (1 of 1 items: \`A(at)B(lt)C'Dx\{113\}…\`)" "$T/out-S3.md")"
+ck s3-cut-first-keeps-both-at-signs 1 "$(grep -c "andon not captured (1 of 1 items: \`x\{118\}(at)(at)…\`)" "$T/out-S3.md")"
+ck s3-the-skipped-record-is-in-no-section 0 "$(grep -E '^- items:' "$T/out-S3.md" | grep -c '#121')"
+# --- O3: an empty reference section reads `not captured (no items in section)` on every field (7 lead time + 3 yield + 8 rework + 1 escaped + 16 tokens + 5 touches + 1 doors)
+ref="$(awk '/^#### Section — whole-item overrides: runner-line — reference/ {f=1; next} /^####|^## / {f=0} f' "$T/out-N.md")"
+ck o3-empty-reference-every-field-reads-no-items-in-section 41 "$(printf '%s\n' "$ref" | grep -o 'not captured (no items in section)' | wc -l | tr -d ' ')"
+ck o3-empty-reference-no-zero-no-series-text 0 "$(printf '%s\n' "$ref" | grep -v '^- items: 0 items$' | grep -cE ' 0( |;|$)|no items in series')"
+# --- O4: the optional `- records:` line sits right after `not in any section`, only for a series that holds v3 and v4 records
+ck o4-records-line-after-not-in-any-section "- not in any section: none
+- records: schema v3 and v4 read together" "$(grep -B1 '^- records:' "$T/out-M.md")"
+ck o4-one-schema-series-have-none 0 "$(cat "$T/out-C.md" "$T/out-I.md" "$T/out-S3.md" | grep -c '^- records:')"
 
 # --- AC-4: a calibration record never changes a figure or an item list of a release section
 blk() { awk -v s="### Series 1.1 " 'index($0, s)==1 {f=1} f && /^## / {exit} f {print}' "$1"; }
@@ -124,13 +139,15 @@ for c in R1 R2 R3 R4 R5 R6; do
 done
 out="$(python3 -I "$PY" a3classify "$A3/P.json")"
 for k in before during after neither; do ck "ac14-P-$k" "$(exp P $k)" "$(printf '%s' "$out" | jq -r ".$k | map(\"#\" + (.|tostring)) | join(\",\")")"; done
+# AC-14, the fixed order of a3.md section 6 (P2: during-item of another series, after-item of another series, calibration first)
+out="$(python3 -I "$PY" a3classify "$A3/P2.json")"
+for k in before during after neither; do ck "ac14-P2-$k" "$(exp P2 $k)" "$(printf '%s' "$out" | jq -r ".$k | map(\"#\" + (.|tostring)) | join(\",\")")"; done
 for c in Q1 Q3 Q3b Q4 Q5 Q6a Q6b Q6c Q6d Q6e; do
   ck "ac15-$c-change" "$(exp $c change)" "$(python3 -I "$PY" a3change "$A3/$c.json" | jq -r .change)"
 done
 ck ac15-Q1-after "$(exp Q1 after)" "$(python3 -I "$PY" a3change "$A3/Q1.json" | jq -r .after)"
-# AC-15 "the release moved": the requirement's own example. The text as written classifies the 1.3 item out of every reading first
-# (a3.md section 6 item 1), so section 7 item 2 cannot fire: QA-57 finding F1.
-got="$(python3 -I "$PY" a3change "$A3/Q2.json" | jq -r .change)"
-if [ "$got" = "$(exp Q2 change)" ]; then ck ac15-Q2-release-moved "$(exp Q2 change)" "$got"
-else skip ac15-Q2-release-moved "QA-57 finding F1: a3.md section 6 item 1 drops a series-1.3 after-item before section 7 item 2 sees it; found '$got', required '$(exp Q2 change)'; developer/architect fix"; fi
+# AC-15 "the release moved": the requirement's own example. a3.md section 6 rule 3 keeps a series 1.3 after-item an after-item,
+# so section 7 item 2 sees it (feedback round 1, F1).
+ck ac15-Q2-release-moved "$(exp Q2 change)" "$(python3 -I "$PY" a3change "$A3/Q2.json" | jq -r .change)"
+ck ac15-Q2-after-item-is-the-1.3-one "8" "$(python3 -I "$PY" a3classify "$A3/Q2.json" | jq -r '.after | join(",")')"
 done_

@@ -1,12 +1,12 @@
 # Expected result of the rules on the REAL records S5 and S2, from the contract (contracts/57-baseline.md section 4, "Expected values", and section 7) and the requirement (AC-2, AC-3).
 # Written before the replay. The replay reads the two records into a scratch file outside the repository and reports only pass or fail per row.
 S5-alone	line	- lead time: total 18m (1 of 1 items); agent working 10m (1 of 1 items); waiting for the person 5m (1 of 1 items); waiting on limits 0m (1 of 1 items); stalled 0m (1 of 1 items); interrupted 0m (1 of 1 items); andon 3m (1 of 1 items)
-S5-alone	frag	qa pass first time 1; security pass first time 1; acceptance demo not captured 1 (1 of 1 items: person did not run the demo; merge approved without a recorded demo outcome)
+S5-alone	frag	qa pass first time 1; security pass first time 1; acceptance demo not captured 1 (1 of 1 items: `person did not run the demo; merge approved without a recorded demo outcome`)
 S5-alone	frag	qa-engineer 1 (1 of 1 items); security-reviewer 1 (1 of 1 items)
 S5-alone	frag	overturned two-way decisions 0 (1 of 1 items)
 S5-alone	frag	devops: spend n/a (did not run in any of 1 items); peak context n/a (did not run in any of 1 items)
 S5-alone	frag	docs-writer: spend 745399 (1 of 1 items)
-S5-alone	line	- escaped defects: not captured (tracing deferred until the first defect found in a merged item)
+S5-alone	line	- escaped defects: not captured (`tracing deferred until the first defect found in a merged item`)
 S5-alone	frag	approvals 1 (1 of 1 items); overturns 0 (1 of 1 items); other 6 (1 of 1 items)
 S5-alone	line	- doors: confirmed 2
 S5+S2	line	### Series 1.1 — replaced by 1.2 (first item pending)

@@ -24,9 +24,9 @@ B	line	- items: 1 items: #101 https://example.invalid/shop/issues/101#issuecomme
 B	line	- skipped: #107 https://example.invalid/shop/issues/107#issuecomment-9107 (schema v1)
 C	line	- lead time: total 47m (1 of 1 items); agent working 30m (1 of 1 items); waiting for the person 9m (1 of 1 items); waiting on limits 0m (1 of 1 items); stalled 0m (1 of 1 items); interrupted 0m (1 of 1 items); andon 8m (1 of 1 items)
 C	line	  the parts are read on their own: their medians need not add up to the total's
-C	line	- first-pass yield: qa pass first time 1; security pass first time 1; acceptance demo not captured 1 (1 of 1 items: no demo held; approval without outcome noted)
+C	line	- first-pass yield: qa pass first time 1; security pass first time 1; acceptance demo not captured 1 (1 of 1 items: `no demo held; approval without outcome noted`)
 C	line	- rework: product-owner 0 (1 of 1 items); architect 0 (1 of 1 items); developer 0 (1 of 1 items); qa-engineer 2 (1 of 1 items); security-reviewer 1 (1 of 1 items); devops 0 (1 of 1 items); docs-writer 0 (1 of 1 items); overturned two-way decisions 0 (1 of 1 items)
-C	line	- escaped defects: not captured (tracing deferred until the first defect found in a merged item)
+C	line	- escaped defects: not captured (`tracing deferred until the first defect found in a merged item`)
 C	line	  - lead: spend 5000100 (1 of 1 items); peak context 150000 (1 of 1 items)
 C	line	  - product-owner: spend 100000 (1 of 1 items); peak context 20000 (1 of 1 items)
 C	line	  - architect: spend 120000 (1 of 1 items); peak context 30000 (1 of 1 items)
@@ -38,13 +38,13 @@ C	line	  - docs-writer: spend 700000 (1 of 1 items); peak context 41000 (1 of 1 
 C	line	- person's touches: decision cards 0 (1 of 1 items); demos 0 (1 of 1 items); approvals 1 (1 of 1 items); overturns 0 (1 of 1 items); other 4 (1 of 1 items)
 C	line	- doors: confirmed 2
 D	line	- lead time: total 54m (2 of 2 items); agent working 37m (2 of 2 items); waiting for the person 9m (2 of 2 items); waiting on limits 0m (2 of 2 items); stalled 0m (2 of 2 items); interrupted 0m (2 of 2 items); andon 8m (2 of 2 items)
-D	line	- first-pass yield: qa pass first time 1, failed first time 1; security pass first time 1, pass first time (low) 1; acceptance demo not captured 2 (2 of 2 items: no demo held; approval without outcome noted)
+D	line	- first-pass yield: qa pass first time 1, failed first time 1; security pass first time 1, pass first time (low) 1; acceptance demo not captured 2 (2 of 2 items: `no demo held; approval without outcome noted`)
 D	line	- rework: product-owner 0 (2 of 2 items); architect 0 (2 of 2 items); developer 0 (2 of 2 items); qa-engineer 2 (2 of 2 items); security-reviewer 1.5 (2 of 2 items); devops 0 (2 of 2 items); docs-writer 0 (2 of 2 items); overturned two-way decisions 0 (2 of 2 items)
 D	line	  - developer: spend 90000 (1 of 2 items, 1 not captured); peak context 26000 (2 of 2 items)
 D	line	  - devops: spend n/a (did not run in any of 2 items); peak context n/a (did not run in any of 2 items)
 D	line	  - docs-writer: spend 700000.5 (2 of 2 items); peak context 41000 (2 of 2 items)
-D	line	- doors: confirmed 2, not captured 1 (1 of 3 entries: run stopped before the resurvey)
-G	line	- lead time: total 22h18m (1 of 1 items); agent working not captured (1 of 1 items: manual log, split not kept); waiting for the person not captured (1 of 1 items: manual log, split not kept); waiting on limits not captured (1 of 1 items: manual log, split not kept); stalled not captured (1 of 1 items: manual log, split not kept); interrupted not captured (1 of 1 items: manual log, split not kept); andon not captured (1 of 1 items: manual log, split not kept)
+D	line	- doors: confirmed 2, not captured 1 (1 of 3 entries: `run stopped before the resurvey`)
+G	line	- lead time: total 22h18m (1 of 1 items); agent working not captured (1 of 1 items: `manual log, split not kept`); waiting for the person not captured (1 of 1 items: `manual log, split not kept`); waiting on limits not captured (1 of 1 items: `manual log, split not kept`); stalled not captured (1 of 1 items: `manual log, split not kept`); interrupted not captured (1 of 1 items: `manual log, split not kept`); andon not captured (1 of 1 items: `manual log, split not kept`)
 G	absent	waiting on limits 0m
 G	absent	agent working 0m
 I	line	- not in any section: #13 https://example.invalid/shop/issues/13#issuecomment-913 (runner-line in force for part of the item)
@@ -62,3 +62,20 @@ K	line	#### Section — whole-item overrides: runner-line — history: runner-li
 K	line	- runner-line dropped 2026-11-12 (A3 https://example.invalid/shop/issues/3#issuecomment-9003)
 K	line	- not in any section: #13 https://example.invalid/shop/issues/13#issuecomment-913 (runner-line in force for part of the item)
 I	absent	dropped
+S3	line	- items: 1 items: #120 https://example.invalid/shop/issues/120#issuecomment-9120
+S3	line	- skipped: #121 https://example.invalid/shop/issues/121#issuecomment-9121 (active overrides line not in its grammar)
+S3	absent	#121 https://example.invalid/shop/issues/121#issuecomment-9121;
+S3	line	- lead time: total 47m (1 of 1 items); agent working not captured (1 of 1 items: `A(at)B(lt)C'Dxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…`); waiting for the person 9m (1 of 1 items); waiting on limits 0m (1 of 1 items); stalled 0m (1 of 1 items); interrupted 0m (1 of 1 items); andon not captured (1 of 1 items: `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx(at)(at)…`)
+S3	line	- rework: product-owner not captured (1 of 1 items: unreadable rework line); architect not captured (1 of 1 items: unreadable rework line); developer not captured (1 of 1 items: unreadable rework line); qa-engineer not captured (1 of 1 items: unreadable rework line); security-reviewer not captured (1 of 1 items: unreadable rework line); devops not captured (1 of 1 items: unreadable rework line); docs-writer not captured (1 of 1 items: unreadable rework line); overturned two-way decisions not captured (1 of 1 items: unreadable rework line)
+S3	line	- escaped defects: not captured (`tracing deferred until the first defect found in a merged item`)
+S3e	line	- escaped defects: not captured (`tracing deferred until the first defect found in a merged item`; `see (at)bob (lt)b> 'x'`)
+S3e	absent	see @bob
+S3e	absent	<b>
+M	line	- records: schema v3 and v4 read together
+M	line	- items: 2 items: #101 https://example.invalid/shop/issues/101#issuecomment-9101; #130 https://example.invalid/shop/issues/130#issuecomment-9130
+C	absent	- records:
+I	absent	- records:
+N	line	#### Section — whole-item overrides: runner-line — reference
+N	line	- items: 0 items
+N	absent	no items in series
+S3p	line	- doors: not captured 1 (1 of 1 entries: `pending resurvey`)

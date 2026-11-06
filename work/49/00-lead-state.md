@@ -68,4 +68,7 @@ none (all roles finished); next: acceptance demo (person)
 - AC-7: kind 3 raised unprompted (Andon A1, sandbox #5, 17:40Z; docs-writer commit changed an architect path). Kind 1 seed never happened: the sandbox session declined the Lead's relayed instructions as a peer, not the person (correct).
 - AC-9, AC-10, AC-28: not exercised (A1 paused no agent; no override in force).
 - AC-14: one 5 Whys chain read, ends in a process item (no model/role swap); three chains not reached.
-- AC-11, AC-25: pending the sandbox item's close.
+- AC-11: the sandbox item went through the andon to merge (PR #6 merged 17:52Z, #5 closed) and the Lead posted a hansei v3 comment; lead state never read abandoned (not checked from outside).
+- AC-25: hansei v3 lists the andon with a link (A1) and `active overrides: none`; the override half is not exercised (no override in force).
+- Hansei honesty: `acceptance demo not captured (person did not run the demo ...)` and `escaped defects not captured`, both as designed.
+| ~2026-11-06T17:53Z | other | sandbox item closed by the person; Lead resurveying sandbox map |

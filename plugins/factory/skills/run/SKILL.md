@@ -15,9 +15,9 @@ Every script call below uses this substituted path (`bash "${CLAUDE_PLUGIN_ROOT}
 
 The roles share [the protocol](${CLAUDE_PLUGIN_ROOT}/references/protocol.md); read it once so your briefs match its templates. This repo's ownership, decision-maker level, role model overrides, and tracker ids are in `docs/agents/factory.md`; the tracker commands are under `## Factory operations` in `docs/agents/issue-tracker.md`. When either file is missing, stop and point the person at `/factory:setup-factory-skill`.
 
-When the `## Factory operations` section has no *Post hansei* bullet, the project's tracker doc predates factory 1.0.0: use the `## Factory operations` section of `${CLAUDE_PLUGIN_ROOT}/skills/setup-factory-skill/references/issue-tracker-github.factory.md` for the whole item instead, and tell the person once that replacing their section with it (`/factory:setup-factory-skill`, step 6) brings the project up to date. Never edit the project's tracker doc yourself.
+When the `## Factory operations` section has no *Post hansei* bullet, the project's tracker doc predates factory 1.0.0: use the `## Factory operations` section of `${CLAUDE_PLUGIN_ROOT}/skills/setup-factory-skill/references/issue-tracker-github.factory.md` for the whole item instead, and tell the person once that replacing their section with it (`/factory:setup-factory-skill`, step 6) brings the project up to date. When the section has *Post hansei* but lacks a bullet this standard names for the baseline or the A3 (*Find baseline*, *Create baseline*, *Pin baseline*, *Read baseline*, *Edit baseline*, *Find records*, *Find A3s*, *Find A3*, *Post A3*, *Edit A3*), use that bullet from the template's section, and tell the person once that replacing their section with the template's (`/factory:setup-factory-skill`, step 6) brings the project up to date. Never edit the project's tracker doc yourself.
 
-While an item runs you keep a stage log and, at its close, post one hansei record on the slice ticket; both are defined in [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md). Read it at step 5 and at step 8. The rules for stopping the line, for overrides and for the fence are the protocol's *Andon*, *Overrides* and *Never overridable locally*; your procedure is `## Andon` below.
+While an item runs you keep a stage log and, at its close, post one hansei record on the slice ticket; both are defined in [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md). Read it at step 5 and at step 8. The Factory baseline and the per-run A3 are defined in [baseline.md](${CLAUDE_PLUGIN_ROOT}/references/baseline.md) and [a3.md](${CLAUDE_PLUGIN_ROOT}/references/a3.md): read `baseline.md` at step 0, at step 8.10 and at step 9, and `a3.md` at step 9 and whenever an override is written. The rules for stopping the line, for overrides and for the fence are the protocol's *Andon*, *Overrides* and *Never overridable locally*; your procedure is `## Andon` below.
 
 Every role runs on the model in its agent file unless the `## Role models` table in `docs/agents/factory.md` overrides it. When spawning a role that has a row, pass that value as the spawn's `model`; for any other role, leave `model` out so the agent file's default holds. Check the table before the first spawn: a value other than `haiku`, `sonnet`, `opus`, or `fable` stops the run, and you tell the person which row to fix. Never fall back to the default silently.
 
@@ -31,7 +31,7 @@ A **run** takes one destination from idea to a dissolved map. An **item** is one
 - **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round in progress is resumed in its worktree, from the state that section records.
 - **`#<slice>`** of a map this factory runs → read `work/<id>/00-lead-state.md` in its worktree and continue that item at the step it names.
 
-Whichever entry applies, run the checks of `## Andon`, *Run start*, before step 1 or the next item starts. On a resumed run they include the FREEZE check.
+Whichever entry applies, run the checks of `## Andon`, *Run start*, before step 1 or the next item starts. On a resumed run they include the FREEZE check. They also include the baseline check of `references/baseline.md`: *Find baseline* and act on its result (section 2), then the repair check (section 8.2).
 
 A slice ticket the factory did not cut is not an entry point; point the person at `/wayfinding:beachhead` for building outside the factory.
 
@@ -100,7 +100,7 @@ Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unb
 
 1. Add the ticket to the board and set `Factory status` to Backlog (*Add to board*, *Set status*).
 2. `git worktree add ../wt/<id> -b item/<id>` (or the location in `docs/agents/factory.md`), then create `work/<id>/` in it. When this is the run's first worktree, bind `kept … for next run` overrides (`## Andon`, *Run identity*).
-3. Stamp `date -u +%FT%TZ` and open the `Start item` row of the stage log. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/fingerprint.sh" "${CLAUDE_PLUGIN_ROOT}"` and write the label (release, standard and tooling fingerprints, dependency versions, your session id) as `## Label`; start `## Stage log`, `## Waits`, `## Person's touches`, `## Findings` and `## Abnormalities`, all as `references/hansei.md` defines them. Then run the item-start checks of `## Andon` (kind 6 (a) and (b), kind 5 on the item worktree's `docs/agents/factory.md`) and put their results in the `Start item` row's `Notes`.
+3. Stamp `date -u +%FT%TZ` and open the `Start item` row of the stage log. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/fingerprint.sh" "${CLAUDE_PLUGIN_ROOT}"` and write the label (release, standard and tooling fingerprints, dependency versions, your session id) as `## Label`; start `## Stage log`, `## Waits`, `## Person's touches`, `## Findings` and `## Abnormalities`, all as `references/hansei.md` defines them. Write the label's `overrides at start` line after the binding of step 5.2 and the run-start sort of `## Andon`. Then run the item-start checks of `## Andon` (kind 6 (a) and (b), kind 5 on the item worktree's `docs/agents/factory.md`) and the baseline check of step 0 again (*Find baseline*, then the repair check, `references/baseline.md` sections 2 and 8.2), and put their results in the `Start item` row's `Notes`.
 4. Write `work/<id>/00-lead-state.md`: the board item id, current status, next step, open questions, and a **Running agents** list with one line per running role: role, brief file, agent handle (the id you message to resume it), last commit. Keep that list current as roles start and finish; it also records interruptions and whether fan-out has gone sequential (see *Interruptions*). Once the architect's stage is done, add a **Shared resources** list too (see *Environment and shared resources*). The sections from the previous point follow these parts. The lead state and every brief follow the protocol's path rule (*Messages*): no absolute path under the home directory, only worktree-relative, `../wt/<id>` or `~/` paths.
 
 On a resumed item, keep what exists and continue from the lead state.
@@ -283,7 +283,7 @@ Apply each rule when it is due. A hit is an abnormality: add a row to `## Abnorm
 1. Stamp `date -u +%FT%TZ`: the pause start. Open an `andon` wait in `## Waits` and the row in `## Abnormalities`. The stage row you pause names it in `Notes` (`paused by A<n>`) and lists the andon wait's id in its `Waits` column: the slow-stage test subtracts only the waits a row lists. For the affected work only (the running agents that depend on it; others carry on).
 2. Stop the running agent. Read the last line of its result file's `Progress` (`Next:`) and write it, with the agent id and the pause time, into the draft file `work/<id>/NN-andon-lead.md` (message type `andon`, role `lead`; its body is the comment of *The comment* in progress, with a `## Refused drafts` section). Then `TaskStop` the agent id. An agent that already handed back is not stopped: skip `TaskStop`.
 3. Run the 5 Whys in the draft file; read evidence while the line is stopped.
-4. Decide the countermeasure inside the fence. Write the override in the item's worktree, or decide `none: needs a plugin change`, or `none`. An andon raised outside any worktree (steps 1, 2, 4) writes no override: the countermeasure is `none` and you note the proposal in the map's Factory run section.
+4. Decide the countermeasure inside the fence. Write the override in the item's worktree, or decide `none: needs a plugin change`, or `none`. When the override is the run's experiment (`references/a3.md`, section 5: the fence is asked first, a closed item exists in the current series, it addresses the run's one problem, it names one measure with a captured before-reading and a direction, and its form is an override), write the experiment's extra lines with it. The run has at most one experiment; the same decision is made between items, in the worktree of the next item, with `andon: none (experiment)`. An andon raised outside any worktree (steps 1, 2, 4) writes no override: the countermeasure is `none` and you note the proposal in the map's Factory run section.
 5. Resume the same agent with `SendMessage` to its agent id. The message names the countermeasure (the override's name and rule, or "no countermeasure"), says what to continue (the saved `Next:` line), and asks for nothing else. For an agent that had handed back, it carries the follow-up brief. Stamp the time when sent: it ends the `andon` wait. The wait is `Held item: yes` when no other role agent of the item worked meanwhile, `no` otherwise (split as `hansei.md` says). Its `Agent` is the paused agent's id, or `lead` when none was paused.
 6. When `SendMessage` is refused as cancelled (the person stopped the agent from the UI), make no second attempt by any route. Spawn a fresh agent of the role with a brief whose Inputs are the role's result file (`Progress` and `Next`) and the commits it names. Log both agents in the stage row's `Agents` column and in `## Abnormalities` (`paused: <old id> cancelled; fresh <new id>`), and end the `andon` wait at the spawn. Never abandon the item for a refused resume.
 7. Post the comment after the resume, or when you decided to carry on with no override. Complete the `## Abnormalities` row (resume time, comment link), add the `Andon A<n>` stage-log row, commit the lead state.
@@ -322,12 +322,27 @@ Write an accepted override in the worktree that raised the andon, under `## Over
 - started: YYYY-MM-DD
 - run: #<map>
 - rule: <the rule in plain words; may continue on indented lines>
-- andon: <URL of the andon comment | pending>
+- andon: <URL of the andon comment | pending | none (experiment)>
 - status: <status>
 - fence check: pass YYYY-MM-DD (touches none of the seven)
 ```
 
-`<name>` is `[a-z0-9]+(-[a-z0-9]+)*`, unique in the file. `started` is `date -u +%F`. Write `andon: pending` first (the override must exist before the resume), and replace it with the comment URL in a second commit, `#<id> lead: override <name> andon link`, right after you post the comment. Entries stay in the order written; the section holds nothing else. An override without `pass` is never applied. Status must match:
+The run's experiment (`references/a3.md`, section 5) carries eight more lines after `fence check`, written at the moment the override is written and never edited except `a3`:
+
+```
+- experiment: yes
+- problem: <the problem's process item to change, in one line>
+- measure: <number field, from the table in references/a3.md section 5>
+- direction: <down | up>
+- series: <M.N>
+- reference: <none | name; name …>
+- before: <value> (<k> of <n>; items #<a>, #<b>; factory <semver>)
+- a3: <pending | the A3 comment's URL>
+```
+
+`series` is the series of the session, `reference` the key of the baseline's reference section when the override was written (`none` when empty), `before` the reading over the before-items; it is never `not captured`. `a3` is `pending` until the A3 is posted; the settle commit replaces it with the comment's URL while the entry exists. An override without `experiment: yes` is not the run's experiment. The rule that a `pending` andon link left after the item carried on is a defect applies to `pending` only, never to `none (experiment)`. An override that crosses the fence is refused before any of these lines is written.
+
+`<name>` is `[a-z0-9]+(-[a-z0-9]+)*`, unique in the file. `started` is `date -u +%F`. Write `andon: pending` first (the override must exist before the resume; an experiment written between items has `andon: none (experiment)` and needs no second commit), and replace it with the comment URL in a second commit, `#<id> lead: override <name> andon link`, right after you post the comment. Entries stay in the order written; the section holds nothing else. An override without `pass` is never applied. Status must match:
 
 ```
 ^(active|promote chosen [0-9]{4}-[0-9]{2}-[0-9]{2}|kept [0-9]{4}-[0-9]{2}-[0-9]{2} for (next run|#[0-9]+)|superseded [0-9]{4}-[0-9]{2}-[0-9]{2} by [a-z0-9-]+)$

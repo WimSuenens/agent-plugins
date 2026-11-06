@@ -4,10 +4,11 @@ Every role reads this at the start of every task, then `docs/agents/factory.md` 
 
 ## Your place
 
-The lead briefs you and you report to the lead. Your brief names one of two places:
+The lead briefs you and you report to the lead. Your brief names one of three places:
 
 - **An item**: the item's worktree, on branch `item/<id>`, with messages in `work/<id>/`. `<id>` is the slice ticket's number.
 - **A frontier round**: the round's worktree, on branch `frontier/<map>`, with messages in `work/frontier-<id>/`. `<id>` is the number of the frontier ticket being worked (a ticket on the map), and `<map>` the map issue's number.
+- **A settle round**: the run close's worktree, on branch `settle/<map>`, with messages in `work/settle-<map>/`. `<map>` is the map issue's number; commits start with `#<map>`.
 
 All coordination runs through files in that folder.
 Commit only paths you own. Start each commit message with `#<id>`, then `<role>: <what>`. Commit your own paths yourself; the lead does not commit for you.

@@ -113,6 +113,45 @@ The factory ships no service: no process, port, queue or scheduled job. The new 
 
 There is no pager. "Alert" means a message to the Lead's next decision card or question.
 
+## Release 1.1.0 (slice #49, Andon)
+
+Minor release (standard work changed, ADR 0012 point 3: the baseline resets). Same blast radius as above. Item #49 runs on the frozen install `9147301f75c3`, whose text has no tag step, so the Lead tags by hand at the merge, as for #39 (AC-30).
+
+**Release checks** (as above, with these values):
+
+1. `bash plugins/factory/scripts/check-bump.sh` in the item/49 worktree after `git fetch origin main`: `pass: minor bump needed, 1.0.0 -> 1.1.0`, exit 0.
+2. `bash tests/run.sh` prints `ALL PASSED`; the two named skips (docs-writer items) are gone or accepted by name before tagging.
+3. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
+
+```
+release: 1.1.0
+standard: 683cfb53180122ef3307b5d00d04adf37c141076985d212941925d4a908429c2
+tooling: 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5
+```
+
+`tooling` equals 1.0.0's (no script or hook changed). Any edit under `plugins/factory/` after these were noted moves `standard`: re-read and update this entry.
+
+**Tag by hand (the Lead, after the person approved the merge).** `<PR>` is the number of the item/49 pull request.
+
+```
+git fetch origin main
+bash plugins/factory/scripts/check-bump.sh        # in the item/49 worktree; expect exit 0
+gh pr merge <PR> --merge
+printf '%s' "1.1.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
+git ls-remote --tags origin factory-v1.1.0        # must print nothing, else the tag exists: stop
+git fetch origin main
+git tag factory-v1.1.0 "$(gh pr view <PR> --json mergeCommit --jq .mergeCommit.oid)"
+git push origin factory-v1.1.0
+```
+
+**Post-merge checks (AC-30).** `git ls-remote --tags origin 'factory-v*'` lists `refs/tags/factory-v1.1.0`; `git rev-parse 'factory-v1.1.0^{commit}'` equals the PR's merge commit and `git merge-base --is-ancestor factory-v1.1.0 origin/main` succeeds; `git show factory-v1.1.0:plugins/factory/.claude-plugin/plugin.json` shows `"version": "1.1.0"`. Do not move or delete a published tag.
+
+**Rollback of 1.1.0.** As *Roll back* above, with 1.0.0 as the target: per session, `git worktree add ../factory-1.0.0 factory-v1.0.0` and `claude --plugin-dir ../factory-1.0.0/plugins/factory`; for everyone, restore `plugins/factory` from `factory-v1.0.0` and release it as `1.2.0` (standard work again, so a minor; a version at or below 1.1.0 ships nothing to a 1.1.0 install). Andon comments and `hansei v3` records already posted stay; a 1.0.0 Lead ignores them, and they are not comparable with v2 records. Overrides in a project's `## Overrides` section are inert for a 1.0.0 Lead.
+
+**Monitoring added by 1.1.0.** No new process or service. The andon is watched by the Lead itself: kind 3 and kind 4 checks at each result, andon comments on the slice ticket, and the `## Abnormalities` section of the hansei record. The fence (F1 to F7) is the alert for overrides: an override across it is refused, never applied.
+
+**Human-only checks** run only in `WimSuenens/factory-sandbox` (Project #10), never in this repo: the list is in `reviews/qa-49.md`, section *Human-only criteria*.
+
 ## Not verified
 
 - Install and update were not run (frozen machine). `--plugin-dir` use of a pre-release worktree and `marketplace update` behaviour are from the README, ADR 0012 and #35's findings, not exercised here. Rollback (A) was reasoned, not run; the Delivery Done item "rollback has run successfully in test" is therefore open for 1.0.0 and should be run in a scratch HOME after the freeze ends: install 1.0.0, then repeat steps A and B, and confirm the installed version string follows.

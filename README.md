@@ -62,6 +62,7 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 | Role models | Each role picks a model by the cost of its mistakes: product owner, architect, QA engineer, and security reviewer `inherit` the lead's model; developer and DevOps run on `sonnet`; the docs writer on `haiku`. A repo overrides any role in the `## Role models` table of `docs/agents/factory.md`, with `haiku`, `sonnet`, `opus`, or `fable`. |
 | Private role memory | Each role keeps craft notes in its own memory; a plugin hook stops one role reading another's. |
 | Decision cards | A one-way door never gets decided by an agent. The product owner writes a [card](plugins/factory/references/decision-card.md) in everyday words — consequences, cost, effort to undo, a recommendation — and the lead offers ways to dig deeper (`/research`, `/prototype`, `/grilling`). |
+| Andon and overrides | When a role or the lead sees an abnormality, the lead stops the affected work, writes a 5 Whys that blames the process first, and tries a local countermeasure: an override in the project's own `docs/agents/factory.md`, inside a fence and ending with its run. See [The andon and overrides](#the-andon-and-overrides). |
 
 ```
 /wayfinding:setup-wayfinding-skill   once per repo (setup-factory-skill runs it if needed)
@@ -71,24 +72,26 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 
-**Status: the acceptance demo ran in a scratch project.** Every human-only criterion passed except AC-17, which failed there: lead time counted stalls and machine sleep as agent work. AC-17 was fixed in schema v2 (cut-off detection, measured from the transcripts). QA checked the fix by replaying the demo's own transcripts through the scripts and accepted AC-17 on that replay, without a demo re-run. The close step's live-session check is still open; see [CHANGELOG.md](CHANGELOG.md) under *Known limitations*. The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0013 (0006 superseded by 0007) in [docs/adr/](docs/adr/), each with the status line it carries there.
+**Status: release 1.1.0 (the andon) has passed QA and security.** Its human-only checks run in a separate session with the person and are still open until they do; the limits are in [CHANGELOG.md](CHANGELOG.md) under *1.1.0*, *Known limitations at release*.
+
+**Status of 1.0.0: the acceptance demo ran in a scratch project.** Every human-only criterion passed except AC-17, which failed there: lead time counted stalls and machine sleep as agent work. AC-17 was fixed in schema v2 (cut-off detection, measured from the transcripts). QA checked the fix by replaying the demo's own transcripts through the scripts and accepted AC-17 on that replay, without a demo re-run. The close step's live-session check is still open; see [CHANGELOG.md](CHANGELOG.md) under *1.0.0*, *Known limitations at release*. The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0013 (0006 superseded by 0007) in [docs/adr/](docs/adr/), each with the status line it carries there.
 
 **Feedback goes to this repo's issues** with the `plugin:factory` label — use the *Factory feedback* template, or let `/factory:run` draft the issue at the end of an item. It posts only what you approve, and leaves your project's code and names out.
 
 ### Measurement: the hansei record
 
-Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v2 -->`, and it holds:
+Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v3 -->` (`v2` at 1.0.0), and it holds:
 
-- the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (`none` for now), and a stage-log cross-check;
+- the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (each by name and start date, or `none`), the abnormalities (a count per kind, and a link to each andon comment), and a stage-log cross-check;
 - seven measures in a fixed order: lead time, first-pass yield, rework, escaped defects, tokens per role, the person's touches, and doors confirmed or contradicted.
 
-Lead time is split into five parts that add up to the total: agent working, waiting for the person, waiting on limits, stalled, and interrupted. Measure 7 reads `pending resurvey` at posting and is filled by editing the same comment after the resurvey.
+Lead time is split into parts that add up to the total: agent working, waiting for the person, waiting on limits, stalled, interrupted, and, from 1.1.0, andon (the time the lead held the item for an andon). Measure 7 reads `pending resurvey` at posting and is filled by editing the same comment after the resurvey.
 
-While an item runs, the lead keeps a **stage log** in `work/<id>/00-lead-state.md`: one row per stage with UTC times, the waits (the person, usage limits, stalls and interruptions, each naming the agent it stopped), and the person's touches. The item's folder is removed by the last commit, after the record is posted.
+While an item runs, the lead keeps a **stage log** in `work/<id>/00-lead-state.md`: one row per stage with UTC times, the waits (the person, usage limits, stalls, interruptions and, from 1.1.0, andon pauses, each naming the agent it stopped), the abnormalities, and the person's touches. The item's folder is removed by the last commit, after the record is posted.
 
-A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. A role whose transcript was cut off by a stall or an interruption reads `not captured (transcript truncated by <kind>)` for its spend. Escaped defects read `not captured` in schema v2.
+A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. A role whose transcript was cut off by a stall, an interruption or an andon pause reads `not captured (transcript truncated by <kind>)` for its spend. Escaped defects read `not captured` in schemas v2 and v3.
 
-The data lives in the project's own tracker (the record, the stage summaries, the decisions) and in `work/<id>/` while the item runs. Nothing is aggregated yet; the baseline is a later slice. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md) and [contracts/39-stage-log.md](contracts/39-stage-log.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
+The data lives in the project's own tracker (the record, the stage summaries, the decisions, the andon comments) and in `work/<id>/` while the item runs. Nothing is aggregated yet; the baseline is a later slice. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md), [contracts/39-stage-log.md](contracts/39-stage-log.md) and, for schema v3 and the andon rows, [contracts/49-records.md](contracts/49-records.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
 
 The four scripts behind the labels, the bump check, the spend and the cut-offs are described in [contracts/39-plugin-scripts.md](contracts/39-plugin-scripts.md). Run from the repo root:
 
@@ -100,9 +103,21 @@ bash plugins/factory/scripts/token-spend.sh --require-end -- <role transcript.js
 bash plugins/factory/scripts/cut-offs.sh -- <transcript.jsonl>...    # one line per stall, interruption or limit gap; prints nothing for a clean transcript; needs jq
 ```
 
+### The andon and overrides
+
+An **andon** is the factory's stop-the-line response to an abnormality. A role meets one and writes an `Abnormality:` line in its result, or the lead notices one itself. The list has seven kinds: a blocked input, the same finding twice, a role committing outside its ownership, a stage that took more than twice the usual agent time for its role, a fence crossing, version drift, and *other*, a free-form kind for an event that fits none of the six ([contract](contracts/49-abnormality-list.md)).
+
+The lead then pauses the affected work and stops the running agent. It writes a 5 Whys chain in which each cause names a process object (the brief, the inputs, the standard's text, the tooling, the ownership table, the order of stages) with evidence. A chain that blames a person, a role's care, or a model is refused, and the process is examined first. The lead chooses a countermeasure, resumes the same agent, and carries on. An item is never abandoned by a pause ([contract](contracts/49-andon-process.md)).
+
+A **local countermeasure** is an **override**: a rule under `## Overrides` in the project's own `docs/agents/factory.md`, with a name, a start date, the run it belongs to, the andon comment it came from, and its fence check. An override applies outside the fence, and it never edits a file under `plugins/`. The fence (`## Never overridable locally` in the protocol) lists seven things no override may touch: merge and production approvals, the decision-card route, QA and security verdicts as merge gates, the andon itself, the memory rules, the shell-scope rules, and the honesty rule for measures. Every override also gets one data-egress question, and one yes to any question refuses it. A request from the person does not loosen the fence; loosening is a decision card ([contract](contracts/49-overrides.md)).
+
+Overrides end with their run. At its close the lead shows the person one line per override in force, and the person answers keep, promote or drop. An override from an earlier run with no answer is not applied until the person answers.
+
+Limits, stated plainly: the lead's reading of its results and stage log is the only detection (no hook or watcher raises an andon); there is no measurement baseline yet, so the before/after line reads `no baseline yet`; `promote` is recorded, and its decision card is not built. The rules are text the lead follows. The suite checks that text and replays the kind 2 rule on #39's findings; a live session has not yet run them.
+
 ### Versions and updates
 
-The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. The first release is `1.0.0`. Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
+The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. Releases: `1.0.0` (the first), and `1.1.0` (the andon). Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
 
 Any change under `plugins/factory/` needs a bump in `plugin.json`:
 
@@ -237,7 +252,7 @@ To try a factory change without installing it, load the plugin from a checkout f
 claude --plugin-dir ./plugins/factory      # or <worktree>/plugins/factory
 ```
 
-This leaves the installed factory alone. The session reads the skill text when it starts, so restart it after every change to `plugins/factory/`. Before you rely on it, check that the loaded run skill is the new one: release 1.0.0's `run` skill has a `Plugin root:` line near its top, and the pre-1.0.0 text has none. During a calibration freeze, use this route only.
+This leaves the installed factory alone. The session reads the skill text when it starts, so restart it after every change to `plugins/factory/`. Before you rely on it, check that the loaded run skill is the new one: the `run` skill has had a `Plugin root:` line near its top since 1.0.0, and the pre-1.0.0 text has none. During a calibration freeze, use this route only.
 
 ### Why `plugin.json` has no `version`
 
@@ -299,6 +314,23 @@ The `factory` plugin, on macOS with gh `2.94.0`:
 | `guard-memory.sh` against twelve sample inputs, with and without `jq` | every input allowed or blocked as intended |
 | `gh project` flags used by the setup and the tracker patch | present in `--help` |
 | acceptance demo, in a scratch project, `claude --plugin-dir` | every human-only criterion passed except AC-17, which failed there; fixed in schema v2 and verified by replay of the demo's transcripts |
+
+The `factory` plugin at 1.1.0, on macOS (Claude Code 2.1.287, `/bin/bash` 3.2.57, `jq` and `gh` present), on 2026-11-06, from `item/49`. Only read-only and validate-only commands were run. The user-scope install is frozen on `9147301f75c3` for the calibration run, so install, marketplace and reload commands were not run; see [Versions and updates](#versions-and-updates).
+
+| Check | Result |
+| --- | --- |
+| `claude plugin validate ./plugins/factory` | passed, no warning |
+| `claude plugin validate ./plugins/factory/skills` | passed |
+| `claude plugin validate .` | passed; the same four version warnings for the plugins without a `version` |
+| `claude plugin list --json` | the user-scope `factory@wimsuenens` is still `9147301f75c3`; the freeze holds |
+| `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.1.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`) |
+| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 1.0.0 -> 1.1.0` |
+| `bash tests/run.sh` | `ALL PASSED`: 952 passed, 0 skipped, exit 0 |
+| `bash plugins/factory/scripts/token-spend.sh -- <PO transcript of #39>` | `spend 387472 …; peak 53942; messages 11`, the figures the contract records (unchanged from 1.0.0) |
+| `bash plugins/factory/scripts/token-spend.sh --require-end -- <same transcript>` | exit 0 |
+| `bash plugins/factory/scripts/cut-offs.sh -- <same transcript>` | prints nothing, exit 0 |
+
+**Not tested yet, for 1.1.0:** the human-only checks. They run in a separate session that loads the item branch with `claude --plugin-dir`, in a sandbox project, not in this repo; the list is in [CHANGELOG.md](CHANGELOG.md) under *1.1.0*.
 
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 

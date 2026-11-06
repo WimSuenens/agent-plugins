@@ -35,8 +35,10 @@ has ac1-skill-kind-numbers "$AN" '**Kind 5, at run start and item start.**'
 
 # ---------- AC-2: kind 7, other ----------
 has ac2-kind7-in-skill "$AN" '- **Kind 7.** Any role or you, for an event that fits no kind 1–6 and still ought to stop the line. Its comment'"'"'s `fit` line says why no listed kind fits.'
-has ac2-step9-lists-other "$SK" 'Add each `other` (kind 7) abnormality of the run as a candidate for the abnormality list'
-has ac2-step9-lists-proposals "$SK" 'each plugin change an andon proposed (`standard change proposed`)'
+# #57: the batch step 9 is now the run close; kind 7 abnormalities and andon plugin-change proposals reach the factory through the A3's
+# `standard changes proposed` line and step 9.4's drafts (contract 57-run-close section 6). Same two flows, now with a stated reason per draft.
+has ac2-step9-lists-other "$SK" 'the A3'"'"'s `standard changes proposed` entries (plugin changes an andon proposed, and `other` (kind 7) abnormalities)'
+has ac2-step9-lists-proposals "$SK" 'listed because: standard change proposed | other abnormality A<k> | the A3'"'"'s problem | other problem seen | the person'"'"'s remark'
 has ac2-comment-fit-line "$AN" '- fit: <n/a | why no listed kind fits (kind 7 only)>'
 # the two #39 abnormalities that fit no kind 1-6, written as the line says: a role result in the line's grammar
 LINE='Abnormality: other — the demo prep check named the wrong input (the plugin base dir, not the loaded text) — reviews/qa-39.md, section "Human-only criteria"'
@@ -137,13 +139,14 @@ ck ac13-swap-after-three-examined-refused "REFUSED: swap-without-4-examined" "$(
 has ac15-written-in-worktree "$AN" 'Write an accepted override in the worktree that raised the andon, under `## Overrides` in `docs/agents/factory.md`'
 has ac15-commit-subject "$AN" 'Commit with `git -C "<worktree>" commit`, subject `#<id> lead: override <name>`.'
 has ac15-never-edit-plugins "$AN" 'Never edit `plugins/` to apply a countermeasure.'
-has ac15-plugin-text-only-no-override "$AN" 'A countermeasure whose only form is a change of plugin text writes no override: the comment holds the 5 Whys and the proposed change, the item continues, and the proposal goes into the step-9 issue.'
+# #57: the proposal now goes into the A3's line first, then into step 9.4's issue when the person approves a draft; still no override, no plugins/ edit
+has ac15-plugin-text-only-no-override "$AN" 'A countermeasure whose only form is a change of plugin text writes no override: the comment holds the 5 Whys and the proposed change, the item continues, and the proposal goes into the A3'"'"'s `standard changes proposed` line and, if the person approves a draft, into step 9.4'"'"'s issue.'
 has ac15-rule-in-briefs "$PR" '- The lead puts each in-force override'"'"'s rule, in its own words, in the Constraints of your brief (`Override <name>: <rule>`).'
 has ac15-skill-puts-rule-in-briefs "$SK" 'Put each in-force override'"'"'s rule, in your own words, in the Constraints of the briefs it concerns.'
 has ac15-roles-apply "$OV" 'Apply every in-force override that concerns your role or stage as if it were part of this protocol.'
 has ac16-override-wins "$OV" '- Outside the fence, the override wins over the plugin'"'"'s text where they disagree. The fence wins over any override.'
 has ac16-later-wins "$AN" 'the later `started` wins, the one lower in the file when equal. Set the loser to `superseded <date> by <winner>` in the commit that writes the winner, and name it in the winner'"'"'s comment (`supersedes:`).'
-for f in 'started: YYYY-MM-DD' 'run: #<map>' 'rule: <the rule in plain words' 'andon: <URL of the andon comment | pending>' 'status: <status>' 'fence check: pass YYYY-MM-DD (touches none of the seven)'; do has "ac17-field '${f%%:*}'" "$AN" "- $f"; done
+for f in 'started: YYYY-MM-DD' 'run: #<map>' 'rule: <the rule in plain words' 'andon: <URL of the andon comment | pending | none (experiment)>' 'status: <status>' 'fence check: pass YYYY-MM-DD (touches none of the seven)'; do has "ac17-field '${f%%:*}'" "$AN" "- $f"; done
 has ac17-name-grammar "$AN" '`<name>` is `[a-z0-9]+(-[a-z0-9]+)*`, unique in the file.'
 # the status grammar: the regex in the SKILL, run on good and bad values
 SRE="$(grep -m1 '^\^(active|promote chosen' "$AN")"
@@ -240,32 +243,36 @@ has ac23-findings-table "$HA" '| Role | Round | Id | Severity | Text |'
 has ac23-andon-row "$HA" 'Each andon is a row: `Stage` `Andon A<n>`'
 has ac23-paused-note "$HA" 'The row of the stage that was paused names it in `Notes` (`paused by A<n>`) and lists the andon wait'"'"'s id in its `Waits` column, since the slow-stage test subtracts only the waits a row lists.'
 has ac23-five-kinds "$HA" 'Kind of a wait: five kinds.'
-has ac24-marker-v3 "$HA" '<!-- factory:hansei v3 -->'
+has ac24-marker-v4 "$HA" '<!-- factory:hansei v4 -->'   # #57: v3 -> v4; the v3 reading note is pinned in test_baseline_a3.sh
 has ac24-abnormalities-line "$HA" '- abnormalities: <none | <n> (<kind name> <count>, …): A<k> <URL | raised, no andon recorded>; …>'
-has ac24-active-overrides-line "$HA" '- active overrides: <none | name (since YYYY-MM-DD); …>'
+has ac24-active-overrides-line "$HA" '- active overrides: <none | <name> (since YYYY-MM-DD; whole item | from <YYYY-MM-DDTHH:MMZ> | until <YYYY-MM-DDTHH:MMZ>); …>'
 has ac24-honesty "$HA" 'A row with no comment reads `A<k> raised, no andon recorded`. Never a count that leaves a raised abnormality out.'
 has ac24-no-5-whys "$HA" 'The record carries no 5 Whys text and no transcript content: it links the comment.'
 has ac24-close-step "$HA" 'A row of `## Abnormalities` with no comment URL reads `raised, no andon recorded` in the `abnormalities` line.'
-has ac24-v2-text-not-kept "$HA" 'The v2 text is not kept: read a v2 record by its own marker.'
+has ac24-v1-v2-text-not-kept "$HA" 'The v1 and v2 texts are not kept.'   # #57: the older texts stay dropped; v3 is kept as a short reading note
 EXAMPLE="$(awk '/^### Worked example$/ {f=1; next} f && /^```/ {g++; next} f && g==1 {print} g==2 {exit}' "$HA")"
 ck ac24-example-two-andons-listed 2 "$(printf '%s\n' "$EXAMPLE" | grep '^- abnormalities:' | grep -o 'issuecomment-' | wc -l | tr -d ' ')"
 ck ac24-example-count-matches-table "$(awk '/^## Abnormalities$/ {c++} c==2 && /^\| A[0-9]+ \|/ {n++} END {print n+0}' "$HA")" "$(printf '%s\n' "$EXAMPLE" | sed -nE 's/^- abnormalities: ([0-9]+) .*/\1/p')"
 ck ac24-example-links-are-the-tables "$(awk -F'|' '/^## Abnormalities$/ {c++} c==2 && /^\| A[0-9]+ \|/ {gsub(/ /,"",$8); print $8}' "$HA" | paste -sd' ' -)" "$(printf '%s\n' "$EXAMPLE" | grep '^- abnormalities:' | grep -o 'https://[^ ;]*' | paste -sd' ' -)"
-ck ac24-example-active-override-listed "- active overrides: replay-before-build (since 2026-11-08)" "$(printf '%s\n' "$EXAMPLE" | grep '^- active overrides:')"
+ck ac24-example-active-override-listed "- active overrides: replay-before-build (since 2026-11-04; from 2026-11-04T15:11Z)" "$(printf '%s\n' "$EXAMPLE" | grep '^- active overrides:')"
 ck ac24-example-no-5-whys 0 "$(printf '%s\n' "$EXAMPLE" | grep -ci 'why\|process item to change')"
 ck ac24-example-andon-in-header-and-part "1 1" "$(printf '%s\n' "$EXAMPLE" | grep -c 'andon [0-9]' | tr -d ' ') $(printf '%s\n' "$EXAMPLE" | grep '^1\. lead time' | grep -c '; andon [0-9]')"
 
 # ---------- AC-26, 27: expiry ----------
-has ac26-step10 "$SK" '## 10. Close the run'
-has ac26-no-report-closed "$SK" 'Do not report the run closed while an override of the run has no answer.'
-has ac26-one-line "$AN" '1. For each, show one line: `<name> — started <date> — before/after: no baseline yet`, and ask for `keep`, `promote` or `drop`.'
-has ac26-promote-not-asked-again "$AN" 'Overrides already `promote chosen` are named in the summary and not asked again.'
+# #57: the close is one step 9 (step 10 removed, contract 57-run-close section 1); the settle round is its 9.3 and shows two kinds of line
+has ac26-step9-close "$SK" '## 9. Close the run'
+ck ac26-no-step10 0 "$(grep -c '^## 10\.' "$SK")"
+has ac26-no-report-closed "$SK" 'Do not report the run closed before 9.3 has an answer, applied and merged, for every override of the run.'
+has ac26-one-line-experiment "$AN" '- The experiment: `<name> — started <date> — before <reading> / after <reading> — keep, promote or drop?`'
+has ac26-one-line-other "$AN" '- Any other override: `<name> — started <date> — before/after: not measured (not this run'"'"'s experiment) — keep, promote or drop?`'
+has ac26-ask-keep-promote-drop "$AN" 'show one line and ask `keep`, `promote` or `drop`.'
+has ac26-promote-not-asked-again "$AN" '`promote chosen` ones are named in the summary and not asked again.'
 has ac26-keep "$AN" '`keep` sets `status: kept <date> for next run`'
 has ac26-drop "$AN" '`drop` removes the entry (and any `## Role models` row it added)'
 has ac26-promote "$AN" '`promote` sets `status: promote chosen <date>`'
 has ac27-run-start-kind7 "$AN" '2. **From an earlier run** with no answer: not applied; start a kind 7 andon (no listed kind names it), show the person the settle line for it, and ask **keep, promote or drop** before the first item starts.'
-has ac27-nothing-written-when-stopped "$AN" 'When the person stops the run before step 10 nothing is written; the run-start check finds the unanswered ones.'
-has ac26-after-step9 "$SK" 'Runs after step 9.'
+has ac27-nothing-written-when-stopped "$AN" 'When the person stops the run before step 9.3 and does not say yes to the question of step 9.0, nothing is written; the run-start check finds the unanswered ones.'
+has ac26-settle-is-step-9-3 "$AN" 'At step 9.3, and on the run-start answer above'
 # the settle transformation on a fixture with three overrides of run #3; answers keep, drop, promote
 cat > "$T/fm.md" <<'X'
 ## Overrides
@@ -411,7 +418,7 @@ else skip docs-changelog-1.1.0 "QA-49 O3: CHANGELOG.md has no 1.1.0 entry yet (d
 
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
-ck ac29-version-is-minor-above-1.0.0 "1.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac29-version-is-minor-above-1.1.0 "1.2.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 # the changed files under plugins/ are standard work or other, never a script (tooling fingerprint does not move)
 ck ac29-no-script-changed 0 "$(git -C "$REPO" diff --name-only "$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null || echo HEAD)" HEAD -- plugins/factory/scripts plugins/factory/hooks 2>/dev/null | grep -c .)"
 # no absolute home path in what ships or in what QA writes

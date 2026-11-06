@@ -1,0 +1,57 @@
+{
+ "experiment": {
+  "name": "X",
+  "series": "1.2",
+  "reference": []
+ },
+ "records": [
+  {
+   "item": 5,
+   "series": "1.2",
+   "overrides": {}
+  },
+  {
+   "item": 6,
+   "series": "1.2",
+   "overrides": {
+    "X": "from"
+   }
+  },
+  {
+   "item": 7,
+   "series": "1.2",
+   "overrides": {
+    "X": "whole"
+   },
+   "in_run": true
+  },
+  {
+   "item": 8,
+   "series": "1.3",
+   "overrides": {
+    "X": "whole"
+   },
+   "in_run": true
+  },
+  {
+   "item": 9,
+   "series": "1.2",
+   "calibration": true,
+   "overrides": {}
+  },
+  {
+   "item": 10,
+   "series": "1.2",
+   "overrides": {
+    "Y": "from"
+   }
+  },
+  {
+   "item": 11,
+   "series": "1.2",
+   "overrides": {
+    "Z": "whole"
+   }
+  }
+ ]
+}

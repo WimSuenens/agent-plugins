@@ -1,0 +1,20 @@
+{
+ "closed_items": 3,
+ "andons": [],
+ "fields": [
+  {
+   "field": "stalled",
+   "base": 0,
+   "k_base": 1,
+   "run": 0,
+   "k_run": 1
+  },
+  {
+   "field": "devops",
+   "base": 1,
+   "k_base": 1,
+   "run": 0,
+   "k_run": 0
+  }
+ ]
+}

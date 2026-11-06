@@ -1,0 +1,17 @@
+{
+ "closed_items": 2,
+ "andons": [
+  {
+   "item": 1,
+   "id": "A1",
+   "raised": "2026-11-08T10:00Z",
+   "process_item": "plugins/factory/agents/devops.md has no teardown line"
+  },
+  {
+   "item": 2,
+   "id": "A1",
+   "raised": "2026-11-08T09:00Z",
+   "process_item": "plugins/factory/skills/run/SKILL.md orders two steps the wrong way"
+  }
+ ]
+}

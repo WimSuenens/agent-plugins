@@ -1,9 +1,0 @@
-# Brief: devops — 49
-Goal: Add the release-runbook entry for factory 1.1.0 and prepare the sandbox for the person's human-only checks.
-Inputs: docs/factory/release-runbook.md (or wherever the 1.0.0 entry lives; find it); contracts/49-standard-changes.md (sections 1, 5, 6); contracts/39-standard-changes.md section 5; reviews/qa-49.md (Human-only list, post-merge AC-30); docs/adr/0012
-Constraints:
-- Entry for 1.1.0 with the final fingerprints: release 1.1.0, standard 683cfb53180122ef3307b5d00d04adf37c141076985d212941925d4a908429c2, tooling 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5. Item #49 runs on the frozen install (no tag step in its text), so the runbook says the Lead tags factory-v1.1.0 by hand at the merge, as for #39 (AC-30), and checks the tag with git ls-remote.
-- Sandbox: WimSuenens/factory-sandbox (private) with Project #10 is the only place for the human-only checks. Prepare a demo script (plain language, one step per human-only criterion AC-7, 9, 10, 11, 14, 20, 25, 28, from reviews/qa-49.md) in work/49/17-demo-script.md: start with `claude --plugin-dir <worktree>/plugins/factory` (use ../wt/49 relative form), restart after the last change to plugins/, check the filled "Plugin root:" line and `release: 1.1.0` / `standard: 683cfb53...` before trusting the session. Check that the sandbox repo and Project #10 exist and what state they are in (read-only: gh repo view, gh project view); do not create or change anything in them without listing it in your result first. Nothing from the sandbox lands in agent-plugins.
-- Do not run /plugin marketplace update or /reload-plugins. No absolute home paths. Do not touch plugins/, contracts/, tests/, reviews/.
-Output: the runbook entry; work/49/17-demo-script.md; result in work/49/16-result-devops.md
-Done: runbook entry has the final fingerprints and the by-hand tag step; the demo script has one step per human-only criterion; sandbox state reported.

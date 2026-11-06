@@ -75,7 +75,7 @@ A v3 record's line is `active overrides: none` or a list of `name (since YYYY-MM
 
 **(a) The `andon` line may read `none (experiment)`** when no andon started the override (the run's experiment written between items, [57-a3](57-a3.md) §4). The rule that a `pending` link left after the item carried on is a defect (kind 7) applies to a `pending` only, never to `none (experiment)`.
 
-**(b) The experiment carries seven more lines**, after `fence check`, written **at the moment the override is written** and never edited except `a3`:
+**(b) The experiment carries eight more lines**, after `fence check`, written **at the moment the override is written** and never edited except `a3`:
 
 ```
 - experiment: yes
@@ -88,7 +88,7 @@ A v3 record's line is `active overrides: none` or a list of `name (since YYYY-MM
 - a3: <pending | the A3 comment's URL>
 ```
 
-(eight lines, `experiment: yes` being the first). An override without `experiment: yes` is not the run's experiment.
+(`experiment: yes` is the first of the eight.) An override without `experiment: yes` is not the run's experiment.
 
 - `series` is the series of the session ([57-baseline](57-baseline.md) §3), `reference` the key of the reference section of that series when the override was written (the overrides adopted by earlier runs, [57-baseline](57-baseline.md) §6; `none` when empty), `before` the reading of [57-a3](57-a3.md) §6 over the before-items. The override is never written with `before: not captured (…)`.
 - `a3` is `pending` until the A3 is posted. The settle commit ([57-run-close](57-run-close.md) §4) replaces it with the comment's URL in the same commit as the answer, while the entry exists; a dropped entry is removed with it. This is the override's link to the A3 when no andon started it.

@@ -11,7 +11,7 @@
 ## Running agents
 
 - docs-writer, work/49/15-brief-docs-writer.md, handle aa3b6dc1f00d21144
-- devops, work/49/15-brief-devops.md, handle a33f91761c9ee2e52
+
 
 
 ## Carry-overs (from #39, map #34)
@@ -37,7 +37,7 @@
 | 9 | Build (round 2) | developer | a9399ddf9aa504a15 | 2026-11-05T23:52Z | 2026-11-05T23:54Z | 2m | - | 142265 (subagent_tokens, peak context; spend not captured) | done | contract section 10 applied; 6 tests to QA; standard 683cfb53... |
 | 10 | QA (round 2) | qa-engineer | a0b6ee3a034e26d7e | 2026-11-05T23:54Z | 2026-11-06T00:00Z | 6m | - | 266869 (subagent_tokens, peak context; spend not captured) | pass | 950 pass, 2 named skips (docs rows); AC-3 5/5, 0/8; standard 683cfb53... |
 | 12 | Documentation | docs-writer | aa3b6dc1f00d21144 | 2026-11-06T00:00Z | | | - | | | |
-| 13 | Delivery prep | devops | a33f91761c9ee2e52 | 2026-11-06T00:00Z | | | - | | | runbook entry, demo script, sandbox state |
+| 13 | Delivery prep | devops | a33f91761c9ee2e52 | 2026-11-06T00:00Z | 2026-11-06T00:01Z | ~ | - | 35755 (subagent_tokens, peak context; spend not captured) | done | runbook 1.1.0 entry, demo script (8 steps), sandbox read-only state; PR number left as placeholder |
 | 11 | Security (round 2) | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:54Z | 2026-11-05T23:55Z | ~ | - | pending notice | pass | S2-S5 fixed; S1 partly (low residual: one git identity for all roles); new low N1, N2 accepted, no further round |
 | 7 | Security | security-reviewer | a38eb60ee88a63e43 | 2026-11-05T23:35Z | 2026-11-05T23:35Z | ~2m | - | 65906 (subagent_tokens, peak context; spend not captured) | pass | 0 critical/high, 3 medium (S1-S3), 2 low (S4,S5); fixes held for one feedback round with QA's |
 

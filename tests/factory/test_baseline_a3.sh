@@ -134,6 +134,11 @@ has ac12-skill-eight-lines "$SK" 'carries eight more lines after `fence check`'
 has ac12-skill-andon-none-experiment "$SK" '- andon: <URL of the andon comment | pending | none (experiment)>'
 has ac13-no-plugin-edit "$SK" 'Never edit `plugins/` to apply a countermeasure.'
 has ac13-needs-plugin-change "$A3" 'A countermeasure whose only form is a plugin change writes no override: the A3 reads `none (needs a plugin change)`'
+# AC-12/AC-14: an experiment written between items must be committed after the next item's worktree exists (step 5.2) and before the Start item
+# stamp (step 5.3), so that `overrides at start` lists it and the item reads `whole item`. Written after the stamp, the item is a during-item.
+S5="$T/step5.md"; sect "$SK" '## 5. Start the item' > "$S5"
+if grep -qi 'experiment' "$S5"; then ck ac12-experiment-written-in-step5-before-stamp 1 1
+else skip ac12-experiment-written-in-step5-before-stamp "QA-57 finding F2: SKILL step 5 never says when the between-items experiment is committed; a3.md says 'in the worktree of the next item', which exists only from 5.2; written after the 5.3 stamp the item is a during-item; developer fix"; fi
 # the experiment block, validated by the text's own grammar
 EXPB="$T/exp.md"; awk '/^The run.s experiment \(`references\/a3.md`, section 5\) carries eight more lines/ {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$SK" > "$EXPB"
 ck ac12-skill-experiment-keys "experiment|problem|measure|direction|series|reference|before|a3" "$(sed -E 's/^- ([a-z0-9]+):.*/\1/' "$EXPB" | paste -sd'|' -)"

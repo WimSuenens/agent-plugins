@@ -66,7 +66,7 @@ Its key is `replay-before-build`; it is a during-item for `fixtures-first` and f
 
 A v3 record's line is `active overrides: none` or a list of `name (since YYYY-MM-DD)`. The new standard reads it so:
 
-- `none`: the item's key is the empty key, no extent is partial. The record is placed like a v4 record with `none`. (An override cannot have been in force earlier in the item and be absent at approval, unless it was superseded, which v3 does not list; the item is read as `none` knowingly, and the baseline's section line says `schema v3 and v4 records read together`.) S5 is this case.
+- `none`: the item's key is the empty key, no extent is partial. The record is placed like a v4 record with `none`. (An override cannot have been in force earlier in the item and be absent at approval, unless it was superseded, which v3 does not list; the item is read as `none` knowingly, and the series block's optional `- records: schema v3 and v4 read together` line ([57-baseline](57-baseline.md) §7) says so when the series holds both schemas.) S5 is this case.
 - a list: the extent of each name is **not recorded**. The item is **excluded** and named: `excluded: #<id> (override extent not recorded, schema v3)` ([57-baseline](57-baseline.md) §3). It is in no section and in no reading.
 
 ## 5. The override format: the experiment's lines

@@ -131,16 +131,16 @@ tooling: 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5
 
 `tooling` equals 1.0.0's (no script or hook changed). Any edit under `plugins/factory/` after these were noted moves `standard`: re-read and update this entry.
 
-**Tag by hand (the Lead, after the person approved the merge).** `<PR>` is the number of the item/49 pull request.
+**Tag by hand (the Lead, after the person approved the merge).** `56` is the number of the item/49 pull request (56).
 
 ```
 git fetch origin main
 bash plugins/factory/scripts/check-bump.sh        # in the item/49 worktree; expect exit 0
-gh pr merge <PR> --merge
+gh pr merge 56 --merge
 printf '%s' "1.1.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
 git ls-remote --tags origin factory-v1.1.0        # must print nothing, else the tag exists: stop
 git fetch origin main
-git tag factory-v1.1.0 "$(gh pr view <PR> --json mergeCommit --jq .mergeCommit.oid)"
+git tag factory-v1.1.0 "$(gh pr view 56 --json mergeCommit --jq .mergeCommit.oid)"
 git push origin factory-v1.1.0
 ```
 

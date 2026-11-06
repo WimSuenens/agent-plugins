@@ -88,6 +88,16 @@ tail -r "$T/r-A.jsonl" > "$T/r-A-rev.jsonl"
 python3 -I "$PY" body "$T/r-A-rev.jsonl" 1.2.0 - "$T/a-A.jsonl" > "$T/rev-A.md"
 ck ac7-record-order-does-not-matter "$(cat "$T/out-A.md")" "$(cat "$T/rev-A.md")"
 
+# --- AC-7: the run-start repair check (baseline.md section 8.2): a record whose item number appears in no list of the body
+#     means the previous run stopped before its update. Body written for X5 only; X5b has closed since.
+listed="$(grep -oE '#[0-9]+' "$T/out-C.md" | sort -u)"
+unlisted=0; for i in $(jq -r '.body' "$T/r-D.jsonl" | sed -nE 's/^## Hansei: (#[0-9]+) .*/\1/p'); do printf '%s\n' "$listed" | grep -qx -- "$i" || unlisted=$((unlisted + 1)); done
+ck ac7-repair-finds-the-record-the-body-does-not-list 1 "$unlisted"
+python3 -I "$PY" body "$T/r-D.jsonl" 1.1.0 - "$T/a-D.jsonl" > "$T/repaired-D.md"
+listed="$(grep -oE '#[0-9]+' "$T/repaired-D.md" | sort -u)"
+unlisted=0; for i in $(jq -r '.body' "$T/r-D.jsonl" | sed -nE 's/^## Hansei: (#[0-9]+) .*/\1/p'); do printf '%s\n' "$listed" | grep -qx -- "$i" || unlisted=$((unlisted + 1)); done
+ck ac7-after-the-update-nothing-unlisted 0 "$unlisted"
+
 # --- AC-8: nothing in the body without a source record; no raw record text, no 5 Whys
 ck ac8-no-updated-at-line 0 "$(grep -ciE 'updated at|last updated' "$T/out-A.md")"
 ck ac8-no-record-text 0 "$(grep -c 'Synthetic' "$T/out-C.md")"

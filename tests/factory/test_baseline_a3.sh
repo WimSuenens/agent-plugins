@@ -84,6 +84,8 @@ ck ac16-line-keys-in-order "$WANT" "$(printf '%s\n' "$TEMPL" | keys | paste -sd'
 EXA="$(block_after "$A3" '## 3. Worked example')"
 ck ac16-example-same-keys-as-template "$(printf '%s\n' "$TEMPL" | keys | paste -sd'|' -)" "$(printf '%s\n' "$EXA" | keys | paste -sd'|' -)"
 ck ac16-example-marker '<!-- factory:a3 v1 -->' "$(printf '%s\n' "$EXA" | sed -n 1p)"
+has ac16-marker-prose-is-the-templates "$A3" 'The body'"'"'s first line is exactly `'"$(printf '%s\n' "$TEMPL" | sed -n 1p)"'`.'
+has ac16-marker-prose-regex "$A3" 'A reader finds an A3 by `^<!-- factory:a3 v([0-9]+) -->$` on the first line'
 has ac16-no-line-left-out "$A3" 'Fixed lines, fixed order, **no line may be left out**; a line with nothing to say reads `none (<reason>)`.'
 has ac16-unknown-version-skipped "$A3" 'a reader that meets a version it does not know skips the comment and says so'
 has ac16-no-experiment-line "$A3" 'There is no line keyed `experiment` in the A3'
@@ -262,6 +264,7 @@ ck v4-fixture-override-line-from-hansei-md 1 "$(exline "- active overrides: repl
 ck v4-grammar-rejects-v3-entry 0 "$(exline "- active overrides: replay-before-build (since 2026-11-08)" | grep -Ec "$ext")"
 ck v4-grammar-rejects-bad-time 0 "$(exline "- active overrides: x (since 2026-11-08; from 15:02)" | grep -Ec "$ext")"
 ck v4-hansei-md-has-the-worked-line 1 "$(grep -cF 'replay-before-build (since 2026-11-07; whole item); fixtures-first (since 2026-11-08; from 2026-11-08T15:02Z); old-rule (since 2026-11-05; until 2026-11-08T15:30Z)' "$HA")"
+has v4-marker-prose-is-v4 "$HA" 'The body'"'"'s **first line** is exactly `<!-- factory:hansei v4 -->`.'
 ck v4-no-v3-marker-in-template 0 "$(block_after "$HA" '### Layout' | grep -c 'hansei v3')"
 
 # ---------- AC-26: standard work stays inside its paths ----------

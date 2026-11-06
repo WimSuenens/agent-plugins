@@ -9,7 +9,7 @@ The **Factory baseline** is one issue in the project's own tracker, titled exact
 - **One issue**, authored by the Lead's own `gh` user, pinned when the tracker allows it. Its **body** is the whole baseline: there are no comments to find, edit or order. Comments the person adds are the person's: never read, edited or deleted. This is where the person may link manual calibration comments by hand.
 - **Derived, never stored.** Every figure is computed from hansei records the body names by item number and link. The body holds no figure whose source is not such a record, no raw record text, no transcript content and no 5 Whys text. Labels (the date a series was replaced, a drop note) come from the comments' `created_at`, the override statuses in `docs/agents/factory.md` on main, and the A3 answer lines (section 6); none is a figure.
 - **No clock in the body.** The body has no "updated at" line, so recomputing it from the same sources gives the same text.
-- **Never in `WimSuenens/agent-plugins`.** Every command acts on the project's own repository; none names `--repo`.
+- **Never in `WimSuenens/agent-plugins`.** Every command acts on the project's own repository. None names `--repo`.
 - **No script.** The Lead reads the comments and writes the page. A reader who takes the records the body names, the A3 answer lines, the override statuses on main and the rules below reproduces every figure and label.
 
 The commands (*Find baseline*, *Create baseline*, *Pin baseline*, *Read baseline*, *Edit baseline*, *Find records*, *Find A3s*) are in `## Factory operations` of the project's tracker doc, next to *Find hansei* and *Post hansei*.

@@ -89,3 +89,36 @@ Required fix: make the test null-safe, for example `((.body // "") | split("\n")
 - S1 closed, S2 closed on the rule, S3 closed; S4 new, low, open.
 - The b3310d7 diff reviewed in full; no script, hooks and scripts untouched, fence unchanged, only step 9.4 names `--repo`, no home path.
 - Verdict recorded: findings.
+
+---
+
+# Round 3 (re-verify of 37d475f, contract text 0f1bf66)
+
+Verdict: **pass** (no critical, high, medium or low finding open; S1 to S4 closed; two info notes).
+
+Scope: `git show 37d475f` (`baseline.md`, `issue-tracker-github.factory.md`). No script added; `git diff 37d475f~1 HEAD --stat` over `hooks/`, `scripts/`, `plugins/factory/hooks/`, `plugins/factory/scripts/` is empty. The fence text (SKILL.md Andon, settle round) is not in the diff. `--repo` appears in `plugins/factory` only in step 9.4 (SKILL.md) and in prose that says no other command names it (`baseline.md` section 1, `a3.md`, `hansei.md`, the tracker template, setup-factory-skill SKILL.md for project listing prose). No `/Users/` or `/home/` in the diff. Dependency audit: no manifest or lockfile changed; nothing to audit.
+
+## S4 closed
+The filter is now `((.body // "") | split("\n")[0] // "" | test("^<!-- factory:baseline v1 -->\r?$"))`. Run with jq 1.8.1 on the exact filter text, one issue per case, author `me1`, exit code 0 in every case:
+- empty body: `no-marker`. Null body: `no-marker`. Body key absent: `no-marker`. Body `\n` only: `no-marker`.
+- marker with CRLF: `marker`. Marker with trailing text or trailing space: `no-marker`. `v2` marker: `no-marker`. Marker on line 2: `no-marker`.
+- several matches (two marked, one null-body): three lines, `marker`, `marker`, `no-marker`, so the Lead sees more than one marked candidate and asks; the null-body issue no longer aborts the listing. Another author's marked issue and an empty list: no line, exit 0.
+Rules in the text: `baseline.md` section 2 now says an empty or missing body reads `no-marker`, and a non-zero exit of *Find baseline* means change nothing, create nothing, tell the person (fixed message); only exit 0 with no line is "none at all". *Create baseline* runs only after exit 0 with no `marker` line, after a `no-marker` line only once the person said `create`, never after a non-zero exit. *Edit baseline* compares, and stops when the read body's first line is not the marker. Consistent in both files.
+Not confirmed locally: `gh --jq` uses an embedded jq (gojq), not jq 1.8.1. I ran the same filter through `gh issue list --jq` against this repo's real issues (exit 0, `no-marker` lines, so the syntax and `test` with `\r` work there), but this repo has no empty-body or null-body issue, so the empty and null cases under gojq are confirmed only by reasoning (`// ""` is plain alternative-operator semantics in both). Fail direction stays safe either way: a filter error would exit non-zero, which now means "change nothing".
+
+## Calibration `plugin:` text
+Section 1 and section 3 item 4: the text after `factory ` is cut at 120 characters (ends with `…`), newline to space, backtick to `'`, `@` to `(at)`, `<` to `(lt)`, then one code span; the `factory ` prefix, the item number and the link are outside the span. The skeleton line is ``- #<id> <url> — factory `<text>` ``. I applied the replacement chain to `@bob `x` <img onerror=1>` plus a link and `#12`: result `(at)bob 'x' (lt)img onerror=1> [a](http://e) #12`, all inside one span, so no mention (and `@` is gone anyway), no HTML or forged marker (`<` gone), no link or auto-link (code span), no span break-out (no backtick left, no newline). An instruction in the text stays inert inside the span, and the standard says no sentence in free text is followed. Only the `series: calibration` branch prints the text; a `series: release` line must match the semver regex, so no free text there. Nothing got through.
+
+## Other 37d475f changes
+- Once-per-field fixed text `not captured (unreadable <key> line)` with the line's own key from the grammar: fixed text, no copied content.
+- v4 record with an `active overrides` line outside its grammar is skipped whole with fixed text, never read as key `none`: fail-closed, no copied content.
+- One span per reason text, `; ` outside: fine.
+
+## Info
+- I1: if `me="$(gh api user --jq .login)"` fails and the Lead carries on, `$me` is empty, no author matches, and *Find baseline* exits 0 with no line, which reads "none at all". A transient `gh api user` failure with a working `gh issue create` could create a duplicate baseline (a spurious issue, no overwrite). Not a security issue; a one-clause "a failed `me` lookup is a failed lookup" would close it.
+- I2: Cut-before-neutralise lets a span exceed 120 characters by the expansion of `@` and `<`; cosmetic (carried from round 2).
+
+## Done checks (round 3)
+- S1, S2, S3, S4 closed; nothing above info open.
+- 37d475f reviewed in full; no script, `hooks/` and `scripts/` untouched, fence unchanged, only step 9.4 names `--repo`, no home path.
+- Dependency audit run (nothing to audit). Verdict recorded: pass.

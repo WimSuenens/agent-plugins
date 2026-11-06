@@ -31,7 +31,23 @@ has ac1-many-asks "$BA" 'creates nothing and uses none; asks the person which on
 has ac1-pin-fail-never-second "$BA" 'The find rule never reads the pin, so **a failed pin can never lead to a second issue**.'
 # the old literal "printed nothing" contradicts the S2 exception in the same bullet (QA-57 round 2, finding R2-2): pin the rule, not the wording
 ck ac1-create-runs-only-on-the-find-result 1 "$(grep -F -- '- **Create baseline**' "$TP" | grep -F 'Run only' | grep -cF '*Find baseline*')"
-has ac1-create-exception-no-marker-needs-create "$TP" 'create only when the person said `create`.)'
+# moved (round 3): the old sentence "(An exact-title issue without the marker is the exception: ... create only when the person said `create`.)" is
+# replaced by the contract's wording; the pins protect the same three cases: exit 0 and no `marker` line creates, a `no-marker` line creates only
+# after `create`, and (new) a non-zero exit never creates
+has ac1-create-rule-exit0-no-marker-line "$TP" 'Run only when *Find baseline* exited 0 and printed no `marker` line;'
+has ac1-create-no-marker-needs-create "$TP" 'when it printed a `no-marker` line, only after the person said `create`.'
+has ac1-create-never-after-nonzero "$TP" 'Never after a non-zero exit.'
+cl="$(grep -F -- '- **Create baseline**' "$TP")"
+ck ac1-create-rule-order 1 "$([ "${cl%%only after the person said*}" != "$cl" ] && [ "${cl%%exited 0 and printed*}" != "$cl" ] && [ ${#cl} -gt 0 ] && a="${cl%%exited 0 and printed*}" && b="${cl%%only after the person said*}" && [ ${#a} -lt ${#b} ] && echo 1 || echo 0)"
+ck ac1-create-no-old-printed-nothing 0 "$(grep -F -- '- **Create baseline**' "$TP" | grep -cF 'printed nothing')"
+# failed lookup (contract round 2): a non-zero exit of Find baseline never leads to creating or editing a baseline
+has ac1-find-failed-lookup-template "$TP" 'When this command exits non-zero, the lookup failed: change nothing, create nothing and tell the person; only an exit of 0 with no line means there is no such issue at all'
+has ac1-failed-lookup-rule "$BA" '**A failed lookup is not "none found".** When *Find baseline* exits non-zero (the `gh` call or the filter fails), change nothing, create nothing and tell the person:'
+has ac1-failed-lookup-only-exit0-is-none "$BA" 'Only an exit of 0 with no line is the row "none at all".'
+has ac1-failed-lookup-message "$BA" 'Factory baseline: the lookup failed (<the error line>); nothing was changed.'
+before ac1-failed-lookup-after-table "$BA" 'and I create a new one.`' '**A failed lookup is not "none found".**'
+before ac1-failed-lookup-before-pinning "$BA" '**A failed lookup is not "none found".**' '**Pinning is best-effort.**'
+has ac1-filter-total-empty-or-missing-body "$BA" 'An empty or missing body reads `no-marker`.'
 has ac1-create-writes-the-marker "$TP" 'its first line is the marker `<!-- factory:baseline v1 -->`'
 has ac1-edit-stops-without-marker "$TP" 'when the read body'"'"'s first line is not the marker `<!-- factory:baseline v1 -->`, stop: change nothing and ask the person'
 has ac1-find-says-no-marker-is-not-the-baseline "$TP" 'a `no-marker` issue is not the baseline and is never edited'
@@ -58,14 +74,23 @@ jq -n '[
  {number:11,state:"OPEN",title:"Factory baseline",author:{login:"lead-qa"},body:"<!-- factory:baseline v1 -->\r\nrest"},
  {number:12,state:"OPEN",title:"Factory baseline",author:{login:"lead-qa"},body:"<!-- factory:baseline v2 -->\nrest"},
  {number:13,state:"OPEN",title:"Factory baseline",author:{login:"lead-qa"},body:"notes\n<!-- factory:baseline v1 -->"},
- {number:14,state:"OPEN",title:"Factory baseline",author:{login:"lead-qa"},body:"<!-- factory:baseline v1 --> and more"}
+ {number:14,state:"OPEN",title:"Factory baseline",author:{login:"lead-qa"},body:"<!-- factory:baseline v1 --> and more"},
+ {number:15,state:"OPEN",title:"Factory baseline",author:{login:"lead-qa"},body:null},
+ {number:16,state:"CLOSED",title:"Factory baseline",author:{login:"lead-qa"},body:"<!-- factory:baseline v1 -->"}
 ]' > "$T/issues.json"
-ck ac1-find-baseline-exact-title-own-author-any-state-and-marker "4	OPEN	marker|5	CLOSED	marker|9	OPEN	no-marker|11	OPEN	marker|12	OPEN	no-marker|13	OPEN	no-marker|14	OPEN	no-marker" "$(jq 'map(select(.number != 10))' "$T/issues.json" | jq -r "$fbf" | paste -sd'|' -)"
+ck ac1-find-baseline-exact-title-own-author-any-state-and-marker "4	OPEN	marker|5	CLOSED	marker|9	OPEN	no-marker|11	OPEN	marker|12	OPEN	no-marker|13	OPEN	no-marker|14	OPEN	no-marker" "$(jq 'map(select(.number < 10 or .number > 10 and .number < 15))' "$T/issues.json" | jq -r "$fbf" | paste -sd'|' -)"
 # the empty body, alone (S2 fixture): a no-marker line, and no jq error
 jq 'map(select(.number == 10))' "$T/issues.json" > "$T/issues-empty.json"
-got="$(jq -r "$fbf" "$T/issues-empty.json" 2>/dev/null)"
-if [ "$got" = "10	OPEN	no-marker" ]; then ck ac1-find-baseline-empty-body-is-no-marker "10	OPEN	no-marker" "$got"
-else skip ac1-find-baseline-empty-body-is-no-marker "QA-57 finding R2-1: the Find baseline filter splits the body and tests its first line; an empty body has none, jq stops with an error and the issue is not printed (found '$got'); developer fix"; fi
+got="$(jq -r "$fbf" "$T/issues-empty.json" 2>/dev/null; echo "rc=$?")"
+ck ac1-find-baseline-empty-body-is-no-marker "10	OPEN	no-marker
+rc=0" "$got"
+# a null body (round 3 fixture, expected written first): no-marker, exit 0, and the issue after it in the list is still printed
+jq 'map(select(.number == 15 or .number == 16))' "$T/issues.json" > "$T/issues-null.json"
+got="$(jq -r "$fbf" "$T/issues-null.json" 2>/dev/null | paste -sd'|' -; echo "rc=${PIPESTATUS[0]}")"
+ck ac1-find-baseline-null-body-is-no-marker-and-list-goes-on "15	OPEN	no-marker|16	CLOSED	marker
+rc=0" "$got"
+# the whole list, empty and null bodies included: every own exact-title issue is printed once (no line lost to an error)
+ck ac1-find-baseline-whole-list-no-line-lost "4	OPEN	marker|5	CLOSED	marker|9	OPEN	no-marker|10	OPEN	no-marker|11	OPEN	marker|12	OPEN	no-marker|13	OPEN	no-marker|14	OPEN	no-marker|15	OPEN	no-marker|16	CLOSED	marker" "$(jq -r "$fbf" "$T/issues.json" | paste -sd'|' -)"
 ck ac1-find-baseline-none "" "$(printf '[]' | jq -r "$fbf")"
 
 # ---------- AC-7: the update, its place in the close order, the repair at run start ----------
@@ -415,4 +440,15 @@ if git -C "$REPO" rev-parse -q --verify refs/tags/factory-v1.1.0 >/dev/null 2>&1
 else
   skip ac27-fingerprint-vs-1.1.0 "tag factory-v1.1.0 not in this clone"
 fi
+# ---------- round 3: the contract's round-2 sentences in baseline.md (text pins; the replay runs them in test_baseline_replay.sh) ----------
+has r3-unreadable-once-per-field "$BA" 'It is written once for each field of that line, with the line'"'"'s own key (a `rework` or `escaped` line gives each of its fields that text).'
+has r3-calibration-plugin-text-is-a-reason-text "$BA" 'and the `plugin:` text of the calibration line, the record'"'"'s free text) is written in a **code span**, cut first, then neutralised'
+has r3-calibration-prefix-outside-span "$BA" 'In the calibration line the `factory ` before the text, the item number and the link are the standard'"'"'s own text and outside the span.'
+has r3-calibration-skeleton-line "$BA" '- #<id> <url> — factory `<the plugin line after "factory ">`'
+has r3-cut-ends-with-ellipsis "$BA" 'A text cut at 120 characters ends with `…`. One code span per reason text'
+has r3-v4-skip-line "$BA" 'A v4 record whose `active overrides` line is outside the extent grammar is skipped whole, because that line carries the item'"'"'s key: `skipped: #<id> <url> (active overrides line not in its grammar)`; it is in no section and no reading, and is never read as key `none`.'
+# Edit baseline: the compare with Read baseline now comes first, then the marker stop
+el="$(grep -F -- '- **Edit baseline**' "$TP")"
+ck r3-edit-names-read-baseline-before-the-stop 1 "$(a="${el%%\*Read baseline\**}"; b="${el%%first line is not the marker*}"; [ ${#a} -lt ${#b} ] && echo 1 || echo 0)"
+
 done_

@@ -309,7 +309,9 @@ def baseline(records, session, mainpath, a3s):
             continue
         seen_items.add(r.item)
         if r.series and r.series.startswith('calibration'):
-            calib.append('- #%d %s — factory %s' % (r.item, r.url, (r.plugin or '')[len('factory '):] if (r.plugin or '').startswith('factory ') else r.plugin))
+            # baseline.md section 1: the plugin text is a reason text: cut, neutralised, one code span; `factory ` stays outside
+            ptxt = (r.plugin or '')[len('factory '):] if (r.plugin or '').startswith('factory ') else r.plugin
+            calib.append('- #%d %s — factory %s' % (r.item, r.url, span(ptxt or '')))
             continue
         m = SEMVER.match(r.plugin or '')
         if r.series != 'release' or not m:

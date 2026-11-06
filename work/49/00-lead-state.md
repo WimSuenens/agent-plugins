@@ -59,3 +59,4 @@ none (all roles finished); next: acceptance demo (person)
 - S1 residual: with one git identity for all roles the author test cannot separate them; subject test and the shown rule text still apply (low).
 - N1: `seen` may quote a long path that reads like an instruction (low). N2: FREEZE-line check compares logins; the person and the Lead sharing one account defeats it (low). Candidates for step-9 issues; need the person's approval to file.
 | 2026-11-06T00:07Z | other | pending: acceptance demo in the sandbox (8 human-only criteria) |
+| 2026-11-06T00:20Z | demo | sandbox session started with --plugin-dir on ../wt/49/plugins/factory; first check failed (skill text not loaded yet), re-run after loading factory:run: root = item 49 worktree, release 1.1.0, standard 683cfb53..., tooling 295033f4..., fence heading and question E present. Session trusted. |

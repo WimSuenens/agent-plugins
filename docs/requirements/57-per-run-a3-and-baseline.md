@@ -149,8 +149,8 @@ It is contradicted if applying the experiment needs an edit under `plugins/facto
 **AC-14 Before, during and after items are told apart from the records.** *(Under test: Baseline, Loops; validation: S5, S5b, S5c, controls)*
 Given records of three items of one series, closed before, across and after the start of override `X`, each carrying what the architect's contract says about the overrides in force,
 when the Lead reads the experiment's before and after,
-then the first is a before-item, the second a during-item (named in the A3 and counted in neither reading), and the third an after-item; an item of another series (S5c against S5) is in neither reading; a calibration item (S5f) is in neither; and each reading is the AC-3 reading of its items.
-It is contradicted if the during-item is counted, or a calibration or other-series item is.
+then the first is a before-item, the second a during-item (named in the A3 and counted in neither reading), and the third an after-item; an item of another series is never a before-item, and is an after-item only when it is in the run list and carries `X` for the whole item (S5c against S5, in neither of those cases, is in neither reading); a calibration item (S5f) is in neither; and each reading is the AC-3 reading of its items.
+It is contradicted if the during-item is counted, or a calibration item is, or an other-series item that is not an after-item.
 
 **AC-15 When the two readings cannot be compared, the A3 says so.** *(Under test: Baseline; honesty rule)*
 Given a fixture where the release moved from `1.2.x` to `1.3.0` between the before-items and the after-items, or where a second override was in force for the after-items only,

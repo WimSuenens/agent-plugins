@@ -201,7 +201,7 @@ The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md
 1. Once delivery and documentation are done, put the PR to the person with its stage summaries and any open decisions, and ask one question: **merge and clean up?** Merging is never automatic, and this one approval covers the merge and the whole clean-up, the item's environment included. Until then, the item waits. Open the `Merge approval` row and a `person` wait when you ask; on the yes stamp `date -u +%FT%TZ`: that is the approval time and the touch `approval`.
 2. Complete `## Waits` with the close scan, then cross-check the stage log against git and the tracker, as `hansei.md` describes. The scan runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh"` once over every role agent's transcript of the item and once over each Lead session with `--since` the `Start item` start and `--until` the approval time (`--sleep-log -` with the `hansei.md` filter where `pmset` exists), and logs or reconciles each line it prints (`hansei.md`, *Cut-offs at close*): the cut-offs an agent recovered from send no notice, and this is where they are found.
 3. Total the token spend per role with `scripts/token-spend.sh` (`--require-end` for role transcripts).
-4. Fill the hansei template, measure 7 reading `pending resurvey`, and post it (*Post hansei*) on the slice ticket, before `work/<id>/` goes. Write `hansei: <comment URL> (measure 7 pending)` into the map's Factory run section.
+4. Fill the hansei template, measure 7 reading `pending resurvey`, and post it (*Post hansei*) on the slice ticket, before `work/<id>/` goes. Write `hansei: <comment URL> (measure 7 pending)` into the map's Factory run section, and append the item to its `closed in this run` line as `#<id> <comment URL>`.
 5. When the item had an Environment stage, brief devops to tear down the resources in the lead state's **Shared resources** list.
 6. The last commit on `item/<id>` removes `work/<id>/`, after one commit of the lead state, all in the item worktree and never reaching outside it. Run the guard and both commits as **one shell call** (one Bash tool call, one script that stops at the first failure): your shell keeps no variables between calls, so `w` exists only inside that call, and every use is written `"${w:?}"`, which stops the command when `w` is empty instead of acting on the main checkout. Every command names the worktree by its absolute path, so the shell's working directory does not matter. Guard first:
    ```
@@ -214,7 +214,8 @@ The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md
 7. Merge the PR and remove the worktree and branch (*Merge PR*, which also tags a factory release), and set `Factory status` to Done. When the merge fails, keep the worktree and put the failure to the person.
 8. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand. Post its outcome to the person in a few lines.
 9. Fill measure 7 (*Edit hansei*): one line per Under test line, `confirmed`, `contradicted` or `not exercised`. Remove the `hansei:` pointer from the Factory run section. If the person stops the run after the record is posted and before this edit, edit measure 7 to `not captured (run stopped before the resurvey)` first; a later session that finds the pointer still in the Factory run section does the same.
-10. Advance without waiting for the person again:
+10. Update the baseline (`references/baseline.md`, section 8.1): once the record is in its final state, recompute the baseline issue from the records and append the `baseline:` note to the map's Factory run section. Then, before the next item starts, decide whether the run's experiment is written now (`references/a3.md`, section 5).
+11. Advance without waiting for the person again:
    - **The destination moved, or a `[locked]` decision was contradicted** → stop the run and put it to the person. Redrawing the destination is step 1 again.
    - **One-way doors on the frontier** → step 3, as a new frontier round from main.
    - **Frontier clear, destination not reached** → step 4.
@@ -222,23 +223,22 @@ The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md
 
 **Done when** the person approved, the hansei record is posted on the slice ticket, the item's environment is torn down, the PR is merged, the worktree and branch are gone, the board shows Done, the map is resurveyed, measure 7 of the record is filled, and the next step is written into the Factory run section.
 
-## 9. Offer factory feedback
+## 9. Close the run
 
-At the end of a run, or when the person stops one, gather what went wrong with the factory itself: briefs that came back `blocked` for a missing input the protocol should have named, a role doing another's work, a decision card the person struggled with, a stream of decisions the person had to overturn, a step in this skill that did not fit. Add each `other` (kind 7) abnormality of the run as a candidate for the abnormality list, with the problem in factory terms and no project data, and each plugin change an andon proposed (`standard change proposed`). Ask the person what felt clumsy.
+Entered when the map dissolves (step 8.11) or when the person stops the run. [a3.md](${CLAUDE_PLUGIN_ROOT}/references/a3.md) and [baseline.md](${CLAUDE_PLUGIN_ROOT}/references/baseline.md) hold the rules. In this order; no other batch step gathers findings at the end of the run:
 
-When there is anything, draft one issue per finding for `WimSuenens/agent-plugins`, written about the factory and stripped of this project's code, names, and data. Each draft holds the problem in factory terms, the standard change, and before/after numbers against the baseline with item count and release. It holds no code, no project names, no business content, and no raw hansei records. Show the drafts and post only those the person approves:
+0. **Entry.** When the person stopped the run, ask once: `Close the run now? That posts the A3 and settles the overrides.` Silence, a timeout or an assumption is no yes. On no, write nothing: a later run start finds the unanswered overrides and settles them (*Settle round*). On yes, run 9.1 to 9.5, with the A3's `run:` line reading `run stopped`. A closed item counts; an item in flight does not (its worktree stays, resumable with `/factory:run #<slice>`, and the report says so). When the map dissolved, carry on.
+1. **Update the current section from the records.** The recomputation of `references/baseline.md`, section 8.1. When the page is unchanged, say `baseline unchanged`.
+2. **Write the experiment's before/after reading and post the A3** (`references/a3.md`): the problem (section 4), the readings (sections 6 and 7), the lines (section 2), *Post A3*. When the run closed no item (the Factory run section's `closed in this run` line is absent or empty), say `0 items closed: nothing to measure`, post nothing, and go on to 9.3: the overrides still need their answers.
+3. **The settle round** (`## Andon`, *Settle round*): the lines carry the A3's before and after. After the settle merge, recompute the baseline again (section 8.1).
+4. **The feedback offer.** Ask the person what felt clumsy, before drafting. Then draft a factory issue for `WimSuenens/agent-plugins` **only for what the A3 lists, plus the person's remark**: the A3's `standard changes proposed` entries (plugin changes an andon proposed, and `other` (kind 7) abnormalities), the A3's `problem` and `other problems seen`, and the person's remark. Each draft states why it is listed (`listed because: standard change proposed | other abnormality A<k> | the A3's problem | other problem seen | the person's remark`). What the A3 does not list (briefs that came back `blocked` for an input the protocol should have named, a role that did another's work) stays in the project's hansei and andon records and is not drafted. Each draft holds the problem in factory terms, the exact standard change, the before and after figures from the A3 against the baseline with the item count and the release, and a neutral kind of work (the `kind of work` clause of `still uncertain`). It holds no code, no project names, no business content and no raw hansei records. A promoted override's plugin change is not drafted until its decision card is decided. Show the drafts and post only those the person approves:
 
-`gh issue create --repo WimSuenens/agent-plugins --label plugin:factory --title "<title>" --body "<body>"`
+   `gh issue create --repo WimSuenens/agent-plugins --label plugin:factory --title "<title>" --body "<body>"`
 
-This is the only instruction that names `--repo WimSuenens/agent-plugins`. Everything else you measure or record, the stage log and the hansei record included, stays in the project's own tracker and `work/<id>/`.
+   This is the only instruction that names `--repo WimSuenens/agent-plugins`. Everything else you measure or record, the stage log, the hansei record, the baseline and the A3 included, stays in the project's own tracker and `work/<id>/`.
+5. **Report the run closed**, with the A3's link, the baseline's link, the outcome of each override and the link of each open decision card. Do not report the run closed before 9.3 has an answer, applied and merged, for every override of the run.
 
-**Done when** the person has approved, edited, or declined every draft.
-
-## 10. Close the run
-
-Runs after step 9. Settle the run's overrides with the person as `## Andon`, *Settle round*, says. Do not report the run closed while an override of the run has no answer.
-
-**Done when** every override of the run has an answer applied and merged, or the run has none, and the run is reported closed.
+**Done when** every override of the run has an answer applied and merged, or the run has none; the A3 is posted (or the run closed no item); the person has approved, edited or declined every draft; and the run is reported closed.
 
 ## Interruptions
 
@@ -337,11 +337,11 @@ Write an accepted override in the worktree that raised the andon, under `## Over
 
 Two overrides whose rules cannot both be followed in one brief or stage: the later `started` wins, the one lower in the file when equal. Set the loser to `superseded <date> by <winner>` in the commit that writes the winner, and name it in the winner's comment (`supersedes:`). Superseded entries are removed at that run's close and named in the close summary. An override whose rule is a `## Role models` row adds that row; dropping the override removes it.
 
-A countermeasure whose only form is a change of plugin text writes no override: the comment holds the 5 Whys and the proposed change, the item continues, and the proposal goes into the step-9 issue. Never edit `plugins/` to apply a countermeasure.
+A countermeasure whose only form is a change of plugin text writes no override: the comment holds the 5 Whys and the proposed change, the item continues, and the proposal goes into the A3's `standard changes proposed` line and, if the person approves a draft, into step 9.4's issue. Never edit `plugins/` to apply a countermeasure.
 
 ### Run identity
 
-A run is the life of one map, identified by its issue number `#<map>`: from the map's creation (step 2) to its dissolving (step 8.10 to step 9). The current run is the map named by `/factory:run #<map>`, the map of the slice named by `/factory:run #<slice>`, or on a new idea the map created at step 2; until step 2 a new idea has no current run.
+A run is the life of one map, identified by its issue number `#<map>`: from the map's creation (step 2) to its dissolving (step 8.11 to step 9). The current run is the map named by `/factory:run #<map>`, the map of the slice named by `/factory:run #<slice>`, or on a new idea the map created at step 2; until step 2 a new idea has no current run.
 
 At the first worktree the run creates (a frontier round or an item), rewrite each `kept … for next run` to `kept … for #<map>` in that worktree, in a commit `#<id> lead: bind kept overrides to #<map>`.
 
@@ -357,14 +357,31 @@ At step 0 and again at step 5, read `docs/agents/factory.md` and sort every over
 
 ### Settle round
 
-At step 10, and on the run-start answer above, when the run has at least one `active` or `kept … for #<map>` override (superseded ones too, for removal):
+At step 9.3, and on the run-start answer above, when the run has at least one `active` or `kept … for #<map>` override (superseded ones too, for removal). `promote chosen` ones are named in the summary and not asked again.
 
-1. For each, show one line: `<name> — started <date> — before/after: no baseline yet`, and ask for `keep`, `promote` or `drop`. Overrides already `promote chosen` are named in the summary and not asked again.
-2. `git worktree add ../wt/settle-<map> -b settle/<map>` from an up-to-date main, `<map>` the map of the run being settled. Apply the answers in `docs/agents/factory.md` there: `keep` sets `status: kept <date> for next run` (`date -u +%F`); `drop` removes the entry (and any `## Role models` row it added), and the baseline gets a note; `promote` sets `status: promote chosen <date>`; superseded entries are removed and named in the summary.
-3. One commit `#<map> lead: settle overrides`. Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh`), open one PR, and ask **merge and clean up?** as in step 8.1; on the yes merge and clean up (*Merge PR*).
-4. Report the run closed with the outcome of each override.
+1. **The lines.** For each override show one line and ask `keep`, `promote` or `drop`. Silence, a timeout or a default is no answer (F1).
+   - The experiment: `<name> — started <date> — before <reading> / after <reading> — keep, promote or drop?`, where `<reading>` is the A3's `before` and `after` text **verbatim** (`<value> (<k> of <n>; items #<a>, #<b>; factory <semver>)`). When the A3's `change` starts with `not comparable` or `not captured`, it follows the readings: `… — not comparable (<why>) — keep, promote or drop?` (or `not captured (<reason>)`).
+   - Any other override: `<name> — started <date> — before/after: not measured (not this run's experiment) — keep, promote or drop?`
+   - An override of an earlier run `#<M>` takes its readings from the A3 on `#<M>` when that A3 names it as the experiment (*Find A3* on `#<M>`); with none: `before/after: not measured (no A3 for run #<M>)`.
 
-When the person stops the run before step 10 nothing is written; the run-start check finds the unanswered ones.
+   The line never shows a figure the A3 does not.
+2. **On each answer, *Edit A3* now**: that override's `answer` entry becomes `<keep|promote|drop> <date>` (`date -u +%F`). For an earlier run's A3 the same edit goes on `#<M>`.
+3. **For each `promote`, a decision card** (below) is briefed and posted; it needs no merge.
+4. `git worktree add ../wt/settle-<map> -b settle/<map>` from an up-to-date main, `<map>` the map of the run being settled. Apply the answers in `docs/agents/factory.md` there: `keep` sets `status: kept <date> for next run` (`date -u +%F`); `drop` removes the entry (and any `## Role models` row it added); `promote` sets `status: promote chosen <date>`; superseded entries are removed and named in the summary. **The experiment's `a3:` line gets the A3's URL in the same commit** when its answer is `keep` or `promote`.
+5. One commit `#<map> lead: settle overrides` (after the commits of a promote card). Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh`), open one PR, and ask **merge and clean up?** as in step 8.1; on the yes merge and clean up (*Merge PR*). No default, no timeout.
+6. **After the merge, recompute the baseline** (`references/baseline.md`, section 6 reads main): the reference section moves for `keep` and `promote`; the dropped section moves to history with its note.
+7. Report the run closed with the outcome of each override (step 9.5).
+
+When the person stops the run before step 9.3 and does not say yes to the question of step 9.0, nothing is written; the run-start check finds the unanswered ones.
+
+**`promote` is a one-way door** (the change goes to every project) and takes the route of step 7:
+
+- `promote chosen <date>` is written in the settle commit and the override **stays in force**.
+- The settle worktree is a third place for role messages besides an item and a frontier round: messages in `work/settle-<map>/`, commits starting `#<map>`. They follow the path rule, and are removed before the settle commit's PR with the two-commit sequence of step 8.6 (`#<map> lead: close`, `#<map> lead: remove work/`), in the settle worktree, guard first.
+- Brief the product-owner (step 7.2): Goal, a decision card for the yokoten of the override; Inputs, the override's name and rule, the A3's URL, the A3's `before`, `after` and `change` lines, `references/decision-card.md`, the decision-maker level; Constraints, two or three options (for example: change the plugin text in a minor release; keep it local to this project; drop it), the recommendation and each option's undo cost, and no project data beyond the A3's numbers. At `technical` the architect gives the options first (step 7.1).
+- Post the card on the map issue `#<map>` (*Decision card*) and put it to the person in chat in the same words.
+- Nothing is written under `plugins/` and nothing is sent to `WimSuenens/agent-plugins` until the person decides the card; the choice is then recorded as step 7.5 says, and the change itself is a later item.
+- The run may be reported closed with the card open; the report lists the card's link. No route promotes without a card: no automatic promotion, no `promote` by silence or default, no promotion that a later run start applies on its own.
 
 ### The comment
 

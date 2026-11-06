@@ -35,3 +35,9 @@ Comment URL of item #N: `https://example.invalid/shop/issues/N#issuecomment-9N`.
 - G (AC-3): C39t as `series: release`, alone, session 1.1.0.
 - I, J, K, L (AC-6): series 1.2 with v4 records #11, #12 (key none), #13 (override `runner-line` from 09:00Z, a during-item), #14, #15 (`runner-line`, whole item). Overrides file on main: I `active`; J `kept 2026-11-12 for next run`; L `promote chosen 2026-11-12`; K entry removed and an A3 whose answer line reads `runner-line (experiment): drop 2026-11-12`.
 - P (AC-14), Q (AC-15), R (AC-11): the A3 rules on small ledgers, in `a3-*.tsv`.
+
+## Round 3 additions (written before the reader and the tests ran)
+
+- S3cal (baseline.md section 1, calibration `plugin:` text): #124 `plugin: factory 91@47<b> x` + backtick + `y` and #125 `plugin: factory ` + 130 `z`, both `series: calibration (pre-baseline)`, session 1.3.0. Expected: `factory ` outside the span, the text in one code span, `@` as `(at)`, `<` as `(lt)`, backtick as `'`; #125 cut to 120 `z` then `…` inside the span. The earlier calibration expectation (X5f, scenario A) moves to the code-span form.
+- Null body (Find baseline): `body: null` for an own exact-title issue reads `no-marker`, no jq error, and a later issue in the list is still printed.
+- Failed lookup: a non-zero exit of Find baseline never leads to Create baseline or Edit baseline (text pins on the rule in both files).

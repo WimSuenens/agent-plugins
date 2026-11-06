@@ -5,7 +5,7 @@ A	line	- releases: factory 1.1.0, 1.1.1
 A	line	- items: 2 items: #101 https://example.invalid/shop/issues/101#issuecomment-9101; #104 https://example.invalid/shop/issues/104#issuecomment-9104
 A	line	#### Section — whole-item overrides: none — history (series replaced)
 A	line	#### Section — whole-item overrides: none — reference
-A	line	- #106 https://example.invalid/shop/issues/106#issuecomment-9106 — factory 9147301f75c3 (pre-release install, no semver)
+A	line	- #106 https://example.invalid/shop/issues/106#issuecomment-9106 — factory `9147301f75c3 (pre-release install, no semver)`
 A	line	- skipped: #107 https://example.invalid/shop/issues/107#issuecomment-9107 (schema v1)
 A	line	- excluded: #105 https://example.invalid/shop/issues/105#issuecomment-9105 (standard differs under 1.1; a forgotten version bump, see andon kind 6)
 A	absent	#110
@@ -79,3 +79,7 @@ N	line	#### Section — whole-item overrides: runner-line — reference
 N	line	- items: 0 items
 N	absent	no items in series
 S3p	line	- doors: not captured 1 (1 of 1 entries: `pending resurvey`)
+S3cal	line	- #124 https://example.invalid/shop/issues/124#issuecomment-9124 — factory `91(at)47(lt)b> x'y`
+S3cal	line	- #125 https://example.invalid/shop/issues/125#issuecomment-9125 — factory `zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz…`
+S3cal	absent	@
+S3cal	absent	<b>

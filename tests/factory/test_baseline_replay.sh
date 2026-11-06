@@ -35,7 +35,7 @@ run_sc() {  # run_sc <scenario> -> $T/out-<scenario>.md
   [ "$mainf" = "-" ] && mp="-" || mp="$FX/$mainf"
   python3 -I "$PY" body "$T/r-$1.jsonl" "$rel" "$mp" "$T/a-$1.jsonl" > "$T/out-$1.md"
 }
-for s in A B C D E1 E2 F1 F2 G I J K L M N S3 S3e S3p; do run_sc "$s"; done
+for s in A B C D E1 E2 F1 F2 G I J K L M N S3 S3e S3p S3cal; do run_sc "$s"; done
 
 # --- Find records returns the lead's own markers by first line only (AC-2: C39 and C49 are never returned)
 ck ac2-find-records-A "x2 x5 x5d x5e x5f x5c" "$(jq -r '.id' "$T/r-A.jsonl" | while read -r i; do grep -E "	$i	" "$FX/comments.tsv" | cut -f1; done | paste -sd' ' -)"
@@ -77,7 +77,7 @@ blk() { awk -v s="### Series 1.1 " 'index($0, s)==1 {f=1} f && /^## / {exit} f {
 ck ac4-series-1.1-identical "$(blk "$T/out-E1.md")" "$(blk "$T/out-E2.md")"
 ck ac4-calibration-listed-only-under-calibration 1 "$(awk '/^## Calibration/ {f=1; next} /^## / {f=0} f' "$T/out-E2.md" | grep -c '#108')"
 ck ac4-calibration-not-in-items 0 "$(grep -E '^- items:' "$T/out-E2.md" | grep -c '#10[68]')"
-ck ac4-c39t-calibration-record-is-calibration 1 "$(grep -c '^- #108 .* — factory 9147301f75c3' "$T/out-E2.md")"
+ck ac4-c39t-calibration-record-is-calibration 1 "$(grep -c '^- #108 .* — factory `9147301f75c3' "$T/out-E2.md")"
 
 # --- AC-5: S5, S5d, then S5c arrives: series 1.1 keeps every figure; only its heading and section label move
 figs() { grep -E '^(- (lead time|first-pass yield|rework|escaped defects|person|doors)|  - )' "$1" | awk '/^### Series 1.1/ {f=1} {print}' ; }

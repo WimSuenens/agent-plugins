@@ -25,7 +25,7 @@ none
 
 | # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Start item | lead | - | 2026-11-07T11:21:45Z | 2026-11-07T11:22:13Z | open | - | - | open | author test: one git identity for all roles; freeze: ok (install segment 1.3.0 matches the FREEZE line, map body last edited by own account); drift: no earlier record for 1.3.0; kind 5: no ## Overrides section; baseline: #62 open with marker, no record unlisted; start stamp taken after worktree creation |
+| 1 | Start item | lead | - | 2026-11-07T11:21:45Z | 2026-11-07T11:22:37Z | 1m | - | - | done | author test: one git identity for all roles; freeze: ok (install segment 1.3.0 matches the FREEZE line, map body last edited by own account); drift: no earlier record for 1.3.0; kind 5: no ## Overrides section; baseline: #62 open with marker, no record unlisted; start stamp taken after worktree creation |
 
 ## Waits
 

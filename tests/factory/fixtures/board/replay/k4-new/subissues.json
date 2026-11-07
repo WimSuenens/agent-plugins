@@ -1,0 +1,52 @@
+[
+ {
+  "number": 31,
+  "title": "Build: developer on #12",
+  "user": {
+   "login": "lead"
+  },
+  "created_at": "2026-01-01T10:00:00Z",
+  "closed_at": "2026-01-01T10:10:00Z",
+  "state": "closed"
+ },
+ {
+  "number": 32,
+  "title": "rework 1: finding fixed",
+  "user": {
+   "login": "lead"
+  },
+  "created_at": "2026-01-01T11:00:00Z",
+  "closed_at": "2026-01-01T11:12:00Z",
+  "state": "closed"
+ },
+ {
+  "number": 33,
+  "title": "rework 2: finding fixed",
+  "user": {
+   "login": "lead"
+  },
+  "created_at": "2026-01-01T12:00:00Z",
+  "closed_at": "2026-01-01T12:11:00Z",
+  "state": "closed"
+ },
+ {
+  "number": 34,
+  "title": "rework 3: finding fixed",
+  "user": {
+   "login": "lead"
+  },
+  "created_at": "2026-01-01T13:00:00Z",
+  "closed_at": "2026-01-01T13:22:00Z",
+  "state": "closed"
+ },
+ {
+  "number": 35,
+  "title": "rework 4: finding fixed",
+  "user": {
+   "login": "lead"
+  },
+  "created_at": "2026-01-01T14:00:00Z",
+  "closed_at": "2026-01-01T14:24:00Z",
+  "state": "closed"
+ }
+]

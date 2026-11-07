@@ -1,3 +1,5 @@
+## Stage log
+
 | # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 0 | Stage 0 | lead | - | - | - | - | - | - | done |  |

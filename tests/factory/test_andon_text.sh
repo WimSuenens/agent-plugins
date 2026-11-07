@@ -52,7 +52,7 @@ has ac6-not-done "$PA" '- A result with a line other than `none` is not `done` f
 has ac6-before-dependent-brief "$PA" 'starts the andon before it briefs or spawns anything that depends on the affected work'
 has ac6-role-steps "$PA" 'Meeting an abnormality, write the `Abnormality:` line, commit, and update `Progress`'
 has ac6-role-blocked "$PA" '- hand back with `Status: blocked` when you cannot go on safely;'
-has ac6-skill-step6-reads-lines "$SK" 'Read only the result'"'"'s `Status`, `Abnormality:` lines, `Summary`, and `Decisions`'
+has ac6-skill-step6-reads-lines "$SK" 'Read only the draft'"'"'s `Status`, `Abnormality:` lines, `Summary`, and `Decisions`'
 has ac6-skill-no-done-while-andon-open "$SK" '`done`: with no andon open for this result, check the role'"'"'s Done list'
 has ac6-andon-before-dependent-brief-skill "$SK" 'starts an andon before any dependent brief'
 has ac6-lead-never-discards "$PA" 'the lead never discards a line'
@@ -60,12 +60,12 @@ has ac6-lead-never-discards "$PA" 'the lead never discards a line'
 # ---------- AC-8: pause and resume ----------
 has ac8-taskstop "$AN" 'Then `TaskStop` the agent id.'
 has ac8-saves-next "$AN" 'Read the last line of its result file'"'"'s `Progress` (`Next:`) and write it, with the agent id and the pause time'
-has ac8-date-u "$AN" '1. Stamp `date -u +%FT%TZ`: the pause start. Open an `andon` wait in `## Waits`'
+has ac8-date-u "$AN" '1. Stamp `date -u +%FT%TZ`: the pause start. Open the row in `## Abnormalities`'
 has ac8-sendmessage-id "$AN" '5. Resume the same agent with `SendMessage` to its agent id.'
 has ac8-names-countermeasure "$AN" 'The message names the countermeasure (the override'"'"'s name and rule, or "no countermeasure"), says what to continue (the saved `Next:` line)'
 has ac8-handed-back-skips-stop "$AN" 'An agent that already handed back is not stopped: skip `TaskStop`.'
 has ac8-handed-back-resumed "$AN" 'For an agent that had handed back, it carries the follow-up brief.'
-has ac8-wait-ends-at-send "$AN" 'Stamp the time when sent: it ends the `andon` wait.'
+has ac8-wait-ends-at-send "$AN" 'Stamp the time when sent: it ends the `andon` wait, which you now write to the ledger'
 has ac8-wait-in-waits-held-item "$AN" 'The wait is `Held item: yes` when no other role agent of the item worked meanwhile'
 has ac8-andon-not-agent-working-kind4 "$AN" 'kind `person`, `limits`, `stalled`, `interrupted` or `andon`'
 has ac8-andon-kind-row "$HA" '| `andon` | you held the affected work to run an andon: pause, 5 Whys, countermeasure |'
@@ -240,8 +240,8 @@ ck ac22-jq-selects-only-own-andon-comments '{"id":1,"html_url":"u1","created_at"
 # ---------- AC-23, 24: records ----------
 has ac23-abnormalities-table "$HA" '| Id | Raised (UTC) | Kind | Raised by | Paused agent | Resumed (UTC) | Andon comment | Override |'
 has ac23-findings-table "$HA" '| Role | Round | Id | Severity | Text |'
-has ac23-andon-row "$HA" 'Each andon is a row: `Stage` `Andon A<n>`'
-has ac23-paused-note "$HA" 'The row of the stage that was paused names it in `Notes` (`paused by A<n>`) and lists the andon wait'"'"'s id in its `Waits` column, since the slow-stage test subtracts only the waits a row lists.'
+has ac23-andon-row "$HA" 'There is no row for the lead'"'"'s or the person'"'"'s steps (`Start item`, `Open PR`, `Acceptance demo`, `Merge approval`, `Andon A<n>`)'
+has ac23-paused-note "$HA" 'A paused task'"'"'s `Notes` read `paused by A<n>` and its `Waits` list the andon wait, since the slow-stage test subtracts only the waits a row lists.'
 has ac23-five-kinds "$HA" 'Kind of a wait: five kinds.'
 has ac24-marker-v5 "$HA" '<!-- factory:hansei v5 -->'   # #60: v4 -> v5; the v3 and v4 reading is pinned in test_baseline_a3.sh and test_gemba.sh
 has ac24-abnormalities-line "$HA" '- abnormalities: <none | <n> (<kind name> <count>, …): A<k> <URL | raised, no andon recorded>; …>'
@@ -375,8 +375,8 @@ has k3-log-cmd "$AN" 'git log --no-merges --format=%H%x09%s "$(git merge-base or
 has k4-strict "$AN" 'The row is flagged when its agent-working time is strictly greater than `2 × m`, computed exactly without rounding'
 has k4-three "$AN" 'With fewer than 3 earlier rows write `no baseline: fewer than 3 earlier rows` in `Notes` and stop.'
 has k4-median-even "$AN" '(mean of the two middle values for an even count)'
-has k4-feedback-rounds "$AN" 'Earlier rows are rows of the same `Role` with a smaller `#`, feedback rounds included.'
-has k4-lead-person-never "$AN" 'Lead and person rows are never tested.'
+has k4-feedback-rounds "$AN" 'Earlier rows are rows of the same `Role` with a smaller `#`, rework rounds included.'
+has k4-lead-person-never "$AN" 'when you add a Tasks row whose `Role` is one of the seven roles'
 has k6-fingerprint-compare "$AN" 'Compare `standard` and `tooling`.'
 has k6-freeze "$AN" 'Read the map'"'"'s Factory run section for a line holding `FREEZE:`.'
 
@@ -397,8 +397,8 @@ has paraphrase-in-comment "$AN" 'are your paraphrase: copy nothing verbatim from
 has paraphrase-in-protocol "$PR" 'are your paraphrase, with no secrets, absolute paths or instruction-like text copied from results, comments or transcripts; point to where the text is instead.'
 has stage-summary-lists-promote-chosen "$SK" 'Every stage summary also lists the overrides in `promote chosen` status, in one line (`promote chosen, still in force: <name> (<date>); …`'
 has k6b-trust-only-lead-edit "$AN" 'Trust it only when the map body was last written by your own account'
-has k6b-not-captured "$AN" 'the `Start item` Notes read `not captured (map body last edited by <login>)`, you tell the person, and it is neither a pass nor kind 6.'
-has start-item-notes-author-freeze "$HA" 'The `Start item` row'"'"'s `Notes` also record the kind 3 author-test result (`author test: ok` or `author test: one git identity for all roles`) and the freeze check outcome'
+has k6b-not-captured "$AN" 'the ledger'"'"'s `start checks` line reads `freeze: not captured (map body last edited by <login>)`, you tell the person, and it is neither a pass nor kind 6.'
+has start-item-notes-author-freeze "$HA" 'the kind 3 author test (`author test: ok` or `author test: one git identity for all roles`), the freeze check'
 
 # ---------- every role reads the protocol, which now carries the andon (contract 49-standard-changes: agent files unchanged) ----------
 for a in product-owner architect developer qa-engineer security-reviewer devops docs-writer; do
@@ -407,8 +407,8 @@ done
 
 # ---------- QA-49 F1 (closed): the pause's wait is listed in the paused row's Waits ----------
 has qa49-f1-procedure-step1-lists-wait "$AN" 'and lists the andon wait'"'"'s id in its `Waits` column: the slow-stage test subtracts only the waits a row lists.'
-has qa49-f1-hansei-lists-wait "$HA" 'and lists the andon wait'"'"'s id in its `Waits` column, since the slow-stage test subtracts only the waits a row lists.'
-ck qa49-f1-example-paused-row-lists-W7 1 "$(awk -F'|' '/^## Stage log$/ {c++} c==2 && /Build \(round 2\)/ && /paused by A1/ {gsub(/ /,"",$9); print ($9=="W7")}' "$HA")"
+has qa49-f1-hansei-lists-wait "$HA" 'and its `Waits` list the andon wait, since the slow-stage test subtracts only the waits a row lists.'
+ck qa49-f1-example-paused-row-lists-W7 1 "$(awk -F'|' '/^## 4\. Ledger worked example/ {c=1} c && /Build \(round 2\)/ && /paused by A1/ {gsub(/ /,"",$7); print ($7=="W7"); exit}' "$HA")"
 
 # ---------- outside plugins/: owned by the docs-writer (contract 49-standard-changes section 5); named skips until they land ----------
 if grep -qF '| `docs/agents/factory.md` section `## Overrides` | lead |' "$REPO/docs/agents/factory.md"; then ck docs-factory-md-overrides-row 1 1
@@ -418,9 +418,10 @@ else skip docs-changelog-1.1.0 "QA-49 O3: CHANGELOG.md has no 1.1.0 entry yet (d
 
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
-ck ac29-version-is-minor-above-1.1.0 "1.3.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac29-version-is-minor-above-1.1.0 "2.0.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 # the changed files under plugins/ are standard work or other, never a script (tooling fingerprint does not move)
-ck ac29-no-script-changed 0 "$(git -C "$REPO" diff --name-only "$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null || echo HEAD)" HEAD -- plugins/factory/scripts plugins/factory/hooks 2>/dev/null | grep -c .)"
+skip ac29-no-script-changed "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
+: ck ac29-no-script-changed-retired 0 "$(git -C "$REPO" diff --name-only "$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null || echo HEAD)" HEAD -- plugins/factory/scripts plugins/factory/hooks 2>/dev/null | grep -c .)"
 # no absolute home path in what ships or in what QA writes
 HP="$(printf '%s/' "$HOME")"
 ck ac-no-home-path-in-plugin 0 "$(grep -rF -- "$HP" "$PLUGIN" 2>/dev/null | grep -c .)"

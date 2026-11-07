@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "1.3.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.3.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "2.0.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.0.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
@@ -40,10 +40,10 @@ has ac6-label-wayfinding "$HA" '- wayfinding: <version> (<source>)'
 has ac8-fetch-then-check "$SK" '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"` in the item worktree.'
 has ac8-before-pr-create "$SK" 'Before `gh pr create`, always:'
 has ac8-exit1-no-pr "$SK" 'Exit 1: do not open the PR.'
-has ac8-exit1-feedback-source-lead "$SK" 'Send the developer a feedback brief (`Source: lead`) quoting the refusal'
-has ac8-exit1-logged-refused "$SK" 'log the row with `Result` `refused`'
+has ac8-exit1-feedback-source-lead "$SK" 'Create a rework task for the developer (`Source: lead`) quoting the refusal'
+has ac8-exit1-logged-refused "$SK" 'and run *Open PR* again when it is done'
 has ac8-exit2-no-pr "$SK" 'Exit 2: do not open the PR'
-has ac8-refusal-in-stage-log-format "$HA" 'A refused *Open PR* (bump check) is an `Open PR` row with `Result` `refused`'
+has ac8-refusal-in-stage-log-format "$HA" 'A refused *Open PR* (bump check) is told in the session and handled as a `Source: lead` rework task'
 # every instruction that opens a PR must run the check first. PR-opening lines, outside the check's own paragraph:
 pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'check-bump|do not open the PR|opens a PR without this check|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR|once over the whole branch before \*Open PR\* and at the merge approval')"
 if [ -z "$pr_lines" ]; then ck ac8-no-pr-without-check "" ""
@@ -54,9 +54,9 @@ has ac8-tracker-open-pr "$TP" '- **Open PR**: `gh pr create --head item/<id>'
 # --- AC-11: stage log
 has ac11-in-lead-state "$HA" '`work/<id>/00-lead-state.md`'
 has ac11-date-u "$HA" 'Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards'
-has ac11-columns "$HA" '| # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |'
-has ac11-feedback-rounds "$HA" 'A feedback round is its own row with ` (round <n>)` appended'
-has ac11-acceptance-demo-stage "$HA" '`Acceptance demo`, `Delivery`'
+has ac11-columns "$HA" '| # | Task | Stage | Role | Agents | Waits | Peak ctx | Result | Notes |'
+has ac11-feedback-rounds "$HA" 'A rework task appends ` (round <n>)` (`Build (round 2)`).'
+has ac11-acceptance-demo-stage "$HA" '`Requirement`, `Contracts and ADRs`, `Environment`, `Build`, `QA`, `Security`, `Delivery`, `Documentation`'
 # v2: the Waits table names the agent each wait stopped, and four wait kinds each have a detection row
 has ac11-waits-kinds "$HA" '| Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |'
 has ac11-waits-agent-column "$HA" '`Agent`: the agent id the wait stopped, `lead` when it stopped the Lead itself, `-` for a `person` wait.'
@@ -74,9 +74,9 @@ has ac11-lead-wait-stops-role "$HA" '**The Lead'"'"'s own wait stops a role'"'"'
 has ac11-skill-start-via-cut-offs "$SK" 'the start is the last line'"'"'s start from `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>` on the stopped agent'"'"'s transcript, never the file'"'"'s last entry'
 has ac11-one-wait-one-kind "$HA" 'A stretch that changes cause midway (a stall, then a limit hit on the resume) is two entries, back to back.'
 has ac11-touches "$HA" '| Time (UTC) | Kind | What |'
-has ac11-as-it-happens "$SK" 'Every wait goes to `## Waits` and every touch the person makes to `## Person'"'"'s touches`, as it happens'
-has ac11-skill-stamps-each-stage "$SK" '1. Stamp `date -u +%FT%TZ` and open the stage'"'"'s row in the stage log.'
-has ac11-skill-close-row-peak "$SK" 'close the row, with the agent ids and the completion notice'"'"'s peak context'
+has ac11-as-it-happens "$SK" 'Every wait goes to the ledger'"'"'s Waits table when it ends, and every touch the person makes to its Person'"'"'s touches table when you read the answer'
+has ac11-skill-stamps-each-stage "$SK" '1. **Create the role task and spawn the role**'
+has ac11-skill-close-row-peak "$SK" 'add its row to the ledger'"'"'s Tasks table with the agent ids and the completion notice'"'"'s peak context'
 has ac11-interruption-wait-kinds "$SK" '`limits` for a usage limit, `stalled` for no progress (the stream watchdog), `interrupted` for a server or connection error or a machine sleep'
 has ac11-interruption-names-agent "$SK" 'with the stopped agent in its `Agent` column (`lead` for yourself)'
 # v2 (#45): done, then stopped -- in hansei.md and in the run skill's Interruptions
@@ -86,22 +86,22 @@ has done-then-stopped-commits-on-branch "$HA" '(`git branch --contains <sha>` li
 has done-then-stopped-paths-clean "$HA" 'the role'"'"'s paths have no uncommitted changes in the worktree'
 has done-then-stopped-else-resume "$HA" 'When either check fails, it is an ordinary interruption: resume the agent.'
 has done-then-stopped-skill "$SK" '**Done, then stopped.** When the agent stalled or failed after writing a complete result with `Status: done`'
-has done-then-stopped-skill-no-resume "$SK" 'do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the row'"'"'s Notes'
+has done-then-stopped-skill-no-resume "$SK" 'do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the Tasks row'"'"'s Notes'
 
 # --- AC-13: cross-check written in, before posting
 has ac13-git-evidence "$HA" "git log item/<id> --format='%cI %s'"
 has ac13-tracker-evidence "$HA" '.created_at, (.body | split("\n")[0])'
 has ac13-largest-gap "$HA" 'names the largest gap across rows'
-before ac13-cross-check-before-post "$SK" '2. Complete `## Waits` with the close scan, then cross-check the stage log against git and the tracker' '4. Fill the hansei template'
-before ac13-close-scan-before-cross-check-ha "$HA" '2. Complete `## Waits` with the close scan (*Cut-offs at close*), then cross-check the stage log (section 2).' '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*'
-before ac13-close-scan-before-spend-ha "$HA" '2. Complete `## Waits` with the close scan' '3. Total the token spend per role.'
+before ac13-cross-check-before-post "$SK" '2. Complete the ledger'"'"'s Waits table with the close scan, then cross-check the Tasks table' '4. Fill the hansei template'
+before ac13-close-scan-before-cross-check-ha "$HA" '2. Complete the ledger'"'"'s Waits table with the close scan (*Cut-offs at close*), then cross-check the Tasks table (section 2).' '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*'
+before ac13-close-scan-before-spend-ha "$HA" '2. Complete the ledger'"'"'s Waits table with the close scan' '3. Total the token spend per role.'
 # v2 round 5 (#44 F3): the close scan, in hansei.md and in the run skill
 has close-scan-heading "$HA" '### Cut-offs at close'
 has close-scan-every-role "$HA" 'Run `cut-offs.sh` once over every role agent'"'"'s transcript of this item'
-has close-scan-lead-window "$HA" 'once over each session under `lead sessions`, with `--since` the `Start item` start and `--until` the approval time'
+has close-scan-lead-window "$HA" 'once over each session under `lead sessions`, with `--since` the ledger'"'"'s `started` and `--until` the approval time'
 has close-scan-reconcile "$HA" 'it is the same wait: set its Start to the line'"'"'s start when they differ'
 has close-scan-new-wait "$HA" '`What` `found at close: <markers>`'
-has close-scan-open-end "$HA" 'an `open` end takes the End of that agent'"'"'s last stage-log row'
+has close-scan-open-end "$HA" 'an `open` end takes the End of that agent'"'"'s last Tasks row'
 has close-scan-unreadable "$HA" '`cut-offs not captured (transcript <basename> unreadable)`'
 has close-scan-skill "$SK" 'The scan runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh"` once over every role agent'"'"'s transcript of the item'
 has m5-recovered-cut-counts "$HA" 'A recovered cut-off counts as much as a final one'
@@ -151,7 +151,7 @@ has ac15-m5-unlogged "$HA" '`<kind>` is then `unlogged`'
 has ac15-m5-exit6-row "$HA" '| 6 | `not captured (transcript truncated by <kind>)`'
 has ac15-m5-require-end-at-close "$HA" 'At close pass `--require-end` for every role transcript (never for the Lead'"'"'s own session, still running).'
 has ac15-m2-na "$HA" '`n/a (did not run)` when the stage was skipped'
-has ac15-m3-overturned "$HA" 'two-way decisions overturned by a `Source: lead` feedback brief'
+has ac15-m3-overturned "$HA" 'two-way decisions overturned by a `Source: lead` rework task'
 has ac15-m5-script "$HA" 'bash "<plugin root>/scripts/token-spend.sh" <transcripts>'
 has ac15-m5-lead-included "$HA" '   - lead: spend <tok>; peak context <n>'
 has ac15-m6-touches "$HA" '6. person'"'"'s touches: decision cards <n>; demos <n>; approvals <n>; overturns <n>; other <n>'
@@ -173,11 +173,11 @@ ck ac16-only-list-heads-end-in-colon "5. tokens:|7. doors:" "$(printf '%s\n' "$E
 # total = Start item start -> Merge approval end; each kind = its held waits; agent working = total - the five
 hm() { echo "$1" | sed -E 's/.*T([0-9]{2}):([0-9]{2})Z.*/\1 \2/' | awk '{print $1*60+$2}'; }
 dur() { if [ "$1" -ge 60 ]; then echo "$(($1 / 60))h$(printf '%02d' $(($1 % 60)))m"; else echo "${1}m"; fi; }
-WT="$(awk '/^## Waits$/ {f++} f==2 && /^\| W[0-9]+ \|/ {print}' "$HA")"
+WT="$(awk '/^### Waits$/ {f++} f==2 && /^\| W[0-9]+ \|/ {print}' "$HA")"
 ck example-waits-rows 8 "$(printf '%s\n' "$WT" | grep -c .)"
-SL1="$(awk '/^## Stage log$/ {f++} f==2 && /^\| [0-9]+ \|/ {print}' "$HA")"
-t0="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Start item/ {print $6}')")"
-t1="$(hm "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Merge approval/ {print $7}')")"
+SL1="$(awk '/^### Tasks$/ {f++} f==2 && /^\| [0-9]+ \|/ {print}' "$HA")"
+t0="$(hm "$(awk '/^- started:/ {c++} c==2 {print; exit}' "$HA")")"
+t1="$(hm "$(awk '/^### Person'"'"'s touches$/ {f++} f==2 && /\| approval \|/ {print $2; exit}' FS='|' "$HA")")"
 tot=$((t1 - t0))
 kindsum() { s=0; while IFS='|' read -r _ id kind ag st en held _r; do
     [ "$(echo $kind)" = "\`$1\`" ] || [ "$(echo $kind)" = "$1" ] || continue
@@ -206,7 +206,7 @@ bad=0
 while IFS='|' read -r _ id kind ag _rest; do
   k="$(echo $kind | tr -d '`')"; a="$(echo $ag)"
   case "$k" in stalled|interrupted) ;; *) continue ;; esac
-  role="$(printf '%s\n' "$SL1" | awk -F'|' -v a="$a" '$5 ~ a {gsub(/ /,"",$4); print $4; exit}')"
+  role="$(printf '%s\n' "$SL1" | awk -F'|' -v a="$a" '$6 ~ a {gsub(/ /,"",$5); print $5; exit}')"
   printf '%s\n' "$EXAMPLE" | grep -qF "   - $role: spend not captured (transcript truncated by $k)" || { bad=$((bad + 1)); echo "     $id $k $a ($role) not marked truncated"; }
 done <<EOT
 $WT
@@ -214,9 +214,9 @@ EOT
 ck example-truncated-roles-match-waits 0 "$bad"
 # measure 2: the security row's notes ("2 low", verdict pass) give "pass first time (2 low)"; QA's first run had a finding
 ck example-fpy "2. first-pass yield: qa failed first time; security pass first time (2 low); acceptance demo n/a (did not run)" "$(printf '%s\n' "$EXAMPLE" | grep '^2\. first-pass yield:')"
-ck example-security-row-2-low 1 "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /^ Security $/ && $11 ~ /pass/ && $12 ~ /2 low/' | grep -c .)"
+ck example-security-row-2-low 1 "$(printf '%s\n' "$SL1" | awk -F'|' '$4 ~ /^ Security $/ && $9 ~ /pass/ && $10 ~ /2 low/' | grep -c .)"
 # done, then stopped shows in the example: the docs-writer row
-ck example-done-then-stalled-row 1 "$(printf '%s\n' "$SL1" | awk -F'|' '$3 ~ /Documentation/ && $11 ~ /done/ && $12 ~ /done, then stalled/' | grep -c .)"
+ck example-done-then-stalled-row 1 "$(printf '%s\n' "$SL1" | awk -F'|' '$4 ~ /Documentation/ && $9 ~ /done/ && $10 ~ /done, then stalled/' | grep -c .)"
 # every token line: total = i + w + r + o
 bad=0
 while IFS= read -r l; do
@@ -227,18 +227,9 @@ done <<EOT
 $(printf '%s\n' "$EXAMPLE" | grep -E 'spend [0-9]+ \(input')
 EOT
 ck example-token-totals-add-up 0 "$bad"
-# stage-log example durations = End - Start
-SL="$(awk '/^## Stage log$/ {f++} f==2 && /^\| [0-9]+ \|/ {print}' "$HA")"
-bad=0
-while IFS='|' read -r _ n st ro ag s e d _rest; do
-  sm=$(( 10#$(echo "$s" | sed -E 's/.*T([0-9]{2}):.*/\1/')*60 + 10#$(echo "$s" | sed -E 's/.*T[0-9]{2}:([0-9]{2})Z.*/\1/') ))
-  em=$(( 10#$(echo "$e" | sed -E 's/.*T([0-9]{2}):.*/\1/')*60 + 10#$(echo "$e" | sed -E 's/.*T[0-9]{2}:([0-9]{2})Z.*/\1/') ))
-  m=$((em - sm)); if [ $m -ge 60 ]; then want="$((m / 60))h$(printf '%02d' $((m % 60)))m"; else want="${m}m"; fi
-  [ "$(echo $d)" = "$want" ] || { bad=$((bad + 1)); echo "     row$n: $d vs $want"; }
-done <<EOT
-$SL
-EOT
-ck example-stage-durations "0 13" "$bad $(printf '%s\n' "$SL" | grep -c .)"
+# the ledger example has one row per role task (8); a row's duration comes from its sub-issue, not from the table
+SL="$SL1"
+ck example-task-rows 8 "$(printf '%s\n' "$SL" | grep -c .)"
 
 # --- AC-18: posted after approval and before work/<id>/ goes
 before ac18-approval-before-post "$SK" '1. Once delivery and documentation are done' '4. Fill the hansei template'
@@ -503,7 +494,7 @@ has path-rule-commands "$PR_" 'commands in a message (`~/` or `"$HOME"/...`)'
 has path-rule-spawn-prompt-outside "$PR_" 'A spawn prompt is chat, not a file, and is outside the rule.'
 # placed in Messages: after the line naming the files (both folders, so frontier rounds too), before the Brief format
 before path-rule-after-file-names "$PR_" 'Files in `work/<id>/` (or `work/frontier-<id>/`) are named `NN-<type>-<role>.md`' 'Paths in a message file are worktree-relative'
-before path-rule-before-brief "$PR_" 'Paths in a message file are worktree-relative' 'Brief (lead → role):'
+before path-rule-before-brief "$PR_" 'Paths in a message file are worktree-relative' 'Brief (lead → role), the body of the role-task issue'
 before path-rule-in-messages "$PR_" '## Messages' 'Paths in a message file are worktree-relative'
 # the rule's own conforming examples conform, and no shipped standard file carries an absolute home path
 ck path-rule-no-home-path-in-plugin "" "$(grep -rlE '/(Users|home)/[A-Za-z0-9._-]+/' "$PLUGIN/references" "$PLUGIN/agents" "$PLUGIN/skills" 2>/dev/null)"

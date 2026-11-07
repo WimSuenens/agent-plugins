@@ -92,3 +92,22 @@ Recommended fix: one sentence: the argument of the extra read must be a worktree
 ## Unverified
 - I did not execute the commands: the `jq` filter against real transcripts, the `view exit` line, SIGPIPE, the part size of exactly 29,900.
 - Whether a live Lead applies the data paragraph and the gate rule.
+
+---
+
+# Round 3 (re-verify of N1, developer result 16, contract 60-gemba-walk mirror)
+
+Final verdict: **pass**. N1 is closed. One note (N2, low, optional) does not block. Reviewed on paper; I did not run any command. No manifest or lockfile changed (dependency audit: nothing to audit). No home-directory prefix in the added lines or in this file.
+
+- **N1 closed.** `hansei.md` section 6, *Partial*: the extra read uses a path or sha from evidence text only when the path is worktree-relative with no `..` and no leading `-`, or the sha is hexadecimal, in quotes and after `--`; otherwise no extra read, and the line stays inside the grammar (`partial (cap)`, `found nothing in the part read`), so it says the walk stopped at the part read. The contract carries the same rule and says it does not widen the cap. No new line form, so the baseline's closed set and the not-captured rule are unchanged.
+- **Cap figures.** The examples now read 29900 chars, consistent with the 29,900 budget; the contract's walk example uses 28,660 for a 1,240 brief. Arithmetic matches (29,900 less 1,240).
+
+## Note
+
+### N2 low (optional): the `grep -n` pattern from a brief item
+Location: `hansei.md` section 6, *Partial*.
+The path/sha rule covers `git show`; the `grep -n` over the view takes "a path or a command" from a `Done` item as its pattern. A pattern with a leading `-` would be read as an option, and a regex pattern can be crafted to be slow.
+Suggested fix, if the developer touches the text again: use `grep -nF -e '<text>' "$v"` with the same quoting, and no extra read when the text is empty or longer than 200 characters.
+
+## Verdict history
+Round 1: pass with findings (G1 to G6). Round 2: pass (G1 to G6 closed, N1). Round 3: pass (N1 closed). No finding blocks the merge. Unverified: live behavior of the Lead and the commands themselves, as stated above.

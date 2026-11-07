@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "1.2.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.2.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "1.3.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.3.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
@@ -113,7 +113,7 @@ has pmset-copy-utc-only "$HA" '**Copy only UTC start and end times** of a sleep 
 
 # --- AC-14: marker, header, seven measures in fixed order
 # #57: the record is v4 (contract 57-records-and-overrides section 1); a v3 record is still read, pinned in test_baseline_a3.sh
-ck ac14-marker-first-line '<!-- factory:hansei v4 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
+ck ac14-marker-first-line '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
 ck ac14-marker-regex-matches 1 "$(printf '%s\n' "$TEMPLATE" | sed -n 1p | grep -Ec '^<!-- factory:hansei v([0-9]+) -->$')"
 has ac14-find-hansei-op "$TP" "select(.body | startswith(\"<!-- factory:hansei v\")) | .id"
 for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex>' '- active overrides: <none | <name> (since YYYY-MM-DD; whole item | from <YYYY-MM-DDTHH:MMZ> | until <YYYY-MM-DDTHH:MMZ>); …>' '- stage-log cross-check: largest gap <N>m (<row>: <evidence>)'; do
@@ -126,7 +126,7 @@ has ac14-overrides-none "$HA" '`none` when both sets are empty, or when the file
 EXAMPLE="$(block_after "$HA" '### Worked example')"
 keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z-]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
 ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
-ck ac14-example-marker '<!-- factory:hansei v4 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
+ck ac14-example-marker '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
 ck ac14-no-v1-marker-left 0 "$(grep -c 'factory:hansei v1 -->' "$HA" "$SK" "$TP" | awk -F: '{s+=$2} END {print s+0}')"
 has ac14-v1-v2-not-compared "$HA" 'never compare measure 1 or 2 across v1 and v2'
 

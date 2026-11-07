@@ -35,7 +35,7 @@ run_sc() {  # run_sc <scenario> -> $T/out-<scenario>.md
   [ "$mainf" = "-" ] && mp="-" || mp="$FX/$mainf"
   python3 -I "$PY" body "$T/r-$1.jsonl" "$rel" "$mp" "$T/a-$1.jsonl" > "$T/out-$1.md"
 }
-for s in A B C D E1 E2 F1 F2 G I J K L M N S3 S3e S3p S3cal; do run_sc "$s"; done
+for s in A B C D E1 E2 F1 F2 G I J K L M N S3 S3e S3p S3cal P Q R R2 R3 S T; do run_sc "$s"; done
 
 # --- Find records returns the lead's own markers by first line only (AC-2: C39 and C49 are never returned)
 ck ac2-find-records-A "x2 x5 x5d x5e x5f x5c" "$(jq -r '.id' "$T/r-A.jsonl" | while read -r i; do grep -E "	$i	" "$FX/comments.tsv" | cut -f1; done | paste -sd' ' -)"
@@ -150,4 +150,40 @@ ck ac15-Q1-after "$(exp Q1 after)" "$(python3 -I "$PY" a3change "$A3/Q1.json" | 
 # so section 7 item 2 sees it (feedback round 1, F1).
 ck ac15-Q2-release-moved "$(exp Q2 change)" "$(python3 -I "$PY" a3change "$A3/Q2.json" | jq -r .change)"
 ck ac15-Q2-after-item-is-the-1.3-one "8" "$(python3 -I "$PY" a3classify "$A3/Q2.json" | jq -r '.after | join(",")')"
+
+# ---------- #60 AC-8: hansei v5 beside v3 and v4 (the gemba line is counted for presence, never read) ----------
+# fixtures x5 (v3, #101), x5v4 (v4, #130), x5v5 (v5, #131), x5v5alt and x5v5alt2 (the same record with another gemba line), x5v5dup (two gemba lines, #132), x5v5none (none, #133)
+ck v5-p-three-schemas-records-line "- records: schema v3, v4 and v5 read together" "$(grep '^- records:' "$T/out-P.md")"
+ck v5-p-three-items-in-the-series 1 "$(grep -c '^- items: 3 items: #101 .*; #130 .*; #131 ' "$T/out-P.md")"
+ck v5-q-v4-and-v5-records-line "- records: schema v4 and v5 read together" "$(grep '^- records:' "$T/out-Q.md")"
+ck v5-r-one-schema-no-records-line 0 "$(grep -c '^- records:' "$T/out-R.md")"
+ck v5-m-v3-and-v4-line-unchanged "- records: schema v3 and v4 read together" "$(grep '^- records:' "$T/out-M.md")"
+# v3 with v5 and no v4 cannot arise from release series (baseline.md, section 7: said in one sentence; QA-60 F5 closed). The replay still writes a line for the set.
+ck v5-t-v3-and-v5-set-is-written-by-the-replay-in-ascending-order "- records: schema v3 and v5 read together" "$(grep '^- records:' "$T/out-T.md")"
+# a v5 record's measures enter its series exactly as the same v4 record's would (same measures, x5v4 and x5v5)
+fig() { grep -E '^(- (lead time|first-pass yield|rework|escaped defects|person|doors)|  - )' "$1"; }
+mkjson x5v4 > "$T/c-v4only.json"; jq -c "$filt" "$T/c-v4only.json" > "$T/r-v4only.jsonl"; python3 -I "$PY" body "$T/r-v4only.jsonl" 1.1.0 - /dev/null > "$T/out-v4only.md"
+ck v5-r-figures-equal-the-v4-record-figures "$(fig "$T/out-v4only.md")" "$(fig "$T/out-R.md")"
+# the content of a gemba line changes nothing: the same record with another line gives the same text, but for the record's own comment URL (same id here)
+ck v5-r2-other-gemba-content-same-baseline "$(cat "$T/out-R.md")" "$(cat "$T/out-R2.md")"
+ck v5-r3-no-role-stage-line-same-baseline "$(cat "$T/out-R.md")" "$(cat "$T/out-R3.md")"
+ck v5-no-gemba-content-in-any-baseline-output 0 "$(cat "$T"/out-*.md | grep -ci 'found nothing\|no role stage ran\|transcript and commits unreadable\|brief not found\|read transcript')"
+ck v5-gemba-appears-in-an-output-only-as-a-skip-reason 0 "$(cat "$T"/out-*.md | grep -i 'gemba' | grep -vc '^- skipped: #13[23] .* (gemba line \(missing\|repeated\))$')"
+# presence check: none and two-or-more are skipped whole and named; a v3 or v4 record is never asked for the line
+ck v5-s-missing-line-named "- skipped: #133 https://example.invalid/shop/issues/133#issuecomment-9133 (gemba line missing)" "$(grep 'gemba line missing' "$T/out-S.md")"
+ck v5-s-repeated-line-named "- skipped: #132 https://example.invalid/shop/issues/132#issuecomment-9132 (gemba line repeated)" "$(grep 'gemba line repeated' "$T/out-S.md")"
+ck v5-s-skipped-records-in-no-section 0 "$(grep -E '^- items:' "$T/out-S.md" | grep -c '#13[23]')"
+ck v5-s-the-good-record-is-read 1 "$(grep -E '^- items:' "$T/out-S.md" | grep -c '#131')"
+ck v5-v3-and-v4-records-create-no-gemba-entry 0 "$(cat "$T/out-M.md" "$T/out-P.md" | grep -ci 'gemba')"
+ck v5-v6-record-still-skipped-by-version 1 "$(printf '%s' '[{"id":9,"html_url":"u","created_at":"2026-01-01T00:00:00Z","user":{"login":"lead-qa"},"body":"<!-- factory:hansei v6 -->\n## Hansei: #9 later\n"}]' > "$T/v6.json"; jq -c "$filt" "$T/v6.json" > "$T/v6.jsonl"; python3 -I "$PY" body "$T/v6.jsonl" 1.1.0 - /dev/null | grep -c 'skipped: #9 u (schema v6)')"
+# the baseline text: version list, item 7, no field reads the line
+has v5-text-item-2-reads-v3-v4-v5 "$PLUGIN/references/baseline.md" '`v3`, `v4` and `v5` are readable. Any other version is **skipped and named**'
+has v5-text-item-7-presence-only "$PLUGIN/references/baseline.md" 'The check counts those lines and never reads their content: no baseline or A3 field reads, parses or counts what a gemba line says, and no script reads it.'
+has v5-text-item-7-v3-v4-no-entry "$PLUGIN/references/baseline.md" 'A v3 or v4 record has no such line and is read without one; no `not captured` entry is created for it.'
+has v5-text-gemba-line-missing "$PLUGIN/references/baseline.md" '`skipped: #<id> <url> (gemba line missing)`'
+has v5-text-gemba-line-repeated "$PLUGIN/references/baseline.md" 'two or more is `skipped: #<id> <url> (gemba line repeated)`'
+ck v5-a3-md-has-no-gemba 0 "$(grep -ci 'gemba' "$PLUGIN/references/a3.md")"
+ck v5-no-script-or-hook-mentions-gemba 0 "$(grep -rIli 'gemba' "$PLUGIN/scripts" "$PLUGIN/hooks" 2>/dev/null | wc -l | tr -d ' ')"
+ck v5-no-hoshin-view-anywhere-in-the-plugin 0 "$(grep -rIli 'hoshin' "$PLUGIN" | wc -l | tr -d ' ')"
+ck v5-no-found-nothing-count-in-baseline-or-a3 0 "$(cat "$PLUGIN/references/baseline.md" "$PLUGIN/references/a3.md" | grep -ci 'found nothing\|gemba line over\|differences against')"
 done_

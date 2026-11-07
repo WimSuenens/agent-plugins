@@ -72,7 +72,9 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 
-**Status: release 1.2.0 (the per-run A3 and the Factory baseline) has passed QA and security.** Its acceptance demo ran in a scratch project with `claude --plugin-dir`: the baseline issue appeared at run start and one A3 was posted at run close. It did not exercise a countermeasure (no override was written, so the before and after readings, and the keep, promote and drop answers, were not seen in a session), nor the paused-agent check. The limits are in [CHANGELOG.md](CHANGELOG.md) under *1.2.0*, *Known limitations at release*.
+**Status: release 1.3.0 (the gemba sample) has passed QA and security, and no acceptance demo gated it.** The walk of one stage per item, and its line in the record, are verified by offline tests, replays and reviews. What only real use can show is listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *1.3.0*, *Unverified*; its known limits are under *Known limits*.
+
+**Status of 1.2.0 (the per-run A3 and the Factory baseline): passed QA and security.** Its acceptance demo ran in a scratch project with `claude --plugin-dir`: the baseline issue appeared at run start and one A3 was posted at run close. It did not exercise a countermeasure (no override was written, so the before and after readings, and the keep, promote and drop answers, were not seen in a session), nor the paused-agent check. The limits are in [CHANGELOG.md](CHANGELOG.md) under *1.2.0*, *Known limitations at release*.
 
 **Status of 1.1.0 (the andon): passed QA and security; its human-only checks are not all done.** The 1.2.0 demo did not exercise the paused-agent check or a keep, promote or drop answer; see [CHANGELOG.md](CHANGELOG.md) under *1.1.0*, *Known limitations at release*.
 
@@ -82,16 +84,18 @@ Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` e
 
 ### Measurement: the hansei record
 
-Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v4 -->` (`v3` at 1.1.0, `v2` at 1.0.0), and it holds:
+Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v5 -->` (`v4` at 1.2.0, `v3` at 1.1.0, `v2` at 1.0.0), and it holds:
 
-- the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (each by name and start date, or `none`), the abnormalities (a count per kind, and a link to each andon comment), and a stage-log cross-check;
+- the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (each by name and start date, or `none`), the abnormalities (a count per kind, and a link to each andon comment), a stage-log cross-check, and from 1.3.0 the gemba line below;
 - seven measures in a fixed order: lead time, first-pass yield, rework, escaped defects, tokens per role, the person's touches, and doors confirmed or contradicted.
 
 Lead time is split into parts that add up to the total: agent working, waiting for the person, waiting on limits, stalled, interrupted, and, from 1.1.0, andon (the time the lead held the item for an andon). Measure 7 reads `pending resurvey` at posting and is filled by editing the same comment after the resurvey.
 
 While an item runs, the lead keeps a **stage log** in `work/<id>/00-lead-state.md`: one row per stage with UTC times, the waits (the person, usage limits, stalls, interruptions and, from 1.1.0, andon pauses, each naming the agent it stopped), the abnormalities, and the person's touches. The item's folder is removed by the last commit, after the record is posted.
 
-A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. A role whose transcript was cut off by a stall, an interruption or an andon pause reads `not captured (transcript truncated by <kind>)` for its spend. Escaped defects read `not captured` in schemas v2 to v4.
+A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. A role whose transcript was cut off by a stall, an interruption or an andon pause reads `not captured (transcript truncated by <kind>)` for its spend. Escaped defects read `not captured` in schemas v2 to v5.
+
+**The gemba line (from 1.3.0).** At each item's close, after the merge approval and before the record is filled, the lead walks one stage of the item. A counted rule picks the stage from the stage log: the ticket number, modulo the count of role rows that were not flagged. The walk reads what that agent did, in its transcript or, where no transcript can be read, in its commits and result file. It never reads the agent's own summary, and it compares the work with the brief and the stage-log row. The record then carries one header line, `gemba`, that names the stage walked and says whether the walk found a difference. A difference is a question about the process, not about a person, a role or a model, and it gets a 5 Whys as a kind 7 andon. A walk that could not be done reads `not captured (<reason>)`, never `found nothing` and never `0`. The walk comes after the merge approval, so it cannot stop a merge by itself. The rule, the 30,000-character read limit and the grammar of the line are in `plugins/factory/references/hansei.md`, section 6, and in the contracts [60-gemba-sample](contracts/60-gemba-sample.md), [60-gemba-walk](contracts/60-gemba-walk.md) and [60-gemba-line](contracts/60-gemba-line.md). Whether the walk is worth its cost has not been measured yet; [CHANGELOG.md](CHANGELOG.md) lists it under *1.3.0*, *Unverified*.
 
 The data lives in the project's own tracker (the record, the stage summaries, the decisions, the andon comments, and from 1.2.0 the baseline issue and the A3) and in `work/<id>/` while the item runs. No script aggregates the records: the lead reads their comments and keeps the baseline, as [described below](#the-baseline-and-the-a3) explains. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md), [contracts/39-stage-log.md](contracts/39-stage-log.md) and, for schema v3 and the andon rows, [contracts/49-records.md](contracts/49-records.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
 
@@ -133,7 +137,7 @@ Limits, stated plainly: the lead's reading of its results and stage log is the o
 
 ### Versions and updates
 
-The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. Releases: `1.0.0` (the first), `1.1.0` (the andon), and `1.2.0` (the per-run A3 and the Factory baseline). Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
+The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. Releases: `1.0.0` (the first), `1.1.0` (the andon), `1.2.0` (the per-run A3 and the Factory baseline), and `1.3.0` (the gemba sample). Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
 
 Any change under `plugins/factory/` needs a bump in `plugin.json`:
 
@@ -143,7 +147,7 @@ Any change under `plugins/factory/` needs a bump in `plugin.json`:
 
 `scripts/check-bump.sh` enforces this. The lead runs it before a PR is opened and again before it is merged, and a PR that fails it does not open or merge. Changes outside `plugins/factory/` pass without a bump.
 
-Installs of the factory change only when its version string changes, so a push without a bump does not reach other projects. The measurement baseline resets on a minor or major release only: from 1.2.0 a project's `1.2` series begins with its first item run on that release, and earlier releases stay in its baseline as history. A run can be frozen on one install (a calibration run): then `/plugin marketplace update` and `/reload-plugins` wait until it closes, because the freeze holds for every project on the machine.
+Installs of the factory change only when its version string changes, so a push without a bump does not reach other projects. The measurement baseline resets on a minor or major release only: from 1.2.0 a project's `1.2` series begins with its first item run on that release, from 1.3.0 its `1.3` series does the same, and earlier releases stay in its baseline as history. A run can be frozen on one install (a calibration run): then `/plugin marketplace update` and `/reload-plugins` wait until it closes, because the freeze holds for every project on the machine.
 
 **Restart Claude Code after an update.** A session keeps the factory skill text it read when it started, so a session opened before an install, an update, or a change to `plugins/factory/` still runs the old text. Start a new session before you run an item.
 
@@ -360,6 +364,23 @@ The `factory` plugin at 1.2.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | *Find baseline*, *Find records*, *Find A3s* and *Find A3* from the tracker doc, read-only | each exits 0 and prints no line: this repo holds no `Factory baseline` issue, no hansei record with its marker and no A3, as the calibration run expects |
 
 **Not tested yet, for 1.2.0:** the install and update path, and the rollback, which need an unfrozen machine (see the [release runbook](docs/factory/release-runbook.md)); a live session's run close and its settle answers; and the human-only checks of [CHANGELOG.md](CHANGELOG.md) under *1.2.0*. The 1.2.0 demo ran in a scratch project and is summarised there.
+
+The `factory` plugin at 1.3.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.57, `jq` 1.8.1, `gh` 2.94.0), on 2026-11-07, from `item/60`. Only read-only and validate-only commands were run, and the user-scope install was not touched: `factory@wimsuenens` is still on `9147301f75c3` because this run is frozen. So install, marketplace and reload commands were not run, nor were `/factory:run` or `/factory:setup-factory-skill`, which are interactive and write to the repo. The tracker's find operations were not run for this release.
+
+| Check | Result |
+| --- | --- |
+| `claude plugin validate ./plugins/factory` | passed, no warning |
+| `claude plugin validate ./plugins/factory/skills` | passed, no warning |
+| `claude plugin list --json` | `factory@wimsuenens` is `9147301f75c3`; the freeze holds |
+| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 1.2.0 -> 1.3.0`, exit 0 |
+| `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.3.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`); the tooling line equals 1.2.0's, the standard line does not |
+| `bash tests/run.sh` | `ALL PASSED`: 1939 passed, 0 skipped, exit 0, across eleven test files; the changelog check of 1.3.0 runs and passes |
+| `bash plugins/factory/scripts/token-spend.sh -- <transcript of this run's docs-writer agent>` | prints spend, peak and message count, exit 0 |
+| `bash plugins/factory/scripts/cut-offs.sh -- <same transcript>` | prints nothing, exit 0 |
+| `bash plugins/factory/scripts/token-spend.sh --require-end -- <same transcript>` | exit 6: the transcript was read before its agent gave a final reply, which the check reads as cut off; no finished transcript was at hand to re-run it |
+| the view part of the walk's command block (`hansei.md`, section 6), on the same transcript | exit 0 with empty stderr; the whole view fits the budget, so it is not partial |
+
+**Not tested yet, for 1.3.0:** the install and update path, and the rollback, which need an unfrozen machine (see the [release runbook](docs/factory/release-runbook.md)); the walk on a real project's transcript and a live close at step 8.3a; and the items listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *1.3.0*.
 
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 

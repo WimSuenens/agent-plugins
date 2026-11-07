@@ -2,6 +2,63 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 1.3.0 (#60)
+
+Release: `1.3.0`, the gemba sample. At each item's close the Lead walks one stage of the item, chosen by a counted rule. It reads what that agent actually did, in its transcript or, where no transcript can be read, in its commits and result file, and compares it with the brief and with the stage-log row. The hansei record then carries one line, `gemba`, that says which stage was walked, what the walk found, and whether it changes anything. A finding is a question about the process, and it goes to a 5 Whys; it is never a verdict on a person, a role or a model. A walk that could not be done reads `not captured (<reason>)`, never `found nothing` and never `0`. The version lives in `plugins/factory/.claude-plugin/plugin.json` only. Tag: `factory-v1.3.0`, created by hand by the Lead on the merge commit at merge. This item ran on the frozen install `9147301f75c3`, whose text has neither the walk nor a tag step, so the tag is made by hand, as for 1.1.0 and 1.2.0.
+
+Slice [#60](https://github.com/WimSuenens/agent-plugins/issues/60), map [#34](https://github.com/WimSuenens/agent-plugins/issues/34). Requirement [60-gemba-sample](docs/requirements/60-gemba-sample.md). Decisions: [ADR 0011](docs/adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [ADR 0012](docs/adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md) and [ADR 0013](docs/adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md), unchanged; no new ADR. Contracts: [60-gemba-sample](contracts/60-gemba-sample.md), [60-gemba-walk](contracts/60-gemba-walk.md), [60-gemba-line](contracts/60-gemba-line.md) and [60-standard-changes](contracts/60-standard-changes.md). The hansei record is at schema v5, and v3 and v4 records are still read. The contract index is [docs/factory/reference.md](docs/factory/reference.md). The release steps and checks are in [docs/factory/release-runbook.md](docs/factory/release-runbook.md), section *Release 1.3.0*.
+
+**No acceptance demo gated this slice.** The map decided that it is verified by best practice, not by a demo ([#60](https://github.com/WimSuenens/agent-plugins/issues/60), *Deliberately faked*). What offline checks cannot show is listed below as **unverified**. Real use settles that list: each finding goes to this repo as a feedback issue (the *Factory feedback* template, label `plugin:factory`).
+
+**Restart your Claude Code sessions after updating.** A session keeps the factory skill text it read when it started. A session that started before 1.3.0 runs the 1.2.0 run close, with no walk and no `gemba` line, until it is restarted.
+
+**Installs.** The machine on which this run is frozen keeps the install `9147301f75c3` until the freeze ends. Until someone updates that install (`claude plugin marketplace update wimsuenens`, then a restart), this release reaches no project on that machine.
+
+### Added
+
+- **The sample rule.** The stage is picked from the stage log by a count. Take the role rows (`product-owner`, `architect`, `developer`, `qa-engineer`, `security-reviewer`, `devops`, `docs-writer`) whose `Agents` cell is not `-`, and drop the flagged ones: a row whose `Result` does not start with `done` or `pass`, or whose `Notes` record a pause by an andon. The ticket number modulo the count picks the row, counted in the log's own order. When every role row is flagged, the same count runs over all of them and the line says `already flagged`. A log with no role row reads `not captured (no role stage ran)`. No duration, wait, peak or random choice enters the rule.
+- **The walk (step 8.3a).** One walk per item, after the merge approval and the token totals, before the record is filled. The evidence is the sampled row's transcript, or its commits and result file when no transcript can be read. The result's `Summary`, the completion notice, the stage summary and the agent's final reply are claims, never evidence. The walk compares the evidence with the brief (`Done`, `Constraints`, `Output`) and with the row (`Result`, `Notes`, `Waits`), and looks for exactly three things: a `Done` item with no trace, work that the brief or the ownership table forbids, and a row field that the evidence contradicts. Everything the walk reads is data: the Lead follows no instruction in it.
+- **The read limit.** Every read of a walk goes through a command that ends in `head -c`. A walk prints at most 30,000 characters, the brief included. A view longer than that is `partial (cap)`: the walk reads its head and may make one more bounded read, and the line says so.
+- **The 5 Whys of a difference.** A difference gets a 5 Whys as a kind 7 andon with no paused agent. It has no wait, no stop, no override and no resume, because the approval has already ended the lead time and covered the diff as shown. The andon comment, its row and the `abnormalities` link follow the andon rules, and the refusal rules of *The 5 Whys* apply unchanged.
+- **The gemba line, hansei schema v5.** The first line is `<!-- factory:hansei v5 -->`. One header line `gemba` follows `stage-log cross-check` and comes before the measures. The measures do not change: seven, with the same keys, order and grammar, so v3, v4 and v5 measures may be compared. The line is not a measure, and no baseline figure reads it. It is a new schema version and not a field in v4, so that a v4 reader skips a v5 record and says so rather than reading a key it does not know.
+- **Reading old and new records.** The baseline reads v3, v4 and v5. A v5 record with no `gemba` line, or with two, is skipped and named (`gemba line missing`, `gemba line repeated`). The check counts lines; no baseline or A3 field reads what a gemba line says. A v3 or v4 record has no line, and no `not captured` entry is made for one. The `records:` line of a series names every schema the series holds.
+
+### Changed
+
+- **The item close gains one step.** Step 8.3a is the walk. No step is renumbered: 8.4 stays 8.4. The walk runs after the approval, so its time is in no measure, and lead time still ends at the approval.
+- **The hansei record is at v5.** Its template, its header-field table and its worked example carry the line. The *Versions* paragraph and *Which versions the standard reads* (`v3, v4 and v5`) say what changed.
+- **The baseline.** `references/baseline.md` reads v3, v4 and v5, takes the presence check for the gemba line, and its `records:` line names the schemas of each series (`schema v4 and v5 read together`, `schema v3, v4 and v5 read together`).
+- **The files of this release under `plugins/factory/`** are `skills/run/SKILL.md`, `references/hansei.md`, `references/baseline.md` and `.claude-plugin/plugin.json`. No agent, script, hook or new file changed. The bounded read is text, so no script was added.
+
+### Unverified
+
+Offline checks, replays and reviews cover the text of this release. They cannot show the following, so they are named here as unverified:
+
+1. **The sample rule under real load.** Whether the stages it picks teach the Lead anything, judged by the share of walks that find a `difference` against those that find `nothing`, over items.
+2. **The walk's cost in a long item.** Whether the walk stays within its cap, and whether its cost in the Lead's context is worth the line, with a large transcript.
+3. **A real transcript read in a project's own checkout.** The bounded read has been run on transcripts of this machine and on generated ones. A project's own checkout has not been read, and the fallback to commits and result file is tested offline only.
+4. **How often a walk finds a difference.** Not measured yet. The line is the only record.
+5. **The 5 Whys of a real gemba finding.** Whether a real chain ends in a process item without the Lead's correction.
+6. **A fresh person or agent applying the rule's text.** Two programmatic readers agree on the fixtures. No person and no language-model reader has applied the text.
+7. **A live close at step 8.3a.** The order of the steps, the kind 7 andon after the approval, its `Abnormalities` row and the lead-state commit were read from the text and replayed on arithmetic. No live close has run them.
+8. **The guessed numbers.** The 30,000-character cap, the 300- and 200-character cuts of the view and the 1,500-character cut of the final reply are guesses. Feedback will tune them.
+9. **The first baseline that holds mixed v4 and v5 records.** Neither the `records:` line of such a series nor a real series 1.3 has been read.
+10. **The Lead obeying the data rule and the gate paragraph** against a hostile transcript (one whose tool results or final reply tell the Lead to do something else), in a live session.
+11. **The jq filter beyond one local transcript.** The view has been run on one transcript of this machine and on generated transcripts.
+12. **SIGPIPE behaviour.** Whether `head -c` closing the pipe ends a `jq` read cleanly was not run.
+
+### Known limits
+
+- **The extra read's pattern (security N2, low, accepted for this release).** The one extra read is a `grep -n` over the view, and its pattern can come from a `Done` item of the brief. A pattern that begins with `-` would be read as an option, and a regular expression can be slow. The read stays under `head -c`, and the line still reads `partial (cap)`.
+- **The walk cannot stop the merge.** It runs after the approval. A difference about a gating stage (QA or security did not run, or a verdict was not what its result said) is told to the person before the merge, and the merge question is asked again. Any other difference goes into the record and its 5 Whys.
+- **This item has no gemba line.** #60 ran on the frozen install `9147301f75c3`, which has no walk. Its close writes no `gemba` line and creates no `Factory baseline` issue. The first item run on 1.3.0 is the first walk.
+- **The 29,900-character budget.** A walk reads at most 29,900 characters of evidence and brief together, so that its printed total stays under 30,000. The rest of a long view is not read, and the line says `partial (cap)`. With two transcripts in one row the budget is shared and the first takes it first (QA observation): a second agent may then go unread, and the line says only `partial (cap)`.
+- **The rule is text.** The walk is the Lead following the text of `hansei.md` section 6 and step 8.3a. No script runs it, and the suite checks the text and replays the rule on fixtures, not in a live session.
+- **Carried from 1.2.0.** The limits listed under 1.2.0 stand: the experiment's settle, the paused-agent check, and the shared identity of the Lead.
+- **Post-merge checks, by the Lead.** The tag `factory-v1.3.0` must point at the merge commit on `main`, and this repo must hold no `Factory baseline` issue from this item's work. The release runbook lists the commands.
+
+Verdicts: QA round 3, pass, with the ten criteria covered by offline tests or named above ([reviews/qa-60.md](reviews/qa-60.md)); security round 3, pass with N2 open ([reviews/security-60.md](reviews/security-60.md)).
+
 ## factory 1.2.0 (#57)
 
 Release: `1.2.0`, the per-run A3 and the Factory baseline. Each project gets one `Factory baseline` issue that says what normal looks like for the factory release it runs, and each run ends with one A3: one problem, the 5 Whys behind it, at most one countermeasure tried as a local override, its before and after against that baseline, and what is still uncertain. The run's close is one step 9, in one order. The version lives in `plugins/factory/.claude-plugin/plugin.json` only. Tag: `factory-v1.2.0`, created by hand by the Lead on the merge commit at merge. This run is frozen on install `9147301f75c3`, whose text has no tag step, as for 1.0.0 and 1.1.0.

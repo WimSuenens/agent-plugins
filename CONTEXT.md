@@ -57,3 +57,6 @@ _Avoid_: retro, run report, post-mortem
 
 **Countermeasure experiment** — the run's one override that names the measure it is meant to move; items closed before it started are the **before-items**, items in flight when it started the **during-items** (counted in neither reading), and items that ran wholly under it within the run the **after-items**. It is read as counts with item numbers, with no claim of significance. Honesty rule: it is never started with a before-reading that was not captured, and two readings that cannot be compared show no difference.
 _Avoid_: A/B test, trial
+
+**Gemba** — going to where the work was done and looking at it, instead of reading a report of it. In the factory it is the **walk**: at each item's close the Lead picks one stage by a counted rule from the stage log, reads what that stage's agent did (its transcript, else its commits and result file, never its own summary) up to a fixed cap, compares it with the stage's brief and log row, and leaves one `gemba` line in the hansei record. A difference goes to a 5 Whys that blames the process. Honesty rule: a walk that could not be done reads `not captured`, never "found nothing".
+_Avoid_: audit, inspection, spot check (it checks the process, not the person)

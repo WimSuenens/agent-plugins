@@ -243,7 +243,7 @@ has ac23-findings-table "$HA" '| Role | Round | Id | Severity | Text |'
 has ac23-andon-row "$HA" 'Each andon is a row: `Stage` `Andon A<n>`'
 has ac23-paused-note "$HA" 'The row of the stage that was paused names it in `Notes` (`paused by A<n>`) and lists the andon wait'"'"'s id in its `Waits` column, since the slow-stage test subtracts only the waits a row lists.'
 has ac23-five-kinds "$HA" 'Kind of a wait: five kinds.'
-has ac24-marker-v4 "$HA" '<!-- factory:hansei v4 -->'   # #57: v3 -> v4; the v3 reading note is pinned in test_baseline_a3.sh
+has ac24-marker-v5 "$HA" '<!-- factory:hansei v5 -->'   # #60: v4 -> v5; the v3 and v4 reading is pinned in test_baseline_a3.sh and test_gemba.sh
 has ac24-abnormalities-line "$HA" '- abnormalities: <none | <n> (<kind name> <count>, …): A<k> <URL | raised, no andon recorded>; …>'
 has ac24-active-overrides-line "$HA" '- active overrides: <none | <name> (since YYYY-MM-DD; whole item | from <YYYY-MM-DDTHH:MMZ> | until <YYYY-MM-DDTHH:MMZ>); …>'
 has ac24-honesty "$HA" 'A row with no comment reads `A<k> raised, no andon recorded`. Never a count that leaves a raised abnormality out.'
@@ -418,7 +418,7 @@ else skip docs-changelog-1.1.0 "QA-49 O3: CHANGELOG.md has no 1.1.0 entry yet (d
 
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
-ck ac29-version-is-minor-above-1.1.0 "1.2.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac29-version-is-minor-above-1.1.0 "1.3.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 # the changed files under plugins/ are standard work or other, never a script (tooling fingerprint does not move)
 ck ac29-no-script-changed 0 "$(git -C "$REPO" diff --name-only "$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null || echo HEAD)" HEAD -- plugins/factory/scripts plugins/factory/hooks 2>/dev/null | grep -c .)"
 # no absolute home path in what ships or in what QA writes

@@ -33,8 +33,8 @@ none
 | 6 | Build | developer | a40fa600e25cc74c0 | 2026-11-07T11:45:02Z | 2026-11-07T12:04:37Z | 19m | - | 319332 | done | 1 question (project id source) answered: option A; ~12 two-way decisions; no tests run in repo (tests/ is QA's) |
 | 7 | Open PR | lead | - | 2026-11-07T12:04:37Z | 2026-11-07T12:04:37Z | 1m | - | - | opened | bump check: pass: minor bump needed, 1.3.0 -> 2.0.0 |
 | 8 | QA | qa-engineer | PENDING | 2026-11-07T12:04:37Z | | | - | | | |
-| 9 | Security | security-reviewer | PENDING | 2026-11-07T12:04:37Z | | | - | | | |
-| 10 | Contracts and ADRs (round 3) | architect | PENDING | 2026-11-07T12:04:37Z | | | - | | | |
+| 9 | Security | security-reviewer | af80c5d52b2004eea | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 116170 | findings | 3 medium, 5 low; no critical/high; reviews/security-64.md |
+| 10 | Contracts and ADRs (round 3) | architect | a8ecdf464b0f459a7 | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 40782 | done | project-id source and split join amended; 1 two-way decision |
 
 ## Waits
 
@@ -50,6 +50,14 @@ none
 
 | Role | Round | Id | Severity | Text |
 |---|---|---|---|---|
+| security-reviewer | 1 | S1 | medium | review diff command lists only the new name of a rename and quotes non-ASCII names |
+| security-reviewer | 1 | S2 | medium | paths.sh accepts p//q and p/./q spellings and compares case-sensitively, so overlap reads no |
+| security-reviewer | 1 | S3 | medium | public text other than briefs, results and needs-you comments is posted unscanned |
+| security-reviewer | 1 | S4 | low | Stage summary and Task request pass result-derived text with --body |
+| security-reviewer | 1 | S5 | low | the T-subissues author filter is prose only and roles do not check a brief's author or marker |
+| security-reviewer | 1 | S6 | low | scan secret patterns use awk interval expressions and miss some token shapes |
+| security-reviewer | 1 | S7 | low | rule 5.6 does not flag a role commit editing parallel-limit or factory-state |
+| security-reviewer | 1 | S8 | low | overlap rule never compares a path with the other list's shared entry |
 
 ## Abnormalities
 

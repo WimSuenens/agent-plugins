@@ -36,8 +36,6 @@ none
 
 | Time (UTC) | Kind | What |
 |---|---|---|
-| 2026-11-07T11:10Z | decision card | chose A1, B1, C1 on the combined card for #53, #54, #55 (frontier round, before this item) |
-| ~2026-11-07T11:18Z | approval | yes to merge and clean up for frontier PR #63 (frontier round, before this item) |
 
 ## Findings
 

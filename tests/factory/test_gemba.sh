@@ -354,4 +354,114 @@ nfb="$(wc -c < "$T/commits.view" | tr -d ' ')"
 ck t7-a-fallback-line-in-grammar OK "$(python3 -I "$GL" "- gemba: row 2 Build (developer); read commits and result file $nfb chars; found nothing (3 Done items and 2 constraints checked); changes nothing" | cut -d: -f1)"
 # the commit window needs the committer time; the format the text prints has none
 if [ "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log" | grep -cE '%(ct|cI|cd|cs|ci)')" -ge 1 ]; then ck t7-a-window-time-in-the-log-format 1 1; else skip t7-a-window-time-in-the-log-format "QA-60 F3: the text filters the commits by the row's window (committer time) but the printed format '%H %s' holds no time"; fi
+
+# ---------- T7 continued: an unreadable transcript, seen through the walk's own commands ----------
+printf 'not json at all\n' > "$T/bad.jsonl"
+walk "$T/brief3.md" 29000 "$T/gone.jsonl"; gone_out="$(cat "$T/w.out")"; gone_err="$(cat "$T/w.err")"
+ck t7-gone-transcript-view-has-no-call-or-result 0 "$(printf '%s\n' "$gone_out" | grep -cE '^(CALL|RESULT) ')"
+ck t7-gone-transcript-jq-error-on-stderr 1 "$(printf '%s\n' "$gone_err" | grep -c 'Could not open file' | sed 's/^[2-9]/1/')"
+walk "$T/brief3.md" 29000 "$T/bad.jsonl"
+ck t7-non-json-transcript-jq-error-on-stderr 1 "$([ -s "$T/w.err" ] && echo 1 || echo 0)"
+# nothing in the text tells the Lead to look at stderr or the exit status, and the commands exit 0 either way (the view hides the failure)
+bash "$T/run1.sh" >/dev/null 2>&1; rc=$?
+if printf '%s\n' "$sec6" | grep -qiE 'stderr|exit status|exit code|jq: error'; then ck t7-text-says-how-to-detect-an-unreadable-transcript 1 1
+else skip t7-text-says-how-to-detect-an-unreadable-transcript "QA-60 F4: a deleted or non-JSON transcript gives exit $rc and a view of the header and an empty FINAL line; only stderr shows it, and section 6 does not say to look"; fi
+
+# ---------- T9 (AC-7): a finding goes to the 5 Whys under the rule already in the standard ----------
+has t9-points-to-the-5-whys "$T/sec6.md" 'It reuses the Andon comment, *The 5 Whys*, the refusal and `## Refused drafts`'
+has t9-points-not-restates "$T/sec6.md" 'which this section points to and does not restate'
+for w in careless sloppy 'too weak' hallucinat 'wrong model' 'did not bother' 'blame the process'; do ck "t9-section-6-does-not-restate-$(printf '%s' "$w" | tr ' ' '-')" 0 "$(grep -ci -- "$w" "$T/sec6.md")"; done
+has t9-difference-always-gets-a-5-whys "$T/sec6.md" 'A `difference` always gets a 5 Whys before the record is posted'
+has t9-nothing-written-until-accepted "$T/sec6.md" '**Nothing is written to the line until a chain is accepted and its comment posted.**'
+has t9-difference-never-changes-nothing "$T/sec6.md" 'A difference never ends as `changes nothing`.'
+has t9-refused-draft-stays "$T/sec6.md" 'the refused draft stays under `## Refused drafts`'
+ck t9-5-whys-section-exists-in-skill 1 "$(grep -c '^### The 5 Whys$' "$SK")"
+ck t9-skill-names-the-section-by-its-title 1 "$(grep -c 'The 5 Whys' "$SK" | sed 's/^[1-9][0-9]*$/1/')"
+# the mechanical part of the refusal, applied to the found sentence and to the chain
+refuse() {  # refuse <found sentence> <chain file> -> REFUSED:<why> | ACCEPTED
+  s="$1"; f="$2"; why=""
+  printf '%s' "$s" | grep -qE '^(Done item [0-9]+|Constraint [0-9]+|the path [^ ]+|the row.s (Result|Notes)) .*, process object: (the )?(brief|inputs|standard text|tooling|ownership table|order of stages)$' || why="$why sentence-form"
+  printf '%s' "$s" | grep -qiE 'careless|forgot|weak|sloppy|should have|did not bother|hallucinat|wrong model|model is|skipped|ignored|lazy|failed to' && why="$why actor-word"
+  [ "$(printf '%s' "$s" | tr -cd ';' | wc -c | tr -d ' ')" = 0 ] || why="$why semicolon"
+  [ "${#s}" -le 200 ] || why="$why too-long"
+  while IFS= read -r l; do
+    case "$l" in [0-9]*". Why "*) printf '%s' "$l" | grep -qE 'evidence: [^ -]' || why="$why no-evidence" ;; esac
+  done < "$f"
+  # the actor words are looked for on every line of the chain, the closing process-item line included
+  grep -qiE 'careless|forgot|weak|sloppy|should have|did not bother|hallucinat|wrong model|model is|skipped' "$f" && why="$why actor-or-model"
+  tail -1 "$f" | grep -qE '^process item to change: ' || why="$why no-process-item-last"
+  if grep -qE '^countermeasure: .*(Role models|replac(e|ing) the role|swap)' "$f"; then
+    [ "$(grep -cE '^examined: the (brief|inputs|role.s standard text|tooling) — adequate — evidence: [^ ]' "$f")" -ge 4 ] || why="$why swap-without-4-examined"; fi
+  [ -z "$why" ] && echo ACCEPTED || echo "REFUSED:$why"; }
+cat > "$T/ch-a.txt" <<'X'
+1. Why was the third Done item missing? — the developer skipped it — evidence: commit 1a2b3c4
+process item to change: the developer should have checked
+X
+cat > "$T/ch-b.txt" <<'X'
+1. Why was a three-item brief not followed? — the agent's model is too weak — evidence: transcript 14:02Z
+countermeasure: a row in ## Role models
+process item to change: swap the model
+X
+cat > "$T/ch-c.txt" <<'X'
+1. Why was Done item 3 untraced? — the brief's third Done item named no output path — evidence: work/14/04-brief-developer.md:9
+2. Why did it name none? — the brief template lists no output path per Done item — evidence: plugins/factory/agents/developer.md:15
+process item to change: the brief template lists no output path per Done item
+X
+ck t9-a-refused "REFUSED: sentence-form actor-word actor-or-model" "$(refuse 'the developer skipped the third Done item' "$T/ch-a.txt")"
+ck t9-b-refused "REFUSED: sentence-form actor-word actor-or-model swap-without-4-examined" "$(refuse "the agent's model is too weak to follow a three-item brief" "$T/ch-b.txt")"
+ck t9-c-accepted ACCEPTED "$(refuse 'Done item 3 named no output path, process object: the brief' "$T/ch-c.txt")"
+# controls the word list alone would miss: an actor named with no banned word is refused by the sentence form; a good sentence on a chain that names an actor is refused by the chain
+ck t9-control-actor-without-banned-word-refused "REFUSED: sentence-form" "$(refuse 'the developer left Done item 3 untouched, process object: the brief' "$T/ch-c.txt")"
+cp "$T/ch-c.txt" "$T/ch-d.txt"; sed -i '' 's/^process item to change: .*/process item to change: the developer should have asked/' "$T/ch-d.txt"
+ck t9-control-good-sentence-bad-chain-refused "REFUSED: actor-or-model" "$(refuse 'Done item 3 named no output path, process object: the brief' "$T/ch-d.txt")"
+ck t9-control-chain-without-process-item-refused "REFUSED: no-process-item-last" "$(head -2 "$T/ch-c.txt" > "$T/ch-e.txt"; refuse 'Done item 3 named no output path, process object: the brief' "$T/ch-e.txt")"
+ck t9-control-semicolon-refused "REFUSED: semicolon" "$(refuse 'Done item 3 has no trace; it is empty, process object: the brief' "$T/ch-c.txt")"
+# the line grammar refuses a difference with no process object, so (a) cannot be written even if the Lead skipped the refusal
+ck t9-a-line-rejected-by-grammar REJECT "$(python3 -I "$GL" '- gemba: row 4 Build (developer); read transcript 4000 chars; found difference: the developer skipped the third Done item; changes none: needs a plugin change' | cut -d: -f1)"
+# honest limit: the grammar checks the form only, so (b) gets through it once it borrows a process-object tail; the word list and the sentence form catch it
+ck t9-limit-grammar-alone-accepts-a-borrowed-tail OK "$(python3 -I "$GL" "- gemba: row 4 Build (developer); read transcript 4000 chars; found difference: the agent's model is too weak to follow a three-item brief, process object: tooling; changes none: needs a plugin change" | cut -d: -f1)"
+ck t9-b-with-borrowed-tail-refused-by-sentence-form-and-words "REFUSED: sentence-form actor-word" "$(refuse "the agent's model is too weak to follow a three-item brief, process object: tooling" "$T/ch-c.txt")"
+
+# ---------- T10 (AC-7, AC-9): the andon path of a difference ----------
+has t10-kind-7-no-paused-agent "$T/sec6.md" 'as an **andon of kind 7 with no paused agent**'
+has t10-no-waits-entry "$T/sec6.md" '**no `## Waits` entry**'
+has t10-paused-agent-dash "$T/sec6.md" 'None runs. `Paused agent` `-`.'
+has t10-no-override "$T/sec6.md" 'Fixed: no override is written, because a commit after the approval would change what was approved.'
+has t10-fixed-lines "$T/sec6.md" 'The comment'"'"'s fixed lines: `kind: 7 other`, `raised by: lead`, `paused: no agent paused`, `fence check: not run: no override proposed`'
+has t10-row-notes "$T/sec6.md" '`kind 7 other; gemba walk after approval; override none`'
+has t10-row-waits-dash "$T/sec6.md" 'is a `lead` row with `Waits` `-`'
+has t10-skill-andon-sentence "$SK" 'A kind 7 andon raised by the gemba walk at step 8.3a (`hansei.md`, section 6) takes the rows of that section'"'"'s table: stamp but no `andon` wait, no agent to stop, no override, no resume'
+has t10-skill-kind-7-names-the-walk "$SK" 'The gemba walk of `hansei.md`, section 6, raises it when it finds a difference.'
+has t10-changes-two-outcomes "$T/sec6.md" 'the outcome is `none: needs a plugin change` and `standard change proposed` is filled'
+# replay of measure 1 on W12 plus an andon row after the approval
+awk '/^## 4\. Stage-log worked example/{f=1} /^## 5\./{f=0} f && /^\| W[0-9]+ \|/' "$HA" > "$T/w12-waits.txt"
+wsum() {  # wsum <kind>: minutes of held waits of that kind (parsed from the Waits table)
+  awk -F'|' -v k="$1" '{kind=$3; gsub(/ /,"",kind); held=$7; gsub(/ /,"",held); if(kind==k && held=="yes"){ s=$5; e=$6; gsub(/ /,"",s); gsub(/ /,"",e)
+     split(substr(s,12,5),a,":"); split(substr(e,12,5),b,":"); m+=((b[1]*60+b[2])-(a[1]*60+a[2])) } } END{print m+0}' "$2"; }
+ck t10-w12-person-51 51 "$(wsum person "$T/w12-waits.txt")"; ck t10-w12-limits-15 15 "$(wsum limits "$T/w12-waits.txt")"; ck t10-w12-stalled-15 15 "$(wsum stalled "$T/w12-waits.txt")"
+ck t10-w12-interrupted-18 18 "$(wsum interrupted "$T/w12-waits.txt")"; ck t10-w12-andon-20 20 "$(wsum andon "$T/w12-waits.txt")"
+tot=281; held=$((51+15+15+18+20)); ck t10-w12-agent-working-162 162 $((tot - held))
+# the walk's andon after the approval (16:21Z): a stage-log row Andon A3 with Waits '-', no Waits entry: the table and every sum are unchanged
+cp "$T/w12-waits.txt" "$T/w12-waits-after.txt"
+ck t10-after-the-walk-andon-sum-unchanged 20 "$(wsum andon "$T/w12-waits-after.txt")"
+# the control that shows why no wait is written: a wait opened after the approval pushes the held total past the item's total
+echo '| W9 | andon | lead | 2026-11-04T16:30Z | 2026-11-04T16:40Z | yes | gemba difference |' >> "$T/w12-waits-after.txt"
+ck t10-control-a-wait-after-approval-breaks-the-sum 1 "$([ $((tot - 51 - 15 - 15 - 18 - $(wsum andon "$T/w12-waits-after.txt"))) -ne 162 ] && echo 1 || echo 0)"
+has t10-hansei-worked-example-sum "$HA" 'Check of line 1: 4h41m = 281m; 51 + 15 + 15 + 18 + 20 = 119m; 281 − 119 = 162m = 2h42m.'
+
+# ---------- T12 (AC-9): the close step is placed once ----------
+ck t12-skill-8-3a-after-8-3-before-8-4 "3 3a 4" "$(sed -n '/^## 8\. /,/^## 9\. /p' "$SK" | grep -oE '^(3a|3|4)\. ' | tr -d '. ' | paste -sd' ' - | sed 's/^3 3a 4.*/3 3a 4/')"
+has t12-skill-8-3a-after-the-approval "$SK" 'Do the gemba walk of `hansei.md`, section 6 (after the approval of 8.1 and the totals of 8.3, before the template is filled)'
+has t12-hansei-5-item-3a-same-place "$HA" '3a. Do the gemba walk (section 6), after the approval and after the token totals, before the template is filled; its result is the `gemba` line.'
+ck t12-hansei-5-order-3-3a-4 "3 3a 4" "$(awk '/^## 5\. Close, in order/{f=1;next} /^## 6\./{f=0} f' "$HA" | grep -oE '^(3a|3|4)\. ' | tr -d '. ' | paste -sd' ' - | sed 's/^3 3a 4.*/3 3a 4/')"
+has t12-section-6-after-the-approval "$T/sec6.md" 'after the merge approval and the token totals, before the template is filled'
+has t12-time-in-no-measure "$T/sec6.md" "The walk's time and cost are in no measure: lead time ended at the approval."
+has t12-one-walk-per-item "$T/sec6.md" 'The Lead never starts a second walk of another stage, even when the first found nothing.'
+has t12-why-gemba-transfers "$T/sec6.md" "Gemba transfers to an agent factory because an agent's summary is written by the party being checked and the stage log holds clocks and counts, not what was done, so the work shows only in the transcript or the commits; the Lead goes and looks at a sample instead of trusting a report."
+ck t12-why-line-once-in-the-plugin 1 "$(grep -rF 'Gemba transfers to an agent factory' "$PLUGIN" | wc -l | tr -d ' ')"
+ck t12-the-index-rule-only-in-section-6 0 "$(grep -rlF '<id> mod n' "$PLUGIN" | grep -vc 'references/hansei.md')"
+ck t12-the-cap-command-only-in-section-6 0 "$(grep -rl 'head -c 30000' "$PLUGIN" | grep -vc 'references/hansei.md')"
+ck t12-the-rule-is-in-section-6-not-elsewhere-in-hansei 0 "$(grep -nF '<id> mod n' "$HA" | cut -d: -f1 | awk -v s="$(grep -n '^## 6\. The gemba walk' "$HA" | cut -d: -f1)" '$1<s' | wc -l | tr -d ' ')"
+ck t12-skill-8-3a-has-no-rule-steps 0 "$(grep -E '^3a\. ' "$SK" | grep -cE 'mod n|head -c|eligible|index')"
+ck t12-no-second-numbered-walk-in-skill 1 "$(grep -cE '^3a\. ' "$SK")"
 done_

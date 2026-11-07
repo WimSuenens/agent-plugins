@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: proposed, partly replaced by 0014
 ---
 
 # Factory roles talk through files, hub-and-spoke

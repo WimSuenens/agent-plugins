@@ -60,3 +60,15 @@ _Avoid_: A/B test, trial
 
 **Gemba** — going to where the work was done and looking at it, instead of reading a report of it. In the factory it is the **walk**: at each item's close the Lead picks one stage by a counted rule from the stage log, reads what that stage's agent did (its transcript, else its commits and result file, never its own summary) up to a fixed cap, compares it with the stage's brief and log row, and leaves one `gemba` line in the hansei record. A difference goes to a 5 Whys that blames the process. Honesty rule: a walk that could not be done reads `not captured`, never "found nothing".
 _Avoid_: audit, inspection, spot check (it checks the process, not the person)
+
+**Role task** — one role's piece of work on a slice or frontier ticket, kept as a sub-issue: the brief is its body, the result its closing comment, and rework is a new one. See [0014](docs/adr/0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md).
+_Avoid_: job, step, subtask (the tracker's word for the link, not for the work)
+
+**Factory status** — the board field that answers "what do I do now": Backlog, Ready, Running, Waiting on you, Blocked, Done. It sits beside the `Kind` and `Role` fields; the stage of a slice is whichever role task is Running. See [0015](docs/adr/0015-factory-status-has-six-values-plus-kind-and-role.md).
+_Avoid_: Status (the project's built-in field, which the factory does not use)
+
+**Needs you view** — the board view filtered to `Factory status` = Waiting on you: every card that is waiting for the person, and nothing else.
+_Avoid_: inbox, queue
+
+**Path list** — the files and directory prefixes a slice's contract says it may touch, plus its shared paths; two slices run side by side only when their lists do not overlap. See [0016](docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md).
+_Avoid_: lock, scope

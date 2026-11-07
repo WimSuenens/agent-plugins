@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: proposed, amended by 0015
 ---
 
 # One branch and worktree per item, shared by every role

@@ -1,0 +1,20 @@
+# derived from the notes of the L57 log: the message number of each role row's brief (- when the row had none written); and the brief files per role in NN order
+# row	role	brief
+2	product-owner	01
+3	architect	03
+4	product-owner	05
+5	developer	07
+7	qa-engineer	09
+8	security-reviewer	11
+9	architect	13
+10	developer	15
+11	qa-engineer	17
+12	security-reviewer	19
+15	architect	22
+16	product-owner	23
+17	developer	-
+19	developer	27
+20	qa-engineer	31
+21	security-reviewer	33
+24	devops	35
+25	docs-writer	37

@@ -502,4 +502,14 @@ if [ -f "$CL" ] && grep -qE '^## .*1\.3\.0' "$CL"; then
   ck t13-changelog-says-unverified 1 "$(printf '%s\n' "$ent" | grep -ci 'unverified' | sed 's/^[1-9][0-9]*$/1/')"
   for w in 'sample rule' 'cost' 'transcript' 'how often' '5 Whys'; do ck "t13-changelog-unverified-lists-$(printf '%s' "$w" | tr ' ' '-')" 1 "$(printf '%s\n' "$ent" | grep -ci -- "$w" | sed 's/^[1-9][0-9]*$/1/')"; done
 else skip t13-changelog-1.3.0-entry "the docs-writer's 1.3.0 entry is not in this checkout yet; reviews/qa-60.md lists what it must say as unverified"; fi
+
+# ---------- T4/T7 continued: the brief of a row is found by ordinal (hansei.md section 6, "Which brief") on a real log shape ----------
+# the role's brief files in NN order are the non-dash numbers of that role; row i of the role gets file i (the text's ordinal rule)
+ord_map() {  # prints "<row> <brief-or-->" for every role row, by the ordinal rule
+  awk -F'\t' '!/^#/ && NF==3 { c[$2]++; rows[NR]=$1; role[NR]=$2; ord[NR]=c[$2]; if ($3 != "-") { k[$2]++; file[$2, k[$2]] = $3 } } END { for (i=1;i<=NR;i++) if (rows[i]!="") print rows[i], ((role[i], ord[i]) in file) ? file[role[i], ord[i]] : "-" }' "$1"
+}
+want="$(awk -F'\t' '!/^#/ && NF==3 {print $1, $3}' "$FX/l57-briefs.tsv")"; got="$(ord_map "$FX/l57-briefs.tsv")"
+if [ "$want" = "$got" ]; then ck t4-ordinal-rule-finds-every-brief-on-L57 1 1
+else skip t4-ordinal-rule-finds-every-brief-on-L57 "QA-60 F6: when a role row has no brief file (L57 row 17, brief never written) the ordinal rule shifts the role's later rows: rows $(diff <(printf '%s\n' "$want") <(printf '%s\n' "$got") | grep '^>' | cut -c3- | cut -d' ' -f1 | paste -sd, -) get another file or none"; fi
+ck t4-ordinal-rule-right-for-every-row-with-a-brief-before-the-gap 1 "$(printf '%s\n' "$got" | awk '$1<17' | diff -q - <(printf '%s\n' "$want" | awk '$1<17') >/dev/null && echo 1 || echo 0)"
 done_

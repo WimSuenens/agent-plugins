@@ -158,9 +158,8 @@ ck v5-p-three-items-in-the-series 1 "$(grep -c '^- items: 3 items: #101 .*; #130
 ck v5-q-v4-and-v5-records-line "- records: schema v4 and v5 read together" "$(grep '^- records:' "$T/out-Q.md")"
 ck v5-r-one-schema-no-records-line 0 "$(grep -c '^- records:' "$T/out-R.md")"
 ck v5-m-v3-and-v4-line-unchanged "- records: schema v3 and v4 read together" "$(grep '^- records:' "$T/out-M.md")"
-ck v5-t-v3-and-v5-has-a-records-line-naming-both "- records: schema v3 and v5 read together" "$(grep '^- records:' "$T/out-T.md")"
-# the text shows three forms; v3 with v5 alone (no v4) has none: named, the replay reads "ascending order" literally
-skip v5-t-v3-and-v5-form-is-in-the-text "QA-60 F5: baseline.md section 7 shows three records: forms and no v3-and-v5 form; contract 60-gemba-line section 4.4 says every schema the series holds, ascending"
+# v3 with v5 and no v4 cannot arise from release series (baseline.md, section 7: said in one sentence; QA-60 F5 closed). The replay still writes a line for the set.
+ck v5-t-v3-and-v5-set-is-written-by-the-replay-in-ascending-order "- records: schema v3 and v5 read together" "$(grep '^- records:' "$T/out-T.md")"
 # a v5 record's measures enter its series exactly as the same v4 record's would (same measures, x5v4 and x5v5)
 fig() { grep -E '^(- (lead time|first-pass yield|rework|escaped defects|person|doors)|  - )' "$1"; }
 mkjson x5v4 > "$T/c-v4only.json"; jq -c "$filt" "$T/c-v4only.json" > "$T/r-v4only.jsonl"; python3 -I "$PY" body "$T/r-v4only.jsonl" 1.1.0 - /dev/null > "$T/out-v4only.md"

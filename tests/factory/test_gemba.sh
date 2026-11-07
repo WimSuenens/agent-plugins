@@ -98,4 +98,73 @@ done
 printf '%s\n' '| # | Stage | Role | Agents | Result |' '|---|---|---|---|---|' '| 1 | a | lead | - | done |' '| 2 | b | developer | x1 | done |' '| 3 | c | architect | x2 | pass |' > "$T/min.md"
 ck t2-minimal-log-picks "3 -" "$(pickA "$T/min.md" 5)"
 ck t2-minimal-log-readerB "3 -" "$(pickB "$T/min.md" 5)"
+
+# ---------- the walk's commands, cut out of section 6 and run (T3, T5, T7, T8) ----------
+CMDS="$(sub6 'The commands and the cap')"
+blk() { printf '%s\n' "$CMDS" | awk -v k="$1" '/^```/{c++; if(c==2*k-1){f=1;next} if(c==2*k){f=0}} f'; }
+blk 1 > "$T/blk1.sh"; blk 2 > "$T/blk2.sh"
+ck t8-two-command-blocks-extracted 1 "$([ -s "$T/blk1.sh" ] && [ -s "$T/blk2.sh" ] && echo 1 || echo 0)"
+G="$TF/gemba_transcript.py"
+python3 -I "$G" 400 "$T/big.jsonl" --edit plugins/x/a.md          # a view of about 200,000 characters
+python3 -I "$G" 6 "$T/small.jsonl" --edit plugins/x/a.md
+# walk <brief> <budget> <transcripts...>: run block 1 with the placeholders filled; stdout in $T/w.out, stderr in $T/w.err
+walk() {
+  b="$1"; bud="$2"; shift 2
+  sed -e "s#work/<id>/<brief file>#$b#" -e "s#<transcript paths>#$*#" -e "s#<budget>#$bud#g" "$T/blk1.sh" > "$T/run1.sh"
+  bash "$T/run1.sh" > "$T/w.out" 2> "$T/w.err"
+}
+# The Lead's two steps: read the brief (its count sets the budget), then the view under 30000 minus the brief. The numeric-only lines of the
+# output are the brief's count and the view's count; m (the whole view's size) is the last token (glued to a cut last line, QA-60 F2).
+walk_full() {  # walk_full <brief> <transcripts...>: sets bn vn wv n m partial
+  b="$1"; shift
+  walk "$b" 30000 "$@"; bn="$(grep -E '^ *[0-9]+$' "$T/w.out" | sed -n 1p | tr -d ' ')"
+  budget=$((30000 - bn)); [ "$budget" -lt 0 ] && budget=0
+  if [ "$budget" -gt 0 ]; then walk "$b" "$budget" "$@"; nums="$(grep -E '^ *[0-9]+$' "$T/w.out" | tr -d ' ')"
+    vn="$(printf '%s\n' "$nums" | sed -n 2p)"; wv="$(tail -1 "$T/w.out" | awk '{print $NF}')"   # m can be glued to a cut last line
+  else vn=0; walk "$b" 30000 "$@"; wv="$(tail -1 "$T/w.out" | awk '{print $NF}')"; fi
+  n=$((bn + vn)); m=$((bn + wv)); partial=0; [ "$n" -lt "$m" ] && partial=1
+}
+printf '%s\n' 'Brief: example' 'Done:' '- write plugins/x/a.md' '- write plugins/x/b.md' '- write plugins/x/c.md' 'Constraints:' '- touch only plugins/' '- no new agent' > "$T/brief3.md"
+BRIEFN="$(wc -c < "$T/brief3.md" | tr -d ' ')"
+
+# T8 (AC-6): a 200,000-character view: the figure is at most 30000, the line reads partial (cap), n equals the characters the commands returned
+walk_full "$T/brief3.md" "$T/big.jsonl"
+ck t8-big-view-is-over-190000 1 "$([ "$wv" -gt 190000 ] && echo 1 || echo 0)"
+ck t8-brief-count-is-wc-c-of-the-brief "$BRIEFN" "$bn"
+ck t8-n-at-most-30000 1 "$([ "$n" -le 30000 ] && echo 1 || echo 0)"
+ck t8-n-is-exactly-the-cap-when-view-is-longer 30000 "$n"
+ck t8-partial-when-view-longer-than-budget 1 "$partial"
+printf '%s' "- gemba: row 4 Build (developer); read transcript $n chars, partial (cap); found nothing in the part read ($n chars of $m); changes nothing" > "$T/line.txt"
+ck t8-partial-line-is-in-the-grammar OK "$(python3 -I "$GL" "$(cat "$T/line.txt")" | cut -d: -f1)"
+# the literal bytes the commands return: the count lines are printed beside the evidence
+walk "$T/brief3.md" $((30000 - BRIEFN)) "$T/big.jsonl"; returned="$(wc -c < "$T/w.out" | tr -d ' ')"
+if [ "$returned" -le 30000 ]; then ck t8-bytes-returned-at-most-30000 1 1; else skip t8-bytes-returned-at-most-30000 "QA-60 F2: the commands print $returned bytes in all (the evidence is capped at 30000; the count lines and the m line come on top)"; fi
+# a smaller view is read whole and is not partial
+walk_full "$T/brief3.md" "$T/small.jsonl"
+ck t8-small-view-read-whole-not-partial 0 "$partial"
+ck t8-small-n-equals-m "$m" "$n"
+# the budget shrinks with the brief: a 12000-character brief leaves 18000 for the view
+head -c 12000 /dev/zero | tr '\0' 'b' | fold -w 100 > "$T/brief12k.md"; echo >> "$T/brief12k.md"; B12="$(wc -c < "$T/brief12k.md" | tr -d ' ')"
+walk_full "$T/brief12k.md" "$T/big.jsonl"
+ck t8-budget-shrinks-view-is-30000-minus-brief $((30000 - B12)) "$vn"
+ck t8-total-still-30000 30000 "$n"
+# a brief longer than the cap is cut at 30000 by its own head -c, and no further read is made
+head -c 40000 /dev/zero | tr '\0' 'b' | fold -w 100 > "$T/brief40k.md"; echo >> "$T/brief40k.md"
+walk_full "$T/brief40k.md" "$T/big.jsonl"
+ck t8-huge-brief-cut-at-30000 30000 "$bn"
+ck t8-huge-brief-leaves-no-view 0 "$vn"
+# two transcripts share one cap
+walk_full "$T/brief3.md" "$T/big.jsonl" "$T/big.jsonl"
+ck t8-two-transcripts-one-cap 1 "$([ "$n" -le 30000 ] && echo 1 || echo 0)"
+# the text: every read command ends in head -c; no unbounded read anywhere in section 6
+has t8-text-30000-cap "$T/sec6.md" 'at most **30,000 characters**'
+has t8-text-every-read-ends-in-head-c "$T/sec6.md" 'Every read command ends in `head -c <budget>`'
+has t8-text-no-further-read-at-zero "$T/sec6.md" 'when it is 0 or less, no further read is made'
+has t8-text-never-a-whole-transcript "$T/sec6.md" 'The walk never reads a whole transcript.'
+has t8-text-awk-under-head-c "$T/sec6.md" 'all under `head -c <budget>`'
+has t8-text-one-more-bounded-read "$T/sec6.md" 'it may then make **one** more bounded read'
+has t8-text-only-through-these-commands "$T/sec6.md" 'The walk reads **only** through the commands below.'
+ck t8-no-unbounded-cat-of-transcript-or-gh 0 "$(grep -vE '^(Total read|The walk reads|Every read)' "$T/sec6.md" | grep -E 'cat "?\$?[a-z]*\.jsonl|gh issue view|gh api|git log -p|git show [^ ]+$' | grep -c .)"
+ck t8-every-jq-and-view-line-is-bounded 1 "$(grep -E 'view \| head -c <budget>' "$T/blk1.sh" | grep -c .)"
+ck t8-brief-read-bounded-by-head-c-30000 1 "$(grep -c 'head -c 30000 "work/<id>/<brief file>"' "$T/blk1.sh")"
 done_

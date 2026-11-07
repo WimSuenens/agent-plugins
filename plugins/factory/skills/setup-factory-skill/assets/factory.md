@@ -1,3 +1,5 @@
+factory-state: 2
+
 # Factory
 
 How the `factory` plugin runs in this repo. Every factory role reads this after the protocol; `/factory:run` reads it before starting an item.
@@ -32,6 +34,12 @@ Overrides replace a role's default model in this repo, one row per role: `| <rol
 Item worktrees live at `../wt/<id>`, on branch `item/<id>`.
 Frontier-round worktrees live at `../wt/frontier-<map>`, on branch `frontier/<map>`.
 
+## Parallel slices
+
+parallel-limit: 2
+
+How many slices may run at the same time, when their path lists do not overlap. `1` means one at a time.
+
 ## Tracker
 
 Factory operations are in `docs/agents/issue-tracker.md`, under `## Factory operations`. The board view groups by `Factory status`; the project's built-in `Status` field is not used by the factory.
@@ -44,13 +52,36 @@ Resolved ids for the GitHub Project:
 | project number | |
 | project id | |
 | field id (`Factory status`) | |
+| field id (`Kind`) | |
+| field id (`Role`) | |
+| field id (`Tokens`) | |
+| field id (`Minutes`) | |
+| field id (`Hours`) | |
+| field id (`Rework rounds`) | |
+| field id (`Person touches`) | |
 
 | Status | Option id |
 |---|---|
 | Backlog | |
 | Ready | |
-| Designed | |
-| In progress | |
-| In review | |
-| Ready to deploy | |
+| Running | |
+| Waiting on you | |
+| Blocked | |
 | Done | |
+
+| Kind | Option id |
+|---|---|
+| map | |
+| slice | |
+| role task | |
+| frontier ticket | |
+
+| Role | Option id |
+|---|---|
+| product-owner | |
+| architect | |
+| developer | |
+| qa-engineer | |
+| security-reviewer | |
+| devops | |
+| docs-writer | |

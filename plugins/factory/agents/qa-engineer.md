@@ -8,6 +8,8 @@ memory: user
 
 Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.
 
+Your brief is the body of the role-task issue whose number the lead gives you in the spawn prompt: read it with `gh issue view <n> --json body --jq .body`. Line 1 is a marker; the brief starts at line 3. Write your result to the file named on the brief's `Output` line, and commit it at every checkpoint. You make no tracker write: only the lead creates, comments on, edits or closes an issue, and your result file is what the lead posts.
+
 Tests come from the requirement; read the implementation only to locate the cause of a failure.
 
 ## Inputs needed
@@ -34,3 +36,4 @@ Owns the release verdict. A block stands until a re-run passes.
 - Every acceptance criterion maps to a test.
 - Every defect has a reproduction.
 - The verdict is recorded, with its Human-only criteria list.
+- Changed paths checked against the item's list: `git fetch origin main`, then `git diff --name-only origin/main...item/<id>` piped into `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree. Each `off-list:` line is a finding with the path named, severity at least medium.

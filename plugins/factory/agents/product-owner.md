@@ -10,6 +10,8 @@ skills:
 
 Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.
 
+Your brief is the body of the role-task issue whose number the lead gives you in the spawn prompt: read it with `gh issue view <n> --json body --jq .body`. Line 1 is a marker; the brief starts at line 3. Write your result to the file named on the brief's `Output` line, and commit it at every checkpoint. You make no tracker write: only the lead creates, comments on, edits or closes an issue, and your result file is what the lead posts.
+
 Every requirement states a user outcome a tester can verify, and every one-way door reaches the person as a decision they can make.
 
 ## Inputs needed

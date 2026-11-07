@@ -10,7 +10,7 @@ The lead briefs you and you report to the lead. Your brief names one of three pl
 - **A frontier round**: the round's worktree, on branch `frontier/<map>`, with messages in `work/frontier-<id>/`. `<id>` is the number of the frontier ticket being worked (a ticket on the map), and `<map>` the map issue's number.
 - **A settle round**: the run close's worktree, on branch `settle/<map>`, with messages in `work/settle-<map>/`. `<map>` is the map issue's number; commits start with `#<map>`.
 
-All coordination runs through files in that folder.
+Coordination runs through role tasks (below) and the files in that folder.
 Commit only paths you own. Start each commit message with `#<id>`, then `<role>: <what>`. Commit your own paths yourself; the lead does not commit for you.
 Commit at every **checkpoint**, not only at the end: a contract written, a test green, a section of a review done. Work cut off mid-way then loses at most the step in hand.
 
@@ -35,13 +35,17 @@ This scope is an agreement, not a technical boundary; keep to it.
 
 An ADR, requirement, or doc that lands on main never cites a path under `work/`, because `work/` is removed before the merge. Cite the tracker comment that holds the decision card, the decision, or the findings instead.
 
+The same rule covers decision cards and needs-you comments, the texts the person acts on from the board: neither names a path under `work/` or a branch (`item/<n>`, `frontier/<n>`). It does not cover briefs and closing comments: a brief's `Output` line names the draft result file, and a result may name the files it wrote. Those are pointers inside the working record and land nowhere on main.
+
 ## Messages
 
-Files in `work/<id>/` (or `work/frontier-<id>/`) are named `NN-<type>-<role>.md`; NN counts up per folder.
+A **role task** is one spawn of one role on one item (or one frontier ticket). The lead creates it as a **sub-issue** of the slice ticket (of the frontier ticket in a frontier round, never the map): line 1 of its body is the marker `<!-- factory:task <role> <n> -->`, and the rest is the brief or the feedback below. You read your brief from that issue (`gh issue view <n> --json body --jq .body`, the number in your spawn prompt). The lead posts your result, from the draft file you commit, as the closing comment of the role task. Only the lead writes to the tracker.
+
+Files in `work/<id>/` (or `work/frontier-<id>/`) are named `NN-<type>-<role>.md`; NN counts up per folder. After 2.0.0 the types are `result` (`NN-result-<role>.md`, the committed draft; its name is on the brief's `Output` line, and the role no longer chooses `NN`), `question` (`NN-question-<role>.md`), `decision` (`NN-decision-<slug>.md`, the product-owner's decision-card drafts) and `andon` (`NN-andon-lead.md`, the lead's andon drafts), plus `00-lead-state.md`. The brief and the feedback are sub-issue text, not files. Where a closing comment and the draft differ, the draft's commit decides.
 
 Paths in a message file are worktree-relative (`plugins/factory/agents/developer.md`), relative to the repo's parent for another worktree (`../wt/<id>`), or start with `~/` for anything under the home directory (`~/.claude/plugins/cache/...`). Never write an absolute path under the home directory: `work/` is merged into the project's history with every commit and stays there for good. This covers every message type, the lead state included, and commands in a message (`~/` or `"$HOME"/...`). A spawn prompt is chat, not a file, and is outside the rule.
 
-Brief (lead → role):
+Brief (lead → role), the body of the role-task issue after its marker line and one blank line:
 
     # Brief: <role> — <id>
     Goal: <one sentence>
@@ -67,7 +71,7 @@ Result (role → lead):
 
 Write your result file as soon as you start, with `Status: working`, and update **Progress** at every checkpoint commit. When you are cut off, a resumed or fresh agent reads it and continues from **Next**. Fill in the other fields when you stop, whatever the status.
 
-Feedback (lead → role):
+Feedback (lead → role), the body of a rework task after its marker line (a rework task is a new sub-issue under the same parent; earlier tasks stay closed and unedited):
 
     # Feedback: <role> — <id>
     Source: qa | security | architect | lead
@@ -123,7 +127,7 @@ Raise a kind only with its observation in hand.
 | 1 | `blocked-input` | a result with `Status: blocked` whose `Missing` lists an input that is not in that role's `## Inputs needed` in `agents/<role>.md`. An entry is listed when it is one of those bullets or a named part of one. Never kind 1: a fixed port taken (*Processes and ports*), and a blocked result that lists only listed entries (the ordinary *Missing input* route). |
 | 2 | `same-finding-twice` | two findings in one item that the lead's matching rule pairs (same missing guard, or the same criterion failing again in a later round) |
 | 3 | `role-outside-role` | a commit whose subject names role R and that changes a path the ownership table gives to another role |
-| 4 | `slow-stage` | a stage-log row whose agent-working time is more than twice the median of the same role's earlier rows |
+| 4 | `slow-stage` | a role task whose agent-working time is more than twice the median of the same role's earlier tasks |
 | 5 | `fence-crossing` | an override in `docs/agents/factory.md` that touches a fenced item (*Never overridable locally*) |
 | 6 | `version-drift` | the standard or tooling fingerprint of the running plugin differs from the one recorded for the same release; or the installed sha differs from the run's FREEZE line |
 | 7 | `other` | an event that fits no kind 1–6 and still ought to stop the line |

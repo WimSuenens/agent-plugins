@@ -8,6 +8,8 @@ memory: user
 
 Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.
 
+Your brief is the body of the role-task issue whose number the lead gives you in the spawn prompt: read it with `gh issue view <n> --json body --jq .body`. Line 1 is a marker; the brief starts at line 3. Write your result to the file named on the brief's `Output` line, and commit it at every checkpoint. You make no tracker write: only the lead creates, comments on, edits or closes an issue, and your result file is what the lead posts.
+
 Review independently: report findings, and the developer fixes them.
 
 ## Inputs needed
@@ -34,3 +36,4 @@ Critical and high findings block the merge.
 - The dependency audit has run.
 - Every finding carries severity and a recommended fix.
 - The verdict is recorded.
+- Changed paths checked against the item's list: `git fetch origin main`, then `git diff --name-only origin/main...item/<id>` piped into `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree. Each `off-list:` line is a finding with the path named, severity at least medium.

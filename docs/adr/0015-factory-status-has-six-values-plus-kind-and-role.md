@@ -18,7 +18,7 @@ Issue [#54](https://github.com/WimSuenens/agent-plugins/issues/54) asked what th
 
 1. **`Factory status`: Backlog, Ready, Running, Waiting on you, Blocked, Done.**
 2. **`Kind`** (map, slice, role task, frontier ticket) and **`Role`** are two further single-select fields. The stage is "which role task is Running", not a status.
-3. **The "Needs you" view** is the filter `status:"Waiting on you"`. #52 found no stable API for the view and the Insights chart; the migration step creates the view and the person checks it once by hand.
+3. **The "Needs you" view** is the filter `factory-status:"Waiting on you"`; the token names the `Factory status` field because the built-in `Status` field is not used by the factory. #52 found no stable API for the view and the Insights chart; the migration step creates the view and the person checks it once by hand.
 4. **The lead state keeps only the lead's memory** (running agents, shared resources, the interrupted role's `Progress` pointer). Status, stage log, waits and the person's touches move to the board and the sub-issues of 0014.
 5. **Migration is a `setup-factory-skill` step in three phases**, so it never relies on the undocumented effect of dropping an in-use option (#52): (1) snapshot the items to a scratch file outside the repo, never committed, then add the new options while sending every old option with its id; (2) re-set each affected item per the table; (3) when no item holds a dropped value, drop the four old options. The step prints the table and item count and applies nothing until the person confirms. It runs first on a scratch Project.
 

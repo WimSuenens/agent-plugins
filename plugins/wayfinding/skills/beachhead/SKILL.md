@@ -60,6 +60,8 @@ Hand the framed slice to the build chain:
 
 `/implement` closes out with `/code-review` as usual. Its Spec axis reads the slice's spec or the frame — not the map, which describes an effort no single slice implements.
 
+A slice may be cut while another is in flight; its path list is compared before it is built.
+
 When the slice merges, return to `/wayfinding:wayfinder`'s **Resurvey** with the **Under test** list in hand: each line is a question the build has now answered.
 
 ## Sizing

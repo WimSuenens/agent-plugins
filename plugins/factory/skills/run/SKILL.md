@@ -30,7 +30,7 @@ A **run** takes one destination from idea to a dissolved map. An **item** is one
 **First**, before the choice below, before any call to the board and before any mutation, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" state`. On a non-zero exit stop and print its stderr line (it says `run setup-factory-skill`): nothing else in this skill runs on a project that has not migrated. Then run `... factory-config.sh limit`; on exit 5 stop and name the line to fix, as for a bad role model value, and start nothing.
 
 - **An idea, or nothing** → start a new run at step 1.
-- **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round in progress is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
+- **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
 - **`#<slice>`** of a map this factory runs → read `work/<id>/00-lead-state.md` in its worktree and continue that item at the step it names. Find the role tasks (*Find role task*) and the ledger (*Find ledger*) before creating or posting anything.
 
 Whichever entry applies, run the checks of `## Andon`, *Run start*, before step 1 or the next item starts. On a resumed run they include the FREEZE check. They also include the baseline check of `references/baseline.md`: *Find baseline* and act on its result (section 2), then the repair check (section 8.2).

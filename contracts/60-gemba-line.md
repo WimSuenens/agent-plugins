@@ -38,7 +38,7 @@ changes  := "nothing" | "process item: " item " (" url ")" | "none: needs a plug
 ```
 
 - `#` and `stage` are the row's cells as the log writes them (`row 9 Build (round 2) (developer)`). `role` is the row's `Role`. `first-word-of-Result` is the first word of the row's `Result` (or `paused by A<n>`), only when the row came from the all-role-rows fallback ([60-gemba-sample](60-gemba-sample.md) §1 step 4).
-- `n`, `m`, `d`, `c`: plain integers. `n` is the total characters the walk read (`wc -c`, brief included) and is at most 30000; `m` is the brief's characters plus the whole view's. `partial (cap)` is written if and only if `n < m` for a walk that read evidence; `found nothing in the part read` is written if and only if the walk is partial and found nothing.
+- `n`, `m`, `d`, `c`: plain integers. `n` is the total characters the walk read (`wc -c`, brief included) and is at most 29900 (the cap of 30,000 printed characters less 100 kept back for count lines); `m` is the brief's characters plus the whole view's. `partial (cap)` is written if and only if `n < m` for a walk that read evidence; `found nothing in the part read` is written if and only if the walk is partial and found nothing.
 - `reason`: short, at most 80 characters, no home path, no transcript text.
 - `sentence`: [60-gemba-walk](60-gemba-walk.md) §4. `item`: the chain's `process item to change`, one line. `url`: the Andon comment's URL.
 - **Consistency.** `found difference` goes with `changes process item: …` or `changes none: needs a plugin change`, never `nothing`; `found nothing…` goes with `changes nothing`. `found` or `changes` that names a person, a role's care or competence, or a model with no process item is never written ([60-gemba-walk](60-gemba-walk.md) §5).
@@ -73,7 +73,7 @@ The other forms (each one line):
 | difference, local item | `- gemba: row 4 Build (developer); read transcript 22720 chars; found difference: Done item 3 has no trace in the calls or the commit diffs, process object: the brief; changes process item: the brief named no output path for Done item 3 (https://github.com/example/shop/issues/14#issuecomment-333)` |
 | difference, in the plugin's text | `- gemba: row 6 QA (qa-engineer); read commits and result file 9120 chars; found difference: the row's Result says pass while the commit diffs add a test that is not run, process object: standard text; changes none: needs a plugin change` |
 | fallback to commits, nothing found | `- gemba: row 3 Contracts and ADRs (architect); read commits and result file 4410 chars; found nothing (5 Done items and 2 constraints checked); changes nothing` |
-| cap hit, nothing found | `- gemba: row 4 Build (developer); read transcript 30000 chars, partial (cap); found nothing in the part read (30000 chars of 201240); changes nothing` |
+| cap hit, nothing found | `- gemba: row 4 Build (developer); read transcript 29900 chars, partial (cap); found nothing in the part read (29900 chars of 201240); changes nothing` |
 | all rows flagged | `- gemba: row 5 QA (qa-engineer, already flagged: findings); read transcript 12010 chars; found nothing (2 Done items and 1 constraints checked); changes nothing` |
 | not done | `- gemba: row 4 Build (developer); not captured (transcript and commits unreadable)` |
 | no role row | `- gemba: not captured (no role stage ran)` |

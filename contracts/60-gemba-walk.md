@@ -20,13 +20,13 @@ Serves AC-2, AC-3, AC-5, AC-6, AC-7, AC-9. The walk is written **once**, in `ref
 
 ## 3. The cap, enforced by the command
 
-The walk reads **only** through the commands of `hansei.md` section 6; no other command, file read or `gh` call brings text of the evidence, the brief or the log into the Lead's context for the walk. Total read for one walk: **at most 30,000 characters** (counted by `wc -c`, as the bytes the commands return). Every read command ends in `head -c <budget>`, with `<budget>` = 30,000 minus what the walk has already read; when it is 0 or less, no further read is made. The walk never reads a whole transcript.
+The walk reads **only** through the commands of `hansei.md` section 6; no other command, file read or `gh` call brings text of the evidence, the brief or the log into the Lead's context for the walk. Total read for one walk: **at most 30,000 characters printed** (counted by `wc -c`, everything the commands print, count lines and newlines included). Every read command ends in `head -c <budget>`, with `<budget>` = **29,900** minus what the walk has already read (100 characters are kept back for the count lines and newlines, as built in `hansei.md` section 6), so `n` is at most 29,900; when it is 0 or less, no further read is made. The walk never reads a whole transcript.
 
 Reference shape (the developer may change quoting, not the properties: a filter that keeps what is listed, a `head -c`, a count of what was returned, a separate count of the whole view):
 
 ```
 # 1. the brief (counts toward the total)
-f="$(mktemp)"; head -c 30000 "work/<id>/<brief file>" > "$f"; wc -c < "$f"; cat "$f"; rm -f "$f"
+f="$(mktemp)"; head -c 29900 "work/<id>/<brief file>" > "$f"; wc -c < "$f"; cat "$f"; rm -f "$f"
 
 # 2. the transcript view, per agent id, in Agents order, one cap for all
 view() {
@@ -47,6 +47,7 @@ view | wc -c        # m: the size of the whole view, for "n chars of m"
 The commits fallback keeps the same shape: `git -C <worktree> log --no-merges --format='%H %s' item/<id>` filtered to the role's subjects and window, then for each sha `git -C <worktree> show --unified=0 --format='commit %h %s'`, kept to the lines that start `commit `, `diff --git `, `+` or `-` (the diffs' file lists and changed lines), the result file through `awk` dropping the `Summary:` field (from its line to the next line that starts `Status:`, `Progress:`, `Artifacts:`, `Decisions:`, `Open questions:`, `Missing:` or `Decision card:`), then `head -c <budget>`. A view is ordered brief, then evidence; the figure `n` is the sum of the characters returned.
 
 - **Partial.** The evidence view is longer than the budget: the walk is `partial`. It reads the head of the view; it may then make **one** more bounded read of the specific part a `Done` item points to (a `grep -n` over the view for a path or a command, `git show <sha> -- <path>`), with `head -c` on what is left of the budget, and no more. It writes only what it found so far.
+- **The extra bounded read** takes only a worktree-relative path with no `..` and no leading `-`, or a hex sha, always quoted and placed after `--`; a path or sha that fails that test gets no extra read (security N1). It does not widen the cap.
 - `n` = characters read in all (brief included). `m` = the brief's characters plus the whole view's (`view | wc -c`). A walk that read the whole view is not partial.
 - The commands read the Lead's own checkout (`work/<id>/`, the item branch) and the transcripts the standard already reads (`cut-offs.sh`, `token-spend.sh`); the commit window is a `git log` filter, no new tool. `jq` is the one dependency, already required by the token script; with `jq` missing, the transcript is unreadable and the fallback applies.
 - The reference filter is a contract of properties, not yet run against a real project transcript. The developer runs it once on a transcript of this item's own agents and says so in the result; real readability is the unverified item 3 of the requirement.
@@ -118,7 +119,7 @@ None reads `nothing`, none reads a count of 0 in place of a missing walk, none i
 Item #14 ([60-gemba-sample](60-gemba-sample.md) §2) sampled row 4, Build, developer `c44a10`. Brief `04-brief-developer.md` has three `Done` items and two `Constraints`; the transcript is readable.
 
 1. Read the brief: 1,240 characters returned.
-2. View: `view | head -c 28760` returned 21,480 characters; `view | wc -c` gives 21,480, so the whole view was read, not partial. `n = 1,240 + 21,480 = 22,720`, `m = 22,720`.
+2. View: `view | head -c 28660` returned 21,480 characters; `view | wc -c` gives 21,480, so the whole view was read, not partial. `n = 1,240 + 21,480 = 22,720`, `m = 22,720`.
 3. Compare: `Done` items 1 and 2 are traced by `CALL Edit` and a commit diff; item 3 (a file list at `plugins/x/ref.md`) has no call, result or diff; the result's `Summary` says it was done. That is thing 1.
 4. A `difference`: sentence `Done item 3 has no trace in the calls or the commit diffs, process object: the brief`. The chain, ending `process item to change: the brief named no output path for Done item 3`, is accepted; that item is this item's own brief, so the outcome is `process item:`. Andon A1 (kind 7) is posted at `https://github.com/example/shop/issues/14#issuecomment-333`.
 5. The line (grammar [60-gemba-line](60-gemba-line.md) §2):
@@ -127,4 +128,4 @@ Item #14 ([60-gemba-sample](60-gemba-sample.md) §2) sampled row 4, Build, devel
 - gemba: row 4 Build (developer); read transcript 22720 chars; found difference: Done item 3 has no trace in the calls or the commit diffs, process object: the brief; changes process item: the brief named no output path for Done item 3 (https://github.com/example/shop/issues/14#issuecomment-333)
 ```
 
-Contrasts: the same sampled row with every item traced reads `found nothing (3 Done items and 2 constraints checked); changes nothing`. A 200,000-character view with the brief of 1,240 reads `read transcript 30000 chars, partial (cap)`; nothing found reads `found nothing in the part read (30000 chars of 201240)`.
+Contrasts: the same sampled row with every item traced reads `found nothing (3 Done items and 2 constraints checked); changes nothing`. A 200,000-character view with the brief of 1,240 reads `read transcript 29900 chars, partial (cap)`; nothing found reads `found nothing in the part read (29900 chars of 201240)`.

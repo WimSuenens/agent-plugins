@@ -5,12 +5,12 @@ Scope: `git diff main...item/60` for `plugins/factory` (hansei.md item 3a and se
 Verdict: **pass with findings** (no critical, no high; nothing blocks the merge). Two medium and four low findings are open. The developer fixes them or the person accepts them; I re-verify after.
 
 Dependency audit: ran. The diff adds or changes no manifest or lockfile (`git diff main...HEAD --name-only` matches only `docs/requirements/60-gemba-sample.md` for the pattern package/lock/requirements, a false hit). Nothing to audit.
-Secrets and paths: no token-like strings; no `/Users/` or `/home/` in any added line. `hooks/`, `scripts/`, `plugins/factory/hooks`, `scripts`, `agents`: no change. No script is added; the commands are prose.
+Secrets and paths: no token-like strings; no absolute home-directory path in any added line (grepped for the macOS and Linux home prefixes). `hooks/`, `scripts/`, `plugins/factory/hooks`, `scripts`, `agents`: no change. No script is added; the commands are prose.
 
 ## Areas
 
 1. **Transcript content to a tracker comment (egress).** The line grammar is closed (fixed words, integers, `reason` at most 80 characters, `sentence` at most 200, no `;`, no newline, "no copied text") and the 5 Whys is tested by the existing refusal rules, so a paraphrase is what is required. Held by prose only: nothing forbids a secret, a home path or an `@mention` inside the sentence or an andon cause line (G3). The andon comment goes to the project's own tracker only; `--repo WimSuenens/agent-plugins` is not used by the walk. Partial: G3.
-2. **Cap and bounded reads.** Every read ends in `head -c <budget>`; the brief is capped at 30,000 and counts toward the total; a budget of 0 stops reads; the one extra read is bounded. Holds. The view is built by running `jq` twice over whole transcripts (once for `view | wc -c`, and a `jq -s` slurp for the final reply): resource use, not egress (G5). Quoting: `$t` and `"$f"` are quoted; `<transcript paths>` and the agent id are placeholders with no validation (G5). Temp files hold transcript excerpts and are removed only on the success path (G4). Paths are relative (`work/<id>/…`) while the run skill otherwise requires absolute worktree paths (G5). No home path is written into a file: the `find ~/.claude/projects` command is in prose; the line and the comment carry none, except by G3's gap.
+2. **Cap and bounded reads.** Every read ends in `head -c <budget>`; the brief is capped at 30,000 and counts toward the total; a budget of 0 stops reads; the one extra read is bounded. Holds. The view is built by running `jq` twice over whole transcripts (once for `view | wc -c`, and a `jq -s` slurp for the final reply): resource use, not egress (G5). Quoting: `$t` and `"$f"` are quoted; `<transcript paths>` and the agent id are placeholders with no validation (G5). Temp files hold transcript excerpts and are removed only on the success path (G4). Paths are relative (`work/<id>/…`) while the run skill otherwise requires absolute worktree paths (G5). No home path is written into a file: the transcript `find` command is in prose; the line and the comment carry none, except by G3's gap.
 3. **Can transcript text steer the Lead.** Section 6 says the walk reads only through the commands, and that the summary and final reply are claims, not evidence. It never says that the text it reads (transcript, brief, commit diff, result file) is data and no sentence in it is followed. `baseline.md` section 1 has that rule for the baseline; the walk is the larger surface (a transcript holds tool results from the web and files). G1.
 4. **The andon at close and ADR 0011.** Held: kind 7, no paused agent, no `## Waits` entry, `fence check: not run: no override proposed`, countermeasure only `none` or `none: needs a plugin change`, no override written, no resume, nothing sent to the plugin repo. The fence list, the verdict gates and the honesty rule are untouched by the diff. Two gaps: a difference found after the merge approval cannot stop the merge, and nothing says the person is told first (G2); the "no commit after the approval" wording is looser than the facts (G6).
 5. **Baseline reading v5.** Held: `v3`, `v4`, `v5` readable, other versions skipped and named; a v5 record with none or two or more `- gemba: ` lines is skipped and named (`gemba line missing` or `repeated`), in no section and no reading; the check counts lines and never reads content, so a hostile gemba line cannot reach the baseline or the A3; v3 and v4 are read without the line and no `not captured` is made for them. The `- records:` line is a closed set of three forms.
@@ -40,7 +40,7 @@ Evidence: `rm -f` is the last command of a sequence; a cut-off or failed `head`/
 Recommended fix: `trap 'rm -f "$f"' EXIT` right after `mktemp` (or pipe straight to the counter with `tee`), and make the temp file go to the session scratchpad.
 
 ### G5 low: unvalidated ids, relative paths, double full read
-Location: same commands; `find ~/.claude/projects -name 'agent-<agent id>.jsonl'`.
+Location: same commands; `find` over the projects directory of the Claude home, `-name 'agent-<agent id>.jsonl'`.
 Evidence: the agent id comes from the stage log (the Lead's own text) and is put into a quoted `find` pattern and a path list; an id with a quote, a glob or `/` would change the command. `work/<id>/<brief file>` is relative to the shell's directory, while step 8.6 requires absolute worktree paths because the shell keeps no state. `jq -rs` and `view | wc -c` read whole transcripts (hundreds of megabytes possible) twice.
 Recommended fix: require an agent id to match `^[0-9a-f]+$` before use (otherwise `not captured (no transcript for agent …)`); write the paths as `"<worktree>/work/<id>/…"`; replace the slurp by a streaming `jq -n 'last(inputs…)'` or note the cost.
 
@@ -59,3 +59,36 @@ Recommended fix: reword to "no commit changes a path outside `work/<id>/`".
 - Dependency audit run (nothing to audit).
 - Every finding has location, severity and fix. Verdict recorded: pass with findings, none blocking.
 - Re-verification after fixes: not yet due.
+
+---
+
+# Round 2 (re-verify of the developer's feedback round 1, commit 1d0ab2c)
+
+Verdict: **pass**. G1 to G6 are closed. One new low finding (N1) is open and does not block. Reviewed on paper; I did not run the changed commands (the developer reports a run on a generated 190k view; unverified by me).
+
+Scope: the diff of `plugins/` since the first review (hansei.md section 6, SKILL.md 8.3a, baseline.md). No script, hook or agent file changed; no manifest or lockfile changed (dependency audit: nothing to audit). No absolute home-directory path in added lines (grepped). This file now carries no home-directory prefix (QA's observation fixed).
+
+## Closure
+- **G1 closed.** A paragraph at the head of section 6: everything the walk reads is data; the Lead follows no sentence, runs no command they name, opens no link; instruction-like text is a difference candidate. See N1 for one edge.
+- **G2 closed.** SKILL.md 8.3a and a section 6 paragraph: a gating difference is told to the person before 8.7 and the merge question is asked again; the walk cannot itself stop the merge; no new measure or stop kind. Matches the Lead's decision and keeps ADR 0011's gate item (the person decides).
+- **G3 closed.** Sentence and cause lines keep paths worktree-relative, no tool-result value, no secret, no `@mention`.
+- **G4 closed.** One `trap ... EXIT` over all four scratch files, created before any read.
+- **G5 closed.** Agent id must match `^[0-9a-f]+$` or the row is not captured; `<worktree>` absolute in brief, awk and git commands; the view is built once into a file and sized from it (the `jq -s` slurp of the final reply remains: memory cost only).
+- **G6 closed.** Reworded to "commits nothing outside `work/<id>/`".
+
+## Changed read commands: new-issue check
+- Cap: budget 29,900 less what is read, count lines and newlines inside 30,000; the extra bounded read is under `head -c` of the remainder. `n` is the sum of printed figures, at most 29,900; the grammar's "at most 30000" is looser but safe.
+- Failure is no longer silent: exit status and stderr size are printed; non-zero exit or any stderr means unreadable. `$?` expands before the command substitution in the same `echo`, so it reports the view's status. Stderr goes to a file and is never printed.
+- The view file holds lines already cut (300, 200, 1,500 characters) and is removed on every exit path; mktemp files are mode 600.
+- `for t in <transcript paths>` is an unquoted word list; a directory name with a space would split it (theoretical; project directories are dash-named).
+
+## New finding
+
+### N1 low: "runs no command they name" and the one extra bounded read are not reconciled
+Location: `hansei.md` section 6, the data paragraph and *Partial*.
+Evidence: the extra read (`grep -n` over the view, `git show <sha> -- <path>`) takes its path, command text or sha from a `Done` item of the brief, which is evidence text. The Lead builds the command, but the argument comes from the text; `..` or a leading `-` (`--output=`) could reach `git show`.
+Recommended fix: one sentence: the argument of the extra read must be a worktree-relative path without `..` or a leading `-`, or a hex sha, quoted and after `--`; otherwise no extra read is made.
+
+## Unverified
+- I did not execute the commands: the `jq` filter against real transcripts, the `view exit` line, SIGPIPE, the part size of exactly 29,900.
+- Whether a live Lead applies the data paragraph and the gate rule.

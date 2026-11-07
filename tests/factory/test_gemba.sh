@@ -464,4 +464,42 @@ ck t12-the-cap-command-only-in-section-6 0 "$(grep -rl 'head -c 30000' "$PLUGIN"
 ck t12-the-rule-is-in-section-6-not-elsewhere-in-hansei 0 "$(grep -nF '<id> mod n' "$HA" | cut -d: -f1 | awk -v s="$(grep -n '^## 6\. The gemba walk' "$HA" | cut -d: -f1)" '$1<s' | wc -l | tr -d ' ')"
 ck t12-skill-8-3a-has-no-rule-steps 0 "$(grep -E '^3a\. ' "$SK" | grep -cE 'mod n|head -c|eligible|index')"
 ck t12-no-second-numbered-walk-in-skill 1 "$(grep -cE '^3a\. ' "$SK")"
+
+# ---------- T13 (AC-10): release and hygiene ----------
+ck t13-plugin-json-1.3.0 1.3.0 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+BASE=""; for b in origin/main main; do git -C "$REPO" rev-parse --verify --quiet "$b^{commit}" >/dev/null 2>&1 && { BASE="$b"; break; }; done
+MB=""; [ -n "$BASE" ] && MB="$(git -C "$REPO" merge-base "$BASE" HEAD 2>/dev/null)"
+if [ -n "$BASE" ] && [ "$(git -C "$REPO" rev-parse HEAD)" != "$MB" ]; then
+  out="$(cd "$REPO" && bash "$CB" "$BASE" 2>&1)"; rc=$?
+  ck t13-check-bump-passes 0 "$rc"; ck t13-check-bump-says-minor "pass: minor bump needed, 1.2.0 -> 1.3.0" "$out"
+  chg="$(git -C "$REPO" diff --name-only "$MB" HEAD -- plugins/factory | sort | paste -sd' ' -)"
+  ck t13-only-the-four-files-change-under-plugins-factory "plugins/factory/.claude-plugin/plugin.json plugins/factory/references/baseline.md plugins/factory/references/hansei.md plugins/factory/skills/run/SKILL.md" "$chg"
+  ck t13-no-new-agent-script-or-hook 0 "$(git -C "$REPO" diff --name-only --diff-filter=A "$MB" HEAD -- plugins/factory | grep -c .)"
+  ck t13-no-agent-script-hook-changed 0 "$(git -C "$REPO" diff --name-only "$MB" HEAD -- plugins/factory/agents plugins/factory/scripts plugins/factory/hooks | grep -c .)"
+  # fingerprints: the standard moves, the tooling does not (plugin 1.2.0 as it is on the merge base)
+  mkdir -p "$T/base-export"; git -C "$REPO" archive "$MB" plugins/factory | tar -x -C "$T/base-export"
+  fo="$(bash "$FP" "$T/base-export/plugins/factory")"; fn="$(bash "$FP" "$PLUGIN")"
+  ck t13-base-release-1.2.0 "release: 1.2.0" "$(line "$fo" 1)"; ck t13-new-release-1.3.0 "release: 1.3.0" "$(line "$fn" 1)"
+  differ t13-standard-fingerprint-moved "$(line "$fo" 2)" "$(line "$fn" 2)"
+  ck t13-tooling-fingerprint-unchanged "$(line "$fo" 3)" "$(line "$fn" 3)"
+  echo "     fingerprints now: $(line "$fn" 2) / $(line "$fn" 3)"
+  # no absolute home path, no project data in what the diff adds or changes
+  H1='/Us''ers/[A-Za-z0-9_.-]+'; H2='/ho''me/[A-Za-z0-9_.-]+'; H3='[A-Za-z]:[\\/]+Us''ers[\\/]+[A-Za-z0-9_.-]+'
+  git -C "$REPO" diff "$MB" HEAD -U0 | grep '^+' | grep -v '^+++' | grep -vE '\$T/|\$\{?T\}?/' > "$T/added.txt"
+  ck t13-no-absolute-home-path-in-added-lines 0 "$(grep -cE "(^|[^A-Za-z0-9_.\$/-])($H1|$H2)|$H3" "$T/added.txt")"
+  ck t13-added-lines-were-read 1 "$([ "$(wc -l < "$T/added.txt")" -gt 500 ] && echo 1 || echo 0)"
+  ck t13-no-link-to-another-project 0 "$(grep -oE 'https?://[A-Za-z0-9./_#-]+' "$T/added.txt" | sed -E 's#(https?://[^/]+/[^/]+/[^/#]+).*#\1#' | sort -u | grep -vE '^https://github.com/WimSuenens/agent-plugins$|^https://github.com/example/|^https://example.invalid/|^https://github.com/anthropics/' | grep -c .)"
+  ck t13-no-issue-link-of-another-repository 0 "$(grep -oE 'github.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/(issues|pull)/[0-9]+' "$T/added.txt" | grep -vE 'WimSuenens/agent-plugins|example/shop' | grep -c .)"
+else skip t13-diff-against-main "no main ref (or nothing ahead of it) in this checkout"; fi
+# the tracked files of the standard and the new fixtures hold no absolute home path at all (git grep over the committed tree)
+H1='/Us''ers/[A-Za-z0-9_.-]+'; H2='/ho''me/[A-Za-z0-9_.-]+'
+ck t13-git-grep-plugin-and-gemba-fixtures-no-home-path 0 "$(git -C "$REPO" grep -nE "(^|[^A-Za-z0-9_.\$/-])($H1|$H2)" -- plugins tests/factory/fixtures/gemba tests/factory/gemba_pick.py tests/factory/gemba_pick.awk tests/factory/gemba_line.py tests/factory/gemba_transcript.py CONTEXT.md docs/factory 2>/dev/null | grep -c .)"
+ck t13-fixtures-carry-no-tracker-text 0 "$(grep -rIlE 'issuecomment-[0-9]{8,}|github.com/WimSuenens' "$FX" | grep -c .)"
+# the 1.3.0 changelog entry lists the five unverified items as unverified (the docs-writer's; skipped until the entry exists)
+CL="$REPO/CHANGELOG.md"
+if [ -f "$CL" ] && grep -qE '^## .*1\.3\.0' "$CL"; then
+  ent="$(awk '/^## .*1\.3\.0/{f=1;next} /^## /{f=0} f' "$CL")"
+  ck t13-changelog-says-unverified 1 "$(printf '%s\n' "$ent" | grep -ci 'unverified' | sed 's/^[1-9][0-9]*$/1/')"
+  for w in 'sample rule' 'cost' 'transcript' 'how often' '5 Whys'; do ck "t13-changelog-unverified-lists-$(printf '%s' "$w" | tr ' ' '-')" 1 "$(printf '%s\n' "$ent" | grep -ci -- "$w" | sed 's/^[1-9][0-9]*$/1/')"; done
+else skip t13-changelog-1.3.0-entry "the docs-writer's 1.3.0 entry is not in this checkout yet; reviews/qa-60.md lists what it must say as unverified"; fi
 done_

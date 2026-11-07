@@ -2,7 +2,7 @@
 
 - Board item id: PVTI_lAHOBIbaa84BqOBFzhGxjhg
 - Status: Backlog
-- Next step: step 6, Requirement (product-owner)
+- Next step: step 6, Contracts and ADRs (architect)
 - Open questions: none
 - Frozen on: factory 1.3.0 (see map #50 Factory run section)
 
@@ -26,6 +26,8 @@ none
 | # | Stage | Role | Agents | Start (UTC) | End (UTC) | Duration | Waits | Peak ctx | Result | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Start item | lead | - | 2026-11-07T11:21:45Z | 2026-11-07T11:22:37Z | 1m | - | - | done | author test: one git identity for all roles; freeze: ok (install segment 1.3.0 matches the FREEZE line, map body last edited by own account); drift: no earlier record for 1.3.0; kind 5: no ## Overrides section; baseline: #62 open with marker, no record unlisted; start stamp taken after worktree creation |
+| 2 | Requirement | product-owner | a1cf0ea9dd6c63829 | 2026-11-07T11:22:37Z | 2026-11-07T11:27:11Z | 5m | - | 91229 | done | 46 criteria, 10 two-way decisions, 0 cards; 2 questions routed to architect |
+| 3 | Contracts and ADRs | architect | PENDING | 2026-11-07T11:27:30Z | | | - | | | |
 
 ## Waits
 

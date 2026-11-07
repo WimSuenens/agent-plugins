@@ -33,8 +33,9 @@ Existing operations that 2.0.0 keeps unchanged keep their 1.3.0 text: **Run stat
 | `B-items` | `gh project item-list <N> --owner <O> --format json --limit 1000` | `{"items":[{"id","title","content":{"type","number","title"}, "<field name, lower case>": <value>}]}`; a single-select value is the option **name**; a number or text value is the plain value; an item with no value in a field has no such key |
 | `B-views` | `gh api graphql -f query='query($p: ID!) { node(id: $p) { ... on ProjectV2 { views(first: 50) { nodes { id name filter layout } } } } }' -f p=<P>` | `{"data":{"node":{"views":{"nodes":[{"id","name","filter","layout"}]}}}}` |
 | `T-view` | `gh issue view <n> --json id,number,title,body,state,createdAt,closedAt` (any subset of the fields) | one issue |
-| `T-subissues` | `gh api "repos/{owner}/{repo}/issues/<parent>/sub_issues" --paginate` | JSON array of issues: `number`, `id`, `title`, `body`, `state`, `created_at`, `closed_at`. Used to **find** a role task by marker and to read the times of the Tasks table |
+| `T-subissues` | `gh api "repos/{owner}/{repo}/issues/<parent>/sub_issues" --paginate` | JSON array of issues: `number`, `id`, `title`, `body`, `state`, `created_at`, `closed_at`, `user.login`. Only those whose `user.login` is the lead's own login count (as *Find hansei*: a public repo can hold a forged marker). Used to **find** a role task by marker and to read the times of the Tasks table |
 | `T-comments` | `me="$(gh api user --jq .login)"`, then `gh api "repos/{owner}/{repo}/issues/<n>/comments" --paginate --jq '.[] | select(.user.login == "'"$me"'") | {id, created_at, body}'` | the lead's own comments; **find by the first line** of `body`, never by position or time |
+| `T-recent` | `me="$(gh api user --jq .login)"`, then `gh issue list --state all --author "$me" --limit 100 --json number,title,body,createdAt` | the lead's 100 newest issues; used only to find a role task that was created but never linked (AC-19) |
 | `T-dbid` | `gh api "repos/{owner}/{repo}/issues/<n>" --jq .id` | the numeric database id |
 
 ### Mutations

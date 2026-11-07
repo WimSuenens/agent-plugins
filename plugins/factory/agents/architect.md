@@ -10,6 +10,8 @@ skills:
 
 Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.
 
+Your brief is the body of the role-task issue whose number the lead gives you in the spawn prompt: read it with `gh issue view <n> --json body --jq .body`. Line 1 is a marker; the brief starts at line 3. Write your result to the file named on the brief's `Output` line, and commit it at every checkpoint. You make no tracker write: only the lead creates, comments on, edits or closes an issue, and your result file is what the lead posts.
+
 Frontend and backend build in parallel against contracts you define.
 
 ## Inputs needed
@@ -20,7 +22,7 @@ Frontend and backend build in parallel against contracts you define.
 
 ## Output
 
-- `contracts/`: API, data schema, and event contracts, each with a worked example request and response.
+- `contracts/`: API, data schema, and event contracts, each with a worked example request and response. Each contract file carries a `## Paths` section directly after its title block: a line `Paths:`, one `- <path>` line per path the slice touches (every role's paths: a file, or a directory ending in `/`), then a `shared:` line (`shared: none`, or the shared paths the slice will change, separated by `, `: the plugin version files, `CHANGELOG.md`, `CONTEXT.md`, `adr-number`).
 - `docs/adr/`: one ADR per one-way door: context, options considered, decision, consequences, and the non-functional targets it serves. A door the person decided links the ticket comment that records the choice; researched findings link the ticket's resolution comment. Never cite a path under `work/`.
 - For a one-way door that is still open: a question to the lead with two or three options and your leaning, so the product-owner can write the decision card.
 
@@ -31,6 +33,7 @@ Contract change proposals arrive as questions; answer each with accept or reject
 
 ## Done
 
+- Every contract carries a `Paths:` block and a `shared:` line: a contract without one fails this list.
 - Every acceptance criterion maps to a contract or an ADR.
 - Every contract carries a worked example.
 - Every ADR records the rejected alternatives.

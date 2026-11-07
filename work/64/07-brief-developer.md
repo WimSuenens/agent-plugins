@@ -1,0 +1,18 @@
+# Brief: developer — 64
+Goal: Build slice #64 (map #50, release 2.0.0) to the contracts: the board as status, role tasks as sub-issues, hansei numbers in fields with the ledger, parallel slices, the migration script, and the 2.0.0 release text. Tracer bullet first.
+Inputs:
+- Tracker: #64 (frame), #50 (map).
+- Files: `docs/requirements/64-board-as-run-state.md` (46 acceptance criteria, Scope, Unverified list); every `contracts/64-*.md` (gh-calls, board-status, role-tasks, ledger-and-fields, parallel-slices, board-script, release), each with its `## Paths` block and a worked example; `docs/adr/0014-*`, `0015-*`, `0016-*`; `CONTEXT.md`; `docs/agents/factory.md`; `plugins/factory/` and `plugins/wayfinding/` as they are today.
+Constraints:
+- Build to the contracts; they are the interface. A contract that cannot be met, or reads wrongly, is a question to the lead, not a silent deviation.
+- Touch only paths you own: `plugins/` (factory and wayfinding). Do not write `tests/` (QA's), `docs/`, `contracts/`, `reviews/`, `CHANGELOG.md`, `README.md` or `CONTEXT.md`. Do not edit this repo's own `docs/agents/factory.md` or `docs/agents/issue-tracker.md`: they migrate through the new step after the run closes. The 2.0.0 tracker template lives at `plugins/factory/skills/setup-factory-skill/references/issue-tracker-github.factory.md`, and the config template at `plugins/factory/skills/setup-factory-skill/assets/factory.md`, per the contracts.
+- The version in `plugins/factory/.claude-plugin/plugin.json` becomes `2.0.0` (a shared path; you own the edit, nothing else changes it). `plugins/wayfinding/` stays unversioned (contract 64-release).
+- Tracer bullet: first `scripts/board.sh plan` against a fake `gh` you write in your scratch space (not in the repo), covering the status mapping and the first migration phase; commit; then the rest in the order of the contracts' dependencies: gh-calls, board-status, role-tasks, ledger-and-fields, parallel-slices, board-script, release.
+- QA writes the repository tests (`tests/factory/`) from the acceptance criteria and the contracts' "what QA can check offline" sections. Run your own checks with throwaway scripts outside the repo, and say so in your result. Scripts must follow the repo's existing shell style (see `plugins/factory/scripts/`), accept the fake-`gh` interface of contract 64-gh-calls (op ids, log, answers, fail switch), and never call the live Project in any default path.
+- Everything must work for a project that never installs the migration: `/factory:run` on a project without `factory-state: 2` stops with "run setup-factory-skill" (contract 64-board-script).
+- Honor the fence in `references/protocol.md`: merge and production approvals, the decision-card route, QA and security verdicts as gates, the andon, memory and shell-scope rules, the honesty rule for measures (no blank, no zero for an uncaptured value). Keep the old stage-log text only where a contract says a 1.x reader still needs it.
+- No absolute path under the home directory in any committed file.
+- Two-way decisions you make go under Decisions with chosen / rejected / cost to undo. A one-way door is a question to the lead.
+- Commit at every checkpoint (a contract met, a script green on your throwaway checks); subject starting `#64 developer: `. Keep `Progress` in your result file current.
+Output: the paths of the `## Paths` blocks that sit under `plugins/`; result `work/64/08-result-developer.md`.
+Done: every contract's plugin paths built; plugin.json at 2.0.0; throwaway checks listed with their results; deviations and questions listed; result written with Status, Progress, Summary and Decisions.

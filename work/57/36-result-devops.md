@@ -25,3 +25,5 @@ Done, point by point:
 - Runbook names 1.2.0, the tag step, the frozen-install note and the rollback path, consistent with the checks: yes.
 - Blast radius stated: yes (runbook header, 1.2.0 section, and above).
 - Edited only the runbook; nothing under plugins/, hooks/, scripts/, tests/; no absolute home path in it (grep checked).
+
+Feedback round (Lead): corrected the 1.2.0 monitoring sentence on baseline timing (created at run start, updated at 8.10, 9.1, 9.3; only the A3 is written at run close).

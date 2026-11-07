@@ -136,7 +136,7 @@ What normal looks like for this project, per factory release. Derived by the Lea
 - standard: <64 hex>
 - tooling: <64 hex>[, <64 hex> …]
 - not in any section: <none | #<id> <url> (<name> in force for part of the item); …>
-- records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line, only when the series holds more than one schema, naming them in ascending order)
+- records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line; a series holding v3 and v5 with no v4 cannot arise from release series, since a 1.2.x series holds v3 and v4 at most and a 1.3.x series v4 and v5 at most, so it has no form; only when the series holds more than one schema, naming them in ascending order)
 
 #### Section — whole-item overrides: <none | name, name> — <reference | history: … | other: …>
 - items: <n> items: #<id> <url>; #<id> <url> …

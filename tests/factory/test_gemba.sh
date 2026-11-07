@@ -603,4 +603,40 @@ ck f6-row-D-after-the-gap-finds-its-brief 27-brief-developer.md "$(brief_for dev
 ck f6-other-role-not-confused 31-brief-qa-engineer.md "$(brief_for qa-engineer - -)"
 ck f6-no-brief-at-all-is-brief-not-found "-" "$(brief_for architect - -)"
 # the same rule at L57 scale: no row's answer depends on another row's missing file (rows with a brief: right; the row without: none)
+
+# ---------- F7 closed: the contrast example follows the 29,900 budget ----------
+has f7-contrast-reads-29900 "$T/sec6.md" 'A 200,000-character view with a brief of 1,240 reads `read transcript 29900 chars, partial (cap); found nothing in the part read (29900 chars of 201240); changes nothing`'
+ck f7-no-30000-chars-example-left 0 "$(grep -c 'read transcript 30000 chars' "$T/sec6.md")"
+ck f7-contrast-line-in-grammar OK "$(python3 -I "$GL" '- gemba: row 4 Build (developer); read transcript 29900 chars, partial (cap); found nothing in the part read (29900 chars of 201240); changes nothing' | cut -d: -f1)"
+ck f7-contrast-numbers-reproduce 29900 "$((29900))"
+# a generated 200k view with a 1240-character brief gives the example's n (29900) and a partial walk
+head -c 1239 /dev/zero | tr '\0' 'b' > "$T/brief1240.md"; echo >> "$T/brief1240.md"
+walk_full "$T/brief1240.md" "$T/big.jsonl"
+ck f7-replay-n-is-29900-and-partial "29900 1" "$n $partial"
+ck f7-replay-m-is-brief-plus-view "$((1240 + M))" "$m"
+
+# ---------- N1: the one extra read takes a path or sha from evidence only when it is safe ----------
+has n1-text-rule "$T/sec6.md" 'The path or sha comes from evidence text, so it is used only when the path is worktree-relative with no `..` and no leading `-` (or the sha is hexadecimal), written in quotes and placed after `--`; otherwise make no extra read.'
+has n1-text-still-partial-cap "$T/sec6.md" 'The line then still reads `partial (cap)` and `found nothing in the part read`'
+has n1-text-one-extra-read-only "$T/sec6.md" 'it may then make **one** more bounded read'
+ck n1-text-extra-read-under-head-c 1 "$(grep -c 'under `head -c` on what is left of the budget, and no more' "$T/sec6.md")"
+# the mechanical refusal: what the Lead checks before building the extra read
+safe_path() {  # safe_path <path> -> OK | REFUSED
+  p="$1"
+  case "$p" in ''|-*|/*|~*) echo REFUSED; return;; esac
+  case "/$p/" in */../*|*/./*) echo REFUSED; return;; esac
+  printf '%s' "$p" | grep -qE '^[A-Za-z0-9_./@+-]+$' || { echo REFUSED; return; }
+  case "$p" in *--*) echo REFUSED; return;; esac
+  echo OK; }
+safe_sha() { printf '%s' "$1" | grep -qE '^[0-9a-f]{7,40}$' && echo OK || echo REFUSED; }
+for p in plugins/x/a.md work/60/04-brief-developer.md tests/factory/test_gemba.sh a.md; do ck "n1-path-accepted-$(printf '%s' "$p" | tr -c 'A-Za-z0-9\n' '_')" OK "$(safe_path "$p")"; done
+for p in '../x' 'a/../../x' '..' '-n' '--output=x' '--output=/tmp/x' '-e' '/etc/passwd' '~/x' 'a b' 'a;rm' 'a$(id)' 'a`id`' "a'b" '' 'a/./b'; do ck "n1-path-refused-$(printf '%s' "$p" | tr -c 'A-Za-z0-9\n' '_')" REFUSED "$(safe_path "$p")"; done
+for h in 1a2b3c4 0123456789abcdef0123456789abcdef01234567; do ck "n1-sha-accepted-$h" OK "$(safe_sha "$h")"; done
+for h in '' xyz1234 'HEAD' '1a2b3c4;id' '--output=x' '-1a2b3c4' '1A2B3C4' '12345'; do ck "n1-sha-refused-$(printf '%s' "$h" | tr -c 'A-Za-z0-9\n' '_')" REFUSED "$(safe_sha "$h")"; done
+# the extra read as the text shapes it ("quotes, after --") does not take a hostile name as an option: run it against a repo file named like an option
+X="$T/xrepo"; git init -q -b main "$X"; echo hi > "$X/./-n"; echo hi > "$X/ok.md"; git -C "$X" add -A -- 2>/dev/null; GIT_COMMITTER_DATE='2026-01-01T09:00:00Z' git -C "$X" commit -q -m 'a' 2>/dev/null
+sha="$(git -C "$X" rev-parse --short HEAD)"
+ck n1-safe-form-shows-the-file 1 "$(git -C "$X" show --unified=0 --format= "$sha" -- "ok.md" | grep -c '^+hi')"
+ck n1-safe-form-with-option-like-name-is-a-file-not-an-option 1 "$(git -C "$X" show --unified=0 --format= "$sha" -- "-n" | grep -c '^+hi')"
+ck n1-grep-form-after-double-dash-reads-file 1 "$(printf 'one\nplugins/x/a.md\n' > "$T/v.txt"; grep -n -F -- "plugins/x/a.md" "$T/v.txt" | wc -l | tr -d ' ')"
 done_

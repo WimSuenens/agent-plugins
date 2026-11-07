@@ -2,7 +2,7 @@
 
 - Board item id: PVTI_lAHOBIbaa84BqOBFzhGua5I
 - Factory status: Ready to deploy
-- Next step: Delivery (devops, brief 21), then Documentation (docs-writer, brief 23), then merge question
+- Next step: Documentation (docs-writer, brief 23), then merge question
 - Map: #34. Frozen factory install 9147301f75c3 (FREEZE line checked at item start: match). Calibration item, manual stage log.
 - Verification: no acceptance demo (map decision "Verification"); unverified items go to the changelog.
 - Open questions: none
@@ -26,3 +26,4 @@ none
 | Verification R2 (QA 13, security 14) | 2026-11-07T04:01Z | 04:10Z | - | QA 296554 cumulative spend after R2 (notice), security 69103 | 0 |
 | Fix round 2 (developer 16, architect 18) | 2026-11-07T04:11Z | 04:14Z | - | developer 105069, architect 152289 (cumulative per agent, notices) | 0 |
 | Verification R3 (QA 19, security 20) | 2026-11-07T04:14Z | 04:20Z | - | QA 305028 cumulative, security 73811 cumulative (notices) | 0 |
+| Delivery (devops 22) | 2026-11-07T04:21Z | 04:26Z | - | not captured (completion notice not read at close of stage) | 0 |

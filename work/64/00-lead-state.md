@@ -27,7 +27,9 @@ none
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Start item | lead | - | 2026-11-07T11:21:45Z | 2026-11-07T11:22:37Z | 1m | - | - | done | author test: one git identity for all roles; freeze: ok (install segment 1.3.0 matches the FREEZE line, map body last edited by own account); drift: no earlier record for 1.3.0; kind 5: no ## Overrides section; baseline: #62 open with marker, no record unlisted; start stamp taken after worktree creation |
 | 2 | Requirement | product-owner | a1cf0ea9dd6c63829 | 2026-11-07T11:22:37Z | 2026-11-07T11:27:11Z | 5m | - | 91229 | done | 46 criteria, 10 two-way decisions, 0 cards; 2 questions routed to architect |
-| 3 | Contracts and ADRs | architect | PENDING | 2026-11-07T11:27:30Z | | | - | | | |
+| 3 | Contracts and ADRs | architect | a826fb9651db80a9f | 2026-11-07T11:27:30Z | 2026-11-07T11:44:07Z | 16m | - | 245638 | done | 7 contracts, 22 two-way decisions, 0 cards; both blocking checks passed (readers re-pointed, text fields); 2 wording corrections found |
+| 4 | Requirement (round 2) | product-owner | PENDING | 2026-11-07T11:44:07Z | | | - | | | |
+| 5 | Contracts and ADRs (round 2) | architect | PENDING | 2026-11-07T11:44:07Z | | | - | | | |
 
 ## Waits
 

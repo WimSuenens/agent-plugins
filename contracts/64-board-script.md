@@ -22,19 +22,20 @@ AC-35 to AC-41 are about **order of calls and what a call carries** (every exist
 `bash` 3.2, `jq` 1.6 or later, `gh`. It calls `gh` only through the operations of [64-gh-calls](64-gh-calls.md), and `git rev-parse --show-toplevel` once. No other network, no home path in any output (a path is printed by its last two components, `…/factory/board-<owner>-<n>/`).
 
 ```
-board.sh plan   [--owner <O>] [--project <N>] [--state-dir <D>]
-board.sh apply  [--owner <O>] [--project <N>] [--state-dir <D>] --yes [--views-confirmed]
-board.sh finish [--owner <O>] [--project <N>] --views-confirmed
+board.sh plan   [--owner <O>] [--project <N>] [--project-id <P>] [--state-dir <D>]
+board.sh apply  [--owner <O>] [--project <N>] [--project-id <P>] [--state-dir <D>] --yes [--views-confirmed]
+board.sh finish [--owner <O>] [--project <N>] [--project-id <P>] --views-confirmed
                 [--factory-md <file>] [--tracker-md <file>] [--ops-template <file>]
 ```
 
 - **Project input.** `--owner` and `--project` win. Without them the script reads `owner` and `project number` from the Tracker table of `--factory-md` (default `docs/agents/factory.md`). If neither gives both: exit 2, `board: say which project (--owner, --project)`. **No project number, id or owner of this repository's Project is written in the script, its tests or its text** (AC-42); a test greps for them.
+- **Project id.** `B-views` and `B-set` need the project's node id `<P>`; no read answer of `B-fields` or `B-items` carries it, and no new `gh` operation is added. `--project-id <P>` gives it. Without the flag the script reads the `project id` row of the Tracker table of `--factory-md`, **only when** that table's `owner` and `project number` equal the project in use (a row for another project is ignored). The setup skill passes the flag, with the id it reads from `gh project list --owner <O> --format json`. `plan` works without an id: it skips the `B-views` read, prints `views: not read (no project id)`, and so reports the state from the options and items alone. `apply` and `finish` without an id exit 2 with `board: project id unknown` before any call.
 - **`--state-dir`.** Default `${XDG_STATE_HOME:-$HOME/.local/state}/factory/board-<owner>-<project>/`. It is created `0700`; files are written `0600` (a snapshot holds the titles of the project's items). It must be **outside** the repository working tree (`git rev-parse --show-toplevel` of the current directory, when there is one) and outside any `work/` folder: otherwise exit 2, `board: state dir is inside the repository`. Its path is printed to the person and never saved in a repo file.
 
 | Exit | Meaning |
 |---|---|
 | 0 | done, or `already migrated` (no mutation) |
-| 2 | usage, project not given, state dir inside the repo, `gh` or `jq` missing, `--yes` missing for `apply` |
+| 2 | usage, project not given, project id unknown (`apply`, `finish`), state dir inside the repo, `gh` or `jq` missing, `--yes` missing for `apply` |
 | 3 | a read call failed |
 | 5 | a **verification difference**: an item's field value differs from the snapshot beyond the expected status change. Stderr names the item and the field; no later phase runs |
 | 6 | phase 3 refused: an item still holds an old value. Stderr names the item |
@@ -169,4 +170,5 @@ Fixtures: **Board-v1**, **Board-v2**, **Board-mid** (after phase 1; after phase 
 | files and the last line | 41 | after a clean run `finish` leaves the diff of §7 and nothing else; with a forced failure in step 2 line 1 is not written and `factory-config.sh state` exits 3 |
 | no live project | 42 | grep of `plugins/`, `tests/factory/` and this contract's fixtures for the real number, id and owner of this repo's Project: none; with `gh` removed from `PATH` the tests fail with a clear message |
 | restore text | 43 | text check of the skill: the restore procedure, and the many-to-one sentence beside the table |
+| project id | 6, 35 | `plan` without a flag and with a `--factory-md` fixture lacking the row: exit 0, no `B-views` in the log, the line `views: not read (no project id)`; `apply --yes` and `finish` in that case: exit 2, `board: project id unknown`, empty call log; with `--project-id` or a matching row, `B-views` carries it and every `B-set` has `--project-id` equal to it; a fixture row for another owner or project number is ignored (exit 2 as without) |
 | views | 6, 21 | `B-vcreate` accepted: the printed line asks for confirmation, exit 10; refused: the manual instructions, exit 10; a second run with the view in `B-views` makes no `B-vcreate` |

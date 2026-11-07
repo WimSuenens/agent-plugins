@@ -72,14 +72,14 @@ The rule is text **and** a script, so a test calls what the lead calls (decision
 ```
 paths.sh list <contract-file>...
 paths.sh overlap <file>... -- <file>...
-paths.sh check <contract-file>...            (names on stdin, one per line)
+paths.sh check [--ignore <prefix>]... <contract-file>...   (names on stdin, one per line)
 ```
 
 | Subcommand | Prints | Exit |
 |---|---|---|
 | `list` | one line per entry of the union: `path <p>` or `shared <s>` (`shared none` is not printed) | 0; 2 a file has no `Paths:` block or no `shared:` line; 3 an entry is malformed (names it by line number, not text) |
 | `overlap` | `overlap: no`, or `overlap: yes <p> <q>` / `overlap: yes shared <s>` (the first pair found, in list order) | 0 no overlap; 1 overlap; 2 and 3 as `list` |
-| `check` | for each stdin name not on the list: `off-list: <name>`. A name is **on the list** when it equals, or lies under, a path entry, or equals a shared entry | 0 none off-list; 1 at least one; 2 and 3 as `list` |
+| `check` | for each stdin name not on the list: `off-list: <name>`. A name is **on the list** when it equals, or lies under, a path entry, or equals a shared entry. A name that starts with an `--ignore` prefix is skipped (the reviewer passes `--ignore work/<id>/`: the protocol's own folder is in the branch's history by design, ADR 0013, and is on no list) | 0 none off-list; 1 at least one; 2 and 3 as `list` |
 
 The files given may be contracts or plain files in the same grammar (a test passes a two-line list). An empty `Paths:` block (no entry) is malformed (3).
 
@@ -147,7 +147,7 @@ A slice is **cut** first, and its list exists only after the architect stage. Th
 A QA or security brief for item `<id>` carries, in its `Done` list, this step, and the two agent files carry it too:
 
 1. `git fetch origin main`, then `git diff --name-only origin/main...item/<id>` (the three-dot form: changes on the branch since it left `main`; `origin/main` rather than a local `main`, which may be stale and would show main's own commits).
-2. Pipe the names into `bash "<plugin root>/scripts/paths.sh" check contracts/<id>-*.md` in the item worktree.
+2. Pipe the names into `bash "<plugin root>/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree.
 3. Each `off-list:` line is a **finding** with the path named, severity at least `medium`. No line, no finding.
 
 A path that only the lead changes at merge (the version file, the changelog line, the ADR number as assigned) is **not in the diff when the review runs**: the lead applies them after the review, at merge (§7), and the standard says so. A shared path that does appear in the diff is on the list only if the slice named it on its `shared:` line.

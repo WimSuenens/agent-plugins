@@ -40,7 +40,7 @@ _Avoid_: checksum, hash (without saying which files it covers)
 **Hansei record** — the one comment the Lead leaves on an item's slice ticket, in the project's own tracker, at the person's merge approval: a marker with a schema version, the release and both fingerprints, and the seven measures, each with a value or "not captured". Its doors measure is filled in the same comment after the resurvey.
 _Avoid_: retro, report, post-mortem
 
-**Stage log** — the Lead's timed account of an item in its lead state: one row per stage with UTC start and end, the agents that worked it, waits for the person or on limits, and the person's touches. The hansei record is computed from it, and it goes with `work/<id>/` at close.
+**Stage log** — in factory 1.x, the Lead's timed account of an item in its lead state: one row per stage with UTC start and end, the agents that worked it, waits for the person or on limits, and the person's touches. The hansei record was computed from it, and it went with `work/<id>/` at close. From 2.0.0 its data lives in the **Ledger** and the role-task sub-issues; the name survives only in the hansei header key `stage-log cross-check` and in the 1.x worked examples.
 _Avoid_: timeline, audit log
 
 **Baseline** — the reference numbers that later changes are compared with, kept as the project's pinned `Factory baseline` issue: one section per **series**, derived by the Lead from the project's hansei records and recomputed, never edited by hand. Each figure is the median of the items that captured it, shown with how many that was; it opens with the first item on a major or minor release. Honesty rule: a value that was not captured reads `not captured`, never `0`, and is never averaged away.
@@ -72,3 +72,15 @@ _Avoid_: inbox, queue
 
 **Path list** — the files and directory prefixes a slice's contract says it may touch, plus its shared paths; two slices run side by side only when their lists do not overlap. See [0016](docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md).
 _Avoid_: lock, scope
+
+**Ledger** — the one comment the Lead keeps on an item's slice ticket, holding three tables: the role tasks (agents, peak context, result, notes), the waits, and the person's touches. A task's start and end are the sub-issue's created and closed times, never copied. The hansei record and the five hansei fields are computed from it at close. See [64-ledger-and-fields](contracts/64-ledger-and-fields.md).
+_Avoid_: log, journal (the 1.x **Stage log** is the term it replaces)
+
+**Board** — the GitHub Project of the repo, where each map, slice, frontier ticket and role task is a card with a `Factory status`, a `Kind` and (for a role task) a `Role`. The only place a status lives.
+_Avoid_: dashboard, kanban (the board is the state, not a view of it)
+
+**Parallel limit** — the number in the `parallel-limit: <N>` line of `docs/agents/factory.md` (default 2): how many slices may be in flight at once, when their path lists do not overlap. `1` means one at a time. A slice is in flight when it has an item branch and is Running, Waiting on you or Blocked. See [0016](docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md).
+_Avoid_: concurrency, worker count
+
+**History view** — the board view of closed slices and closed role tasks with their hansei fields (`Tokens`, `Minutes`, `Hours`, `Rework rounds`, `Person touches`), newest first. The fields are text so that `not captured (<reason>)` is a legal value and a blank never stands for it.
+_Avoid_: report, dashboard

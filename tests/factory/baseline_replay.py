@@ -172,6 +172,7 @@ def parse(c):
     lines = body.split('\n')
     r = Rec()
     r.id, r.url, r.created = c['id'], c['html_url'], c['created_at']
+    r.body = body
     m = MARK.match(lines[0])
     r.version = int(m.group(1))
     m = re.match(r'^## Hansei: #(\d+) ', lines[1]) if len(lines) > 1 else None
@@ -187,7 +188,7 @@ def parse(c):
     r.tooling = head.get('tooling')
     r.ovr = head.get('active overrides', 'none')
     r.f = {}  # field -> (kind, state)
-    if r.version not in (3, 4):
+    if r.version not in (3, 4, 5):
         return r
     mm = re.search(r'^1\. lead time: (.*)$', body, re.M)
     if mm:
@@ -298,7 +299,7 @@ def baseline(records, session, mainpath, a3s):
     series_std = {}
     readable_rel = []  # all readable release records (series M.N) for the "replaced by" rule
     for r in recs:
-        if r.version not in (3, 4):
+        if r.version not in (3, 4, 5):
             skipped.append('skipped: #%s %s (schema v%d)' % (r.item if r.item else '?', r.url, r.version) if r.item else 'skipped: #? %s (schema v%d)' % (r.url, r.version))
             continue
         if r.item is None:
@@ -325,13 +326,23 @@ def baseline(records, session, mainpath, a3s):
         elif r.standard != series_std[r.mn]:
             excluded.append('excluded: #%d %s (standard differs under %s; a forgotten version bump, see andon kind 6)' % (r.item, r.url, r.mn))
             continue
-        if r.version == 4 and r.ov_list_v3:
+        if r.version in (4, 5) and r.ov_list_v3:
             # S3: an `active overrides` line outside the extent grammar is skipped and named; the key it carried is not used
             skipped.append('skipped: #%d %s (active overrides line not in its grammar)' % (r.item, r.url))
             continue
         if r.version == 3 and r.ov_list_v3:
             excluded.append('excluded: #%d %s (override extent not recorded, schema v3)' % (r.item, r.url))
             continue
+        if r.version == 5:
+            # #60 baseline.md section 3 item 7: exactly one `- gemba: ` line in the header block; the content is never read
+            hdr = r.body.split('\n### Measures', 1)[0].split('\n')
+            ng = len([ln for ln in hdr if ln.startswith('- gemba: ')])
+            if ng == 0:
+                skipped.append('skipped: #%d %s (gemba line missing)' % (r.item, r.url))
+                continue
+            if ng > 1:
+                skipped.append('skipped: #%d %s (gemba line repeated)' % (r.item, r.url))
+                continue
         r.key = frozenset(n for n, e in r.ov.items() if e == 'whole')
         r.partial = [n for n, e in r.ov.items() if e != 'whole']
         items.append(r)
@@ -409,8 +420,10 @@ def baseline(records, session, mainpath, a3s):
             for nme in r.partial:
                 nis.append('#%d %s (%s in force for part of the item)' % (r.item, r.url, nme))
         L.append('- not in any section: ' + ('; '.join(nis) if nis else 'none'))
-        if its and {r.version for r in its} >= {3, 4}:
-            L.append('- records: schema v3 and v4 read together')  # O4: only when the series holds both schemas
+        vs = sorted({r.version for r in its})
+        if len(vs) > 1:
+            # #60 baseline.md section 7: every schema the series holds, ascending; one form per set (v3 and v5 alone: READING, the text shows three forms)
+            L.append('- records: schema ' + ', '.join('v%d' % v for v in vs[:-1]) + ' and v%d' % vs[-1] + ' read together')
         keys = []
         for r in its:
             if not r.partial and r.key not in keys:

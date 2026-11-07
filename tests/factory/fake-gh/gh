@@ -1,0 +1,191 @@
+#!/bin/bash
+# The fake gh of contracts/64-gh-calls.md section 3. Never calls the network and never execs a real gh.
+#   FAKE_GH_LOG    file; one JSON line per call: {"argv":[...],"stdin":"...","op":"<op id or unknown>"}
+#   FAKE_GH_DIR    folder of answers: <op>.out, or <op>.<k>.out served in call order (the last repeats); <op>.exit, <op>.err
+#   FAKE_GH_FAIL   <op>[:<k>]  the k-th call of <op> (default every call) exits 1 with stderr from <op>.err
+#   FAKE_GH_BOARD  optional: a board state file (JSON). When set the board operations (B-fields, B-options, B-items, B-views,
+#                  B-set, B-text, B-fcreate, B-foptions, B-vcreate, B-add) are answered from it and change it, the way a Project does:
+#                  an option sent without its id is a NEW option and clears the items that held the old one of that name.
+#   FAKE_BOARD_CLEAR   field key (lower case): after every B-foptions call, drop that field's value from every item
+#                      (a fake of a Project that silently loses a value when the option list is replaced)
+#   FAKE_BOARD_REFUSE_VIEW  non-empty: B-vcreate exits 1 (the mutation is refused)
+#   FAKE_BOARD_IGNORE_SET   a project item id: B-set on that item succeeds but changes nothing (a set that does not take)
+# An unmatched call is logged as op "unknown" and exits 99.
+
+argv=("$@")
+all=" $* "
+op=unknown
+stdin=""
+has_input=0
+for a in "$@"; do [ "$a" = "--input" ] && has_input=1; done
+if [ "$has_input" = 1 ]; then stdin="$(cat)"; fi
+
+method=GET
+prev=""
+for a in "$@"; do
+  [ "$prev" = "--method" ] && method="$a"
+  [ "$prev" = "-X" ] && method="$a"
+  prev="$a"
+done
+path=""
+for a in "$@"; do case "$a" in repos/*) path="$a" ;; esac; done
+
+case "$1 $2" in
+  "project field-list") op=B-fields ;;
+  "project item-list") op=B-items ;;
+  "project item-add") op=B-add ;;
+  "project field-create") op=B-fcreate ;;
+  "project item-edit")
+    if [ "${all#* --single-select-option-id }" != "$all" ]; then op=B-set
+    elif [ "${all#* --text }" != "$all" ]; then op=B-text; fi ;;
+  "issue view") op=T-view ;;
+  "issue list") op=T-recent ;;
+  "issue create") op=T-create ;;
+  "issue comment") op=T-comment ;;
+  "issue close") op=T-close ;;
+  "api user") op=T-me ;;
+  "api graphql")
+    if [ "$has_input" = 1 ]; then
+      case "$stdin" in
+        *updateProjectV2Field*) op=B-foptions ;;
+        *createProjectV2View*) op=B-vcreate ;;
+      esac
+    else
+      case "$all" in
+        *"options { id name color description }"*) op=B-options ;;
+        *"views(first"*) op=B-views ;;
+      esac
+    fi ;;
+  "api "*)
+    case "$path" in
+      */sub_issues) if [ "$method" = POST ]; then op=T-link; else op=T-subissues; fi ;;
+      */issues/comments/*) [ "$method" = PATCH ] && op=T-edit-comment ;;
+      */issues/*/comments) [ "$method" = GET ] && op=T-comments ;;
+      */issues/[0-9]*) [ "$method" = GET ] && op=T-dbid ;;
+    esac ;;
+esac
+
+if [ -n "${FAKE_GH_LOG:-}" ]; then
+  printf '%s\0' "${argv[@]}" | jq -Rs --arg stdin "$stdin" --arg op "$op" '{argv: (split("\u0000")[:-1]), stdin: $stdin, op: $op}' | jq -c . >>"$FAKE_GH_LOG"
+fi
+if [ "$op" = unknown ]; then echo "fake gh: unknown call: $*" >&2; exit 99; fi
+
+D="${FAKE_GH_DIR:-/nonexistent}"
+# call counter per op (kept in a file beside the log: the fake keeps no other state)
+cnt="${FAKE_GH_LOG:-/dev/null}.count.$op"
+k=0; [ -f "$cnt" ] && k="$(cat "$cnt")"
+k=$((k + 1))
+[ "${FAKE_GH_LOG:-}" != "" ] && echo "$k" >"$cnt"
+
+if [ -n "${FAKE_GH_FAIL:-}" ]; then
+  fop="${FAKE_GH_FAIL%%:*}"; fk=""
+  case "$FAKE_GH_FAIL" in *:*) fk="${FAKE_GH_FAIL#*:}" ;; esac
+  if [ "$fop" = "$op" ] && { [ -z "$fk" ] || [ "$fk" = "$k" ]; }; then
+    [ -f "$D/$op.err" ] && cat "$D/$op.err" >&2 || echo "fake gh: $op failed" >&2
+    exit 1
+  fi
+fi
+
+if [ -n "${FAKE_GH_BOARD:-}" ]; then
+  B="$FAKE_GH_BOARD"
+  upd() { jq "$@" "$B" >"$B.new" && mv "$B.new" "$B"; }
+  case "$op" in
+    B-fields)
+      jq '{fields: [.fields[] | {id, name, type} + (if .options then {options: [.options[] | {id, name}]} else {} end)]}' "$B"; exit 0 ;;
+    B-options)
+      f=""; for a in "$@"; do case "$a" in f=*) f="${a#f=}" ;; esac; done
+      jq --arg f "$f" '{data: {node: {options: ([.fields[] | select(.id == $f) | .options][0] // [])}}}' "$B"; exit 0 ;;
+    B-items)
+      jq '{items: [.items[] | {id, title, content: {type: "Issue", number, title}} + .values]}' "$B"; exit 0 ;;
+    B-views)
+      jq '{data: {node: {views: {nodes: .views}}}}' "$B"; exit 0 ;;
+    B-foptions)
+      fid="$(printf '%s' "$stdin" | jq -r '.variables.input.fieldId')"
+      n="$(jq '.next // 1' "$B")"
+      # options sent without an id are new options; options absent from the list are dropped; an item holding an option that is no longer there loses its value
+      printf '%s' "$stdin" | jq -c '.variables.input.singleSelectOptions' >"$B.sent"
+      jq --arg f "$fid" --argjson n "$n" --slurpfile sent "$B.sent" '
+        ([.fields[] | select(.id == $f)][0]) as $fld
+        | ($fld.name | ascii_downcase) as $key
+        | ($sent[0] | to_entries | map(.value + {id: (.value.id // ("opt_new_\($n + .key)"))})) as $new
+        | ($fld.options | map(.id)) as $oldids
+        | ($new | map(.id)) as $newids
+        | ($fld.options | map(select(.id as $i | ($newids | index($i)) == null) | .name)) as $lost
+        | .next = ($n + ($sent[0] | length))
+        | .fields |= map(if .id == $f then .options = ($new | map({id, name, color: (.color // "GRAY"), description: (.description // "")})) else . end)
+        | .items |= map(if (.values[$key] // null) as $v | $v != null and ($lost | index($v)) != null then .values |= del(.[$key]) else . end)
+        ' "$B" >"$B.new" && mv "$B.new" "$B"
+      rm -f "$B.sent"
+      if [ -n "${FAKE_BOARD_CLEAR:-}" ]; then upd --arg k "$FAKE_BOARD_CLEAR" '.items |= map(.values |= del(.[$k]))'; fi
+      echo '{"data":{"updateProjectV2Field":{}}}'; exit 0 ;;
+    B-set)
+      id=""; fid=""; opt=""; prev=""
+      for a in "$@"; do
+        [ "$prev" = "--id" ] && id="$a"
+        [ "$prev" = "--field-id" ] && fid="$a"
+        [ "$prev" = "--single-select-option-id" ] && opt="$a"
+        prev="$a"
+      done
+      [ -n "${FAKE_BOARD_IGNORE_SET:-}" ] && [ "$FAKE_BOARD_IGNORE_SET" = "$id" ] && exit 0
+      upd --arg id "$id" --arg f "$fid" --arg o "$opt" '
+        ([.fields[] | select(.id == $f)][0]) as $fld
+        | ($fld.name | ascii_downcase) as $key
+        | ([$fld.options[] | select(.id == $o) | .name][0]) as $name
+        | if $name == null then error("no such option") else . end
+        | .items |= map(if .id == $id then .values[$key] = $name else . end)' || { echo "fake gh: B-set: no such option" >&2; exit 1; }
+      exit 0 ;;
+    B-text)
+      id=""; fid=""; val=""; prev=""
+      for a in "$@"; do
+        [ "$prev" = "--id" ] && id="$a"
+        [ "$prev" = "--field-id" ] && fid="$a"
+        [ "$prev" = "--text" ] && val="$a"
+        prev="$a"
+      done
+      upd --arg id "$id" --arg f "$fid" --arg v "$val" '
+        ([.fields[] | select(.id == $f) | .name | ascii_downcase][0]) as $key
+        | .items |= map(if .id == $id then .values[$key] = $v else . end)'
+      exit 0 ;;
+    B-fcreate)
+      name=""; dt=""; opts=""; prev=""
+      for a in "$@"; do
+        [ "$prev" = "--name" ] && name="$a"
+        [ "$prev" = "--data-type" ] && dt="$a"
+        [ "$prev" = "--single-select-options" ] && opts="$a"
+        prev="$a"
+      done
+      n="$(jq '.next // 1' "$B")"
+      upd --arg name "$name" --arg dt "$dt" --arg opts "$opts" --argjson n "$n" '
+        .next = ($n + 20)
+        | .fields += [ {id: ("fld_\($n)"), name: $name, type: (if $dt == "SINGLE_SELECT" then "ProjectV2SingleSelectField" else "ProjectV2Field" end)}
+            + (if $dt == "SINGLE_SELECT" then {options: ($opts | split(",") | to_entries | map({id: ("opt_\($n + .key)"), name: .value, color: "GRAY", description: ""}))} else {} end) ]'
+      echo '{}'; exit 0 ;;
+    B-vcreate)
+      if [ -n "${FAKE_BOARD_REFUSE_VIEW:-}" ]; then echo "fake gh: createProjectV2View: not available" >&2; exit 1; fi
+      n="$(jq '.next // 1' "$B")"
+      view="$(printf '%s' "$stdin" | jq -c --arg n "$n" '.variables.input | {id: ("view_" + $n), name, filter, layout}')"
+      upd --argjson v "$view" --argjson n "$n" '.next = ($n + 1) | .views += [$v]'
+      echo '{"data":{"createProjectV2View":{}}}'; exit 0 ;;
+    B-add)
+      url=""; prev=""
+      for a in "$@"; do [ "$prev" = "--url" ] && url="$a"; prev="$a"; done
+      num="${url##*/}"
+      ex="$(jq -r --argjson num "$num" '[.items[] | select(.number == $num) | .id][0] // empty' "$B")"
+      if [ -n "$ex" ]; then echo "$ex"; exit 0; fi
+      n="$(jq '.next // 1' "$B")"
+      upd --argjson num "$num" --argjson n "$n" '.next = ($n + 1) | .items += [{id: ("PVTI_new_\($n)"), number: $num, title: ("issue \($num)"), values: {}}]'
+      echo "PVTI_new_$n"; exit 0 ;;
+  esac
+fi
+
+# static answers
+[ -f "$D/$op.exit" ] && rc="$(cat "$D/$op.exit")" || rc=0
+[ -f "$D/$op.err" ] && [ "$rc" != 0 ] && cat "$D/$op.err" >&2
+if [ -f "$D/$op.$k.out" ]; then cat "$D/$op.$k.out"
+elif [ -f "$D/$op.out" ]; then cat "$D/$op.out"
+else
+  # the highest numbered .k.out repeats
+  last="$(ls "$D" 2>/dev/null | sed -n "s/^$op\.\([0-9][0-9]*\)\.out$/\1/p" | sort -n | tail -1)"
+  [ -n "$last" ] && cat "$D/$op.$last.out"
+fi
+exit "$rc"

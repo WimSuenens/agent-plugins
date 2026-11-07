@@ -20,3 +20,4 @@ none
 | Requirement (product-owner) | 2026-11-07T03:21Z | 03:24Z | - | 115863 spend (completion notice; peak not captured) | 0 |
 | Contracts (architect) | 2026-11-07T03:25Z | 03:31Z | - | 145601 spend (completion notice; peak not captured) | 0 |
 | Build (developer) | 2026-11-07T03:31Z | 03:35Z | - | 83776 spend (completion notice; peak not captured) | 0 |
+| Verification (QA 08, security 10) | 2026-11-07T03:35Z | 03:50Z | - | QA 115k? see notice; security 52525 spend | 0 |

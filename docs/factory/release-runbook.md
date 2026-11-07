@@ -1,6 +1,6 @@
 # Factory release runbook
 
-How the `factory` plugin is released, checked, rolled back and rolled forward. First written for release `1.0.0` (slice #39, [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md)).
+How the `factory` plugin is released, checked, rolled back and rolled forward. First written for release `1.0.0`, extended for `1.1.0` and `1.2.0` (slice #39, [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md)).
 
 **Blast radius of any factory release:** every project on a machine where the factory is installed at user scope. A release changes no project's files; it changes how the Lead runs the next item there. The release itself (merge, tag) touches only this repo. Production-like actions (merge, tag, push) wait for the person's approval, relayed by the Lead.
 
@@ -151,6 +151,57 @@ git push origin factory-v1.1.0
 **Monitoring added by 1.1.0.** No new process or service. The andon is watched by the Lead itself: kind 3 and kind 4 checks at each result, andon comments on the slice ticket, and the `## Abnormalities` section of the hansei record. The fence (F1 to F7) is the alert for overrides: an override across it is refused, never applied.
 
 **Human-only checks** run only in `WimSuenens/factory-sandbox` (Project #10), never in this repo: the list is in `reviews/qa-49.md`, section *Human-only criteria*.
+
+## Release 1.2.0 (slice #57, per-run A3 and baseline)
+
+Minor release (standard work changed, ADR 0012 point 3: the baseline resets to a new 1.2 section). Same blast radius as above: every project on a machine where the factory is installed, after that machine updates; the release itself (merge, tag) touches only this repo. Item #57 runs on the frozen install `9147301f75c3`, whose text has no tag step, so the Lead tags by hand at the merge, as for #39 and #49 (AC-28). The acceptance demo ran on `--plugin-dir` (a worktree of this branch); the install stayed frozen and was not touched.
+
+**This run is calibration (AC-27).** No `Factory baseline` issue is created in this repository by this item's work; the series is pre-baseline here, and the 1.2 baseline begins with the first item run on 1.2.0. The baseline issue and the A3 comment of the acceptance demo live in `WimSuenens/factory-sandbox`, not here. The one new issue in this repository from the demo is #59, approved by hand.
+
+**Release checks** (read-only; run on the branch at 33b521d plus this runbook edit, after `git fetch origin main`):
+
+1. `claude plugin validate .` passes with the same four version warnings as before (wayfinding, toolkit, discover, design); `./plugins/factory` and `./plugins/factory/skills` pass with no warning.
+2. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 1.1.0 -> 1.2.0`, exit 0.
+3. `bash tests/run.sh` prints `ALL PASSED` (`test_token_spend.sh: 93 passed, 0 skipped, fail=0`); no named skip is left.
+4. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
+
+```
+release: 1.2.0
+standard: b0f96401e7e4f5fe46aab86ab7dff5ecf50e92f7cd2b9d5e6d85b8b8841cbc67
+tooling: 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5
+```
+
+`tooling` equals 1.0.0's and 1.1.0's (no script or hook changed). Any edit under `plugins/factory/` after these were noted moves `standard`: re-read and update this entry.
+
+**Tag by hand (the Lead, after the person approved the merge).** `58` is the number of the item/57 pull request. Tags `factory-v1.0.0` and `factory-v1.1.0` exist; `factory-v1.2.0` must not.
+
+```
+git fetch origin main
+bash plugins/factory/scripts/check-bump.sh        # in the item/57 worktree; expect exit 0
+gh pr merge 58 --merge
+printf '%s' "1.2.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
+git ls-remote --tags origin factory-v1.2.0        # must print nothing, else the tag exists: stop
+git fetch origin main
+git tag factory-v1.2.0 "$(gh pr view 58 --json mergeCommit --jq .mergeCommit.oid)"
+git push origin factory-v1.2.0
+```
+
+**Post-merge checks (AC-28).** `git ls-remote --tags origin 'factory-v*'` lists `refs/tags/factory-v1.2.0`; `git rev-parse 'factory-v1.2.0^{commit}'` equals the PR's merge commit and `git merge-base --is-ancestor factory-v1.2.0 origin/main` succeeds; `git show factory-v1.2.0:plugins/factory/.claude-plugin/plugin.json` shows `"version": "1.2.0"`. Also (AC-27): no issue titled `Factory baseline` exists in this repository (`gh issue list --state all --search 'Factory baseline in:title'`). Do not move or delete a published tag.
+
+**Frozen install.** Merging and tagging 1.2.0 changes nothing on this machine; the install stays on `9147301f75c3` until the freeze ends. Then someone runs `claude plugin marketplace update wimsuenens`, and the person restarts running sessions: an open session keeps the skill text it read at start, so the per-run A3 and baseline steps appear only in sessions started after the update. Until then, `--plugin-dir` on a checkout of the tag is the way to run 1.2.0.
+
+**Rollback of 1.2.0.** Rollback ends in a new version, never a revert that leaves the string alone: an install follows the version string, and a push or revert under `1.2.0` reaches nobody. Target is 1.1.0.
+
+- Per session, now: `git worktree add ../factory-1.1.0 factory-v1.1.0` and `claude --plugin-dir ../factory-1.1.0/plugins/factory`. Nothing installed or changed.
+- Before any machine has updated: do not update; nothing was installed, nothing to undo.
+- For everyone: on an `item/<id>` branch, `git checkout factory-v1.1.0 -- plugins/factory`, then set `"version"` to `1.3.0` (standard work again, so a minor; a version at or below 1.2.0 ships nothing to a 1.2.0 install and `check-bump.sh` refuses it). Run the release checks and the tag step for 1.3.0. `factory-v1.2.0` stays.
+- Roll forward is preferred when the fault is small: tooling-only is `1.2.1`; anything in standard work is `1.3.0` or higher.
+- Records stay: `hansei v4` records, `factory:a3 v1` comments and the `Factory baseline` issue in projects where 1.2.0 ran are not removed. A 1.1.0 Lead ignores the A3 and baseline issue (it does not read them), and v4 records are not comparable with v3 ones. Do not mix them in one baseline. The baseline issue is the project's to close or leave.
+- Rollback has not been exercised in a scratch HOME (the machine is frozen): see *Not verified*.
+
+**Monitoring added by 1.2.0.** No new process, port or service. The `Factory baseline` issue (one per project, found by title and the Lead's gh user) and the `factory:a3 v1` comment on the map issue are written by the Lead at run close; the alert for a missing or unreadable one is the Lead's own report at close: it says so and writes `not captured (<reason>)`, never `0`. `check-bump.sh` and `fingerprint.sh` keep watching the version and fingerprints as in *Monitoring and alerts*.
+
+**Review notes carried from the verdicts.** QA (`reviews/qa-57.md`): final pass. Security (`reviews/security-57.md`): round 3 pass; info items I1 and I2 do not block. I1: a failed `gh api user` lookup of the Lead's login could read as "no baseline" and create a duplicate `Factory baseline` issue (spurious, nothing overwritten); if two appear in a project, close the newer one by hand. I2: a cosmetic span-length overshoot.
 
 ## Not verified
 

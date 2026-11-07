@@ -39,13 +39,14 @@ A session whose release has no semver (a pre-release install such as `9147301f75
 The input is *Find records*' output: the Lead's own comments whose **first line** is the marker. For each comment, in the order `created_at` ascending (ties: item number ascending):
 
 1. **Not a record.** A comment with no marker on its first line is never returned, so nothing reads it and no figure of it enters any section. Manual calibration comments are this case.
-2. **Version.** `v3` and `v4` are readable. Any other version is **skipped and named**: `skipped: #<id> <url> (schema v<n>)`. The item number is the `#<id>` of the record's second line (`## Hansei: #<id> <title>`); a record whose second line has no `#<id>` is `skipped: #? <url> (no item number)`.
+2. **Version.** `v3`, `v4` and `v5` are readable. Any other version is **skipped and named**: `skipped: #<id> <url> (schema v<n>)`. The item number is the `#<id>` of the record's second line (`## Hansei: #<id> <title>`); a record whose second line has no `#<id>` is `skipped: #? <url> (no item number)`.
 3. **One record per item.** When two readable records name the same item, the earlier is read and the later is named `ignored: #<id> <url> (second record for the item)`.
 4. **Series.** From `series:` and `plugin:`:
    - `series: release` and a `plugin:` line matching `^factory (0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$` → series `M.N`.
    - `series: calibration (pre-baseline)` → **no series**; the item is listed under `## Calibration (pre-baseline)` with its number and link and nothing else, whatever the `plugin:` line says (its text after `factory ` is cut, neutralised and put in one code span, section 1). The reverse (a `plugin:` with no semver under `series: release`) is `skipped: #<id> <url> (series and plugin disagree)`.
 5. **The series' standard.** The `standard:` of the series' earliest readable record. A later record of the same `M.N` whose `standard` differs is **excluded** and named: `excluded: #<id> <url> (standard differs under <M.N>; a forgotten version bump, see andon kind 6)`. It is in no section and no reading. Records with the same `standard` and a different `tooling` or a different patch **join** the series (the series block lists every release and every tooling value it holds).
-6. **Overrides.** The item's key and extents are read from the `active overrides` line (`hansei.md`, section 3). A v3 record with a list of overrides is `excluded: #<id> <url> (override extent not recorded, schema v3)`. A v4 record whose `active overrides` line is outside the extent grammar is skipped whole, because that line carries the item's key: `skipped: #<id> <url> (active overrides line not in its grammar)`; it is in no section and no reading, and is never read as key `none`. A v3 record reading `none` is read as key `none`; the series block carries the line `- records: schema v3 and v4 read together` when the series holds both schemas (section 7).
+6. **Overrides.** The item's key and extents are read from the `active overrides` line (`hansei.md`, section 3). A v3 record with a list of overrides is `excluded: #<id> <url> (override extent not recorded, schema v3)`. A v4 or v5 record whose `active overrides` line is outside the extent grammar is skipped whole, because that line carries the item's key: `skipped: #<id> <url> (active overrides line not in its grammar)`; it is in no section and no reading, and is never read as key `none`. A v3 record reading `none` is read as key `none`; the series block carries the `- records:` line when the series holds more than one schema (section 7).
+7. **Gemba line.** A v5 record has exactly one line starting `- gemba: ` in its header block. None is `skipped: #<id> <url> (gemba line missing)`; two or more is `skipped: #<id> <url> (gemba line repeated)`; the record is in no section and no reading. The check counts those lines and never reads their content: no baseline or A3 field reads, parses or counts what a gemba line says, and no script reads it. A v3 or v4 record has no such line and is read without one; no `not captured` entry is created for it.
 
 When an exclusion names a forgotten bump, say so to the person in one line and do not start the andon: kind 6 is raised by the item-start fingerprint check, not by the baseline.
 
@@ -135,7 +136,7 @@ What normal looks like for this project, per factory release. Derived by the Lea
 - standard: <64 hex>
 - tooling: <64 hex>[, <64 hex> …]
 - not in any section: <none | #<id> <url> (<name> in force for part of the item); …>
-- records: schema v3 and v4 read together   (optional line)
+- records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line, only when the series holds more than one schema, naming them in ascending order)
 
 #### Section — whole-item overrides: <none | name, name> — <reference | history: … | other: …>
 - items: <n> items: #<id> <url>; #<id> <url> …
@@ -161,7 +162,7 @@ What normal looks like for this project, per factory release. Derived by the Lea
 (none: `- none`)
 ```
 
-`<url>` is the record's comment URL (`html_url`). The optional `- records:` line is written exactly as shown, after `not in any section`, only when the series' records include both schemas. In the **empty current series** the `releases:` line is `factory <the session's semver> (the session's release)`; in a series with records it lists the records' releases only, and the marker is not added. Items are written in close order. `## History` and the lists hold `- none` when empty; no heading is dropped, so a reader finds each in place. The count is written with its noun as is (`1 items`, never `one item`), so a replay compares text. The **empty skeleton** that *Create baseline* writes is this body with the current series block of section 6, item 3 (`0 items`), and `- none` under every other heading.
+`<url>` is the record's comment URL (`html_url`). The optional `- records:` line is written as one of the three forms shown, after `not in any section`, only when the series' records include more than one schema. In the **empty current series** the `releases:` line is `factory <the session's semver> (the session's release)`; in a series with records it lists the records' releases only, and the marker is not added. Items are written in close order. `## History` and the lists hold `- none` when empty; no heading is dropped, so a reader finds each in place. The count is written with its noun as is (`1 items`, never `one item`), so a replay compares text. The **empty skeleton** that *Create baseline* writes is this body with the current series block of section 6, item 3 (`0 items`), and `- none` under every other heading.
 
 A body for a project at the start of its first release series, with one older record read and one skipped:
 

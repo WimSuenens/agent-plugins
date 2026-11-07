@@ -267,7 +267,7 @@ verify() {
         | $c[$s.id] as $n
         | if $n == null then "board: item \($label): field \"(item)\" changed (snapshot: present, now: missing)"
           else (if $mode == "mapped" then ($s.status | if . == null then null else mapst end) else $s.status end) as $want
-          | if $n.status != $want then "board: item \($label): field \"Factory status\" changed (snapshot: \($want // "empty"), now: \($n.status // "empty"))"
+          | if ($n.status != $want and ($mode == "same" or $n.status != $s.status)) then "board: item \($label): field \"Factory status\" changed (snapshot: \($want // "empty"), now: \($n.status // "empty"))"
             else (([ ($s.fields | keys[]), ($n.fields | keys[]) ] | unique)
                   | map(select(($s.fields[.]) != ($n.fields[.])))
                   | .[0]) as $k
@@ -451,7 +451,7 @@ do_finish() {
     [ "$nold" != 0 ] && exit 6
     exit 2
   fi
-  jq -e --argjson f "$FINAL" 'map(.name) == $f' "$tmp/optnames.json" >/dev/null || { echo "board: Factory status does not hold the six options in order" >&2; exit 2; }
+  jq -e --argjson f "$FINAL" '. == $f' "$tmp/optnames.json" >/dev/null || { echo "board: Factory status does not hold the six options in order" >&2; exit 2; }
   [ "$fields_ok" = 1 ] || { echo "board: a field is missing: run apply" >&2; exit 2; }
   if [ "$views_known" = 0 ]; then
     echo "board: project id unknown (--project-id, or the Tracker table)" >&2

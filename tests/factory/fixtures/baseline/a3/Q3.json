@@ -1,0 +1,35 @@
+{
+ "experiment": {
+  "name": "X",
+  "series": "1.2",
+  "reference": []
+ },
+ "records": [
+  {
+   "item": 5,
+   "series": "1.2",
+   "overrides": {}
+  },
+  {
+   "item": 6,
+   "series": "1.2",
+   "overrides": {}
+  },
+  {
+   "item": 7,
+   "series": "1.2",
+   "overrides": {
+    "X": "whole",
+    "Y": "whole"
+   },
+   "in_run": true
+  }
+ ],
+ "unit": "count",
+ "direction": "down",
+ "values": {
+  "5": "1",
+  "6": "1",
+  "7": "0"
+ }
+}

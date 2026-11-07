@@ -1,0 +1,48 @@
+{
+ "closed_items": 3,
+ "andons": [],
+ "fields": [
+  {
+   "field": "total",
+   "base": 10,
+   "k_base": 1,
+   "run": 10,
+   "k_run": 1
+  },
+  {
+   "field": "agent working",
+   "base": 10,
+   "k_base": 1,
+   "run": 9,
+   "k_run": 1
+  },
+  {
+   "field": "waiting for the person",
+   "base": 10,
+   "k_base": 1,
+   "run": 5,
+   "k_run": 1
+  },
+  {
+   "field": "andon",
+   "base": 3,
+   "k_base": 1,
+   "run": 3,
+   "k_run": 1
+  },
+  {
+   "field": "qa-engineer",
+   "base": 1,
+   "k_base": 1,
+   "run": 1,
+   "k_run": 1
+  },
+  {
+   "field": "approvals",
+   "base": 1,
+   "k_base": 1,
+   "run": 1,
+   "k_run": 1
+  }
+ ]
+}

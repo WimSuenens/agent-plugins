@@ -4,7 +4,7 @@ For the lead. Read it at item start (step 5) and at close (step 8). Roles do not
 
 The lead keeps a **stage log** in `work/<id>/00-lead-state.md` while the item runs. At the person's merge approval it computes the **hansei record** from that log and posts it as one comment on the slice ticket, before `work/<id>/` is removed.
 
-**Measurements stay in the project.** Every record, log line and measure is written to the project's own tracker or to `work/<id>/` in the project's worktree. None names `--repo`, and none is written to `WimSuenens/agent-plugins`. The one cross-repo write is step 9's factory feedback issue, under the rule in `skills/run/SKILL.md`.
+**Measurements stay in the project.** Every record, log line and measure is written to the project's own tracker or to `work/<id>/` in the project's worktree. None names `--repo`, and none is written to `WimSuenens/agent-plugins`. The one cross-repo write is step 9.4's factory feedback issue, under the rule in `skills/run/SKILL.md`.
 
 Scripts below are called as `bash "<plugin root>/scripts/<name>.sh" …`. `<plugin root>` is the path on the `Plugin root:` line of `skills/run/SKILL.md`, which the lead already holds (Claude Code substitutes `${CLAUDE_PLUGIN_ROOT}` only in that skill file, not in this one): fill it in before running a command. The same path goes into the label's `plugin root` line, with a leading home directory written as `~`. Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards; a time filled in later is marked `~` (`~14:20Z`), and the cross-check names it.
 
@@ -23,11 +23,13 @@ Written once at item start, never changed.
 - release: <semver, or "<dir name> (pre-release install, no semver)">
 - standard: <64 hex>
 - tooling: <64 hex>
+- overrides at start: <none | name; name …>
 - wayfinding: <version> (<source>)
 - mattpocock-skills: <version> (<source>)
 - lead sessions: <session id>[, <session id> …]
 ```
 
+- `overrides at start`: the names of the overrides **in force** (status `active` with `run` the current run, `kept … for #<map>` or `kept … for next run` bound at this step, or `promote chosen`; none a fence crossing) when you open the `Start item` row, in file order, separated by `; `, `none` when there are none. Read it from `docs/agents/factory.md` in the item worktree after step 5.2 (binding of kept overrides) and the run-start sort of `## Andon`. Like the rest of the label it is never changed afterwards.
 - `release`, `standard`, `tooling`: the output of `bash "<plugin root>/scripts/fingerprint.sh" "<plugin root>"`. When the script fails, each reads `not captured (<script's message>)`.
 - Dependency versions, first source that works:
   1. `skill base dir`: the path segment after `<plugin>/` in the "Base directory for this skill" line the session showed when it last invoked one of that plugin's skills (for example `/wayfinding:beachhead` at step 4). This is the copy the session runs.
@@ -171,14 +173,18 @@ One comment on the slice ticket, in the project's own tracker. Posted once at ap
 
 ### Marker
 
-The body's **first line** is exactly `<!-- factory:hansei v3 -->`. A reader finds a record with `^<!-- factory:hansei v([0-9]+) -->$` on the first line. Any change to a field's key, order, grammar or meaning bumps the version; a reader that meets an unknown version skips the record and says so. v2 changed measure 1 (`stalled`, `interrupted`; `agent working` no longer includes them) and `<fpy>` (`pass first time (<n> low)`), so never compare measure 1 or 2 across v1 and v2. v3 (release 1.1.0) adds a sixth part to measure 1, `andon`, and `agent working` no longer includes that time (for an item with no andon the two read the same), and a header line `abnormalities` after `active overrides`; never compare measure 1 across v2 and v3 for an item that had an andon. The v2 text is not kept: read a v2 record by its own marker.
+The body's **first line** is exactly `<!-- factory:hansei v4 -->`. A reader finds a record with `^<!-- factory:hansei v([0-9]+) -->$` on the first line. Any change to a field's key, order, grammar or meaning bumps the version; a reader that meets an unknown version skips the record and says so.
+
+**Versions.** v2 changed measure 1 (`stalled`, `interrupted`; `agent working` no longer includes them) and `<fpy>` (`pass first time (<n> low)`), so never compare measure 1 or 2 across v1 and v2. v3 (release 1.1.0) added a sixth part to measure 1, `andon`, and `agent working` no longer includes that time (for an item with no andon the two read the same), and a header line `abnormalities` after `active overrides`; never compare measure 1 across v2 and v3 for an item that had an andon. v4 (release 1.2.0) changes one grammar and adds one label line: the `active overrides` entries carry an extent (section 3, *Header fields*), and the label gains `overrides at start`; no measure changes, so v3 and v4 measures may be compared.
+
+**Which versions the standard reads.** v3 and v4. Any other version (v1, v2, a version above 4) is skipped and named by the baseline (`references/baseline.md`, section 3). A v3 record is read by its own marker: its `active overrides` line is `none` or a list of `name (since YYYY-MM-DD)`. Read `none` as the empty key (the baseline's series block says `- records: schema v3 and v4 read together` when the series holds both schemas); a list leaves each override's extent unrecorded, so the item is excluded from the baseline (`references/baseline.md`, section 3, item 6). The v1 and v2 texts are not kept.
 
 ### Layout
 
 Fixed lines, fixed order. Every line is always present. Angle brackets are filled in; nothing else changes.
 
 ```
-<!-- factory:hansei v3 -->
+<!-- factory:hansei v4 -->
 ## Hansei: #<id> <slice title>
 
 - series: <release | calibration (pre-baseline)>
@@ -186,7 +192,7 @@ Fixed lines, fixed order. Every line is always present. Angle brackets are fille
 - standard: <64 hex>
 - tooling: <64 hex>
 - context: wayfinding <version>; mattpocock-skills <version>
-- active overrides: <none | name (since YYYY-MM-DD); …>
+- active overrides: <none | <name> (since YYYY-MM-DD; whole item | from <YYYY-MM-DDTHH:MMZ> | until <YYYY-MM-DDTHH:MMZ>); …>
 - abnormalities: <none | <n> (<kind name> <count>, …): A<k> <URL | raised, no andon recorded>; …>
 - stage-log cross-check: largest gap <N>m (<row>: <evidence>)
 
@@ -241,9 +247,11 @@ Formats:
 | `plugin` | `factory <semver>`; for a pre-release install `factory <install dir name> (pre-release install, no semver)` | `## Label` |
 | `standard`, `tooling` | the two fingerprints, 64 lowercase hex. A reader compares them with another record's: a different `standard` means standard work changed; a different `tooling` with the same `standard` means only tooling changed. | `## Label` |
 | `context` | both dependencies of `plugin.json`, in that order; context only, never a reset trigger | `## Label` |
-| `active overrides` | each **in-force** override by name and start date, `name (since YYYY-MM-DD)`, in file order, separated by `; `. `none` when the file has no `## Overrides` section or no in-force entry. Superseded entries are not listed. | `docs/agents/factory.md` in the item worktree at approval time |
+| `active overrides` | each override by name and start date with its **extent**, in file order, separated by `; `. The list is the union of the label's `overrides at start` and the overrides in force at approval (an override only in the first set is last). Entry: `<name> (since YYYY-MM-DD; whole item)` when it was in force at the `Start item` stamp **and** at approval; `<name> (since YYYY-MM-DD; from <time>)` when it was not in force at start and is in force at approval (written during the item), `<time>` the committer time of its `#<id> lead: override <name>` commit, UTC, cut to the minute (`git log -1 --format=%cI`, converted); `<name> (since YYYY-MM-DD; until <time>)` when it was in force at start and is not at approval (superseded during the item), `<time>` the committer time of the commit that wrote its `superseded` status. `since` is the override's `started` date. A `promote chosen` override counts as in force. `none` when both sets are empty, or when the file has no `## Overrides` section. The line stays on one line. | `## Label` and `docs/agents/factory.md` in the item worktree at approval time |
 | `abnormalities` | the count of rows in `## Abnormalities`, then in parentheses the count per kind name in kind order, then a colon and one `A<k> <link>` per row, the link being the URL of its andon comment. A row with no comment reads `A<k> raised, no andon recorded`. Never a count that leaves a raised abnormality out. `none` when the table is empty. The record carries no 5 Whys text and no transcript content: it links the comment. | `## Abnormalities` of the lead state |
 | `stage-log cross-check` | the largest gap found by the cross-check | section 2 |
+
+An item is a **during-item for X** when X's extent is `from` or `until`, and **whole-item under X** when it is `whole item`. The names with `whole item` are the item's **key** (`none` for the empty key); the baseline counts a during-item in no section (`references/baseline.md`, section 5). For example, an item where `replay-before-build` was in force from the first brief, `fixtures-first` was written during Build at 2026-11-08T15:02Z and `old-rule` was superseded at 2026-11-08T15:30Z reads `replay-before-build (since 2026-11-07; whole item); fixtures-first (since 2026-11-08; from 2026-11-08T15:02Z); old-rule (since 2026-11-05; until 2026-11-08T15:30Z)`: its key is `replay-before-build`, and it is a during-item for the other two.
 
 Copy the label from the lead state. The record never recomputes it.
 
@@ -274,18 +282,18 @@ Transcripts are deleted after `cleanupPeriodDays` (30 by default), and those wri
 
 ### Worked example
 
-A fictional item #12 in a scratch project, factory 1.1.0, after the resurvey edit. QA failed once, security passed with two low findings, no demo, no devops stage, one decision card, one overturn, one limit hit, one machine sleep during the build, a mid-stream cut-off QA recovered from by itself, a docs-writer that stalled after writing its `done` result, one override in force, and two andons: A1, a kind 2 repeat (the developer `c44a10` had handed back; 12m pause, W7, held), and A2, a kind 3 hit (no agent running; 8m, W8, held). Its lead state is the stage-log example in section 4.
+A fictional item #12 in a scratch project, factory 1.2.0, after the resurvey edit. QA failed once, security passed with two low findings, no demo, no devops stage, one decision card, one overturn, one limit hit, one machine sleep during the build, a mid-stream cut-off QA recovered from by itself, a docs-writer that stalled after writing its `done` result, one override in force, and two andons: A1, a kind 2 repeat (the developer `c44a10` had handed back; 12m pause, W7, held), and A2, a kind 3 hit (no agent running; 8m, W8, held). Its lead state is the stage-log example in section 4.
 
 ```
-<!-- factory:hansei v3 -->
+<!-- factory:hansei v4 -->
 ## Hansei: #12 Export a report as CSV
 
 - series: release
-- plugin: factory 1.1.0
+- plugin: factory 1.2.0
 - standard: 9a1c5e7b3d2f40869a7c1e5b3d9f2a4c6e8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f
 - tooling: d079b65b9ad1fb187cd08f0033ff589838e8564baf2bc92a4ff521e63af37652
 - context: wayfinding 5a136f2eaa0a; mattpocock-skills 1.3.1
-- active overrides: replay-before-build (since 2026-11-08)
+- active overrides: replay-before-build (since 2026-11-04; from 2026-11-04T15:11Z)
 - abnormalities: 2 (same-finding-twice 1, role-outside-role 1): A1 https://github.com/example/shop/issues/12#issuecomment-111; A2 https://github.com/example/shop/issues/12#issuecomment-222
 - stage-log cross-check: largest gap 6m (Build: last developer commit 14:52Z after logged end 14:46Z)
 
@@ -319,10 +327,11 @@ The lead state of item #12 at approval, new sections only.
 ```
 ## Label
 
-- plugin root: ~/.claude/plugins/cache/wimsuenens/factory/1.1.0
-- release: 1.1.0
+- plugin root: ~/.claude/plugins/cache/wimsuenens/factory/1.2.0
+- release: 1.2.0
 - standard: 9a1c5e7b3d2f40869a7c1e5b3d9f2a4c6e8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f
 - tooling: d079b65b9ad1fb187cd08f0033ff589838e8564baf2bc92a4ff521e63af37652
+- overrides at start: none
 - wayfinding: 5a136f2eaa0a (skill base dir)
 - mattpocock-skills: 1.3.1 (plugin list)
 - lead sessions: 0b7c4f1e-2d55-4c1e-9a7e-3f0d8e2a1b6c
@@ -387,7 +396,7 @@ W6 is the close scan's work: QA's transcript held one `cut-off mid-stream` marke
 
 ## 5. Close, in order
 
-Step 8 of `skills/run/SKILL.md` follows this order:
+Step 8 of `skills/run/SKILL.md` follows this order (the steps here are 8.1 to 8.10 there):
 
 1. Ask **merge and clean up?**. On the yes, stamp the approval time: it ends the `Merge approval` row and is the touch `approval`.
 2. Complete `## Waits` with the close scan (*Cut-offs at close*), then cross-check the stage log (section 2).
@@ -410,5 +419,8 @@ Step 8 of `skills/run/SKILL.md` follows this order:
 7. *Merge PR* (with the release tag), board to Done.
 8. Resurvey with the frame's **Under test** list.
 9. *Edit hansei*: measure 7 gets one line per Under test line. Remove the `hansei:` pointer from the Factory run section.
+10. Update the baseline (`references/baseline.md`), then the experiment decision.
+
+Step 4 also appends the item and its record URL to the Factory run section's `closed in this run` line, and step 10 appends `#<id> <n> records, <m>m` to its `baseline:` line; the Factory run section survives the removal of `work/<id>/` and holds both. The A3 and the run close are step 9 (`references/a3.md`).
 
 When the person stops the run between 4 and 8, edit measure 7 to `not captured (run stopped before the resurvey)` before you stop. A later session that finds the pointer still in the Factory run section does the same.

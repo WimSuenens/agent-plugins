@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "1.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.1.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "1.2.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "1.2.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
@@ -112,20 +112,21 @@ ck pmset-no-loose-grep 0 "$(grep -hE 'pmset[^|]*\| *grep' "$HA" "$SK" | grep -c 
 has pmset-copy-utc-only "$HA" '**Copy only UTC start and end times** of a sleep into `What`'
 
 # --- AC-14: marker, header, seven measures in fixed order
-ck ac14-marker-first-line '<!-- factory:hansei v3 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
+# #57: the record is v4 (contract 57-records-and-overrides section 1); a v3 record is still read, pinned in test_baseline_a3.sh
+ck ac14-marker-first-line '<!-- factory:hansei v4 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
 ck ac14-marker-regex-matches 1 "$(printf '%s\n' "$TEMPLATE" | sed -n 1p | grep -Ec '^<!-- factory:hansei v([0-9]+) -->$')"
 has ac14-find-hansei-op "$TP" "select(.body | startswith(\"<!-- factory:hansei v\")) | .id"
-for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex>' '- active overrides: <none | name (since YYYY-MM-DD); …>' '- stage-log cross-check: largest gap <N>m (<row>: <evidence>)'; do
+for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex>' '- active overrides: <none | <name> (since YYYY-MM-DD; whole item | from <YYYY-MM-DDTHH:MMZ> | until <YYYY-MM-DDTHH:MMZ>); …>' '- stage-log cross-check: largest gap <N>m (<row>: <evidence>)'; do
   ck "ac14-header '${k%%:*}'" 1 "$(printf '%s\n' "$TEMPLATE" | grep -cxF -- "$k")"
 done
 ck ac14-seven-measures-in-order "1. lead time|2. first-pass yield|3. rework|4. escaped defects|5. tokens|6. person's touches|7. doors" \
   "$(printf '%s\n' "$TEMPLATE" | grep -E '^[1-7]\. ' | cut -d: -f1 | paste -sd'|' -)"
-has ac14-overrides-none "$HA" '`none` when the file has no `## Overrides` section or no in-force entry'
+has ac14-overrides-none "$HA" '`none` when both sets are empty, or when the file has no `## Overrides` section.'
 # the worked example follows the template's line keys in the same order
 EXAMPLE="$(block_after "$HA" '### Worked example')"
 keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z-]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
 ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
-ck ac14-example-marker '<!-- factory:hansei v3 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
+ck ac14-example-marker '<!-- factory:hansei v4 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
 ck ac14-no-v1-marker-left 0 "$(grep -c 'factory:hansei v1 -->' "$HA" "$SK" "$TP" | awk -F: '{s+=$2} END {print s+0}')"
 has ac14-v1-v2-not-compared "$HA" 'never compare measure 1 or 2 across v1 and v2'
 
@@ -260,8 +261,9 @@ has ac19-done-when "$SK" 'measure 7 of the record is filled'
 repo_lines="$(grep -rnF -- '--repo' "$PLUGIN" | grep -v 'None names `--repo`' | grep -v 'No command here names `--repo`' | grep -v 'only instruction that names `--repo' | grep -vF -- '--repo <owner>/<repo>')"  # setup links the project to its own repo
 ck ac20-only-step9-names-repo 1 "$(printf '%s\n' "$repo_lines" | grep -c .)"
 ck ac20-the-one-is-feedback-issue 1 "$(printf '%s\n' "$repo_lines" | grep -c 'gh issue create --repo WimSuenens/agent-plugins --label plugin:factory')"
-before ac20-feedback-issue-in-step9 "$SK" '## 9. Offer factory feedback' 'gh issue create --repo WimSuenens/agent-plugins'
-for w in 'the problem in factory terms' 'the standard change' 'before/after numbers against the baseline with item count and release' 'no code, no project names, no business content, and no raw hansei records'; do
+# #57: the feedback offer is step 9.4 of the run close (contract 57-run-close section 6); the rule's four parts are kept, reworded
+before ac20-feedback-issue-in-step9 "$SK" '## 9. Close the run' 'gh issue create --repo WimSuenens/agent-plugins'
+for w in 'the problem in factory terms' 'the exact standard change' 'the before and after figures from the A3 against the baseline with the item count and the release' 'a neutral kind of work' 'no code, no project names, no business content and no raw hansei records'; do
   has "ac20-step9-rule '$w'" "$SK" "$w"
 done
 has ac20-hansei-rule "$HA" 'None names `--repo`, and none is written to `WimSuenens/agent-plugins`.'

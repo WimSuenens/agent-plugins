@@ -1,0 +1,29 @@
+{
+ "closed_items": 3,
+ "andons": [
+  {
+   "item": 1,
+   "id": "A1",
+   "raised": "2026-11-08T09:00Z",
+   "process_item": "the qa-engineer Inputs needed list lacks a line, see plugins/factory/agents/qa-engineer.md"
+  },
+  {
+   "item": 1,
+   "id": "A3",
+   "raised": "2026-11-08T10:00Z",
+   "process_item": "plugins/factory/agents/qa-engineer.md has no line for the runner"
+  },
+  {
+   "item": 2,
+   "id": "A1",
+   "raised": "2026-11-08T11:00Z",
+   "process_item": "plugins/factory/agents/qa-engineer.md names no test command"
+  },
+  {
+   "item": 3,
+   "id": "A1",
+   "raised": "2026-11-08T12:00Z",
+   "process_item": "the step order in plugins/factory/skills/run/SKILL.md"
+  }
+ ]
+}

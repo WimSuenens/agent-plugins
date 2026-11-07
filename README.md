@@ -72,7 +72,9 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 
-**Status: release 1.1.0 (the andon) has passed QA and security.** Its human-only checks run in a separate session with the person and are still open until they do; the limits are in [CHANGELOG.md](CHANGELOG.md) under *1.1.0*, *Known limitations at release*.
+**Status: release 1.2.0 (the per-run A3 and the Factory baseline) has passed QA and security.** Its acceptance demo ran in a scratch project with `claude --plugin-dir`: the baseline issue appeared at run start and one A3 was posted at run close. It did not exercise a countermeasure (no override was written, so the before and after readings, and the keep, promote and drop answers, were not seen in a session), nor the paused-agent check. The limits are in [CHANGELOG.md](CHANGELOG.md) under *1.2.0*, *Known limitations at release*.
+
+**Status of 1.1.0 (the andon): passed QA and security; its human-only checks are not all done.** The 1.2.0 demo did not exercise the paused-agent check or a keep, promote or drop answer; see [CHANGELOG.md](CHANGELOG.md) under *1.1.0*, *Known limitations at release*.
 
 **Status of 1.0.0: the acceptance demo ran in a scratch project.** Every human-only criterion passed except AC-17, which failed there: lead time counted stalls and machine sleep as agent work. AC-17 was fixed in schema v2 (cut-off detection, measured from the transcripts). QA checked the fix by replaying the demo's own transcripts through the scripts and accepted AC-17 on that replay, without a demo re-run. The close step's live-session check is still open; see [CHANGELOG.md](CHANGELOG.md) under *1.0.0*, *Known limitations at release*. The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0013 (0006 superseded by 0007) in [docs/adr/](docs/adr/), each with the status line it carries there.
 
@@ -80,7 +82,7 @@ Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` e
 
 ### Measurement: the hansei record
 
-Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v3 -->` (`v2` at 1.0.0), and it holds:
+Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v4 -->` (`v3` at 1.1.0, `v2` at 1.0.0), and it holds:
 
 - the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (each by name and start date, or `none`), the abnormalities (a count per kind, and a link to each andon comment), and a stage-log cross-check;
 - seven measures in a fixed order: lead time, first-pass yield, rework, escaped defects, tokens per role, the person's touches, and doors confirmed or contradicted.
@@ -89,9 +91,9 @@ Lead time is split into parts that add up to the total: agent working, waiting f
 
 While an item runs, the lead keeps a **stage log** in `work/<id>/00-lead-state.md`: one row per stage with UTC times, the waits (the person, usage limits, stalls, interruptions and, from 1.1.0, andon pauses, each naming the agent it stopped), the abnormalities, and the person's touches. The item's folder is removed by the last commit, after the record is posted.
 
-A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. A role whose transcript was cut off by a stall, an interruption or an andon pause reads `not captured (transcript truncated by <kind>)` for its spend. Escaped defects read `not captured` in schemas v2 and v3.
+A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. A role whose transcript was cut off by a stall, an interruption or an andon pause reads `not captured (transcript truncated by <kind>)` for its spend. Escaped defects read `not captured` in schemas v2 to v4.
 
-The data lives in the project's own tracker (the record, the stage summaries, the decisions, the andon comments) and in `work/<id>/` while the item runs. Nothing is aggregated yet; the baseline is a later slice. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md), [contracts/39-stage-log.md](contracts/39-stage-log.md) and, for schema v3 and the andon rows, [contracts/49-records.md](contracts/49-records.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
+The data lives in the project's own tracker (the record, the stage summaries, the decisions, the andon comments, and from 1.2.0 the baseline issue and the A3) and in `work/<id>/` while the item runs. No script aggregates the records: the lead reads their comments and keeps the baseline, as [described below](#the-baseline-and-the-a3) explains. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md), [contracts/39-stage-log.md](contracts/39-stage-log.md) and, for schema v3 and the andon rows, [contracts/49-records.md](contracts/49-records.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
 
 The four scripts behind the labels, the bump check, the spend and the cut-offs are described in [contracts/39-plugin-scripts.md](contracts/39-plugin-scripts.md). Run from the repo root:
 
@@ -103,6 +105,20 @@ bash plugins/factory/scripts/token-spend.sh --require-end -- <role transcript.js
 bash plugins/factory/scripts/cut-offs.sh -- <transcript.jsonl>...    # one line per stall, interruption or limit gap; prints nothing for a clean transcript; needs jq
 ```
 
+### The baseline and the A3
+
+From 1.2.0 each project keeps two pages of its own, both in its own tracker and neither in this repo.
+
+**The Factory baseline** is one issue, titled exactly `Factory baseline`, whose body starts with the marker `<!-- factory:baseline v1 -->`. The lead finds it at the start of every run by its title, its author (the lead's own `gh` user) and that marker, and creates it when there is none, pinning it when the tracker allows. The body says what "normal" looks like for the release the session runs: the median of each measure over the items that captured it, with how many items that was, and `not captured (<reason>)` where no item did, never `0`. Earlier releases stay below as history, labelled with the date they were replaced. Items run on a frozen install (calibration) and records the lead cannot read are listed, never counted. Nothing is stored: each figure can be recomputed from the hansei records the issue names, and the lead rewrites the whole body after each item.
+
+**The A3** is one comment on the run's map issue, its first line `<!-- factory:a3 v1 -->`. It names the one problem the run worked on, the 5 Whys behind it (which end in a process item to change, [blaming the process first](#the-andon-and-overrides)), the one countermeasure tried as an override (the run's *experiment*), how the measure moved before and after against the baseline, with item numbers, release and `k of n`, and what is still uncertain. A run has at most one experiment. A run that closed no item writes no A3.
+
+**The run's close** is step 9 of the run skill, in this order: the lead updates the baseline from the records; posts the A3; asks the person, for each override, **keep**, **promote** or **drop**; offers the feedback that the A3 lists; and reports the run closed. `keep` and `promote` make the countermeasure the reference for the next comparison; `drop` removes it and leaves a note in the baseline. `promote` puts a decision card in front of the person, because it would change every project: nothing under `plugins/` changes, and nothing is sent to this repo, until the person decides the card. The feedback issues for this repo are drafted only for what the A3 lists and the person's own remark, and each is posted only when the person approves it.
+
+A run that the person stops after an item has closed still gets its A3, marked `run stopped`, after one yes to *Close the run now?*.
+
+Contracts: [57-baseline](contracts/57-baseline.md), [57-a3](contracts/57-a3.md), [57-run-close](contracts/57-run-close.md), and the record and override fields in [57-records-and-overrides](contracts/57-records-and-overrides.md); all five are indexed in [docs/factory/reference.md](docs/factory/reference.md).
+
 ### The andon and overrides
 
 An **andon** is the factory's stop-the-line response to an abnormality. A role meets one and writes an `Abnormality:` line in its result, or the lead notices one itself. The list has seven kinds: a blocked input, the same finding twice, a role committing outside its ownership, a stage that took more than twice the usual agent time for its role, a fence crossing, version drift, and *other*, a free-form kind for an event that fits none of the six ([contract](contracts/49-abnormality-list.md)).
@@ -113,11 +129,11 @@ A **local countermeasure** is an **override**: a rule under `## Overrides` in th
 
 Overrides end with their run. At its close the lead shows the person one line per override in force, and the person answers keep, promote or drop. An override from an earlier run with no answer is not applied until the person answers.
 
-Limits, stated plainly: the lead's reading of its results and stage log is the only detection (no hook or watcher raises an andon); there is no measurement baseline yet, so the before/after line reads `no baseline yet`; `promote` is recorded, and its decision card is not built. The rules are text the lead follows. The suite checks that text and replays the kind 2 rule on #39's findings; a live session has not yet run them.
+Limits, stated plainly: the lead's reading of its results and stage log is the only detection (no hook or watcher raises an andon). The baseline and the A3 are the lead's reading of the comments too. `promote` puts a decision card in front of the person, and a promoted countermeasure is not yet built into the plugin. The rules are text the lead follows. The suite checks that text and replays the rules on invented fixtures and on two real records of a scratch project; a live session has not run every rule, as the 1.2.0 limits in the CHANGELOG list.
 
 ### Versions and updates
 
-The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. Releases: `1.0.0` (the first), and `1.1.0` (the andon). Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
+The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. Releases: `1.0.0` (the first), `1.1.0` (the andon), and `1.2.0` (the per-run A3 and the Factory baseline). Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
 
 Any change under `plugins/factory/` needs a bump in `plugin.json`:
 
@@ -127,7 +143,7 @@ Any change under `plugins/factory/` needs a bump in `plugin.json`:
 
 `scripts/check-bump.sh` enforces this. The lead runs it before a PR is opened and again before it is merged, and a PR that fails it does not open or merge. Changes outside `plugins/factory/` pass without a bump.
 
-Installs of the factory change only when its version string changes, so a push without a bump does not reach other projects. The measurement baseline resets on a minor or major release only. A run can be frozen on one install (a calibration run): then `/plugin marketplace update` and `/reload-plugins` wait until it closes, because the freeze holds for every project on the machine.
+Installs of the factory change only when its version string changes, so a push without a bump does not reach other projects. The measurement baseline resets on a minor or major release only: from 1.2.0 a project's `1.2` series begins with its first item run on that release, and earlier releases stay in its baseline as history. A run can be frozen on one install (a calibration run): then `/plugin marketplace update` and `/reload-plugins` wait until it closes, because the freeze holds for every project on the machine.
 
 **Restart Claude Code after an update.** A session keeps the factory skill text it read when it started, so a session opened before an install, an update, or a change to `plugins/factory/` still runs the old text. Start a new session before you run an item.
 
@@ -330,7 +346,20 @@ The `factory` plugin at 1.1.0, on macOS (Claude Code 2.1.287, `/bin/bash` 3.2.57
 | `bash plugins/factory/scripts/token-spend.sh --require-end -- <same transcript>` | exit 0 |
 | `bash plugins/factory/scripts/cut-offs.sh -- <same transcript>` | prints nothing, exit 0 |
 
-**Not tested yet, for 1.1.0:** the human-only checks. They run in a separate session that loads the item branch with `claude --plugin-dir`, in a sandbox project, not in this repo; the list is in [CHANGELOG.md](CHANGELOG.md) under *1.1.0*.
+The `factory` plugin at 1.2.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.57, `jq` 1.8.1, `gh` 2.94.0), on 2026-11-07, from `item/57`. Only read-only and validate-only commands were run, and the user-scope install was not touched: `factory@wimsuenens` is still on `9147301f75c3` because this run is frozen. So install, marketplace and reload commands were not run, and nor were `/factory:run` or `/factory:setup-factory-skill`, which are interactive and write to the repo. The tracker lookups were run read-only against this repo.
+
+| Check | Result |
+| --- | --- |
+| `claude plugin validate .` | passed; the same four version warnings for the plugins without a `version` (wayfinding, toolkit, discover, design), intentional |
+| `claude plugin validate ./plugins/factory` | passed, no warning |
+| `claude plugin validate ./plugins/factory/skills` | passed, no warning |
+| `claude plugin list --json` | `factory@wimsuenens` is `9147301f75c3`; the freeze holds |
+| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 1.1.0 -> 1.2.0`, exit 0 |
+| `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.2.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`); the tooling line equals 1.1.0's |
+| `bash tests/run.sh` | `ALL PASSED`: 1436 passed, 0 skipped, exit 0, across ten test files |
+| *Find baseline*, *Find records*, *Find A3s* and *Find A3* from the tracker doc, read-only | each exits 0 and prints no line: this repo holds no `Factory baseline` issue, no hansei record with its marker and no A3, as the calibration run expects |
+
+**Not tested yet, for 1.2.0:** the install and update path, and the rollback, which need an unfrozen machine (see the [release runbook](docs/factory/release-runbook.md)); a live session's run close and its settle answers; and the human-only checks of [CHANGELOG.md](CHANGELOG.md) under *1.2.0*. The 1.2.0 demo ran in a scratch project and is summarised there.
 
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 

@@ -272,4 +272,86 @@ has t5-text-nothing-needs-both-counts "$T/cmp.md" 'it is refused'
 has t5-text-nothing-form "$T/cmp.md" '`nothing (<d> Done items and <c> constraints checked)`'
 has t5-text-first-difference-by-brief-order "$T/cmp.md" 'for the first by brief order (a lower `Done` item before a higher, then a `Constraints` item, then a path, then a row field)'
 has t5-text-sentence-200-no-semicolon "$T/cmp.md" 'one line, at most 200 characters, no `;`, no newline, no copied text of the transcript, the brief or a commit message'
+
+# ---------- T6 (AC-4): the line in the template ----------
+# first fenced block under a heading; the heading scan is fence-aware (the template holds a '### Measures' line inside its fence)
+fblock() { awk -v h="$2" '/^```/{fence=!fence; if(f&&!fence){exit} if(f&&fence){inb=1} next} !fence&&/^#{2,3} /{f=($0==h)} f&&fence{print}' "$1"; }
+LAY="$(fblock "$HA" '### Layout')"
+printf '%s\n' "$LAY" > "$T/layout.txt"
+ck t6-template-first-line '<!-- factory:hansei v5 -->' "$(sed -n 1p "$T/layout.txt")"
+ck t6-exactly-one-gemba-line-in-the-template 1 "$(grep -c '^- gemba: ' "$T/layout.txt")"
+ck t6-gemba-directly-after-cross-check "- stage-log cross-check: largest gap <N>m (<row>: <evidence>)|- gemba: <walk>|" "$(grep -A2 '^- stage-log cross-check:' "$T/layout.txt" | head -3 | paste -sd'|' -)"
+ck t6-gemba-before-measures-heading "- gemba: <walk>||### Measures" "$(grep -B0 -A2 '^- gemba: ' "$T/layout.txt" | paste -sd'|' - | sed 's/|$//')"
+ck t6-gemba-is-not-a-numbered-line 0 "$(grep -cE '^[0-9]+\. gemba' "$T/layout.txt")"
+ck t6-measures-numbered-1-to-7-only "1 2 3 4 5 6 7" "$(grep -E '^[0-9]+\. ' "$T/layout.txt" | cut -d. -f1 | paste -sd' ' -)"
+if git -C "$REPO" rev-parse --verify --quiet main >/dev/null 2>&1; then
+  git -C "$REPO" show main:plugins/factory/references/hansei.md > "$T/hansei-main.md"; fblock "$T/hansei-main.md" '### Layout' > "$T/layout-main.txt"
+  ck t6-measures-block-identical-to-v4 "$(awk '/^### Measures/{f=1} f' "$T/layout-main.txt")" "$(awk '/^### Measures/{f=1} f' "$T/layout.txt")"
+  trim_end() { awk 'NF{last=NR} {l[NR]=$0} END{for(i=1;i<=last;i++)print l[i]}'; }
+  ck t6-header-block-differs-only-by-the-gemba-line-and-marker "$(sed '1d' "$T/layout-main.txt" | awk '/^### Measures/{exit} 1' | trim_end)" "$(sed '1d' "$T/layout.txt" | awk '/^### Measures/{exit} 1' | grep -v '^- gemba: ' | trim_end)"
+else skip t6-measures-identical-to-v4 "no main ref in this checkout"; fi
+WEX="$(fblock "$HA" '### Worked example')"
+ck t6-worked-example-first-line '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$WEX" | sed -n 1p)"
+ck t6-worked-example-one-gemba-line 1 "$(printf '%s\n' "$WEX" | grep -c '^- gemba: ')"
+ck t6-worked-example-gemba-after-cross-check 1 "$(printf '%s\n' "$WEX" | grep -A1 '^- stage-log cross-check:' | tail -1 | grep -c '^- gemba: ')"
+ck t6-worked-example-line-in-grammar OK "$(python3 -I "$GL" "$(printf '%s\n' "$WEX" | grep '^- gemba: ')" | cut -d: -f1)"
+ck t6-section-6-example-line-in-grammar OK "$(python3 -I "$GL" "$(printf '%s\n' "$sec6" | grep '^- gemba: ' | head -1)" | cut -d: -f1)"
+ck t6-worked-example-still-seven-measures "1 2 3 4 5 6 7" "$(printf '%s\n' "$WEX" | grep -E '^[0-9]+\. ' | cut -d. -f1 | paste -sd' ' -)"
+nacc=0; bad=0; while IFS= read -r l; do nacc=$((nacc+1)); [ "$(python3 -I "$GL" "$l" | cut -d: -f1)" = OK ] || { bad=$((bad+1)); echo "     not accepted: $l"; }; done < "$FX/lines-accept.txt"
+ck t6-every-contract-form-accepted 0 "$bad"; ck t6-accept-fixture-has-12-forms 12 "$nacc"
+nrej=0; bad=0; while IFS=$'\t' read -r why l; do nrej=$((nrej+1)); [ "$(python3 -I "$GL" "$l" | cut -d: -f1)" = REJECT ] || { bad=$((bad+1)); echo "     not rejected: $why"; }; done < "$FX/lines-reject.txt"
+ck t6-every-bad-form-rejected 0 "$bad"; ck t6-reject-fixture-has-15-forms 15 "$nrej"
+# a record with a second gemba line, or with the line among the measures
+ck t6-second-gemba-line-detected 2 "$(printf '%s\n' "$WEX" | sed 's/^\(- gemba: .*\)$/\1\n\1/' | grep -c '^- gemba: ')"
+HF="$(awk '/^\| `gemba` \|/' "$HA")"
+for w in 'one line, always present, exactly once, directly after `stage-log cross-check`' '`not captured (no role stage ran)`' '`transcript` \| `commits and result file`' '`nothing (<d> Done items and <c> constraints checked)`' '`nothing in the part read (<n> chars of <m>)`' '`none: needs a plugin change`' '`reason` is at most 80 characters'; do
+  ck "t6-field-row-has-$(printf '%s' "$w" | tr -c 'a-z\n' '-' | cut -c1-30)" 1 "$(printf '%s\n' "$HF" | grep -cF -- "$w")"
+done
+has t6-why-v5-not-a-field-in-v4 "$HA" 'which is why it is a new version and not a field inside v4'
+has t6-v5-sentence-versions "$HA" 'v5 (release 1.3.0) adds a header line `gemba` after `stage-log cross-check` (section 6); no measure changes, so v3, v4 and v5 measures may be compared.'
+has t6-line-holds-no-transcript-text "$HA" 'holds no transcript text'
+
+# ---------- T7 (AC-5): a walk that cannot be done reads not captured ----------
+NC="$(sub6 'Not captured')"; printf '%s\n' "$NC" > "$T/nc.md"
+has t7-case-a-from-commits "$T/nc.md" 'the walk is done from them: `read commits and result file …`'
+has t7-case-b "$T/nc.md" '`row <#> <stage> (<role>); not captured (transcript and commits unreadable)`'
+has t7-case-c "$T/nc.md" '`not captured (no role stage ran)`'
+has t7-case-d "$T/nc.md" '`row …; not captured (no transcript and no commits for agent <id>)`'
+has t7-brief-not-found "$T/nc.md" '`row …; not captured (brief not found)`'
+has t7-none-reads-nothing-or-zero "$T/nc.md" 'None reads `nothing`, none reads a count of 0 in place of a missing walk, none is blank or dropped.'
+has t7-some-agents-fallback-whole-row "$T/nc.md" 'uses the fallback for the whole row'
+has t7-partial-never-plain-nothing "$T/cmp.md" '`nothing in the part read (<n> chars of <m>)`, never plain `nothing`'
+for l in "- gemba: row 4 Build (developer); not captured (transcript and commits unreadable)" "- gemba: row 8 Documentation (docs-writer); not captured (no transcript and no commits for agent ag07)" "- gemba: not captured (no role stage ran)" "- gemba: row 3 Contracts (architect); not captured (brief not found)" "- gemba: row 4 Build (developer); read commits and result file 4000 chars; found nothing (3 Done items and 2 constraints checked); changes nothing"; do
+  ck "t7-accepted-$(printf '%s' "$l" | cut -c10-50 | tr -c 'a-zA-Z0-9\n' '-')" OK "$(python3 -I "$GL" "$l" | cut -d: -f1)"
+done
+# (c) no role row: the sample rule gives no row, and the only line is the one the text names
+ck t7-c-no-role-row-picks-none "none -" "$(pickA "$FX/logs/v7-no-role-row.md" 14)"
+ck t7-c-readerB "none -" "$(pickB "$FX/logs/v7-no-role-row.md" 14)"
+# (a) the transcript is gone, the commits and the result file are readable: build the fixture repo and run the text's commands
+R="$T/repo"; git init -q -b main "$R"; echo base > "$R/base.txt"; git -C "$R" add -A; GIT_COMMITTER_DATE='2026-01-01T09:00:00Z' GIT_AUTHOR_DATE='2026-01-01T09:00:00Z' git -C "$R" commit -q -m 'base'
+git -C "$R" checkout -q -b item/60; mkdir -p "$R/plugins/x" "$R/tests" "$R/work/60"
+cm() { d="$1"; shift; GIT_COMMITTER_DATE="$d" GIT_AUTHOR_DATE="$d" git -C "$R" commit -q -m "$1"; }
+echo lead > "$R/work/60/00.md"; git -C "$R" add -A; cm '2026-01-01T10:00:00Z' '#60 lead: start'
+echo A > "$R/plugins/x/a.md"; git -C "$R" add -A; cm '2026-01-01T10:10:00Z' '#60 developer: first'
+echo T > "$R/tests/t.sh"; git -C "$R" add -A; cm '2026-01-01T10:20:00Z' '#60 qa-engineer: tests'
+echo O > "$R/plugins/x/other.md"; git -C "$R" add -A; cm '2026-01-01T10:12:00Z' '#61 developer: another item'
+echo B > "$R/plugins/x/b.md"; git -C "$R" add -A; cm '2026-01-01T10:30:00Z' '#60 developer: second'
+cp "$T/result.md" "$R/work/60/06-result-developer.md"
+logcmd="$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log --no-merges --format='%H %s' item/<id>" | head -1)"
+ck t7-a-text-names-the-git-log-command 1 "$([ -n "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log --no-merges --format='%H %s' item/<id>")" ] && echo 1 || echo 0)"
+ck t7-a-text-names-the-git-show-command 1 "$([ -n "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> show --unified=0 --format='commit %h %s' <sha>")" ] && echo 1 || echo 0)"
+shas="$(git -C "$R" log --no-merges --format='%H %s' item/60 | grep -F ' #60 developer: ' | cut -d' ' -f1 | tail -r 2>/dev/null || true)"
+shas="$(git -C "$R" log --no-merges --format='%H %s' item/60 | grep -F ' #60 developer: ' | cut -d' ' -f1)"
+view_c() { for s in $shas; do git -C "$R" show --unified=0 --format='commit %h %s' "$s" | grep -E '^(commit |diff --git |\+|-)'; done; sed "s#\"work/<id>/<result file>\"#\"$R/work/60/06-result-developer.md\"#" "$T/awk.sh" | sed "s#$T/result.md#$R/work/60/06-result-developer.md#" | bash; }
+view_c | head -c 29000 > "$T/commits.view"
+ck t7-a-fallback-has-the-role-commits 2 "$(grep -c '^commit ' "$T/commits.view")"
+ck t7-a-fallback-lists-the-changed-files 1 "$(grep -c '^diff --git a/plugins/x/a.md' "$T/commits.view")"
+ck t7-a-fallback-has-the-changed-lines 1 "$(grep -c '^+A$' "$T/commits.view")"
+ck t7-a-fallback-excludes-another-role 0 "$(grep -c 'qa-engineer\|t\.sh' "$T/commits.view")"
+ck t7-a-fallback-excludes-another-item 0 "$(grep -c '#61\|other\.md' "$T/commits.view")"
+ck t7-a-fallback-excludes-the-summary 0 "$(grep -ci 'Everything in the brief\|summary' "$T/commits.view")"
+nfb="$(wc -c < "$T/commits.view" | tr -d ' ')"
+ck t7-a-fallback-line-in-grammar OK "$(python3 -I "$GL" "- gemba: row 2 Build (developer); read commits and result file $nfb chars; found nothing (3 Done items and 2 constraints checked); changes nothing" | cut -d: -f1)"
+# the commit window needs the committer time; the format the text prints has none
+if [ "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log" | grep -cE '%(ct|cI|cd|cs|ci)')" -ge 1 ]; then ck t7-a-window-time-in-the-log-format 1 1; else skip t7-a-window-time-in-the-log-format "QA-60 F3: the text filters the commits by the row's window (committer time) but the printed format '%H %s' holds no time"; fi
 done_

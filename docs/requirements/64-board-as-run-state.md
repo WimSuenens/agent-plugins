@@ -91,7 +91,7 @@ It is contradicted if the card can reach `Waiting on you` with no comment, or th
 **AC-6 The "Needs you" view is created by the migration or setup step, with a manual fallback.** *(Under test: the view cannot be created or filled by script)*
 Given the setup step runs against a fake `gh` that (a) accepts the view-creation mutation, (b) refuses it,
 when the step completes,
-then in (a) a view named `Needs you` with the filter `status:"Waiting on you"` is requested and the step then asks the person to open it once and confirm it shows the filter; in (b) the step does not report success for the view, prints exactly what the person must click (name, filter), asks for confirmation, and continues only after it; neither case leaves the step reporting `done` for the view unconfirmed.
+then in (a) a view named `Needs you` with the filter `factory-status:"Waiting on you"` is requested and the step then asks the person to open it once and confirm it shows the filter; in (b) the step does not report success for the view, prints exactly what the person must click (name, filter), asks for confirmation, and continues only after it; neither case leaves the step reporting `done` for the view unconfirmed.
 And re-running the step with the view already present (fixture field list shows it) makes no second view.
 It is contradicted if the step reports the view as created when the call failed, or creates a duplicate.
 *Human-only:* that the view really appears and filters on a live Project (**Unverified** item 2).

@@ -1,0 +1,12 @@
+# Brief: qa-engineer — 60
+Goal: Derive offline tests from the 10 ACs, move the old version pins to v5, replay the sample rule on existing records, and give a release verdict.
+Inputs: docs/requirements/60-gemba-sample.md; contracts/60-standard-changes.md (test list T1 to T13, section 5 on pins, section 6 AC map); contracts/60-gemba-sample.md, 60-gemba-walk.md, 60-gemba-line.md; the built text in plugins/factory/ (hansei.md section 6, SKILL.md 8.3a, baseline.md); work/60/06-result-developer.md (named red tests); tests/run.sh and tests/factory/; tracker issue 60; PR for item/60.
+Constraints:
+- You own tests/ and reviews/qa-*. Do not edit plugins/ or docs; send findings to the lead as a result.
+- Before the replay, write your own expected sample rows for the three replay logs (the hansei.md worked example, the #49 manual stage log, the #57 manual stage log) independently from the rule in AC-1 / contracts/60-gemba-sample.md, then compare with the PO's cross-check (row 2 for the worked example, row 8 for the #49 log). The #49 and #57 manual stage logs are posted on those tracker issues; read them with gh. Do not commit tracker content; commit only derived fixtures that carry no project data and no absolute home paths.
+- Update the existing pins (test_standard_text, test_andon_text, test_baseline_a3, test_baseline_replay, baseline_replay.py, test_fingerprint) to v5 and 1.3.0 and keep a v4 fixture so v3 and v4 still read. A test must not hide a real defect: if the text and the contract disagree, report it as a finding, do not bend the test.
+- Include two fresh-reader style checks that can run offline (same stage picked from the same log by the rule's text alone), and tests for: not captured never 0 and never "nothing found", cap commands end in head -c, no eighth measure, no hoshin view, no script reading gemba lines, 5 Whys refused/accepted fixture chains (AC-7), no home paths in committed files (git grep).
+- Run the whole suite (tests/run.sh). No live session is available: name what is unverified.
+- Note: whatever only live use can show ships as "unverified" in the changelog; give the docs-writer that list.
+Output: tests under tests/ and reviews/qa-60.md; result in work/60/08-result-qa.md (Status: working at start). Verdict pass | fail, with human-only criteria (expected none).
+Done: every AC has a test or is named unverified; suite result quoted; independent replay rows quoted; findings numbered with severity; commits start "#60 qa-engineer:".

@@ -2,7 +2,7 @@
 
 - Board item id: PVTI_lAHOBIbaa84BqOBFzhGxjhg
 - Status: Backlog
-- Next step: step 6, Build (developer), then QA and security
+- Next step: step 6, Verification (QA and security alongside), contract amendment (architect)
 - Open questions: none
 - Frozen on: factory 1.3.0 (see map #50 Factory run section)
 
@@ -30,7 +30,11 @@ none
 | 3 | Contracts and ADRs | architect | a826fb9651db80a9f | 2026-11-07T11:27:30Z | 2026-11-07T11:44:07Z | 16m | - | 245638 | done | 7 contracts, 22 two-way decisions, 0 cards; both blocking checks passed (readers re-pointed, text fields); 2 wording corrections found |
 | 4 | Requirement (round 2) | product-owner | a568bb6a49a65df40 | 2026-11-07T11:44:07Z | 2026-11-07T11:45:02Z | 0m | - | 27339 | done | AC-6 filter token fixed; first commit carried only the result (own sed failed), redone; 0 decisions |
 | 5 | Contracts and ADRs (round 2) | architect | a3e5195fc9a9a479c | 2026-11-07T11:44:07Z | 2026-11-07T11:45:02Z | 0m | - | 26925 | done | ADR 0015 token, ADR 0016 wording; 0 decisions |
-| 6 | Build | developer | PENDING | 2026-11-07T11:45:02Z | | | - | | | |
+| 6 | Build | developer | a40fa600e25cc74c0 | 2026-11-07T11:45:02Z | 2026-11-07T12:04:37Z | 19m | - | 319332 | done | 1 question (project id source) answered: option A; ~12 two-way decisions; no tests run in repo (tests/ is QA's) |
+| 7 | Open PR | lead | - | 2026-11-07T12:04:37Z | 2026-11-07T12:04:37Z | 1m | - | - | opened | bump check: pass: minor bump needed, 1.3.0 -> 2.0.0 |
+| 8 | QA | qa-engineer | PENDING | 2026-11-07T12:04:37Z | | | - | | | |
+| 9 | Security | security-reviewer | PENDING | 2026-11-07T12:04:37Z | | | - | | | |
+| 10 | Contracts and ADRs (round 3) | architect | PENDING | 2026-11-07T12:04:37Z | | | - | | | |
 
 ## Waits
 

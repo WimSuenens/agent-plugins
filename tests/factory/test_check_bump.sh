@@ -167,4 +167,12 @@ ck newline-script-standard-work 1 "$(line "$out" 1 | grep -c '^refuse: standard 
 ver 1.1.0; git commit -qam v; run
 ck newline-script-minor-passes "pass: minor bump needed, 1.0.0 -> 1.1.0" "$out"
 
+# --- slice 64: a major bump passes, and the unchanged version is refused (contracts/64-release.md section 1)
+newb; echo n > $F/agents/developer.md; ver 3.2.1; git add -A; git commit -qm c; git checkout -q main; ver 1.3.0; git commit -qam v13; git push -q origin main 2>/dev/null; git fetch -q origin
+newb; echo changed > $F/skills/run/SKILL.md; ver 2.0.0; git add -A; git commit -qm c; run
+ck major-bump-from-1.3.0-passes "pass: minor bump needed, 1.3.0 -> 2.0.0" "$out"; ck major-bump-exit 0 $code
+newb; echo changed2 > $F/skills/run/SKILL.md; ver 1.3.0; git add -A; git commit -qm c; run
+ck same-version-with-standard-work-refused 1 $code
+ck same-version-refusal-says-standard-work 1 "$(printf '%s\n' "$out" | grep -c '^refuse: standard work changed;')"
+
 done_

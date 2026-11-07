@@ -3,6 +3,9 @@
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/lib64.sh"
+# Fixture strings that look like a home path or a token are built from parts, so that no committed file holds one (AC-45).
+UD="Us""ers"; HM="ho""me"; GH="gh""p_"; GO="gh""o_"; GS="gh""s_"; PAT="github""_pat_"; AK="AK""IA"; XO="xo""xb-"; SKP="s""k-"; BEG="-----BEG""IN RSA PRIVATE KEY-----"; BR="Bea""rer "
+TOK36="abcdefghijklmnopqrstuvwxyz0123456789"
 PT="$SCRIPTS/post-text.sh"
 RUN="$PLUGIN/skills/run/SKILL.md"; PROTO="$PLUGIN/references/protocol.md"
 OPS="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
@@ -196,32 +199,28 @@ has ac13-run-caps-65536-via-60000 "$RUN" '60,000 bytes'
 
 # ---------- AC-18: the scan ----------
 printf 'plain text\nnothing here\n' >"$T/clean.md"; bash "$PT" scan "$T/clean.md"; ck ac18-clean-text-exit-0 0 "$?"
-printf 'line one\nsee /Users/someone/Projects/x here\nend\n' >"$T/hp.md"
+printf 'line one\nsee /%s/someone/Projects/x here\nend\n' "$UD" >"$T/hp.md"
 out="$(bash "$PT" scan "$T/hp.md")"; rc=$?; ck ac18-home-path-exit-1 1 "$rc"; ck ac18-home-path-names-line-not-text "scan: hp.md:2: home-path" "$out"
-for p in "/home/alice/work" "C:\\Users\\bob\\x" "C:/Users/bob/x" "/root/.ssh/id" "file:///Users/zed/a.md" "(/Users/q/f)" '"/Users/q/f"'; do
+for p in "/$HM/alice/work" "C:\\$UD\\bob\\x" "C:/$UD/bob/x" "/ro""ot/.ssh/id" "file:///$UD/zed/a.md" "(/$UD/q/f)" "\"/$UD/q/f\""; do
   printf 'x %s y\n' "$p" >"$T/hp2.md"; bash "$PT" scan "$T/hp2.md" >/dev/null; ck "ac18-home-path-variant [$p]" 1 "$?"
 done
-for p in "~/.claude/plugins/x" "worktree-relative/Users/x" '$HOME/x' "../wt/64/x" "see the /Users folder" "/usr/local/bin/x"; do
+for p in "~/.claude/plugins/x" "worktree-relative/$UD/x" '$HOME/x' "../wt/64/x" "see the /$UD folder" "/usr/local/bin/x"; do
   printf 'x %s y\n' "$p" >"$T/ok.md"; bash "$PT" scan "$T/ok.md" >/dev/null; ck "ac18-not-a-home-path [$p]" 0 "$?"
 done
 tok() { printf 'tok %s end\n' "$1" >"$T/tok.md"; bash "$PT" scan "$T/tok.md"; echo $?; }
-ck ac18-secret-ghp "1" "$(tok ghp_abcdefghijklmnopqrstuvwxyz0123456789 | tail -1)"
-ck ac18-secret-gho "1" "$(tok gho_abcdefghijklmnopqrstuvwxyz0123456789 | tail -1)"
-ck ac18-secret-ghs "1" "$(tok ghs_abcdefghijklmnopqrstuvwxyz0123456789 | tail -1)"
-ck ac18-secret-github-pat "1" "$(tok github_pat_11ABCDEFG0abcdefghijklmnop | tail -1)"
-ck ac18-secret-akia "1" "$(tok AKIAABCDEFGHIJKLMNOP | tail -1)"
-ck ac18-secret-slack "1" "$(tok xoxb-1234567890-abcdefghij | tail -1)"
-ck ac18-secret-sk "1" "$(tok sk-abcdefghijklmnopqrstuvwx | tail -1)"
-ck ac18-secret-private-key "1" "$(tok '-----BEGIN RSA PRIVATE KEY-----' | tail -1)"
-ck ac18-secret-bearer "1" "$(tok 'Bearer abcdefghijklmnopqrstuvwxyz012345' | tail -1)"
-ck ac18-token-too-short-not-a-secret "0" "$(tok ghp_short | tail -1)"
-out="$(tok ghp_abcdefghijklmnopqrstuvwxyz0123456789)"; ck ac18-secret-output-never-prints-the-token 0 "$(printf '%s' "$out" | grep -c 'abcdefghijklmnopqrstuvwxyz')"
+ck ac18-secret-ghp "1" "$(tok "${GH}${TOK36}" | tail -1)"
+ck ac18-secret-gho "1" "$(tok "${GO}${TOK36}" | tail -1)"
+ck ac18-secret-ghs "1" "$(tok "${GS}${TOK36}" | tail -1)"
+ck ac18-secret-github-pat "1" "$(tok "${PAT}11ABCDEFG0abcdefghijklmnop" | tail -1)"
+ck ac18-secret-akia "1" "$(tok "${AK}ABCDEFGHIJKLMNOP" | tail -1)"
+ck ac18-secret-slack "1" "$(tok "${XO}1234567890-abcdefghij" | tail -1)"
+ck ac18-secret-sk "1" "$(tok "${SKP}abcdefghijklmnopqrstuvwx" | tail -1)"
+ck ac18-secret-private-key "1" "$(tok "$BEG" | tail -1)"
+ck ac18-secret-bearer "1" "$(tok "${BR}abcdefghijklmnopqrstuvwxyz012345" | tail -1)"
+ck ac18-token-too-short-not-a-secret "0" "$(tok "${GH}short" | tail -1)"
+out="$(tok "${GH}${TOK36}")"; ck ac18-secret-output-never-prints-the-token 0 "$(printf '%s' "$out" | grep -c 'abcdefghijklmnopqrstuvwxyz')"
 # the Home-path result fixture: scan stops the post; the fake log holds no comment
-cat >"$T/hpres.md" <<'D'
-Status: done
-Abnormality: none
-Summary: Built it in /Users/someone/Projects/portfolio/wt/64 and used ghp_abcdefghijklmnopqrstuvwxyz0123456789 to push.
-D
+printf 'Status: done\nAbnormality: none\nSummary: Built it in /%s/someone/Projects/x and used %s%s to push.\n' "$UD" "$GH" "$TOK36" >"$T/hpres.md"
 bash "$PT" scan "$T/hpres.md" >"$T/scan.out"; rc=$?
 ck ac18-home-path-result-scan-exit-1 1 "$rc"
 ck ac18-home-path-result-both-hits-reported "scan: hpres.md:3: home-path
@@ -245,10 +244,10 @@ bash "$PT" scan "$T/nonexistent.md" >/dev/null 2>&1; ck ac18-scan-unreadable-exi
 bash "$PT" scan >/dev/null 2>&1; ck ac18-scan-usage-exit-2 2 "$?"
 printf 'ok\n' >"$T/okf.md"; bash "$PT" scan "$T/okf.md" "$T/hp.md" >/dev/null; ck ac18-scan-many-files-one-bad-exit-1 1 "$?"
 # kebab-case words that contain "sk-" must not read as a secret
-printf 'a risk-based-approach-to-testing-things and a task-description-for-the-build\n' >"$T/kebab.md"
+printf 'a ri%s-based-approach-to-testing-things and a ta%s-description-for-the-build\n' sk sk >"$T/kebab.md"
 bash "$PT" scan "$T/kebab.md" >/dev/null; kebab_rc=$?
 if [ "$kebab_rc" = 0 ]; then ck ac18-ordinary-kebab-words-are-not-secrets 0 "$kebab_rc"; else
-  skip ac18-ordinary-kebab-words-are-not-secrets "QA finding F-sk-prefix: the sk- pattern has no left boundary, so risk-based-approach-to-testing and task-description-for-the-build are scanned as secrets and block the post"; fi
+  skip ac18-ordinary-kebab-words-are-not-secrets "QA finding F-sk-prefix: the s""k- pattern has no left boundary, so a kebab-case word ending in sk and followed by 20 more kebab characters (a role-task ADR file name, for one) is scanned as a secret and blocks the post"; fi
 
 # ---------- needs-you comment: shape, order, scan (AC-5) ----------
 cat >"$T/ny-ok.md" <<'D'

@@ -203,6 +203,49 @@ git push origin factory-v1.2.0
 
 **Review notes carried from the verdicts.** QA (`reviews/qa-57.md`): final pass. Security (`reviews/security-57.md`): round 3 pass; info items I1 and I2 do not block. I1: a failed `gh api user` lookup of the Lead's login could read as "no baseline" and create a duplicate `Factory baseline` issue (spurious, nothing overwritten); if two appear in a project, close the newer one by hand. I2: a cosmetic span-length overshoot.
 
+## Release 1.3.0 (slice #60, gemba line)
+
+Minor release (standard work changed, ADR 0012 point 3: the baseline resets to a new 1.3 series). Same blast radius as above: every project on a machine where the factory is installed, after that machine updates; the release itself (merge, tag) touches only this repo. Item #60 runs on the frozen install `9147301f75c3`, whose text has no tag step, so the Lead tags by hand at the merge, as for #57. No new process, port or service; no timing measure moved (no change to the timing lines).
+
+**Release checks** (read-only; run on the branch after `git fetch origin main`):
+
+1. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 1.2.0 -> 1.3.0`, exit 0.
+2. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
+
+```
+release: 1.3.0
+standard: d146280132f3ad44339ec587ae5ecc93c4b9a4ebf00db4bff5ce5837da256068
+tooling: 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5
+```
+
+`tooling` equals 1.0.0's, 1.1.0's and 1.2.0's (no script or hook changed). Any edit under `plugins/factory/` after these were noted moves `standard`: re-read and update this entry.
+
+**Tag by hand (the Lead, after the person approved the merge).** `61` is the number of the item/60 pull request. Tags `factory-v1.0.0`, `factory-v1.1.0` and `factory-v1.2.0` exist; `factory-v1.3.0` must not.
+
+```
+git fetch origin main
+bash plugins/factory/scripts/check-bump.sh        # in the item/60 worktree; expect exit 0
+gh pr merge 61 --merge
+printf '%s' "1.3.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
+git ls-remote --tags origin factory-v1.3.0        # must print nothing, else the tag exists: stop
+git fetch origin main
+git tag factory-v1.3.0 "$(gh pr view 61 --json mergeCommit --jq .mergeCommit.oid)"
+git push origin factory-v1.3.0
+```
+
+**Post-merge checks (AC-10).** `git ls-remote --tags origin 'factory-v*'` lists `refs/tags/factory-v1.3.0`; `git rev-parse 'factory-v1.3.0^{commit}'` equals the PR's merge commit and `git merge-base --is-ancestor factory-v1.3.0 origin/main` succeeds; `git show factory-v1.3.0:plugins/factory/.claude-plugin/plugin.json` shows `"version": "1.3.0"`. The close of #60 carries no gemba line and creates no `Factory baseline` issue in this repo. Do not move or delete a published tag.
+
+**Frozen install.** Merging and tagging 1.3.0 changes nothing on this machine; the install stays on `9147301f75c3` until the freeze ends. After `claude plugin marketplace update wimsuenens` and a session restart, the gemba line appears in `hansei v5` records.
+
+**Rollback of 1.3.0.** A new version, never an edit under `1.3.0`. Target is 1.2.0.
+
+- Per session, now: `git worktree add ../factory-1.2.0 factory-v1.2.0` and `claude --plugin-dir ../factory-1.2.0/plugins/factory`. Before any machine has updated: do not update.
+- For everyone: on an `item/<id>` branch, `git checkout factory-v1.2.0 -- plugins/factory`, set `"version"` to `1.4.0` (standard work again, so a minor), run the release checks and the tag step for 1.4.0. `factory-v1.3.0` stays.
+- Records stay: `hansei v5` records are not removed. A 1.2.0 Lead reads v3 and v4 only and skips v5 records (they are not in its series); do not mix v5 with v4 in one baseline.
+- Rollback has not been exercised in a scratch HOME (the machine is frozen): see *Not verified*.
+
+**Monitoring added by 1.3.0.** None. The gemba line is a record field read by no script; the baseline's presence check (one `- gemba: ` line in a v5 record) reports `skipped ... (gemba line missing)` or `(gemba line repeated)` in the `records:` line, which is the alert.
+
 ## Not verified
 
 - Install and update were not run (frozen machine). `--plugin-dir` use of a pre-release worktree and `marketplace update` behaviour are from the README, ADR 0012 and #35's findings, not exercised here. Rollback (A) was reasoned, not run; the Delivery Done item "rollback has run successfully in test" is therefore open for 1.0.0 and should be run in a scratch HOME after the freeze ends: install 1.0.0, then repeat steps A and B, and confirm the installed version string follows.

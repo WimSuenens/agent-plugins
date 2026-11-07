@@ -382,6 +382,7 @@ make_views() {
       variables: { input: { projectId: $p, name: $n, layout: "TABLE_LAYOUT", filter: $f } } }' >"$tmp/body"
     if "gh" api graphql --input - <"$tmp/body" >"$tmp/mutout" 2>"$tmp/err"; then
       echo "view: $v: requested; open it once and confirm it shows the filter $flt"
+      [ "$v" = History ] && echo "view: History: also set the fields to show (Title, Kind, Role, Parent issue, Tokens, Minutes, Hours, Rework rounds, Person touches) and the order (closed, newest first): the API sets only name, layout and filter"
     else
       if [ "$v" = History ]; then
         echo "view: $v: NOT created. Build it by hand: name \"$v\", table layout, filter $flt, show Title, Kind, Role, Parent issue, Tokens, Minutes, Hours, Rework rounds, Person touches, order by closed, newest first"

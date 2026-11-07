@@ -10,7 +10,7 @@ Scripts below are called as `bash "<plugin root>/scripts/<name>.sh" …`. `<plug
 
 ## 1. The lead state, and the ledger
 
-The lead state (`work/<id>/00-lead-state.md`) keeps the lead's memory and nothing the board shows: after its parts (board item id, next step, open questions, frozen-on, assigned ADR number, Running agents, Shared resources, Interrupted) it holds three sections, in this order: `## Label`, `## Findings`, `## Abnormalities`. It has no `Status:` line: the board holds the slice's status. The ledger holds the tasks, waits and touches that the 1.x lead state held as its own tables. A frontier round, which has no lead state and no ledger, keeps its andon lines in the map's Factory run section.
+The lead state (`work/<id>/00-lead-state.md`) keeps the lead's memory and nothing the board shows: after its parts (board item id, next step, open questions, frozen-on, assigned ADR number, Running agents, Shared resources, Interrupted) it holds three sections, in this order: `## Label`, `## Findings`, `## Abnormalities`. It carries no status line: the board holds the slice's status. The ledger holds the tasks, waits and touches that the 1.x lead state held as its own tables. A frontier round, which has no lead state and no ledger, keeps its andon lines in the map's Factory run section.
 
 ### `## Label`
 

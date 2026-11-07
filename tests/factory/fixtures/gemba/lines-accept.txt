@@ -1,0 +1,12 @@
+- gemba: row 2 Requirement (product-owner); read transcript 18342 chars; found nothing (4 Done items and 3 constraints checked); changes nothing
+- gemba: row 4 Build (developer); read transcript 22720 chars; found difference: Done item 3 has no trace in the calls or the commit diffs, process object: the brief; changes process item: the brief named no output path for Done item 3 (https://example.invalid/shop/issues/14#issuecomment-333)
+- gemba: row 6 QA (qa-engineer); read commits and result file 9120 chars; found difference: the row's Result says pass while the commit diffs add a test that is not run, process object: standard text; changes none: needs a plugin change
+- gemba: row 3 Contracts and ADRs (architect); read commits and result file 4410 chars; found nothing (5 Done items and 2 constraints checked); changes nothing
+- gemba: row 4 Build (developer); read transcript 30000 chars, partial (cap); found nothing in the part read (30000 chars of 201240); changes nothing
+- gemba: row 5 QA (qa-engineer, already flagged: findings); read transcript 12010 chars; found nothing (2 Done items and 1 constraints checked); changes nothing
+- gemba: row 7 Build (round 2) (developer, already flagged: paused by A1); read transcript 900 chars; found nothing (3 Done items and 2 constraints checked); changes nothing
+- gemba: row 4 Build (developer); not captured (transcript and commits unreadable)
+- gemba: row 3 Contracts (architect); not captured (brief not found)
+- gemba: row 8 Documentation (docs-writer); not captured (no transcript and no commits for agent ag07)
+- gemba: not captured (no role stage ran)
+- gemba: row 0 Requirement (product-owner); read transcript 1 chars; found nothing (1 Done items and 0 constraints checked); changes nothing

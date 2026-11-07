@@ -167,4 +167,109 @@ has t8-text-only-through-these-commands "$T/sec6.md" 'The walk reads **only** th
 ck t8-no-unbounded-cat-of-transcript-or-gh 0 "$(grep -vE '^(Total read|The walk reads|Every read)' "$T/sec6.md" | grep -E 'cat "?\$?[a-z]*\.jsonl|gh issue view|gh api|git log -p|git show [^ ]+$' | grep -c .)"
 ck t8-every-jq-and-view-line-is-bounded 1 "$(grep -E 'view \| head -c <budget>' "$T/blk1.sh" | grep -c .)"
 ck t8-brief-read-bounded-by-head-c-30000 1 "$(grep -c 'head -c 30000 "work/<id>/<brief file>"' "$T/blk1.sh")"
+
+# ---------- T3 (AC-2): the evidence, in this order; the Summary is never evidence ----------
+EV="$(sub6 'Evidence')"; printf '%s\n' "$EV" > "$T/ev.md"
+ck t3-transcript-is-first-commits-second 1 "$([ "$(grep -n '^1\. \*\*The transcript\*\*' "$T/ev.md" | cut -d: -f1)" -lt "$(grep -n '^2\. \*\*The commits and the result file\*\*' "$T/ev.md" | cut -d: -f1)" ] && echo 1 || echo 0)"
+has t3-in-this-order-of-preference "$T/ev.md" 'In this order of preference:'
+has t3-transcript-found-by-the-close-scan-find "$T/ev.md" "find ~/.claude/projects -name 'agent-<agent id>.jsonl'"
+has t3-commits-subject-prefix "$T/ev.md" 'whose subject starts `#<id> <role>: `'
+has t3-result-file-without-summary "$T/ev.md" 'with its `Summary` field removed'
+has t3-whole-row-from-one-source "$T/ev.md" 'A row is read from transcripts or from commits, never a mix.'
+has t3-not-evidence "$T/ev.md" "**Not evidence, never read as such:** the result's \`Summary\`, the completion notice's text, the stage summary comment, and the final reply of a transcript."
+has t3-traced-only-by-call-result-diff "$T/ev.md" 'a `Done` item is traced only by a tool call, a tool result or a diff, never by a sentence of the agent'"'"'s'
+has t3-artifact-traced-only-by-diff "$T/ev.md" 'an artifact path is traced only when a commit diff touches it'
+# every line of section 6 that names the Summary says it is removed or not evidence
+ck t3-every-summary-mention-is-a-refusal 0 "$(printf '%s\n' "$sec6" | grep -F 'Summary' | grep -vE 'Not evidence|with its `Summary` field removed|not evidence|dropping|Summary:' | grep -c .)"
+# the awk that removes the Summary, cut out of the standard and run on a result with a multi-line Summary
+awk_cmd="$(printf '%s\n' "$CMDS" | awk '/^```/{c++; if(c==3){f=1;next} if(c==4){f=0}} f')"
+ck t3-awk-block-extracted 1 "$([ -n "$awk_cmd" ] && echo 1 || echo 0)"
+cat > "$T/result.md" <<'X'
+# Result: developer — 60
+Status: done
+Progress:
+  Done: step one; step two
+  Next: none
+Summary: Everything in the brief is done and green.
+  Second line of the summary, indented.
+  Third line says all three Done items are written.
+Artifacts: plugins/x/a.md, plugins/x/b.md
+Decisions: none
+Open questions: none
+Known-red tests (a free heading after the fields):
+  - one
+X
+printf '%s\n' "$awk_cmd" | sed "s#\"work/<id>/<result file>\"#\"$T/result.md\"#" > "$T/awk.sh"; bash "$T/awk.sh" > "$T/result.out"
+ck t3-summary-field-and-continuations-dropped 0 "$(grep -ci 'summary\|second line of the\|third line says' "$T/result.out")"
+ck t3-status-progress-artifacts-decisions-kept 1 "$(grep -c '^Status: done$' "$T/result.out")$(grep -c '^Progress:$' "$T/result.out" | sed 's/^1$//;s/^0$/x/')$(grep -c '^Artifacts:' "$T/result.out" | sed 's/^1$//;s/^0$/x/')$(grep -c '^Decisions:' "$T/result.out" | sed 's/^1$//;s/^0$/x/')"
+ck t3-progress-body-kept 2 "$(grep -c '^  Done: step one\|^  Next: none' "$T/result.out")"
+ck t3-free-heading-after-fields-kept 1 "$(grep -c '^Known-red tests' "$T/result.out")"
+# a Summary that is the last field: its continuation lines run to the end (no later field to stop it): they are still dropped
+printf '%s\n' 'Status: done' 'Summary: only field after status' '  and its second line' > "$T/result2.md"
+sed "s#\"work/<id>/<result file>\"#\"$T/result2.md\"#" "$T/awk.sh" > /dev/null; printf '%s\n' "$awk_cmd" | sed "s#\"work/<id>/<result file>\"#\"$T/result2.md\"#" > "$T/awk2.sh"
+ck t3-summary-last-field-dropped-to-end "Status: done" "$(bash "$T/awk2.sh")"
+# a result with no Summary is passed through unchanged
+printf '%s\n' 'Status: done' 'Artifacts: x' > "$T/result3.md"; printf '%s\n' "$awk_cmd" | sed "s#\"work/<id>/<result file>\"#\"$T/result3.md\"#" > "$T/awk3.sh"
+ck t3-no-summary-unchanged "$(cat "$T/result3.md")" "$(bash "$T/awk3.sh")"
+# a Summary whose claim the transcript does not back: the view shows the calls, the claim only on the FINAL line
+python3 -I "$G" 3 "$T/claim.jsonl" --edit plugins/x/a.md --edit plugins/x/b.md --final 'All three Done items are written: plugins/x/a.md, plugins/x/b.md and plugins/x/c.md.'
+walk "$T/brief3.md" 29000 "$T/claim.jsonl"
+ck t3-claim-c-md-appears-on-the-FINAL-line-only 1 "$(sed -n '/^== agent/,$p' "$T/w.out" | grep -c 'c\.md' | tr -d ' ')"
+ck t3-claim-line-is-FINAL 1 "$(sed -n '/^== agent/,$p' "$T/w.out" | grep 'c\.md' | grep -c '^FINAL ')"
+ck t3-calls-trace-a-and-b 2 "$(grep -E '^CALL Edit' "$T/w.out" | grep -cE 'plugins/x/[ab]\.md')"
+ck t3-no-call-or-result-traces-c 0 "$(grep -E '^(CALL|RESULT)' "$T/w.out" | grep -c 'c\.md')"
+
+# ---------- T4 (AC-2, AC-3): what is compared ----------
+CMP="$(sub6 'What is compared')"; printf '%s\n' "$CMP" > "$T/cmp.md"
+has t4-brief-fields "$T/cmp.md" 'the **brief** of the row (each `Done` item, each `Constraints` item, the `Output` paths)'
+has t4-row-fields "$T/cmp.md" 'the **row** in the stage log (`Result`, `Notes`, `Waits`)'
+has t4-exactly-three "$T/cmp.md" 'Look for exactly three things:'
+has t4-thing-1 "$T/cmp.md" 'a `Done` item with no trace of the work in the evidence'
+has t4-thing-2 "$T/cmp.md" "work in the evidence that the brief's \`Constraints\` or the role's ownership forbids"
+has t4-ownership-from-origin-main "$T/cmp.md" 'read ownership from `git show origin/main:docs/agents/factory.md`, never the worktree copy'
+has t4-thing-3 "$T/cmp.md" 'a row `Result` or `Notes` that the evidence contradicts'
+ck t4-three-numbered-things 3 "$(grep -cE '^[1-3]\. ' "$T/cmp.md")"
+has t4-stage-log-alone-is-not-a-walk "$T/cmp.md" 'A walk that checks the stage log alone is not a walk.'
+has t4-item-is-a-bullet-or-clause "$T/cmp.md" 'An item is a bullet line under the field; where a field is one line, each `;`-separated clause is an item.'
+# counting d and c by that rule: bullets under the field, or the ;-separated clauses of a one-line field
+count_items() {  # count_items <brief.md> <Field>
+  awk -v F="$2:" '$0==F{b=1;n=0;next} index($0,F)==1{rest=substr($0,length(F)+1); gsub(/^ +| +$/,"",rest); k=split(rest,p,";"); print k; done=1; exit} b&&/^- /{n++; next} b&&!/^- /{print n; done=1; exit} END{if(!done&&b)print n}' "$1"; }
+ck t4-count-done-bullets 3 "$(count_items "$T/brief3.md" Done)"
+ck t4-count-constraints-bullets 2 "$(count_items "$T/brief3.md" Constraints)"
+printf '%s\n' 'Done: a thing; another thing; a third' 'Constraints: only one' > "$T/brief1.md"
+ck t4-count-done-clauses 3 "$(count_items "$T/brief1.md" Done)"
+ck t4-count-constraints-one-clause 1 "$(count_items "$T/brief1.md" Constraints)"
+
+# ---------- T5 (AC-3): three fixtures of one sampled row; the stage-log row is the same for all ----------
+# the row: Result done, no note. The view the walk's commands give is what the comparison reads (the filter must keep what the comparison needs).
+python3 -I "$G" 4 "$T/fa.jsonl" --edit plugins/x/a.md --edit plugins/x/b.md --final 'All three Done items are written.'
+python3 -I "$G" 4 "$T/fb.jsonl" --edit plugins/x/a.md --edit plugins/x/b.md --edit plugins/x/c.md --final 'Done.'
+python3 -I "$G" 4 "$T/fc.jsonl" --edit plugins/x/a.md --edit plugins/x/b.md --edit plugins/x/c.md --edit tests/other/test.sh --final 'Done.'
+OWN='plugins/'    # the developer's ownership in the fixture's factory.md
+compare() {  # compare <view> -> prints  untraced=<k...>; outside=<path...>
+  v="$1"; un=""; k=0
+  for p in $(sed -n 's/^- write \(.*\)$/\1/p' "$T/brief3.md"); do k=$((k+1)); grep -E '^(CALL|RESULT|diff --git|\+)' "$v" | grep -qF "$p" || un="$un$k "; done
+  out="$(grep -E '^CALL (Edit|Write)' "$v" | sed -n 's/.*"file_path":"\([^"]*\)".*/\1/p' | grep -v "^$OWN" | paste -sd' ' -)"
+  echo "untraced=[${un% }] outside=[$out]"; }
+for x in a b c; do walk "$T/brief3.md" 29000 "$T/f$x.jsonl"; cp "$T/w.out" "$T/view-$x.txt"; done
+ck t5-a-third-done-item-untraced-though-final-claims-it "untraced=[3] outside=[]" "$(compare "$T/view-a.txt")"
+ck t5-a-final-line-claims-it 1 "$(grep -c '^FINAL All three' "$T/view-a.txt")"
+ck t5-b-all-traced-nothing-outside "untraced=[] outside=[]" "$(compare "$T/view-b.txt")"
+ck t5-c-edit-outside-ownership-found "untraced=[] outside=[tests/other/test.sh]" "$(compare "$T/view-c.txt")"
+ck t5-three-fixtures-three-different-views-one-stage-log-row 3 "$(for x in a b c; do compare "$T/view-$x.txt"; done | sort -u | wc -l | tr -d ' ')"
+d=$(count_items "$T/brief3.md" Done); c=$(count_items "$T/brief3.md" Constraints)
+la="- gemba: row 4 Build (developer); read transcript 4000 chars; found difference: Done item 3 has no trace in the calls or the commit diffs, process object: the brief; changes process item: the brief named no output path for Done item 3 (https://example.invalid/shop/issues/9#issuecomment-1)"
+lb="- gemba: row 4 Build (developer); read transcript 4000 chars; found nothing ($d Done items and $c constraints checked); changes nothing"
+lc="- gemba: row 4 Build (developer); read transcript 4000 chars; found difference: the path tests/other/test.sh is outside the role's ownership, process object: ownership table; changes none: needs a plugin change"
+ck t5-a-line-accepted OK "$(python3 -I "$GL" "$la" | cut -d: -f1)"
+ck t5-b-line-with-counts-accepted OK "$(python3 -I "$GL" "$lb" | cut -d: -f1)"
+ck t5-b-counts-are-3-and-2 1 "$(printf '%s' "$lb" | grep -c 'found nothing (3 Done items and 2 constraints checked)')"
+ck t5-c-line-accepted OK "$(python3 -I "$GL" "$lc" | cut -d: -f1)"
+ck t5-b-without-counts-refused REJECT "$(python3 -I "$GL" "${lb/ (3 Done items and 2 constraints checked)/}" | cut -d: -f1)"
+ck t5-b-with-one-count-refused REJECT "$(python3 -I "$GL" "${lb/ and 2 constraints checked/ checked}" | cut -d: -f1)"
+ck t5-a-as-nothing-refused REJECT "$(python3 -I "$GL" "${la/found difference: Done item 3 has no trace in the calls or the commit diffs, process object: the brief; changes process item: the brief named no output path for Done item 3 (https:\/\/example.invalid\/shop\/issues\/9#issuecomment-1)/found nothing; changes nothing}" | cut -d: -f1)"
+has t5-text-nothing-needs-both-counts "$T/cmp.md" 'it is refused'
+has t5-text-nothing-form "$T/cmp.md" '`nothing (<d> Done items and <c> constraints checked)`'
+has t5-text-first-difference-by-brief-order "$T/cmp.md" 'for the first by brief order (a lower `Done` item before a higher, then a `Constraints` item, then a path, then a row field)'
+has t5-text-sentence-200-no-semicolon "$T/cmp.md" 'one line, at most 200 characters, no `;`, no newline, no copied text of the transcript, the brief or a commit message'
 done_

@@ -1,0 +1,15 @@
+found nothing without counts	- gemba: row 2 Requirement (product-owner); read transcript 18342 chars; found nothing; changes nothing
+n over 30000	- gemba: row 2 Requirement (product-owner); read transcript 30001 chars, partial (cap); found nothing in the part read (30001 chars of 90000); changes nothing
+difference with changes nothing	- gemba: row 4 Build (developer); read transcript 22720 chars; found difference: Done item 3 has no trace in the calls, process object: the brief; changes nothing
+semicolon inside the sentence	- gemba: row 4 Build (developer); read transcript 22720 chars; found difference: Done item 3 has no trace; the diff is empty, process object: the brief; changes none: needs a plugin change
+plain nothing on a partial walk	- gemba: row 4 Build (developer); read transcript 30000 chars, partial (cap); found nothing (3 Done items and 2 constraints checked); changes nothing
+nothing in the part read on a whole view	- gemba: row 4 Build (developer); read transcript 22720 chars; found nothing in the part read (22720 chars of 22720); changes nothing
+a walk not done reads found nothing	- gemba: row 4 Build (developer); not captured (transcript and commits unreadable); found nothing (3 Done items and 2 constraints checked); changes nothing
+a walk not done reads a count of 0	- gemba: row 4 Build (developer); read transcript 0 chars; found nothing (3 Done items and 2 constraints checked); changes nothing
+no role row but a row part	- gemba: row 4 Build (developer)
+blank not captured reason	- gemba: row 4 Build (developer); not captured ()
+sentence names no process object	- gemba: row 4 Build (developer); read transcript 22720 chars; found difference: the developer skipped the third Done item; changes none: needs a plugin change
+nothing changes a process item	- gemba: row 2 Requirement (product-owner); read transcript 18342 chars; found nothing (4 Done items and 3 constraints checked); changes process item: the brief (https://example.invalid/shop/issues/1#issuecomment-1)
+partial without partial marker and n smaller than m	- gemba: row 4 Build (developer); read transcript 30000 chars; found nothing in the part read (30000 chars of 201240); changes nothing
+unknown source	- gemba: row 4 Build (developer); read summary 900 chars; found nothing (3 Done items and 2 constraints checked); changes nothing
+a gemba line that is a measure	8. gemba: row 2 Requirement (product-owner); read transcript 18342 chars; found nothing (4 Done items and 3 constraints checked); changes nothing

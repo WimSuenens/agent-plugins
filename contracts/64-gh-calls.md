@@ -31,7 +31,7 @@ Existing operations that 2.0.0 keeps unchanged keep their 1.3.0 text: **Run stat
 | Stage summary | `gh issue comment <id> --body-file <file>`, the file holding `<stage>: <summary>` (at most five lines) and the `Decisions:` list, as in 1.3.0 |
 | Task request | `gh issue comment <ticket> --body-file <file>`, the file holding `Task for you: <what, and why it blocks>`, on the map's `task` ticket |
 
-**One rule for every posting operation.** Every operation that sends text (`T-create`, `T-comment`, `T-edit-comment`, Stage summary, Task request, Post/Edit hansei, Post/Edit A3, Decision card, baseline create and edit, andon comment) takes it from a scratch file that has passed `post-text.sh scan`. No operation takes text on the command line (`--body`, `--title` excepted: see [64-role-tasks](64-role-tasks.md) §9 for titles, which are scanned the same way and passed with a quoted variable read from the scanned file). A grep of the operations in `references/issue-tracker-github.factory.md` finds `--body "` in none.
+**One rule for every posting operation.** Every operation that sends text (`T-create`, `T-comment`, `T-edit-comment`, Stage summary, Task request, Post/Edit hansei, Post/Edit A3, Decision card, baseline create and edit, andon comment) takes it from a scratch file that has passed `post-text.sh scan`. The text is never typed inside the call's quotes: a body is `--body-file <file>`, and a title is `--title "$title"`, `title` a variable read from a scanned scratch file (the shell does not run what a variable holds). A grep of the operations in `references/issue-tracker-github.factory.md` finds `--body "` in none.
 
 ### Reads
 

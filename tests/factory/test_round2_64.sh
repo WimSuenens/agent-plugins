@@ -120,7 +120,7 @@ done
 adr="0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md"
 printf '%s\n' "$adr" >"$T/s.md"; bash "$PT" scan "$T/s.md" >/dev/null; ck r2-adr-0014-file-name-bare-exit-0 0 "$?"
 printf '[ADR 0014](docs/adr/%s)\n' "$adr" >"$T/s.md"; bash "$PT" scan "$T/s.md" >/dev/null; ck r2-adr-0014-in-a-link-exit-0 0 "$?"
-for w in "disk-usage-report-for-the-whole-machine" "risk-assessment-for-the-new-release-plan" "a ri""sk-based-approach-to-testing-things" "ta""sk-description-for-the-build-step"; do
+for w in "disk-usage-report-for-the-whole-machine" "risk-assessment-for-the-new-release-plan" "a ris""k-based-approach-to-testing-things" "tas""k-description-for-the-build-step"; do
   printf '%s\n' "$w" >"$T/s.md"; bash "$PT" scan "$T/s.md" >/dev/null; ck "r2-ordinary-word-exit-0 [$w]" 0 "$?"
 done
 hit() { printf '%s\n' "$2" >"$T/s.md"; bash "$PT" scan "$T/s.md" >/dev/null; ck "r2-token-hit [$1]" 1 "$?"; }

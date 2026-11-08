@@ -1,8 +1,0 @@
-# Feedback: developer — 64
-Source: qa (round 2, F7) and lead (andon A1)
-Findings:
-1. `plugins/factory/skills/run/SKILL.md`, *Parallel slices*, the **Overlap** paragraph — low — `paths.sh` folds ASCII case and applies overlap rule 3 (a path equal to, or a directory prefix of, the other list's `shared:` entry; `adr-number` excluded), but the paragraph states rules 1 and 2 only, case-sensitively. Reproduction: `paths.sh overlap` of `A/b.md` against `a/` prints `overlap: yes`. Fix: state rule 3 and the ASCII case folding in that paragraph, in a form that yields the contract's table (AC-28). QA's skipped test: `r2-run-text-states-folding-and-rule-3`.
-2. Restatement search (countermeasure of andon A1; the same type as the earlier stale baseline line) — low — before you hand back, search `plugins/` for every other statement of each rule this round changed and of the rules in the three rule changes of build round 2 (case folding, overlap rule 3, the two-option review diff command, `--body-file`, the brief check, the 29,800 gemba budget, scan scope, rule 5.6 lines, the grep -E secret patterns). Update every stale statement, or list it in your result with the reason it stays. Show the searches you ran (the `grep -rn` commands) in your result.
-Constraints: touch only `plugins/`; do not edit `tests/`, `contracts/`, `reviews/`, `docs/`; no absolute home path in a committed file; commit with subject `#64 developer: `.
-Re-verify: QA re-runs the suite (third pass, the skip becomes a test); security re-verifies S1 to S8 after it.
-Write `work/64/20-result-developer.md` (Status, Progress, Summary with the searches, Decisions) and commit.

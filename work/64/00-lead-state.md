@@ -9,7 +9,7 @@
 
 ## Running agents
 
-- developer: feedback work/64/15-feedback-developer.md (build round 2)
+- qa-engineer: feedback work/64/17-feedback-qa-engineer.md (round 2), agent a1f4b69d3913010ce resumed
 
 ## Interruptions
 
@@ -41,7 +41,8 @@
 | 9 | Security | security-reviewer | af80c5d52b2004eea | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 116170 | findings | 3 medium, 5 low; no critical/high; reviews/security-64.md |
 | 10 | Contracts and ADRs (round 3) | architect | a8ecdf464b0f459a7 | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 40782 | done | project-id source and split join amended; 1 two-way decision |
 | 11 | Contracts and ADRs (round 4) | architect | ad0ef927e6ee20e8f | 2026-11-08T21:05:20Z | 2026-11-08T21:09:20Z | 4m | - | 93657 | done | all 11 findings have contract text; 8 two-way decisions (release contract decisions 23-30); 0 cards |
-| 12 | Build (round 2) | developer | PENDING | 2026-11-08T21:09:20Z | | | - | | | |
+| 12 | Build (round 2) | developer | a4839e0a7cd352b02 | 2026-11-08T21:09:20Z | 2026-11-08T21:28:32Z | 19m | - | not captured (completion notice not yet read) | done | items 1-9 built; QA pins to update listed; 4 two-way decisions |
+| 13 | QA (round 2) | qa-engineer | a1f4b69d3913010ce | 2026-11-08T21:28:32Z | | | - | | | |
 
 ## Waits
 

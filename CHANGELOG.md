@@ -46,7 +46,7 @@ Offline checks, replays and reviews cover the text of this release. **None was e
 
 1. **Limits and result size under real load.** The usage-limit gate (`N = 1` after a limit is hit), the cut of a long result, and the limits the tracker sets.
 2. **Anything needing a live Project.** The `Needs you` filter token `factory-status:"Waiting on you"`; the shape of `gh project item-list` that `board.sh` reads (the lower-case field keys and option names); `createProjectV2View`; `updateProjectV2Field` keeping the option ids (if it regenerates them, the damage comes before the check and the snapshot is the only recovery); a real restore from the snapshot.
-3. **Whether the board alone tells the person what to do next.** The needs-you comment and its card, in the first real run.
+3. **Whether the board alone lets the person tell what to do next.** The needs-you comment and its card, in the first real run.
 4. **Parallel running.** Path lists, the off-list catch, merge conflicts and the resurvey pause.
 5. **Hansei numbers across a real run**, including `Tokens` per role task and the frontier-round fields that read `not captured`.
 6. **Migrating a project other than agent-plugins.**

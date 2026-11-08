@@ -35,7 +35,7 @@ wayfinding (unversioned): this release changes two wayfinding files, `plugins/wa
 - **Status moves to the board.** The lead state no longer holds a status. The 1.x values `Designed`, `In progress`, `In review` and `Ready to deploy` are replaced by the six values above. The migration maps Designed to Ready, In progress and In review to Running, and Ready to deploy to Waiting on you; Backlog, Ready and Done are unchanged. **In progress and In review both become Running, so the old distinction survives only in the snapshot.**
 - **Removed from the standard.** The `## Stage log`, `## Waits` and `## Person's touches` sections of the lead state (their data is in the ledger and the sub-issues); the lead state's `Status:` line; the brief and feedback files `NN-brief-<role>.md` and `NN-feedback-<role>.md`; and the one-item-at-a-time rule, which the limit replaces.
 - **The hansei record stays at schema v5.** Its header key `stage-log cross-check` keeps its 1.x name and checks the Tasks table of the ledger. The seven measures keep their keys, order and grammar; their sources now read the ledger and the sub-issues. A frontier round has no ledger, so its role tasks read `not captured (frontier round keeps no ledger)` in `Tokens` and `Minutes`.
-- **Readers re-pointed.** Every reader of a 1.x table now reads the ledger or the sub-issues. The gemba walk, the baseline and the A3 keep their 1.3.0 grammar.
+- **Readers re-pointed.** Every reader of a 1.x table now reads the ledger or the sub-issues. The gemba sample counts the ledger's Tasks table in place of the stage log; the walk, its line, the baseline and the A3 keep their 1.3.0 grammar.
 - **Files.** Standard work under `plugins/factory/`: `skills/run/SKILL.md`, `references/protocol.md`, `references/hansei.md`, the seven `agents/*.md` and the setup skill. Tooling: the four scripts above. `plugins/factory/.claude-plugin/plugin.json` is at `2.0.0`.
 - **Bump.** `scripts/check-bump.sh` is unchanged. It passes `1.3.0 -> 2.0.0` (`pass: minor bump needed, 1.3.0 -> 2.0.0`). The script's word "minor" is a floor; the major level is the architect's decision, because no path pattern can tell a breaking change.
 - **Wayfinding.** The run text says that where an installed older wayfinding text describes slices running one at a time, the run's rule governs.
@@ -51,7 +51,7 @@ Offline checks, replays and reviews cover the text of this release. **None was e
 5. **Hansei numbers across a real run**, including `Tokens` per role task and the frontier-round fields that read `not captured`.
 6. **Migrating a project other than agent-plugins.**
 7. **A live role following the brief check.** The role-side check of a brief's author and marker, and of the path list, is an instruction to the role: its text is pinned and its logic replayed on fixtures.
-8. **jq 1.6 and mawk.** Not tried. The suite ran on bash 5 with jq 1.8.1, and on `/bin/bash` 3.2.57.
+8. **jq 1.6 and mawk.** Not tried. The suite runs on jq 1.8.1 and bash 3.2.57 (the macOS shell); the QA verdict also records bash 5.
 9. **Accepted limits (security review).** The scan finds home paths and the listed token shapes, but not instruction-like text or an unlisted secret. Anyone with write access to the repository can edit a sub-issue body; the lead's own-login filter narrows this and does not remove it.
 
 **Migration try.** Not run when this entry was written. The lead runs the migration once on a scratch Project before the merge, and the outcome is added after that try. A failed try is an andon, not a line in this entry.

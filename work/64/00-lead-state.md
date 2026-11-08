@@ -2,7 +2,7 @@
 
 - Board item id: PVTI_lAHOBIbaa84BqOBFzhGxjhg
 - Status: Backlog
-- Next step: step 6, feedback round: architect (contracts) then developer (build), then QA and security re-verify
+- Next step: step 8.1, the person answers merge and clean up?
 - Notes: kind 2 check of QA F1 against security S6 (both post-text.sh scan): different guards (left boundary vs portable patterns and token coverage), not flagged; QA architect-note on 64-board-script section 9 text is unclear-pair with nothing
 - Open questions: none
 - Frozen on: factory 1.3.0 (see map #50 Factory run section)
@@ -49,7 +49,8 @@
 | 17 | Security (round 2) | security-reviewer | af80c5d52b2004eea | 2026-11-08T21:48:57Z | 2026-11-08T21:50:34Z | 1m | - | 138225 (resumed leg only) | pass | S1-S8 closed, no new finding |
 | 18 | Documentation | docs-writer | a3f1f5751c34122ce | 2026-11-08T21:50:34Z | 2026-11-08T22:11:06Z | 20m | - | 220044 | done | suite 3141 passed, 7 skipped, 0 failed; links 204 ok; 5 two-way decisions; the migration try was left to the lead |
 | 19 | Migration try on a scratch Project | lead | - | 2026-11-08T22:06:39Z | 2026-11-08T22:11:06Z | 4m | - | - | done | scratch Project 11 created and deleted; plan, apply, finish run for real; found: createProjectV2View takes no filter |
-| 20 | Documentation (round 2) | docs-writer | a3f1f5751c34122ce | 2026-11-08T22:11:06Z | | | - | | | |
+| 20 | Documentation (round 2) | docs-writer | a3f1f5751c34122ce | 2026-11-08T22:11:06Z | 2026-11-08T22:17:19Z | 6m | - | 238017 (resumed leg only) | done | scratch-try outcome and the view finding written; suite 3141 passed, 7 skipped, 0 failed |
+| 21 | Merge approval | person | - | 2026-11-08T22:17:19Z | | | - | - | | |
 
 ## Waits
 

@@ -193,5 +193,15 @@ has r2-board-script-contract-exit-6-text "$REPO/contracts/64-board-script.md" 'a
 # S3 scan scope: r2-scan-scope-*.  S4 stage summary body: r2-ops-list-no-body-in-quotes, r2-stage-summary-uses-body-file.
 # S5 author filter and brief check: r2-t-subissues-*, r2-brief-check-*, ac16-agent-*-checks-author.  S6 patterns, mawk: r2-token-hit, r2-canary-*.
 # S7 rule 5.6: r2-5-6-*.  S8 shared against paths: r2-rule3-*.
+# ---------- round 3: the restated statements of the path grammar and of the overlap rule ----------
+has r3-run-overlap-states-rule-3 "$RUN" 'or a path in one list equals a `shared:` entry of the other list or is a directory prefix of it (rule 3: `adr-number` is not a path and takes no part)'
+has r3-run-overlap-states-case-folding "$RUN" 'Names are compared character for character, ASCII case folded (`A/b.md` and `a/` overlap).'
+has r3-run-overlap-keeps-rules-1-and-2 "$RUN" 'or their `shared:` lines both name the same entry'
+has r3-run-path-list-states-the-grammar "$RUN" 'no empty, `.` or `..` component: `paths.sh` exits 3 on one; a directory ends in `/`, and a directory written without it is read as a file, with a warning on stderr'
+has r3-architect-states-the-grammar "$PLUGIN/agents/architect.md" 'no empty, `.` or `..` component, which `paths.sh` rejects; a directory without its slash is read as a file'
+# the paragraph yields the table rows it must (AC-28): each row answered by the script and named by the text
+lf a.md none "A/b.md"; lf b.md none "a/"; bash "$PS" overlap "$T/a.md" -- "$T/b.md" >/dev/null; ck r3-ac28-folded-row-yes 1 "$?"
+lf a.md none "plugins/factory/"; lf b.md "plugins/factory/.claude-plugin/plugin.json" "b/"; bash "$PS" overlap "$T/a.md" -- "$T/b.md" >/dev/null; ck r3-ac28-rule-3-row-yes 1 "$?"
+lf a.md none "a/"; lf b.md "adr-number" "b/"; bash "$PS" overlap "$T/a.md" -- "$T/b.md" >/dev/null; ck r3-ac28-adr-number-row-no 0 "$?"
 echo "info S1..S8 each map to the tests named in the comment block of test_round2_64.sh"
 done_

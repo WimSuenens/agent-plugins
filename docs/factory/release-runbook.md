@@ -1,6 +1,6 @@
 # Factory release runbook
 
-How the `factory` plugin is released, checked, rolled back and rolled forward. First written for release `1.0.0`, extended for `1.1.0` and `1.2.0` (slice #39, [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md)).
+How the `factory` plugin is released, checked, rolled back and rolled forward. First written for release `1.0.0` (slice #39, [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md)), extended for each release since, and for `2.0.0` (slice #64) with the migration of a 1.x project's board.
 
 **Blast radius of any factory release:** every project on a machine where the factory is installed at user scope. A release changes no project's files; it changes how the Lead runs the next item there. The release itself (merge, tag) touches only this repo. Production-like actions (merge, tag, push) wait for the person's approval, relayed by the Lead.
 
@@ -246,7 +246,69 @@ git push origin factory-v1.3.0
 
 **Monitoring added by 1.3.0.** None. The gemba line is a record field read by no script; the baseline's presence check (one `- gemba: ` line in a v5 record) reports `skipped ... (gemba line missing)` or `(gemba line repeated)` in the `records:` line, which is the alert.
 
+## Release 2.0.0 (slice #64, the board as run state)
+
+**Major release.** Every project on a machine where the factory is installed, after that machine updates, must migrate before `/factory:run` accepts it: `factory-config.sh state` exits 3 and names `run setup-factory-skill` on a 1.x project, and the run stops at its first step. The migration changes the **live GitHub Project** (the `Factory status` options and the views), not the files of the project's repository. It is run by `/factory:setup-factory-skill`, after the person's yes; `/factory:run` never runs it. Merging and tagging 2.0.0 changes nothing on the frozen machine (user-scope install factory 1.3.0 for this run) until the freeze ends. Item #64 itself ran on the 1.3.0 mechanism: **no new-series baseline** is written, and the `2.0` series starts with the next run.
+
+**Release checks** (read-only; run on the branch after `git fetch origin main`, in the item/64 worktree):
+
+1. `claude plugin validate .` exits 0 with the four version warnings for wayfinding, toolkit, discover and design (intentional).
+2. `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills` exit 0 with no warning.
+3. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 1.3.0 -> 2.0.0`, exit 0. The script is unchanged; its word "minor" is a floor, and the major level is the architect's decision (decision 8 of [64-release](../../contracts/64-release.md) §6).
+4. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
+
+```
+release: 2.0.0
+standard: 4bb4220e38b793e9a2df0bebb7da9041e94f8f2a1a7f855acd5b4f5b7273e9d0
+tooling: 92746e5d526aeaebcbd1ab94af461c973d1bd417265eb71e940db31b36da324a
+```
+
+`tooling` moved from 1.3.0's `295033f4…` because the four new scripts are tooling; the two values above match the round 3 verdict of [reviews/qa-64.md](../../reviews/qa-64.md). Any edit under `plugins/factory/` after these were noted moves `standard` (or `tooling`, for a file under `scripts/`): re-read and update this entry.
+
+5. `bash tests/run.sh` prints `ALL PASSED` with **seven** named skips, and no failure. The skips are: `ac29-no-script-changed` (test_andon_text), `ac26-no-path-outside-the-list`, `ac26-no-agent-changed`, `ac26-no-new-script`, `ac27-tooling-did-not-move` (test_baseline_a3), `ac1-repo-own-docs-agents-factory-md` (test_board_status) and `t13-release-delta-vs-1.2.0` (test_gemba). Six are retired release-delta pins replaced by `test_release64.sh`; the seventh keeps this repository's own `docs/agents/factory.md` in its 1.x table until the step after the run closes. As the *Tag* rule of the 1.0.0 section requires, the Lead tags only when none is left or the person accepts these seven by name.
+
+**Tag by hand (the Lead, after the person approved the merge).** `<pr>` is the number of the item/64 pull request. Tags `factory-v1.0.0` to `factory-v1.3.0` exist; `factory-v2.0.0` must not.
+
+```
+git fetch origin main
+bash plugins/factory/scripts/check-bump.sh        # in the item/64 worktree; expect exit 0
+gh pr merge <pr> --merge
+printf '%s' "2.0.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
+git ls-remote --tags origin factory-v2.0.0        # must print nothing, else the tag exists: stop
+git fetch origin main
+git tag factory-v2.0.0 "$(gh pr view <pr> --json mergeCommit --jq .mergeCommit.oid)"
+git push origin factory-v2.0.0
+```
+
+**Post-merge checks.** `git ls-remote --tags origin 'factory-v*'` lists `refs/tags/factory-v2.0.0`; `git rev-parse 'factory-v2.0.0^{commit}'` equals the PR's merge commit, and `git merge-base --is-ancestor factory-v2.0.0 origin/main` succeeds; `git show factory-v2.0.0:plugins/factory/.claude-plugin/plugin.json` shows `"version": "2.0.0"`. Do not move or delete a published tag.
+
+**The migration try on a scratch Project (the Lead, before the merge).** The live Project is not used for the try. The token needs the `project` scope (`gh auth refresh -s project` if `gh auth status` does not show it). The Lead creates a scratch Project under its own account, puts a few items on it with the 1.x `Factory status` values (`Designed`, `In progress`, `In review`, `Ready to deploy`, `Done`), and then:
+
+1. `bash plugins/factory/scripts/board.sh plan --owner <owner> --project <scratch number> --project-id <scratch id>`: prints the mapping and the snapshot file it would write; changes nothing.
+2. `bash plugins/factory/scripts/board.sh apply --owner <owner> --project <scratch number> --project-id <scratch id> --yes`: writes the snapshot first, then changes the field. Exit 10 asks for the views to be confirmed.
+3. Open the scratch Project's views, check `Needs you` (`factory-status:"Waiting on you"`) and `History` (`is:closed kind:slice,"role task"`), and confirm each. Where the script reports a view was not created, follow its manual instructions.
+4. `board.sh apply ... --yes --views-confirmed`, then `board.sh finish --owner <owner> --project <scratch number> --project-id <scratch id> --views-confirmed`.
+5. `board.sh plan` again: it prints `already migrated`. Keep the snapshot file path it printed for the record.
+
+Record the outcome in the changelog after the try. A failed try is an andon (the protocol's kind 7), not a changelog line. Delete the scratch Project only after the person says so.
+
+**Rollback.** There are two kinds, and the board one is not automatic.
+
+- **The board (after a live migration).** The snapshot is the only record of the old `In progress` and `In review` difference. The restore is the one in the setup skill, step 7: add the four old option names back to `Factory status` (they get new ids), keeping every present id; set each item to its recorded old option with `gh project item-edit`; drop what the old workflow did not have. A real restore is not rehearsed (see *Not verified*).
+- **The plugin.** Installs follow the version string, so the rollback is a **new version above 2.0.0** whose content is the 1.3.0 text (the 1.x rule: a version at or below 2.0.0 ships nothing to a 2.0.0 install). Per session, now, with nothing installed: `git worktree add ../factory-1.3.0 factory-v1.3.0` and `claude --plugin-dir ../factory-1.3.0/plugins/factory`. The 1.3.0 Lead does not know the board and reads the 1.x stage log, so on a project that has already migrated it is not a working rollback without the board restore above. Records stay: `hansei v5` records are read by 1.3.0 as before, and the ledger comments stay on the tickets.
+
+**What to check by hand, after the run closes.** These are the person's checks; no acceptance demo gated this release.
+
+1. Run the migration on the live Project (`/factory:setup-factory-skill` on this repository, which is still on the 1.x table and migrates through that step), and confirm the two views as the skill asks.
+2. Open the **Needs you** view and confirm it lists exactly the cards with `Factory status` `Waiting on you`, and that a card's needs-you comment says what to do next. This is the check of the requirement's AC-5 and AC-6; it is the human-only check of the Unverified list.
+3. Open the **History** view and confirm it lists closed slices and role tasks, newest first.
+4. Confirm the board view groups by `Factory status`.
+5. Keep the snapshot file the migration printed until the first full run on 2.0.0 has closed.
+
+**Monitoring added by 2.0.0.** No process, port or service. The alerts are the exit codes of `board.sh` (2 usage or a missing `gh` or `jq`, 3 a failed read, 5 a verification difference, 6 an item still holds an old value, 7 a failed mutation, 10 the views need the person's confirmation), `factory-config.sh state` (exit 3 on a 1.x project) and `paths.sh check` (an off-list path at review). No port is opened; the scripts run only short-lived commands and leave no process running.
+
 ## Not verified
 
+- **2.0.0:** no migration, view check or board write was run against a live Project; `board.sh plan` was run read-only against the live Project. Not run: the scratch Project try, a restore from a snapshot, a first run on 2.0.0 and an install. The Unverified list of [CHANGELOG.md](../../CHANGELOG.md) under *2.0.0* names every item.
 - Install and update were not run (frozen machine). `--plugin-dir` use of a pre-release worktree and `marketplace update` behaviour are from the README, ADR 0012 and #35's findings, not exercised here. Rollback (A) was reasoned, not run; the Delivery Done item "rollback has run successfully in test" is therefore open for 1.0.0 and should be run in a scratch HOME after the freeze ends: install 1.0.0, then repeat steps A and B, and confirm the installed version string follows.
 - Pinning the user-scope install itself to the pre-release commit (a `ref`/`sha` source for the factory) was not tried; the marketplace entry is a relative path today.

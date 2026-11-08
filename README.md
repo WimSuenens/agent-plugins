@@ -74,7 +74,7 @@ Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` e
 
 **Status: release 2.0.0 (the board as run state) has passed QA and security, and no acceptance demo gated it.** The board, the role-task sub-issues, the ledger and parallel slices are verified by offline tests, replays and reviews. Nothing was run against a live Project or in a live session. What only real use can show is listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *2.0.0*, *Unverified*. A project on 1.x must migrate before `/factory:run` accepts it; see [Upgrading a project to 2.0.0](#upgrading-a-project-to-200).
 
-**Status of 1.3.0 (the gemba sample): passed QA and security, and no acceptance demo gated it.** The walk of one stage per item, and its line in the record, are verified by offline tests, replays and reviews. What only real use can show is listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *1.3.0*, *Unverified*; its known limits are under *Known limits*.
+**Status of 1.3.0 (the gemba sample): passed QA and security, and no acceptance demo gated it.** The walk of one stage per item, and its line in the record, are verified by offline tests, replays and reviews. What only real use can show is listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *1.3.0*, *Unverified*.
 
 **Status of 1.2.0 (the per-run A3 and the Factory baseline): passed QA and security.** Its acceptance demo ran in a scratch project with `claude --plugin-dir`: the baseline issue appeared at run start and one A3 was posted at run close. It did not exercise a countermeasure (no override was written, so the before and after readings, and the keep, promote and drop answers, were not seen in a session), nor the paused-agent check. The limits are in [CHANGELOG.md](CHANGELOG.md) under *1.2.0*, *Known limitations at release*.
 
@@ -110,18 +110,18 @@ Slices run in parallel up to `parallel-limit` (default `2`, in the `## Parallel 
 
 Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v5 -->` (`v4` at 1.2.0, `v3` at 1.1.0, `v2` at 1.0.0), and it holds:
 
-- the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (each by name and start date, or `none`), the abnormalities (a count per kind, and a link to each andon comment), a stage-log cross-check, and from 1.3.0 the gemba line below;
+- the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (each by name and start date, or `none`), the abnormalities (a count per kind, and a link to each andon comment), a cross-check of the ledger's Tasks table (its header key keeps the 1.x name `stage-log cross-check`), and from 1.3.0 the gemba line below;
 - seven measures in a fixed order: lead time, first-pass yield, rework, escaped defects, tokens per role, the person's touches, and doors confirmed or contradicted.
 
 Lead time is split into parts that add up to the total: agent working, waiting for the person, waiting on limits, stalled, interrupted, and, from 1.1.0, andon (the time the lead held the item for an andon). Measure 7 reads `pending resurvey` at posting and is filled by editing the same comment after the resurvey.
 
-While an item runs, the lead keeps a **ledger**: one comment on the slice ticket, with the Tasks table (one row per role task, with its times), the Waits table (the person, usage limits, stalls, interruptions and, from 1.1.0, andon pauses, each naming the agent it stopped) and the Person's touches table. The role tasks are sub-issues, so their own times and closing comments are on the tracker. The lead state in `work/<id>/00-lead-state.md` keeps the lead's memory and nothing the board shows: its label, its findings and its abnormalities. The item's folder is removed by the last commit, after the record is posted.
+While an item runs, the lead keeps a **ledger**: one comment on the slice ticket, with the Tasks table (one row per role task, with its times), the Waits table (the person, usage limits, stalls, interruptions and, from 1.1.0, andon pauses, each naming the agent it stopped) and the Person's touches table. The role tasks are sub-issues, so their own times and closing comments are on the tracker. The lead state, a file the item keeps while it runs and that is removed by the last commit, keeps the lead's memory and nothing the board shows: its label, its findings and its abnormalities. The record is posted before that removal.
 
 A value that could not be captured reads `not captured (<reason>)`. It is never `0`, never blank, and never left out. `n/a (did not run)` is only for a stage or role that did not run. A role whose transcript was cut off by a stall, an interruption or an andon pause reads `not captured (transcript truncated by <kind>)` for its spend. Escaped defects read `not captured` in schemas v2 to v5.
 
 **The gemba line (from 1.3.0).** At each item's close, after the merge approval and before the record is filled, the lead walks one stage of the item. A counted rule picks the stage from the ledger's Tasks table: the ticket number, modulo the count of role tasks that were not flagged. The walk reads what that agent did, in its transcript or, where no transcript can be read, in its commits and result file. It never reads the agent's own summary, and it compares the work with the brief and the stage-log row. The record then carries one header line, `gemba`, that names the stage walked and says whether the walk found a difference. A difference is a question about the process, not about a person, a role or a model, and it gets a 5 Whys as a kind 7 andon. A walk that could not be done reads `not captured (<reason>)`, never `found nothing` and never `0`. The walk comes after the merge approval, so it cannot stop a merge by itself. The rule, the 30,000-character read limit and the grammar of the line are in `plugins/factory/references/hansei.md`, section 6, and in the contracts [60-gemba-sample](contracts/60-gemba-sample.md), [60-gemba-walk](contracts/60-gemba-walk.md) and [60-gemba-line](contracts/60-gemba-line.md). Whether the walk is worth its cost has not been measured yet; [CHANGELOG.md](CHANGELOG.md) lists it under *1.3.0*, *Unverified*.
 
-The data lives in the project's own tracker (the board, the role-task sub-issues, the ledger, the record, the andon comments, and from 1.2.0 the baseline issue and the A3) and in `work/<id>/` while the item runs. No script aggregates the records: the lead reads their comments and keeps the baseline, as [described below](#the-baseline-and-the-a3) explains. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md) and, for schema v3 and the andon rows, [contracts/49-records.md](contracts/49-records.md); the ledger and the fields of 2.0.0 are in [contracts/64-ledger-and-fields.md](contracts/64-ledger-and-fields.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
+The data lives in the project's own tracker (the board, the role-task sub-issues, the ledger, the record, the andon comments, and from 1.2.0 the baseline issue and the A3) and in the item's own files while the item runs. No script aggregates the records: the lead reads their comments and keeps the baseline, as [described below](#the-baseline-and-the-a3) explains. The one write this repo receives is the optional factory-feedback issue, which carries the problem in factory terms and never a raw record. Definitions: [contracts/39-hansei-record.md](contracts/39-hansei-record.md) and, for schema v3 and the andon rows, [contracts/49-records.md](contracts/49-records.md); the ledger and the fields of 2.0.0 are in [contracts/64-ledger-and-fields.md](contracts/64-ledger-and-fields.md). The lead's copy of the template is `plugins/factory/references/hansei.md`.
 
 The scripts behind the labels, the bump check, the spend and the cut-offs are described in [contracts/39-plugin-scripts.md](contracts/39-plugin-scripts.md). Run from the repo root:
 
@@ -139,7 +139,7 @@ Four scripts were added in 2.0.0. The lead and the setup skill call them, and ea
 bash plugins/factory/scripts/paths.sh overlap <file>... -- <file>...          # do two path lists overlap (rules 1 to 3 of the contract)
 bash plugins/factory/scripts/factory-config.sh state [docs/agents/factory.md]  # exit 3 when line 1 is not factory-state: 2
 bash plugins/factory/scripts/factory-config.sh limit [docs/agents/factory.md]  # prints the parallel limit (2 when the line is absent)
-bash plugins/factory/scripts/post-text.sh scan [--needs-you] <file>...        # refuses home paths and secrets; with --needs-you, also work/ and branch names
+bash plugins/factory/scripts/post-text.sh scan [--needs-you] <file>...        # refuses home paths and secrets; with --needs-you, also the names of work folders and branches
 bash plugins/factory/scripts/board.sh plan --owner <owner> --project <number>  # reads the board and prints the mapping; changes nothing
 ```
 
@@ -417,6 +417,21 @@ The `factory` plugin at 1.3.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | the view part of the walk's command block (`hansei.md`, section 6), on the same transcript | exit 0 with empty stderr; the whole view fits the budget, so it is not partial |
 
 **Not tested yet, for 1.3.0:** the install and update path, and the rollback, which need an unfrozen machine (see the [release runbook](docs/factory/release-runbook.md)); the walk on a real project's transcript and a live close at step 8.3a; and the items listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *1.3.0*.
+
+The `factory` plugin at 2.0.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.57, `jq` 1.8.1, `gh` 2.94.0), on 2026-11-08, from `item/64`. Only read-only and validate-only commands were run, and the user-scope install was not touched: `factory@wimsuenens` is still factory 1.3.0, the frozen install of this run. So install, marketplace and reload commands were not run; nor were `/factory:run` or `/factory:setup-factory-skill`, and no board write was made. `board.sh plan` ran read-only against this repository's own Project. Its output named the mapping and the snapshot file it would write, and it wrote no snapshot.
+
+| Check | Result |
+| --- | --- |
+| `claude plugin validate .` | passed with the four version warnings for the plugins without a `version` (wayfinding, toolkit, discover, design), intentional |
+| `claude plugin validate ./plugins/factory` | passed, no warning |
+| `claude plugin validate ./plugins/factory/skills` | passed, no warning |
+| `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 2.0.0`, `standard: 4bb4220e38b7…` and `tooling: 92746e5d526a…` (in full in the runbook, *Release 2.0.0*) |
+| `bash plugins/factory/scripts/check-bump.sh`, after `git fetch origin main` | `pass: minor bump needed, 1.3.0 -> 2.0.0`, exit 0 |
+| `bash plugins/factory/scripts/board.sh plan --owner WimSuenens --project 9 --project-id <id>` | read-only; prints the status mapping and the snapshot file it would write, exit 0 |
+| `bash tests/run.sh` | `ALL PASSED`, no failure, with seven named skips (listed in the runbook, *Release 2.0.0*, check 5) |
+| `claude plugin list --json` | `factory@wimsuenens` is 1.3.0, scope user, enabled: the frozen install of this run; nothing was changed |
+
+**Not tested yet, for 2.0.0:** the migration on a Project, including the scratch-Project try the lead runs before the merge; the Needs you and History views; the restore from a snapshot; parallel slices on a real project; the install and update path, and the rollback. The items listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *2.0.0* are the full list.
 
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 

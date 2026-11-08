@@ -12,9 +12,9 @@ wayfinding (unversioned): this release changes two wayfinding files, `plugins/wa
 
 **No acceptance demo gated this slice.** What offline checks cannot show is listed under *Unverified* below. Real use settles that list: each finding goes to this repo as a feedback issue (the *Factory feedback* template, label `plugin:factory`).
 
-**This item ran on the 1.3.0 mechanism.** It ran on the frozen install `9147301f75c3` (1.3.0), so its briefs and feedback were files, its lead state held a stage log, and it had no sub-issues and no migration. **No new-series baseline was written for 2.0.0**: the `2.0` series starts with the next run.
+**This item ran on the 1.3.0 mechanism.** It ran on the frozen install, factory 1.3.0, so its briefs and feedback were files, its lead state held a stage log, and it had no sub-issues and no migration. **No new-series baseline was written for 2.0.0**: the `2.0` series starts with the next run.
 
-**Installs are frozen.** Merging and tagging 2.0.0 changes nothing on a machine that holds the frozen install, which stays on `9147301f75c3` until the freeze ends. The tag `factory-v2.0.0` is made by hand on the merge commit, as for 1.1.0 to 1.3.0. Once a machine updates (`claude plugin marketplace update wimsuenens`), this release reaches the projects on it.
+**Installs are frozen.** Merging and tagging 2.0.0 changes nothing on a machine that holds the frozen install, which stays on factory 1.3.0 until the freeze ends. The tag `factory-v2.0.0` is made by hand on the merge commit, as for 1.1.0 to 1.3.0. Once a machine updates (`claude plugin marketplace update wimsuenens`), this release reaches the projects on it.
 
 **Restart your Claude Code sessions after updating.** A session keeps the factory skill text it read when it started. A session that started before the update runs the old text and does not read the board.
 

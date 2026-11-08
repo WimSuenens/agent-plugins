@@ -5,10 +5,11 @@
 #        bash post-text.sh elide <in> <out> <ref> [--max <bytes>]
 #        bash post-text.sh split <in> <outdir>
 # scan: prints "scan: <basename>:<line>: home-path | secret | work-path" per hit; it never prints the text itself.
-#       --needs-you also flags a path under work/<n> and a branch item/<n> or frontier/<n>.
+#       --needs-you also flags a path under work/<n>, work/frontier-<n>, work/settle-<n> and a branch item/<n>, frontier/<n> or settle/<n>.
+#       A canary self-check runs first; a canary that does not hit prints "scan: self-check failed (<name>)" on stderr and exits 2.
 # render: marker, Status, Abnormality and Summary visible, every other field of the draft inside one <details>, byte for byte.
 # elide: replaces each fenced block over --max bytes (default 20000) by one line naming <ref>; prints the number of blocks elided.
-# split: writes part-1.md .. part-<m>.md (each at most 60000 bytes) into <outdir> and prints <m>.
+# split: writes part-1.md .. part-<m>.md (each at most 60000 bytes) into <outdir> and prints <m>; an over-long line is cut (one newline added) and reported on stderr.
 # Exit: scan 0 clean, 1 a hit, 2 usage or a file unreadable; render 0, 3 no Status or Summary or Summary over 10 lines; elide 0; split 0, 4 Status and Summary alone exceed the cap.
 # No network; no write outside the named output paths.
 # See contracts/64-role-tasks.md sections 5, 6 and 9 in the repo that hosts the factory.
@@ -27,6 +28,61 @@ case "$cmd" in
     needs=0
     if [ "${1:-}" = "--needs-you" ]; then needs=1; shift; fi
     [ $# -ge 1 ] || usage
+    # B: the left boundary; T: the token class. Every prefix is preceded by B. Plain grep -E, no awk intervals.
+    B='(^|[^A-Za-z0-9_-])'
+    T='[A-Za-z0-9_-]'
+    SN=(github github-pat aws slack openai-style google npm gitlab jwt private-key bearer)
+    SP=(
+      "${B}(ghp|gho|ghs|ghu|ghr)_${T}{20,}"
+      "${B}github_pat_${T}{20,}"
+      "${B}AKIA[A-Z0-9]{16}"
+      "${B}xox[abprs]-${T}{10,}"
+      "${B}sk-${T}{20,}"
+      "${B}AIza[0-9A-Za-z_-]{35}"
+      "${B}npm_[A-Za-z0-9]{36}"
+      "${B}glpat-${T}{20,}"
+      "${B}eyJ${T}{10,}\\.eyJ${T}{10,}\\.${T}{10,}"
+      "-----BEGIN [A-Z ]*PRIVATE KEY-----"
+      "Bearer [A-Za-z0-9._~+/=-]{20,}"
+    )
+    # one fake token per row, assembled from two halves so this file is no hit when scanned
+    n20=aaaaaaaaaaaaaaaaaaaaaaaaa
+    CAN=(
+      "gh""p_${n20}"
+      "github""_pat_${n20}"
+      "AK""IAABCDEFGHIJKLMNOP"
+      "xo""xb-${n20}"
+      "s""k-${n20}"
+      "AI""zaAbCdEfGhIjKlMnOpQrStUvWxYz012345678"
+      "np""m_AbCdEfGhIjKlMnOpQrStUvWxYz0123456789"
+      "glp""at-${n20}"
+      "ey""Jaaaaaaaaaaa.ey""Jaaaaaaaaaaa.aaaaaaaaaaaa"
+      "-----BEGIN ""RSA PRIVATE KEY-----"
+      "Bear""er ${n20}"
+    )
+    HOMEP=(
+      '(^|[^A-Za-z0-9_.~-])/Users/[^/ '"$(printf '\t')"']+'
+      '(^|[^A-Za-z0-9_.~-])/home/[^/ '"$(printf '\t')"']+'
+      '(^|[^A-Za-z0-9_.~-])/root/'
+      '[A-Za-z]:[\\/][Uu]sers[\\/][^\\/ '"$(printf '\t')"']+'
+    )
+    HOMEC=("/Us""ers/someone/x" "/ho""me/someone/x" "/ro""ot/x" 'C:\Us''ers\someone')
+    i=0
+    while [ $i -lt ${#SP[@]} ]; do
+      if ! printf '%s\n' "${CAN[$i]}" | LC_ALL=C grep -Eq -e "${SP[$i]}"; then
+        echo "scan: self-check failed (${SN[$i]})" >&2
+        exit 2
+      fi
+      i=$((i + 1))
+    done
+    i=0
+    while [ $i -lt ${#HOMEP[@]} ]; do
+      if ! printf '%s\n' "${HOMEC[$i]}" | LC_ALL=C grep -Eq -e "${HOMEP[$i]}"; then
+        echo "scan: self-check failed (home-path)" >&2
+        exit 2
+      fi
+      i=$((i + 1))
+    done
     rc=0
     for f in "$@"; do
       if [ ! -f "$f" ] || [ ! -r "$f" ]; then
@@ -35,30 +91,20 @@ case "$cmd" in
         continue
       fi
       b="$(basename "$f")"
-      hits="$(LC_ALL=C awk -v b="$b" -v needs="$needs" '
-        function has(s, re) { return s ~ re }
-        {
-          line = $0
-          home = 0; sec = 0; wk = 0
-          if (line ~ /(^|[^A-Za-z0-9_.~-])\/Users\/[^\/ \t]+/) home = 1
-          if (line ~ /(^|[^A-Za-z0-9_.~-])\/home\/[^\/ \t]+/) home = 1
-          if (line ~ /(^|[^A-Za-z0-9_.~-])\/root\//) home = 1
-          if (line ~ /[A-Za-z]:[\\\/][Uu]sers[\\\/][^\\\/ \t]+/) home = 1
-          if (line ~ /gh[pos]_[A-Za-z0-9_]{20,}/) sec = 1
-          if (line ~ /github_pat_[A-Za-z0-9_]{20,}/) sec = 1
-          if (line ~ /AKIA[A-Z0-9]{16}/) sec = 1
-          if (line ~ /xox[abprs]-[A-Za-z0-9-]{10,}/) sec = 1
-          if (line ~ /sk-[A-Za-z0-9_-]{20,}/) sec = 1
-          if (line ~ /-----BEGIN [A-Z ]*PRIVATE KEY-----/) sec = 1
-          if (line ~ /Bearer [A-Za-z0-9._~+\/=-]{20,}/) sec = 1
-          if (needs) {
-            if (line ~ /(^|[^A-Za-z0-9_])work\/[0-9]+/) wk = 1
-            if (line ~ /(^|[^A-Za-z0-9_])(item|frontier)\/[0-9]+/) wk = 1
-          }
-          if (home) print "scan: " b ":" NR ": home-path"
-          if (sec) print "scan: " b ":" NR ": secret"
-          if (wk) print "scan: " b ":" NR ": work-path"
-        }' "$f")"
+      hits=""
+      for p in "${HOMEP[@]}"; do
+        hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
+      done
+      for p in "${SP[@]}"; do
+        hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ secret/')"$'\n'
+      done
+      if [ "$needs" = 1 ]; then
+        for p in '(^|[^A-Za-z0-9_])work/([0-9]|frontier-[0-9]|settle-[0-9])' '(^|[^A-Za-z0-9_])(item|frontier|settle)/[0-9]+'; do
+          hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ work-path/')"$'\n'
+        done
+      fi
+      # one line per (line number, kind), ordered by line number then home-path, secret, work-path
+      hits="$(printf '%s' "$hits" | grep -v '^$' | awk '{ k = ($2 == "home-path") ? 1 : ($2 == "secret") ? 2 : 3; print $1, k, $2 }' | sort -n -u -k1,1 -k2,2 | awk -v b="$b" '{ print "scan: " b ":" $1 ": " $3 }')"
       if [ -n "$hits" ]; then
         printf '%s\n' "$hits"
         [ "$rc" = 0 ] && rc=1
@@ -203,6 +249,7 @@ case "$cmd" in
         m = 1; cb = b1; used = 0; text[1] = ""
         for (i = bs; i <= be; i++) {
           s = line[i]
+          pieces = 1
           while (length(s) + 1 > cb - used) {
             # the line does not fit in what is left of this part
             if (used > 0 && length(s) + 1 <= bk) { m++; cb = bk; used = 0; text[m] = ""; continue }
@@ -213,10 +260,12 @@ case "$cmd" in
             if (cut == 0) { m++; cb = bk; used = 0; text[m] = ""; continue }
             text[m] = text[m] substr(s, 1, cut) "\n"
             s = substr(s, cut + 1)
+            pieces++
             m++; cb = bk; used = 0; text[m] = ""
           }
           text[m] = text[m] s "\n"
           used += length(s) + 1
+          if (pieces > 1) print "split: details line " (i - bs + 1) " cut into " pieces " pieces" > "/dev/stderr"
         }
         # write the parts
         f1 = dir "/part-1.md"

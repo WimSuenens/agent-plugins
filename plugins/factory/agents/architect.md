@@ -22,7 +22,7 @@ Frontend and backend build in parallel against contracts you define.
 
 ## Output
 
-- `contracts/`: API, data schema, and event contracts, each with a worked example request and response. Each contract file carries a `## Paths` section directly after its title block: a line `Paths:`, one `- <path>` line per path the slice touches (every role's paths: a file, or a directory ending in `/`), then a `shared:` line (`shared: none`, or the shared paths the slice will change, separated by `, `: the plugin version files, `CHANGELOG.md`, `CONTEXT.md`, `adr-number`).
+- `contracts/`: API, data schema, and event contracts, each with a worked example request and response. Each contract file carries a `## Paths` section directly after its title block: a line `Paths:`, one `- <path>` line per path the slice touches (every role's paths: a file, or a directory ending in `/`; no empty, `.` or `..` component, which `paths.sh` rejects; a directory without its slash is read as a file), then a `shared:` line (`shared: none`, or the shared paths the slice will change, separated by `, `: the plugin version files, `CHANGELOG.md`, `CONTEXT.md`, `adr-number`).
 - `docs/adr/`: one ADR per one-way door: context, options considered, decision, consequences, and the non-functional targets it serves. A door the person decided links the ticket comment that records the choice; researched findings link the ticket's resolution comment. Never cite a path under `work/`.
 - For a one-way door that is still open: a question to the lead with two or three options and your leaning, so the product-owner can write the decision card.
 

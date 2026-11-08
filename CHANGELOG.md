@@ -21,7 +21,7 @@ wayfinding (unversioned): this release changes two wayfinding files, `plugins/wa
 ### Added
 
 - **The board as status.** The project's board holds the status of every card: the map, each child ticket, each role task and each frontier ticket. `Factory status` has six values: `Backlog`, `Ready`, `Running`, `Waiting on you`, `Blocked` and `Done`. Two single-select fields are added: `Kind` (`map`, `slice`, `role task`, `frontier ticket`) and `Role` (set only on a role task). Five text fields hold the numbers: `Tokens`, `Minutes`, `Hours`, `Rework rounds` and `Person touches`.
-- **Two views.** `Needs you` lists the cards that wait on the person. `History` lists the closed slices and role tasks, newest first. The filter tokens are `factory-status:"Waiting on you"` and `is:closed kind:slice,"role task"`.
+- **Two views.** `Needs you` lists the cards that wait on the person. `History` lists the closed slices and role tasks, newest first. The filter tokens are `factory-status:"Waiting on you"` and `is:closed kind:slice,"role task"`. The script cannot create either view with its filter, so in 2.0.0 both are built by hand from the instructions it prints (see *Unverified*, item 2).
 - **A waiting card says what to do.** Before a card goes to `Waiting on you`, the lead posts a needs-you comment: its cause, the ask, the options, and what happens after the answer.
 - **Role tasks as sub-issues.** Each spawn of a role on an item is one sub-issue of its slice. The brief is its body and the result is its closing comment; a result longer than one comment is split into parts. Findings go back to a role as a new rework sub-issue, and earlier role tasks stay closed and unedited.
 - **The ledger.** The lead's working record of an item is one comment on the slice ticket, holding the Tasks, Waits and Person's touches tables. It replaces the tables the 1.x lead state held.
@@ -42,10 +42,10 @@ wayfinding (unversioned): this release changes two wayfinding files, `plugins/wa
 
 ### Unverified
 
-Offline checks, replays and reviews cover the text of this release. **None was exercised on a live Project or in a live session**: none was exercised. The following is named here as unverified:
+Offline checks, replays and reviews cover the text of this release. **In a live session, none was exercised.** On a live Project nothing was written. The migration was tried once on a scratch Project on 2026-11-08, on the real GitHub API; the scratch Project was deleted afterwards, and the outcome is under item 2 and in the runbook. The following is named here as unverified:
 
 1. **Limits and result size under real load.** The usage-limit gate (`N = 1` after a limit is hit), the cut of a long result, and the limits the tracker sets.
-2. **Anything needing a live Project.** The `Needs you` filter token `factory-status:"Waiting on you"`; the shape of `gh project item-list` that `board.sh` reads (the lower-case field keys and option names); `createProjectV2View`; `updateProjectV2Field` keeping the option ids (if it regenerates them, the damage comes before the check and the snapshot is the only recovery); a real restore from the snapshot.
+2. **Anything needing a live Project.** Found in the scratch try: `createProjectV2View` takes no `filter` on create. So the single create call always fails, and `board.sh apply` always ends with exit 10 and prints the hand-build instructions for both views (`Needs you`: table layout, filter `factory-status:"Waiting on you"`; `History`: table layout, filter `is:closed kind:slice,"role task"`). The fallback works. A create-then-update path (`updateProjectV2View` with the filter) was checked by hand and the filter reads back; it is a candidate for a later release and is **not** in 2.0.0. Still unproven: that the views filter correctly in the UI with the `factory-status:` token (only the stored text was read back), and the fields shown and their order. A real restore from the snapshot is not rehearsed.
 3. **Whether the board alone lets the person tell what to do next.** The needs-you comment and its card, in the first real run.
 4. **Parallel running.** Path lists, the off-list catch, merge conflicts and the resurvey pause.
 5. **Hansei numbers across a real run**, including `Tokens` per role task and the frontier-round fields that read `not captured`.
@@ -54,7 +54,9 @@ Offline checks, replays and reviews cover the text of this release. **None was e
 8. **jq 1.6 and mawk.** Not tried. The suite runs on jq 1.8.1 and bash 3.2.57 (the macOS shell); the QA verdict also records bash 5.
 9. **Accepted limits (security review).** The scan finds home paths and the listed token shapes, but not instruction-like text or an unlisted secret. Anyone with write access to the repository can edit a sub-issue body; the lead's own-login filter narrows this and does not remove it.
 
-**Migration try.** Not run when this entry was written. The lead runs the migration once on a scratch Project before the merge, and the outcome is added after that try. A failed try is an andon, not a line in this entry.
+**Verified once on a scratch Project (2026-11-08):** `updateProjectV2Field` keeps the option ids through the migration, and the shape of `gh project item-list` that `board.sh` reads matches the one it expects. These are no longer on the unverified list.
+
+**Migration try, 2026-11-08 (scratch Project, deleted afterwards).** `board.sh plan` read the board: seven options, 8 items to change and 4 staying. `apply --yes` moved the 8 items by the mapping and left the 4; every `Priority` value was identical before and after; the four old options were dropped last; the `Kind` and `Role` fields were created; the snapshot was written outside the repository with mode 600. `finish --views-confirmed` refused while a view was missing, and wrote `factory-state: 2`, the new option ids and the 2.0.0 operations section into scratch copies of the two docs; a second run gave the same result, and `plan` then read `already migrated`. A failed try would have been an andon, not a line here; it did not fail.
 
 ## factory 1.3.0 (#60)
 

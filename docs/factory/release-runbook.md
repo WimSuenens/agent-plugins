@@ -282,15 +282,26 @@ git push origin factory-v2.0.0
 
 **Post-merge checks.** `git ls-remote --tags origin 'factory-v*'` lists `refs/tags/factory-v2.0.0`; `git rev-parse 'factory-v2.0.0^{commit}'` equals the PR's merge commit, and `git merge-base --is-ancestor factory-v2.0.0 origin/main` succeeds; `git show factory-v2.0.0:plugins/factory/.claude-plugin/plugin.json` shows `"version": "2.0.0"`. Do not move or delete a published tag.
 
-**The migration try on a scratch Project (the Lead, before the merge).** The live Project is not used for the try. The token needs the `project` scope (`gh auth refresh -s project` if `gh auth status` does not show it). The Lead creates a scratch Project under its own account, puts a few items on it with the 1.x `Factory status` values (`Designed`, `In progress`, `In review`, `Ready to deploy`, `Done`), and then:
+**The migration try on a scratch Project (the Lead, before the merge): outcome of 2026-11-08.** The try ran on the real GitHub API, on a scratch Project that was deleted afterwards, so nothing remains on any real Project. The live Project was not used. The token needed the `project` scope.
+
+What was verified:
+
+- `board.sh plan` read the board: a seven-option board, 8 items to change and 4 staying.
+- `board.sh apply --yes` moved the 8 items by the mapping (Designed to Ready; In progress and In review to Running; Ready to deploy to Waiting on you) and left the other 4. It kept every `Priority` value, identical before and after. It dropped the four old options last, created the `Kind` and `Role` fields, and wrote a snapshot outside the repository with mode 600.
+- A second `plan` read "migration in progress", because the views were not yet made.
+- `board.sh finish --views-confirmed` refused while a view was missing. Once the views were made, it wrote `factory-state: 2`, the new option ids and the 2.0.0 operations section into scratch copies of the two docs. It ran twice with the same result, and `plan` then read "already migrated".
+
+What was found: `CreateProjectV2ViewInput` has no `filter` field. So the single create mutation always fails, and `apply` always ends with exit 10 and the hand-build instructions for both views. The designed fallback works. By hand, creating a view with name and layout and then calling `updateProjectV2View` with the filter works, and the filter reads back. A fix (create, then update) is a candidate for a later release; it is **not** in 2.0.0.
+
+What to expect when the try is run again:
 
 1. `bash plugins/factory/scripts/board.sh plan --owner <owner> --project <scratch number> --project-id <scratch id>`: prints the mapping and the snapshot file it would write; changes nothing.
-2. `bash plugins/factory/scripts/board.sh apply --owner <owner> --project <scratch number> --project-id <scratch id> --yes`: writes the snapshot first, then changes the field. Exit 10 asks for the views to be confirmed.
-3. Open the scratch Project's views, check `Needs you` (`factory-status:"Waiting on you"`) and `History` (`is:closed kind:slice,"role task"`), and confirm each. Where the script reports a view was not created, follow its manual instructions.
-4. `board.sh apply ... --yes --views-confirmed`, then `board.sh finish --owner <owner> --project <scratch number> --project-id <scratch id> --views-confirmed`.
-5. `board.sh plan` again: it prints `already migrated`. Keep the snapshot file path it printed for the record.
+2. `bash plugins/factory/scripts/board.sh apply --owner <owner> --project <scratch number> --project-id <scratch id> --yes`: writes the snapshot first, then changes the field and the items. It ends with exit 10 and the two hand-build instructions (`Needs you`: table layout, filter `factory-status:"Waiting on you"`; `History`: table layout, filter `is:closed kind:slice,"role task"`, with the fields and order shown).
+3. Build the two views by hand from those instructions on the scratch Project.
+4. `board.sh apply --owner <owner> --project <scratch number> --project-id <scratch id> --yes --views-confirmed`, then `board.sh finish --owner <owner> --project <scratch number> --project-id <scratch id> --views-confirmed`.
+5. `board.sh plan` again: it prints `already migrated`. Keep the snapshot file path it printed.
 
-Record the outcome in the changelog after the try. A failed try is an andon (the protocol's kind 7), not a changelog line. Delete the scratch Project only after the person says so.
+Still unverified after the try: that the view filters correctly in the UI with the `factory-status:` token (only the stored text was read back), and the fields shown and their order (the API call sets only name, layout and filter). A failed try is an andon (the protocol's kind 7), not a changelog line. The scratch Project was deleted after the try.
 
 **Rollback.** There are two kinds, and the board one is not automatic.
 
@@ -309,6 +320,6 @@ Record the outcome in the changelog after the try. A failed try is an andon (the
 
 ## Not verified
 
-- **2.0.0:** no migration, view check or board write was run against a live Project; `board.sh plan` was run read-only against the live Project. Not run: the scratch Project try, a restore from a snapshot, a first run on 2.0.0 and an install. The Unverified list of [CHANGELOG.md](../../CHANGELOG.md) under *2.0.0* names every item.
+- **2.0.0:** no migration, view check or board write was run against a live Project; `board.sh plan` was run read-only against the live Project. The scratch-Project try ran on 2026-11-08 (outcome in *Release 2.0.0*). Not run: a restore from a snapshot, a first run on 2.0.0 and an install. The Unverified list of [CHANGELOG.md](../../CHANGELOG.md) under *2.0.0* names every item.
 - Install and update were not run (frozen machine). `--plugin-dir` use of a pre-release worktree and `marketplace update` behaviour are from the README, ADR 0012 and #35's findings, not exercised here. Rollback (A) was reasoned, not run; the Delivery Done item "rollback has run successfully in test" is therefore open for 1.0.0 and should be run in a scratch HOME after the freeze ends: install 1.0.0, then repeat steps A and B, and confirm the installed version string follows.
 - Pinning the user-scope install itself to the pre-release commit (a `ref`/`sha` source for the factory) was not tried; the marketplace entry is a relative path today.

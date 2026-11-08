@@ -1,0 +1,35 @@
+# Values computed by hand from the 1.3.0 rules applied to the OLD logs (references/hansei.md and skills/run/SKILL.md of origin/main), written before any 2.0.0 text of hansei.md was read.
+# log	key	value
+w12	total_min	281
+w12	person_min	51
+w12	limits_min	15
+w12	stalled_min	15
+w12	interrupted_min	18
+w12	andon_min	20
+w12	agent_working_min	162
+w12	row2_requirement_product-owner_working	15
+w12	row3_contracts-and-adrs_architect_working	18
+w12	row4_build_developer_working	78
+w12	row6_qa_qa-engineer_working	18
+w12	row7_security_security-reviewer_working	14
+w12	row9_build-round-2_developer_working	7
+w12	row10_qa-round-2_qa-engineer_working	9
+w12	row11_documentation_docs-writer_working	8
+w12	kind4_flags	none
+w12	gemba_pick_id12	Requirement/product-owner
+w12	touches	3
+w12	rework_feedback_briefs	1
+w12	hours	4.68
+w12	agents_product-owner	a1c9e2
+w12	agents_architect	b7d031
+w12	agents_developer	c44a10
+w12	agents_qa-engineer	d21f77
+w12	agents_security-reviewer	a41f09
+w12	agents_docs-writer	e90b55
+w12	peak_developer	141210
+w12	peak_qa-engineer	74480
+c49	gemba_pick_id49	Stage 8/architect
+c49	role_rows	11
+l57	gemba_pick_id57	Stage 10/developer
+l57	role_rows	18
+k4	kind4_flags	5

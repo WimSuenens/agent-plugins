@@ -1,0 +1,11 @@
+# The narrated run of contracts/64-board-status.md section 3 (AC-4): step, event (a phrase of a row in the run text's status table), card, expected status after the step
+# step	card	event phrase	status
+1	slice	it is cut and may start	Ready
+2	slice	the first role task of the item is spawned	Running
+2	role task	you create it and spawn the role	Running
+3	role task	its closing comment is posted and the issue closed	Done
+5	slice	you ask the person for anything	Waiting on you
+6	slice	you read the person's answer	Running
+10	role task	you create it and spawn the role	Running
+12	slice	you ask the person for anything	Waiting on you
+13	slice	its PR is merged	Done

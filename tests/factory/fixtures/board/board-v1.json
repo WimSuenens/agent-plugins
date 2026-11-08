@@ -1,0 +1,194 @@
+{
+  "project_id": "PVT_fixture01",
+  "next": 100,
+  "fields": [
+    {
+      "id": "fld_title",
+      "name": "Title",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "fld_status",
+      "name": "Factory status",
+      "type": "ProjectV2SingleSelectField",
+      "options": [
+        {
+          "id": "o_backlog",
+          "name": "Backlog",
+          "color": "GRAY",
+          "description": "About Backlog"
+        },
+        {
+          "id": "o_ready",
+          "name": "Ready",
+          "color": "BLUE",
+          "description": "About Ready"
+        },
+        {
+          "id": "o_designed",
+          "name": "Designed",
+          "color": "PURPLE",
+          "description": "About Designed"
+        },
+        {
+          "id": "o_inprogress",
+          "name": "In progress",
+          "color": "YELLOW",
+          "description": "About In progress"
+        },
+        {
+          "id": "o_inreview",
+          "name": "In review",
+          "color": "ORANGE",
+          "description": "About In review"
+        },
+        {
+          "id": "o_rtd",
+          "name": "Ready to deploy",
+          "color": "PINK",
+          "description": "About Ready to deploy"
+        },
+        {
+          "id": "o_done",
+          "name": "Done",
+          "color": "GREEN",
+          "description": "About Done"
+        }
+      ]
+    },
+    {
+      "id": "fld_priority",
+      "name": "Priority",
+      "type": "ProjectV2SingleSelectField",
+      "options": [
+        {
+          "id": "p_high",
+          "name": "high",
+          "color": "RED",
+          "description": "About high"
+        },
+        {
+          "id": "p_low",
+          "name": "low",
+          "color": "GRAY",
+          "description": "About low"
+        }
+      ]
+    },
+    {
+      "id": "fld_estimate",
+      "name": "Estimate",
+      "type": "ProjectV2Field"
+    }
+  ],
+  "items": [
+    {
+      "id": "PVTI_1",
+      "number": 101,
+      "title": "Backlog one",
+      "values": {
+        "factory status": "Backlog"
+      }
+    },
+    {
+      "id": "PVTI_2",
+      "number": 102,
+      "title": "Backlog two",
+      "values": {
+        "factory status": "Backlog"
+      }
+    },
+    {
+      "id": "PVTI_3",
+      "number": 103,
+      "title": "Ready one",
+      "values": {
+        "factory status": "Ready"
+      }
+    },
+    {
+      "id": "PVTI_4",
+      "number": 104,
+      "title": "Designed one",
+      "values": {
+        "factory status": "Designed"
+      }
+    },
+    {
+      "id": "PVTI_5",
+      "number": 105,
+      "title": "Designed two",
+      "values": {
+        "factory status": "Designed"
+      }
+    },
+    {
+      "id": "PVTI_6",
+      "number": 106,
+      "title": "In progress one",
+      "values": {
+        "factory status": "In progress"
+      }
+    },
+    {
+      "id": "PVTI_7",
+      "number": 107,
+      "title": "In progress two",
+      "values": {
+        "factory status": "In progress",
+        "estimate": "5"
+      }
+    },
+    {
+      "id": "PVTI_8",
+      "number": 108,
+      "title": "In review one",
+      "values": {
+        "factory status": "In review",
+        "priority": "high"
+      }
+    },
+    {
+      "id": "PVTI_9",
+      "number": 109,
+      "title": "In review two",
+      "values": {
+        "factory status": "In review"
+      }
+    },
+    {
+      "id": "PVTI_10",
+      "number": 110,
+      "title": "Ready to deploy one",
+      "values": {
+        "factory status": "Ready to deploy",
+        "priority": "low"
+      }
+    },
+    {
+      "id": "PVTI_11",
+      "number": 111,
+      "title": "Done one",
+      "values": {
+        "factory status": "Done",
+        "estimate": "3"
+      }
+    },
+    {
+      "id": "PVTI_12",
+      "number": 112,
+      "title": "No status",
+      "values": {
+        "priority": "high"
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "view_default",
+      "name": "Board",
+      "filter": "",
+      "layout": "BOARD_LAYOUT"
+    }
+  ]
+}

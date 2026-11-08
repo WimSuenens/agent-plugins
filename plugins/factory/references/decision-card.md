@@ -41,3 +41,7 @@ The reader is the **decision-maker** named in `docs/agents/factory.md`. At `non-
 ## After the choice
 
 The lead records the person's choice and their reason as a comment on the slice ticket. The architect writes the ADR, linking that comment. The card itself lives in `work/<id>/`, so it disappears with the item; the ADR and the ticket comment are what remain.
+
+The lead scans the card and that comment before posting either (`skills/run/SKILL.md`, *Scan before posting*, with `--needs-you`); a hit stops the posting.
+
+The lead posts a needs-you comment on the ticket before it asks (`skills/run/SKILL.md`, *The board*); the card and that comment name no path under `work/` and no branch.

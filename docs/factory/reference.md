@@ -1,12 +1,12 @@
-# Factory reference (release 1.3.0)
+# Factory reference (release 2.0.0)
 
 One entry per contract that governs the factory, with the file that implements it and the acceptance criteria it answers. The contracts are the source; this page only points at them. Where a later contract changes what an earlier one says, the earlier entry says so and points at the newer one.
 
-Requirements and decisions: [docs/requirements/39-hansei-record.md](../requirements/39-hansei-record.md), [docs/requirements/49-andon.md](../requirements/49-andon.md), [docs/requirements/57-per-run-a3-and-baseline.md](../requirements/57-per-run-a3-and-baseline.md), [docs/requirements/60-gemba-sample.md](../requirements/60-gemba-sample.md), [ADR 0011](../adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md), [ADR 0013](../adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md).
+Requirements and decisions: [docs/requirements/39-hansei-record.md](../requirements/39-hansei-record.md), [docs/requirements/49-andon.md](../requirements/49-andon.md), [docs/requirements/57-per-run-a3-and-baseline.md](../requirements/57-per-run-a3-and-baseline.md), [docs/requirements/60-gemba-sample.md](../requirements/60-gemba-sample.md), [docs/requirements/64-board-as-run-state.md](../requirements/64-board-as-run-state.md), [ADR 0011](../adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md), [ADR 0013](../adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md), [ADR 0014](../adr/0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md), [ADR 0015](../adr/0015-factory-status-has-six-values-plus-kind-and-role.md) and [ADR 0016](../adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md).
 
 ## Contracts
 
-Eighteen contracts: four from 1.0.0 (`39-*`, the record, the stage log, the scripts and the release rules), five from 1.1.0 (`49-*`, the andon and local countermeasures), five from 1.2.0 (`57-*`, the Factory baseline, the per-run A3, the v4 record and override fields, the run close and the release) and four from 1.3.0 (`60-*`, the gemba sample: the rule, the walk, the gemba line with schema v5, and the release). The `49-*` contracts change some `39-*` text, the `57-*` contracts change some `39-*` and `49-*` text, and the `60-*` contracts change `39-hansei-record`, `57-records-and-overrides` and `57-baseline`; each entry below names what changed.
+Twenty-five contracts: four from 1.0.0 (`39-*`, the record, the stage log, the scripts and the release rules), five from 1.1.0 (`49-*`, the andon and local countermeasures), five from 1.2.0 (`57-*`, the Factory baseline, the per-run A3, the v4 record and override fields, the run close and the release), four from 1.3.0 (`60-*`, the gemba sample: the rule, the walk, the gemba line with schema v5, and the release) and seven from 2.0.0 (`64-*`, the board as run state: the status fields, the role tasks, the ledger and the fields, the parallel slices, the board script, the tracker calls and the release). The `49-*` contracts change some `39-*` text, the `57-*` contracts change some `39-*` and `49-*` text, the `60-*` contracts change `39-hansei-record`, `57-records-and-overrides` and `57-baseline`, and the `64-*` contracts change `39-stage-log`, `39-plugin-scripts`, `39-hansei-record` and the lead state's sections; each entry below names what changed.
 
 ### 39-hansei-record: the hansei record (schema v2, then v3, v4, now v5)
 
@@ -17,14 +17,14 @@ Eighteen contracts: four from 1.0.0 (`39-*`, the record, the stage log, the scri
 
 ### 39-stage-log: the stage log in the lead state
 
-- **Contract**: [contracts/39-stage-log.md](../../contracts/39-stage-log.md). Changed for 1.1.0 by [49-records](../../contracts/49-records.md) §1 to §4.
-- **Governs**: the sections the lead adds to `work/<id>/00-lead-state.md`, in order. At 1.0.0: `## Label` (written once at item start: plugin root, release, standard and tooling fingerprints, dependency versions, lead session ids), `## Stage log` (one row per stage, UTC times from `date -u`), `## Waits` (each wait with its kind, the agent it stopped, and whether it held the item), `## Person's touches`. From 1.1.0 two more follow: `## Findings` (the ledger the kind 2 rule reads) and `## Abnormalities` (one row per abnormality, with its paused agent and its andon comment). A stage row can be an `Andon A<n>` row. The wait kinds were four at 1.0.0 (`person`, `limits`, `stalled`, `interrupted`); from 1.1.0 there are five, with `andon` for the time the Lead holds the affected work for an andon. *Done, then stopped*: an agent that stops after a complete `done` result is accepted, not resumed, when its commits are on the item branch and its paths are clean. The cross-check against git commit times and stage-summary comment times.
+- **Contract**: [contracts/39-stage-log.md](../../contracts/39-stage-log.md). Changed for 1.1.0 by [49-records](../../contracts/49-records.md) §1 to §4. **Superseded for 2.0.0** by [64-ledger-and-fields](#64-ledger-and-fields-the-ledger-the-hansei-fields-and-the-readers-of-the-sections-that-leave-the-lead-state) §3 and §4: the lead state holds no `## Stage log`, `## Waits`, `## Person's touches` or `Status:` line; the tables are the ledger's (one comment on the slice ticket) and the role tasks are the sub-issues. The text below describes the 1.x lead state, which the 1.x migration keeps readable.
+- **Governs**: the sections the lead adds to the item's lead state file (`00-lead-state.md`), in order. At 1.0.0: `## Label` (written once at item start: plugin root, release, standard and tooling fingerprints, dependency versions, lead session ids), `## Stage log` (one row per stage, UTC times from `date -u`), `## Waits` (each wait with its kind, the agent it stopped, and whether it held the item), `## Person's touches`. From 1.1.0 two more follow: `## Findings` (the ledger the kind 2 rule reads) and `## Abnormalities` (one row per abnormality, with its paused agent and its andon comment). A stage row can be an `Andon A<n>` row. The wait kinds were four at 1.0.0 (`person`, `limits`, `stalled`, `interrupted`); from 1.1.0 there are five, with `andon` for the time the Lead holds the affected work for an andon. *Done, then stopped*: an agent that stops after a complete `done` result is accepted, not resumed, when its commits are on the item branch and its paths are clean. The cross-check against git commit times and stage-summary comment times.
 - **Implemented in**: `plugins/factory/references/hansei.md` sections 1, 2 and 4 (the Waits and Abnormalities tables, the close scan); `plugins/factory/skills/run/SKILL.md` steps 5 and 6, *Interruptions* and *Andon*.
 - **Acceptance criteria**: AC-6, AC-11, AC-12, AC-13 (1.0.0). From 1.1.0, AC-8 (the andon wait) and AC-23.
 
 ### 39-plugin-scripts: the four scripts
 
-- **Contract**: [contracts/39-plugin-scripts.md](../../contracts/39-plugin-scripts.md). Unchanged for 1.1.0: no script changed ([49-standard-changes](../../contracts/49-standard-changes.md) §1).
+- **Contract**: [contracts/39-plugin-scripts.md](../../contracts/39-plugin-scripts.md). Unchanged for 1.1.0: no script changed ([49-standard-changes](../../contracts/49-standard-changes.md) §1). For 2.0.0 four scripts were added beside these four (`board.sh`, `paths.sh`, `factory-config.sh`, `post-text.sh`), described in the 64 entries below; the four of this entry are unchanged.
 - **Governs**: the exact stdout lines and exit codes of each script; the two fingerprints and their file sets (standard: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`; tooling: `hooks/` and `scripts/`, recursively); the bump check's levels and refusal text (a file name with a newline counts as standard work); the token-spend window, the peak rule, and `--require-end` (exit 6 for a transcript that was cut off: a `[Request interrupted` entry, or no final reply at its end); the cut-offs of a transcript (§4: one line per gap of kind `limits`, `stalled` or `interrupted`, with its start, read from the transcript and the optional sleep log).
 - **Implemented in**: `plugins/factory/scripts/fingerprint.sh`, `plugins/factory/scripts/check-bump.sh`, `plugins/factory/scripts/token-spend.sh`, `plugins/factory/scripts/cut-offs.sh`. All are bash 3.2 compatible; `token-spend.sh` and `cut-offs.sh` also need `jq`.
 - **Acceptance criteria**: AC-2 to AC-5, AC-8 to AC-10, AC-16; `cut-offs.sh` is the evidence for AC-11 (its tests) and AC-17 (the replay of the demo's transcripts).
@@ -133,6 +133,55 @@ Eighteen contracts: four from 1.0.0 (`39-*`, the record, the stage log, the scri
 - **Governs**: the release: `plugin.json` at `1.3.0`, a minor bump for standard work (ADR 0012), which the bump check accepts from `1.2.0`. The fingerprints: `standard` moves; `tooling` does not, because no file under `hooks/` or `scripts/` changed. The tag `factory-v1.3.0` is made by hand by the Lead on the merge commit, because the item runs on the frozen install. The baseline begins series `1.3` with its first item run on 1.3.0. No absolute home path and no project data in any added or changed file. The files of this release under `plugins/factory/` (§2): `skills/run/SKILL.md`, `references/hansei.md`, `references/baseline.md` and `.claude-plugin/plugin.json`, and no other. No script (§3: the bounded read is text) and no ADR (§4). The test plan QA wrote (§5) and the map of every criterion to its contract (§6).
 - **Implemented in**: `plugins/factory/.claude-plugin/plugin.json`, `plugins/factory/skills/run/SKILL.md`, `plugins/factory/references/hansei.md`, `plugins/factory/references/baseline.md`.
 - **Acceptance criteria**: AC-10 (test `t13-*` in `tests/factory/test_gemba.sh`, which includes the check of the 1.3.0 changelog entry).
+
+### 64-board-status: the board as status
+
+- **Contract**: [contracts/64-board-status.md](../../contracts/64-board-status.md). Builds on [ADR 0015](../adr/0015-factory-status-has-six-values-plus-kind-and-role.md), which amends [ADR 0002](../adr/0002-one-branch-and-worktree-per-item.md).
+- **Governs**: the board's fields and their options (`Factory status` with six values, `Kind`, `Role`, and the five text fields of §1); the event that sets each status for a slice, a role task, a frontier ticket and the map (§3); the needs-you comment and its five lines (§4); the Tracker section of `docs/agents/factory.md` at 2.0.0 (§2); and the rule that no old status value is written outside the migration (§6).
+- **Implemented in**: `plugins/factory/skills/run/SKILL.md`, sections *The board* and *Needs you*; `plugins/factory/skills/setup-factory-skill/assets/factory.md`.
+- **Acceptance criteria**: AC-1 to AC-8 (AC-3 also in [64-gh-calls](#64-gh-calls-the-closed-list-of-tracker-calls-and-the-fake-gh)).
+
+### 64-role-tasks: role tasks as sub-issues
+
+- **Contract**: [contracts/64-role-tasks.md](../../contracts/64-role-tasks.md). Moves the briefs, results and feedback of the roles from files to the tracker, as ADR [0014](../adr/0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md) decides; that ADR partly replaces [ADR 0001](../adr/0001-factory-roles-talk-through-files.md). Questions, draft results and the lead's memory stay files.
+- **Governs**: the marker `<!-- factory:task <role> <n> -->`; find before create (§2) and create and spawn (§3); the draft result, which stays a file (§4); the closing comment (§5) and the split of a result longer than one comment (§6); rework as a new `rework <k>` sub-issue (§7); a cut-off role loses no progress (§8); the text scan and its helper (§9); a tracker limit that stops creation (§10); and who writes to the tracker, which is the lead only (§11).
+- **Implemented in**: `plugins/factory/skills/run/SKILL.md`, section *Role tasks*; the seven `plugins/factory/agents/*.md`; `plugins/factory/scripts/post-text.sh`.
+- **Acceptance criteria**: AC-9 to AC-19.
+
+### 64-ledger-and-fields: the ledger, the hansei fields, and the readers of the sections that leave the lead state
+
+- **Contract**: [contracts/64-ledger-and-fields.md](../../contracts/64-ledger-and-fields.md). Supersedes [39-stage-log](#39-stage-log-the-stage-log-in-the-lead-state) for 2.0.0 (§3 and §4 of this contract); builds on ADRs [0014](../adr/0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md) and [0015](../adr/0015-factory-status-has-six-values-plus-kind-and-role.md).
+- **Governs**: the ledger, one comment on the slice ticket with its Tasks, Waits and Person's touches tables (§2); the lead state after 2.0.0 (§3); every reader of a 1.x table and where it reads now (§4); the five text fields and their `not captured (<reason>)` values (§5); the views and their filter tokens (§6); the replay evidence (§7); and what [hansei.md](../../plugins/factory/references/hansei.md) and the run skill change (§8). The hansei record stays at schema v5 (decision 5 of [64-release](../../contracts/64-release.md) §6).
+- **Implemented in**: `plugins/factory/references/hansei.md`, sections 1, 2, 4 and 7; `plugins/factory/skills/run/SKILL.md`; the readers in `plugins/factory/references/baseline.md` and `plugins/factory/references/a3.md`.
+- **Acceptance criteria**: AC-20 to AC-26.
+
+### 64-gh-calls: the closed list of tracker calls, and the fake gh
+
+- **Contract**: [contracts/64-gh-calls.md](../../contracts/64-gh-calls.md). Says which calls exist; the other 64 contracts say when a call is made.
+- **Governs**: the rule that a call is one of the listed operations (§1); the operations and their `gh` forms, including the REST sub-issue endpoints (§2); the fake `gh` that the offline tests answer (§3).
+- **Implemented in**: `plugins/factory/skills/setup-factory-skill/references/issue-tracker-github.factory.md`, section *Factory operations*, and the calls of `plugins/factory/scripts/board.sh`.
+- **Acceptance criteria**: AC-3, AC-9 to AC-12, AC-19 and AC-35 to AC-42.
+
+### 64-board-script: the board script
+
+- **Contract**: [contracts/64-board-script.md](../../contracts/64-board-script.md). Builds on ADR [0015](../adr/0015-factory-status-has-six-values-plus-kind-and-role.md).
+- **Governs**: `board.sh plan`, `apply` and `finish` and their interface (§2); the plan that changes nothing (§3); the three-phase `apply`, its snapshot and its exit codes (§4); the fields (§5); the views and the manual fallback (§6); `finish`, which writes the Tracker tables and `factory-state: 2` last (§7); and what the setup skill says of each step (§8).
+- **Implemented in**: `plugins/factory/scripts/board.sh`; `plugins/factory/skills/setup-factory-skill/SKILL.md`, step 7.
+- **Acceptance criteria**: AC-6, AC-20, AC-21, AC-34 (written by `finish`) and AC-35 to AC-43.
+
+### 64-parallel-slices: the path lists, the limit, and the start gate
+
+- **Contract**: [contracts/64-parallel-slices.md](../../contracts/64-parallel-slices.md). Builds on ADR [0016](../adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md), which amends [ADR 0007](../adr/0007-factory-owns-destination-and-slicing.md).
+- **Governs**: the `Paths:` block of each contract (§1); the overlap rule (§2); the two lines of `docs/agents/factory.md`, `factory-state: 2` and `parallel-limit` (§3); the start gate and the pause after a usage-limit hit (§4); when the list is compared (§5); the diff check of QA and security (§6); the merge handling (§7); the resurvey pause (§8); and the architect's Done list (§10).
+- **Implemented in**: `plugins/factory/scripts/paths.sh`, `plugins/factory/scripts/factory-config.sh`; `plugins/factory/skills/run/SKILL.md`, section *Parallel slices*; the architect, QA and security agent files; the Resurvey step of `plugins/wayfinding/skills/wayfinder/SKILL.md` and `beachhead/SKILL.md`.
+- **Acceptance criteria**: AC-27 to AC-34.
+
+### 64-release: release 2.0.0
+
+- **Contract**: [contracts/64-release.md](../../contracts/64-release.md). Builds on ADRs [0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md) and [0013](../adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md); no new ADR.
+- **Governs**: the version `2.0.0`, a major bump, which the unchanged bump check accepts from `1.3.0` (§1); the files of the release (§2); the fence, which does not move (§3); the wayfinding plugin, which stays unversioned (§4); the changelog entry and the docs (§5); the decisions of the architect (§6); and the map of every criterion to its contract (§9).
+- **Implemented in**: `plugins/factory/.claude-plugin/plugin.json`, `CHANGELOG.md`, `README.md`, `docs/factory/`.
+- **Acceptance criteria**: AC-44 to AC-46. The tag `factory-v2.0.0` is made by hand on the merge commit, as [release-runbook.md](release-runbook.md) *Release 2.0.0* says.
 
 ## Maintainer procedure: changing the factory
 

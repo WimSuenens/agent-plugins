@@ -213,7 +213,7 @@ A body for a project at the start of its first release series, with one older re
 1. Run *Find records* and *Find A3s*; read `docs/agents/factory.md` on main (section 6). Take `date -u +%FT%TZ` first.
 2. Apply section 3 to every record, group into series and sections (sections 5 and 6), compute every field (section 4), compose the body (section 7). The result is a pure function of the records, the A3 answer lines, the override statuses on main and the session's release.
 3. *Edit baseline*: write only if the composed body differs from the one on the issue. Running the update twice gives the same text.
-4. Take `date -u +%FT%TZ` again, and append to the map's Factory run section's `baseline:` line `#<id> <n> records, <m>m`: `n` the records read (every readable and unreadable record returned by *Find records*), `m` the minutes between the two stamps, rounded half up. The stage log is gone by then (step 8.6), so the map's section is where this note lives.
+4. Take `date -u +%FT%TZ` again, and append to the map's Factory run section's `baseline:` line `#<id> <n> records, <m>m`: `n` the records read (every readable and unreadable record returned by *Find records*), `m` the minutes between the two stamps, rounded half up. The ledger comment stays on the ticket after `work/<id>/` goes (step 8.6), but the note is about the run, not the item, so the map's Factory run section is where it lives.
 
 The update runs **after each item's record has reached its final state** (measure 7 edited by *Edit hansei*, or `not captured (run stopped before the resurvey)`), in the item's close order: step 8.10. It also runs at the run close (step 9.1) and after the settle merge (step 9.3), which are the same recomputation.
 

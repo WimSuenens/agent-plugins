@@ -100,7 +100,7 @@ has ac7-recompute-from-records "$SK" 'recompute the baseline issue from the reco
 has ac7-twice-same-text "$BA" 'Running the update twice gives the same text.'
 has ac7-write-only-if-differs "$BA" '*Edit baseline*: write only if the composed body differs from the one on the issue.'
 has ac7-note-records-and-minutes "$BA" '`#<id> <n> records, <m>m`'
-has ac7-stage-log-gone "$BA" 'The stage log is gone by then (step 8.6)'
+has ac7-stage-log-gone "$BA" 'The ledger comment stays on the ticket after `work/<id>/` goes (step 8.6)'
 has ac7-repair-check "$BA" 'means the previous run stopped before its update. Run the update of section 8.1 and say `Factory baseline: recomputed (<n> record(s) it did not list).`'
 has ac7-hansei-close-list "$HA" '10. Update the baseline (`references/baseline.md`), then the experiment decision.'
 has ac7-hansei-names-run-lines "$HA" "closed in this run"
@@ -124,11 +124,11 @@ ck ac3-no-instruction-for-a-mean 0 "$(grep -iE '\bmean of (all|the items|the sec
 repo_all="$(grep -rnF -- '--repo' "$PLUGIN" | grep -v 'None names `--repo`' | grep -v 'No command here names `--repo`' | grep -v 'only instruction that names `--repo' | grep -vF -- '--repo <owner>/<repo>')"
 ck ac9-only-step9-4-names-repo 1 "$(printf '%s\n' "$repo_all" | grep -c .)"
 ck ac9-it-is-in-step9 1 "$(printf '%s\n' "$repo_all" | grep -c 'skills/run/SKILL.md:.*gh issue create --repo WimSuenens/agent-plugins')"
-ck ac9-issue-create-lines "2" "$(grep -rn 'gh issue create' "$PLUGIN" | grep -c .)"
+ck ac9-issue-create-lines "3" "$(grep -rn 'gh issue create' "$PLUGIN" | grep -c .)"   # slice 64: the third is Create role task (a role-task sub-issue); only the step 9 line names --repo
 ck ac9-create-baseline-is-project-local 0 "$(grep -F -- '- **Create baseline**' "$TP" | grep -c 'agent-plugins')"
 ck ac9-baseline-and-a3-files-no-write-to-plugin-repo 0 "$(grep -nE 'agent-plugins' "$BA" "$A3" | grep -vE 'Never in `WimSuenens/agent-plugins`' | grep -c .)"
 ck ac9-no-plugin-path-write 0 "$(grep -nE '> *"?\$\{CLAUDE_PLUGIN_ROOT\}|tee .*CLAUDE_PLUGIN_ROOT' "$SK" "$BA" "$A3" "$TP" | grep -c .)"
-has ac9-step9-restates "$S9" 'This is the only instruction that names `--repo WimSuenens/agent-plugins`. Everything else you measure or record, the stage log, the hansei record, the baseline and the A3 included, stays in the project'"'"'s own tracker'
+has ac9-step9-restates "$S9" 'This is the only instruction that names `--repo WimSuenens/agent-plugins`. Everything else you measure or record, the ledger, the hansei record, the baseline and the A3 included, stays in the project'"'"'s own tracker'
 
 # ---------- AC-16: the A3 template: marker, fixed lines, fixed order ----------
 TEMPL="$(block_after "$A3" '## 2. The template')"
@@ -194,11 +194,11 @@ has ac13-needs-plugin-change "$A3" 'A countermeasure whose only form is a plugin
 # stamp (step 5.3), so that `overrides at start` lists it and the item reads `whole item`. Written after the stamp, the item is a during-item.
 S5="$T/step5.md"; sect "$SK" '## 5. Start the item' > "$S5"
 S52="$(grep -E '^2\. `git worktree add' "$S5")"; S53="$(grep -E '^3\. Stamp' "$S5")"
-ck ac12-step5-2-commits-the-decided-experiment 1 "$(printf '%s' "$S52" | grep -c 'when step 8.10 decided that the run'"'"'s experiment is written, commit it in this worktree, \*\*after 5.2 and before the `Start item` stamp of 5.3\*\*')"
+ck ac12-step5-2-commits-the-decided-experiment 1 "$(printf '%s' "$S52" | grep -c 'when step 8.10 decided that the run'"'"'s experiment is written, commit it in this worktree, \*\*after 5.2 and before the ledger of 5.3\*\*')"
 ck ac12-step5-2-commit-form 1 "$(printf '%s' "$S52" | grep -c '`#<id> lead: override <name>`, `andon: none (experiment)`')"
-ck ac12-step5-2-stamp-lists-it-item-is-after-item 1 "$(printf '%s' "$S52" | grep -c "the stamp's \`overrides at start\` lists it and this item is an after-item")"
+ck ac12-step5-2-stamp-lists-it-item-is-after-item 1 "$(printf '%s' "$S52" | grep -c "the label's \`overrides at start\` lists it and this item is an after-item")"
 ck ac12-step5-2-resume-applies-rule-again 1 "$(printf '%s' "$S52" | grep -c 'On a resumed run apply the rule of `references/a3.md`, section 5 again from the records; nothing was stored between 8.10 and here.')"
-ck ac12-step5-3-is-the-stamp 1 "$(printf '%s' "$S53" | grep -c 'open the `Start item` row of the stage log')"
+ck ac12-step5-3-is-the-stamp 1 "$(printf '%s' "$S53" | grep -c 'Stamp `date -u +%FT%TZ` (`started`)')"
 before ac12-5-2-before-5-3 "$S5" '2. `git worktree add' '3. Stamp'
 S810="$(grep -E '^10\. Update the baseline' "$SK")"
 ck ac12-8-10-only-decides 1 "$(printf '%s' "$S810" | grep -c '\*\*decide\*\* whether the run'"'"'s experiment is written (`references/a3.md`, section 5). Nothing is committed or stored here: no worktree exists, and the decision is committed at step 5 of the next item.')"
@@ -421,21 +421,21 @@ base="$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null || git -C "$REPO"
 if [ -n "$base" ] && [ "$base" != "$(git -C "$REPO" rev-parse HEAD)" ]; then
   chg="$(git -C "$REPO" diff --name-only "$base" HEAD -- plugins/factory)"
   out_of_list="$(printf '%s\n' "$chg" | grep -vE '^plugins/factory/(skills/run/SKILL\.md|references/[^/]+\.md|scripts/[^/]+|\.claude-plugin/plugin\.json)$' | grep . || true)"
-  ck ac26-no-path-outside-the-list "" "$out_of_list"   # #57's one exception (the setup template) is merged; #60 touches no path outside the list
+  skip ac26-no-path-outside-the-list "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
   ck ac26-no-new-agent-file 0 "$(git -C "$REPO" diff --name-only --diff-filter=ACR "$base" HEAD -- plugins/factory/agents | grep -c .)"
-  ck ac26-no-agent-changed 0 "$(git -C "$REPO" diff --name-only "$base" HEAD -- plugins/factory/agents plugins/factory/hooks plugins/factory/scripts | grep -c .)"
-  ck ac26-no-new-script 0 "$(git -C "$REPO" diff --name-only --diff-filter=A "$base" HEAD -- plugins/factory/scripts plugins/factory/hooks | grep -c .)"
+  skip ac26-no-agent-changed "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
+  skip ac26-no-new-script "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
 else
   skip ac26-diff-against-main "no merge base with main in this checkout (clean export)"
 fi
 
 # ---------- AC-27: the release; the tooling fingerprint did not move ----------
 ver="$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac27-version-is-minor-above-1.1.0 1 "$(printf '%s' "$ver" | awk -F. '{print ($1==1 && $2>=2) ? 1 : 0}')"
+ck ac27-version-is-minor-above-1.1.0 1 "$(printf '%s' "$ver" | awk -F. '{print ($1>1 || ($1==1 && $2>=2)) ? 1 : 0}')"
 if git -C "$REPO" rev-parse -q --verify refs/tags/factory-v1.1.0 >/dev/null 2>&1; then
   mkdir -p "$T/v110"; git -C "$REPO" archive factory-v1.1.0 plugins/factory | tar -x -C "$T/v110"
   old="$(bash "$FP" "$T/v110/plugins/factory")"; new="$(bash "$FP" "$PLUGIN")"
-  ck ac27-tooling-did-not-move "$(line "$old" 3)" "$(line "$new" 3)"
+  skip ac27-tooling-did-not-move "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
   differ ac27-standard-moved "$(line "$old" 2)" "$(line "$new" 2)"
   ck ac27-old-release-is-1.1.0 "release: 1.1.0" "$(line "$old" 1)"
 else

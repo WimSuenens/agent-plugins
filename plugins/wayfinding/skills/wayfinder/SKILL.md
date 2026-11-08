@@ -149,13 +149,16 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 
 ### Resurvey
 
-Run after every resolved ticket, and always after a slice merges — a slice teaches more than a conversation does, so this is where most of the map's movement happens. Work all five; the mode is done when each has been answered out loud, including with "nothing."
+Run after every resolved ticket, and always after a slice merges — a slice teaches more than a conversation does, so this is where most of the map's movement happens. Work all six; the mode is done when each has been answered out loud, including with "nothing."
 
 1. **What did it teach?** Take the resolution at face value and ask what is now known that wasn't. For a slice, that includes everything the build made obvious and nobody asked about. If what it taught touched the data model, refresh `/wayfinding:dbml` now, in this step — not batched for later — since this is the one step every ticket and every slice both pass through, and the map's Notes pointer to the file is only as good as how current it is.
 2. **What did it invalidate?** Check the finding against Decisions-so-far. A contradicted **[provisional]** decision gets overwritten with a note on what corrected it. A contradicted **[locked]** decision stops the resurvey: re-run `/reversibility` across every ticket and deferral that hung off it, because the ground under them moved.
 3. **Which triggers fired?** Walk **Deferred** and check each trigger against what just happened. A fired trigger becomes a ticket — re-triaged, since a two-way door can become a one-way door once something is built on it. Clear the line from Deferred so it lives only as its ticket.
 4. **What graduated from fog?** Anything in **Not yet specified** now sharp enough to phrase goes to a ticket or to Deferred, per its reversibility. Clear the graduated patch.
 5. **Does the destination still hold?** If the answer moved the destination, say so and stop — redrawing the destination is a charting act, not a step on the route.
+6. **Slices in flight.** When other slices are being built at the same time, compare each one's requirement, contract and path list with what this merge taught: the Under test results, any new or changed decision, and the paths the merge changed (`git -c core.quotePath=false diff --no-renames --name-only <merge>^1 <merge>`, piped through the factory's `scripts/paths.sh check` against the slice's contracts). The step ends by naming each questioned slice and the question. It does not pause anything: how a slice is paused belongs to the runner. The rule, in the same words as the runner's text:
+
+   > A slice in flight is questioned when the merge changes a decision its frame rests on, contradicts one of its Under test lines, or changes a path in its list.
 
 Every third slice, run `/improve-codebase-architecture` before picking the next beachhead. Slices accrete; this is what stops the walking skeleton from calcifying into the architecture by default.
 

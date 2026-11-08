@@ -11,7 +11,7 @@ Issue [#55](https://github.com/WimSuenens/agent-plugins/issues/55) asked whether
 ## Context
 
 - 0007 rejected parallel slices because a slice cut before the previous resurvey is cut on stale knowledge, and every merge needs the person's approval, so a second ready slice waits.
-- Targets served: **performance** (less waiting for the person when independent slices exist), **maintainability** (one list per slice, one comparison, no new tooling), **security** (an off-list write is a finding).
+- Targets served: **performance** (less waiting for the person when independent slices exist), **maintainability** (one list per slice; no lock registry and no hook, and a script that compares two path lists is the one comparison), **security** (an off-list write is a finding).
 - The architect's options note: the limit setting is a free retreat, so this is nearly a two-way door; it goes on a card because the person asked for it and 0007 states the opposite.
 
 ## Decision

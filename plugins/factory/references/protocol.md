@@ -37,6 +37,10 @@ An ADR, requirement, or doc that lands on main never cites a path under `work/`,
 
 The same rule covers decision cards and needs-you comments, the texts the person acts on from the board: neither names a path under `work/` or a branch (`item/<n>`, `frontier/<n>`). It does not cover briefs and closing comments: a brief's `Output` line names the draft result file, and a result may name the files it wrote. Those are pointers inside the working record and land nowhere on main.
 
+## Text the lead posts
+
+The lead scans every text before it posts or edits it in the tracker, for home paths, secrets and (for needs-you comments and decision cards) `work/` paths and branch names: `skills/run/SKILL.md`, *Scan before posting*. A hit stops the posting. Write nothing in a result, question or message file that you would not want the scan to refuse.
+
 ## Messages
 
 A **role task** is one spawn of one role on one item (or one frontier ticket). The lead creates it as a **sub-issue** of the slice ticket (of the frontier ticket in a frontier round, never the map): line 1 of its body is the marker `<!-- factory:task <role> <n> -->`, and the rest is the brief or the feedback below. You read your brief from that issue (`gh issue view <n> --json body --jq .body`, the number in your spawn prompt). The lead posts your result, from the draft file you commit, as the closing comment of the role task. Only the lead writes to the tracker.

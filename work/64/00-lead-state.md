@@ -37,7 +37,7 @@
 | 5 | Contracts and ADRs (round 2) | architect | a3e5195fc9a9a479c | 2026-11-07T11:44:07Z | 2026-11-07T11:45:02Z | 0m | - | 26925 | done | ADR 0015 token, ADR 0016 wording; 0 decisions |
 | 6 | Build | developer | a40fa600e25cc74c0 | 2026-11-07T11:45:02Z | 2026-11-07T12:04:37Z | 19m | - | 319332 | done | 1 question (project id source) answered: option A; ~12 two-way decisions; no tests run in repo (tests/ is QA's) |
 | 7 | Open PR | lead | - | 2026-11-07T12:04:37Z | 2026-11-07T12:04:37Z | 1m | - | - | opened | bump check: pass: minor bump needed, 1.3.0 -> 2.0.0 |
-| 8 | QA | qa-engineer | a1f4b69d3913010ce | 2026-11-07T12:04:37Z | 2026-11-08T21:05:20Z | 33h00m | W1 | not captured (completion notice not yet read) | block | 5 findings (1 medium, 3 low, 1 low stale text) + 1 info; suite 2924 passed, 19 skipped, 0 failed; replay W12/C49/L57 equal |
+| 8 | QA | qa-engineer | a1f4b69d3913010ce | 2026-11-07T12:04:37Z | 2026-11-08T21:05:20Z | 33h00m | W1 | 453650 (resumed leg only; earlier legs not captured) | block | 5 findings (1 medium, 3 low, 1 low stale text) + 1 info; suite 2924 passed, 19 skipped, 0 failed; replay W12/C49/L57 equal |
 | 9 | Security | security-reviewer | af80c5d52b2004eea | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 116170 | findings | 3 medium, 5 low; no critical/high; reviews/security-64.md |
 | 10 | Contracts and ADRs (round 3) | architect | a8ecdf464b0f459a7 | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 40782 | done | project-id source and split join amended; 1 two-way decision |
 | 11 | Contracts and ADRs (round 4) | architect | PENDING | 2026-11-08T21:05:20Z | | | - | | | |

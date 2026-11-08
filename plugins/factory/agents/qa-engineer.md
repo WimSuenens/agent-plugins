@@ -36,4 +36,4 @@ Owns the release verdict. A block stands until a re-run passes.
 - Every acceptance criterion maps to a test.
 - Every defect has a reproduction.
 - The verdict is recorded, with its Human-only criteria list.
-- Changed paths checked against the item's list: `git fetch origin main`, then `git diff --name-only origin/main...item/<id>` piped into `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree. Each `off-list:` line is a finding with the path named, severity at least medium.
+- Changed paths checked against the item's list: `git fetch origin main`, then `git -c core.quotePath=false diff --no-renames --name-only origin/main...item/<id>` piped into `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree. Each `off-list:` line is a finding with the path named, severity at least medium.

@@ -7,6 +7,7 @@
 # list: prints "path <p>" or "shared <s>" per entry ("shared none" is not printed).
 # overlap: prints "overlap: no", "overlap: yes <p> <q>" or "overlap: yes shared <s>" (the first pair found, in list order).
 # check: prints "off-list: <name>" for each stdin name that is not on the list; a name under an --ignore prefix is skipped.
+# Rules: overlap is checked in the order path/path, path/other list's shared entry, shared/shared; ASCII case is folded.
 # Exit: 0 ok / no overlap / none off-list; 1 overlap / at least one off-list; 2 usage, a file without a Paths: block or without a shared: line; 3 a malformed entry (named by line number).
 # See contracts/64-parallel-slices.md sections 1 and 2 in the repo that hosts the factory.
 
@@ -14,12 +15,25 @@ PATHS=()
 SHARED=()
 
 valid_path() {
-  case "$1" in
-    "" | /* | ./* | ../* | */../* | */.. | .. ) return 1 ;;
+  local p="$1" c
+  case "$p" in
+    "" | /*) return 1 ;;
     *" "* | *,* | *'`'* | *'*'* | *'?'* | *'['* ) return 1 ;;
   esac
+  p="${p%/}"
+  while :; do
+    c="${p%%/*}"
+    case "$c" in "" | . | ..) return 1 ;; esac
+    case "$p" in
+      */*) p="${p#*/}" ;;
+      *) break ;;
+    esac
+  done
   return 0
 }
+
+# fold <s>: ASCII letters to lower case (the default macOS and Windows volumes are case-insensitive)
+fold() { printf '%s' "$1" | LC_ALL=C tr 'A-Z' 'a-z'; }
 
 # load <file>: appends the entries of the file's blocks to PATHS and SHARED. Returns 0, 2 or 3.
 load() {
@@ -52,6 +66,10 @@ load() {
           echo "paths: $(basename "$f"):$n: malformed entry" >&2
           return 3
         fi
+        case "$e" in
+          */) ;;
+          *) [ -d "$e" ] && echo "paths: line $n: $(basename "$f") names a directory without a trailing slash; it will be read as a file" >&2 ;;
+        esac
         PATHS[${#PATHS[@]}]="$e"
         entries=$((entries + 1))
         ;;
@@ -130,11 +148,14 @@ load_all() {
   return 0
 }
 
-# covers <p> <q>: p equals q, or p is a directory prefix of q
+# covers <p> <q>: p equals q, or p is a directory prefix of q (ASCII case folded)
 covers() {
-  [ "$1" = "$2" ] && return 0
-  case "$1" in
-    */) case "$2" in "$1"*) return 0 ;; esac ;;
+  local p q
+  p="$(fold "$1")"
+  q="$(fold "$2")"
+  [ "$p" = "$q" ] && return 0
+  case "$p" in
+    */) case "$q" in "$p"*) return 0 ;; esac ;;
   esac
   return 1
 }
@@ -175,9 +196,27 @@ case "$cmd" in
         fi
       done
     done
+    for p in "${pa[@]}"; do
+      for q in "${sb[@]}"; do
+        [ "$q" = adr-number ] && continue
+        if covers "$p" "$q"; then
+          echo "overlap: yes $p $q"
+          exit 1
+        fi
+      done
+    done
+    for p in "${pb[@]}"; do
+      for q in "${sa[@]}"; do
+        [ "$q" = adr-number ] && continue
+        if covers "$p" "$q"; then
+          echo "overlap: yes $p $q"
+          exit 1
+        fi
+      done
+    done
     for p in "${sa[@]}"; do
       for q in "${sb[@]}"; do
-        if [ "$p" = "$q" ]; then
+        if [ "$(fold "$p")" = "$(fold "$q")" ]; then
           echo "overlap: yes shared $p"
           exit 1
         fi
@@ -202,7 +241,7 @@ case "$cmd" in
       [ -n "$name" ] || continue
       skip=0
       for i in "${ign[@]}"; do
-        case "$name" in "$i"*) skip=1 ;; esac
+        case "$(fold "$name")" in "$(fold "$i")"*) skip=1 ;; esac
       done
       [ "$skip" = 1 ] && continue
       on=0
@@ -210,7 +249,7 @@ case "$cmd" in
         covers "$p" "$name" && on=1
       done
       for p in "${SHARED[@]}"; do
-        [ "$p" = "$name" ] && on=1
+        [ "$(fold "$p")" = "$(fold "$name")" ] && on=1
       done
       if [ "$on" = 0 ]; then
         echo "off-list: $name"

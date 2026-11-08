@@ -36,4 +36,4 @@ Critical and high findings block the merge.
 - The dependency audit has run.
 - Every finding carries severity and a recommended fix.
 - The verdict is recorded.
-- Changed paths checked against the item's list: `git fetch origin main`, then `git diff --name-only origin/main...item/<id>` piped into `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree. Each `off-list:` line is a finding with the path named, severity at least medium.
+- Changed paths checked against the item's list: `git fetch origin main`, then `git -c core.quotePath=false diff --no-renames --name-only origin/main...item/<id>` piped into `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree. Each `off-list:` line is a finding with the path named, severity at least medium.

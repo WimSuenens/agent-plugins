@@ -2,13 +2,14 @@
 
 - Board item id: PVTI_lAHOBIbaa84BqOBFzhGxjhg
 - Status: Backlog
-- Next step: step 6, Verification (QA and security alongside), contract amendment (architect)
+- Next step: step 6, feedback round: architect (contracts) then developer (build), then QA and security re-verify
+- Notes: kind 2 check of QA F1 against security S6 (both post-text.sh scan): different guards (left boundary vs portable patterns and token coverage), not flagged; QA architect-note on 64-board-script section 9 text is unclear-pair with nothing
 - Open questions: none
 - Frozen on: factory 1.3.0 (see map #50 Factory run section)
 
 ## Running agents
 
-- qa-engineer: brief work/64/10-brief-qa-engineer.md, agent a1f4b69d3913010ce (resumed 2026-11-08T21:02Z after a weekly limit hit 2026-11-07T15:13Z), last commit 74b3f5f
+- architect: feedback work/64/13-feedback-architect.md (round 4)
 
 ## Interruptions
 
@@ -36,9 +37,10 @@
 | 5 | Contracts and ADRs (round 2) | architect | a3e5195fc9a9a479c | 2026-11-07T11:44:07Z | 2026-11-07T11:45:02Z | 0m | - | 26925 | done | ADR 0015 token, ADR 0016 wording; 0 decisions |
 | 6 | Build | developer | a40fa600e25cc74c0 | 2026-11-07T11:45:02Z | 2026-11-07T12:04:37Z | 19m | - | 319332 | done | 1 question (project id source) answered: option A; ~12 two-way decisions; no tests run in repo (tests/ is QA's) |
 | 7 | Open PR | lead | - | 2026-11-07T12:04:37Z | 2026-11-07T12:04:37Z | 1m | - | - | opened | bump check: pass: minor bump needed, 1.3.0 -> 2.0.0 |
-| 8 | QA | qa-engineer | PENDING | 2026-11-07T12:04:37Z | | | - | | | |
+| 8 | QA | qa-engineer | a1f4b69d3913010ce | 2026-11-07T12:04:37Z | 2026-11-08T21:05:20Z | 33h00m | W1 | not captured (completion notice not yet read) | block | 5 findings (1 medium, 3 low, 1 low stale text) + 1 info; suite 2924 passed, 19 skipped, 0 failed; replay W12/C49/L57 equal |
 | 9 | Security | security-reviewer | af80c5d52b2004eea | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 116170 | findings | 3 medium, 5 low; no critical/high; reviews/security-64.md |
 | 10 | Contracts and ADRs (round 3) | architect | a8ecdf464b0f459a7 | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 40782 | done | project-id source and split join amended; 1 two-way decision |
+| 11 | Contracts and ADRs (round 4) | architect | PENDING | 2026-11-08T21:05:20Z | | | - | | | |
 
 ## Waits
 
@@ -65,6 +67,11 @@
 | security-reviewer | 1 | S6 | low | scan secret patterns use awk interval expressions and miss some token shapes |
 | security-reviewer | 1 | S7 | low | rule 5.6 does not flag a role commit editing parallel-limit or factory-state |
 | security-reviewer | 1 | S8 | low | overlap rule never compares a path with the other list's shared entry |
+| qa-engineer | 1 | F1 | medium | post-text.sh scan: sk- pattern has no left boundary, refuses kebab-case words such as the ADR 0014 file name |
+| qa-engineer | 1 | F2 | low | post-text.sh split adds a newline at the cut of an over-long line, so the parts do not concatenate to the original |
+| qa-engineer | 1 | F3 | low | scan --needs-you misses work/frontier-N/, work/settle-N/ and settle/N although the Citations rule covers them |
+| qa-engineer | 1 | F4 | low | gemba walk in hansei.md section 6 prints 30008 bytes against a 30000 cap |
+| qa-engineer | 1 | F5 | low | baseline.md line 216 still says the stage log is gone by then |
 
 ## Abnormalities
 

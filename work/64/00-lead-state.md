@@ -8,7 +8,11 @@
 
 ## Running agents
 
-none
+- qa-engineer: brief work/64/10-brief-qa-engineer.md, agent a1f4b69d3913010ce (resumed 2026-11-08T21:02Z after a weekly limit hit 2026-11-07T15:13Z), last commit 74b3f5f
+
+## Interruptions
+
+- 2026-11-07T15:13Z a usage limit stopped QA (W1). From this point roles run one at a time for the rest of the item: QA first, then the developer round, then re-verification. Security had finished before the limit.
 
 ## Label
 
@@ -40,11 +44,14 @@ none
 
 | Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |
 |---|---|---|---|---|---|---|
+| W1 | limits | a1f4b69d3913010ce | 2026-11-07T15:13Z | 2026-11-08T21:02Z | yes | QA failed: weekly limit (resets 2026-11-08T21:00Z), resumed the same agent after the reset |
 
 ## Person's touches
 
 | Time (UTC) | Kind | What |
 |---|---|---|
+| 2026-11-07T13:40Z | other | asked whether QA was still running |
+| 2026-11-08T21:02Z | other | told the lead to resume and finish the QA agent |
 
 ## Findings
 

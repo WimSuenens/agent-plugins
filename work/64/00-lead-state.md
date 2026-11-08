@@ -42,13 +42,16 @@
 | 10 | Contracts and ADRs (round 3) | architect | a8ecdf464b0f459a7 | 2026-11-07T12:04:37Z | 2026-11-07T12:08:39Z | 4m | - | 40782 | done | project-id source and split join amended; 1 two-way decision |
 | 11 | Contracts and ADRs (round 4) | architect | ad0ef927e6ee20e8f | 2026-11-08T21:05:20Z | 2026-11-08T21:09:20Z | 4m | - | 93657 | done | all 11 findings have contract text; 8 two-way decisions (release contract decisions 23-30); 0 cards |
 | 12 | Build (round 2) | developer | a4839e0a7cd352b02 | 2026-11-08T21:09:20Z | 2026-11-08T21:28:32Z | 19m | - | 111413 | done | items 1-9 built; QA pins to update listed; 4 two-way decisions |
-| 13 | QA (round 2) | qa-engineer | a1f4b69d3913010ce | 2026-11-08T21:28:32Z | | | - | | | |
+| 13 | QA (round 2) | qa-engineer | a1f4b69d3913010ce | 2026-11-08T21:28:32Z | 2026-11-08T21:40:50Z | 12m | - | 516921 | block | F7 low (run text stale); round-1 findings met; suite 3111 passed, 10 skipped, 0 failed; paused by A1 after reading |
+| 14 | Andon A1 | lead | - | 2026-11-08T21:40:50Z | 2026-11-08T21:40:50Z | 0m | W2 | - | done | kind 2 same-finding-twice; override none |
+| 15 | Build (round 3) | developer | a4839e0a7cd352b02 | 2026-11-08T21:40:50Z | | | - | | | |
 
 ## Waits
 
 | Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |
 |---|---|---|---|---|---|---|
 | W1 | limits | a1f4b69d3913010ce | 2026-11-07T15:13Z | 2026-11-08T21:02Z | yes | QA failed: weekly limit (resets 2026-11-08T21:00Z), resumed the same agent after the reset |
+| W2 | andon | lead | 2026-11-08T21:40Z | 2026-11-08T21:40Z | yes | no stop A1 kind 2: same-finding-twice |
 
 ## Person's touches
 
@@ -74,8 +77,10 @@
 | qa-engineer | 1 | F3 | low | scan --needs-you misses work/frontier-N/, work/settle-N/ and settle/N although the Citations rule covers them |
 | qa-engineer | 1 | F4 | low | gemba walk in hansei.md section 6 prints 30008 bytes against a 30000 cap |
 | qa-engineer | 1 | F5 | low | baseline.md line 216 still says the stage log is gone by then |
+| qa-engineer | 2 | F7 | low | run SKILL Overlap paragraph states rules 1 and 2 only, case-sensitively, after paths.sh gained case folding and rule 3 |
 
 ## Abnormalities
 
 | Id | Raised (UTC) | Kind | Raised by | Paused agent | Resumed (UTC) | Andon comment | Override |
 |---|---|---|---|---|---|---|---|
+| A1 | 2026-11-08T21:40Z | 2 same-finding-twice | lead | - | 2026-11-08T21:40Z | https://github.com/WimSuenens/agent-plugins/issues/64#issuecomment-6727499997 | none |

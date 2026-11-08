@@ -46,7 +46,8 @@
 | 14 | Andon A1 | lead | - | 2026-11-08T21:40:50Z | 2026-11-08T21:40:50Z | 0m | W2 | - | done | kind 2 same-finding-twice; override none |
 | 15 | Build (round 3) | developer | a4839e0a7cd352b02 | 2026-11-08T21:40:50Z | 2026-11-08T21:43:52Z | 3m | - | 126195 (resumed leg only) | done | F7 fixed; restatement search found 2 more stale statements (updated); 0 decisions |
 | 16 | QA (round 3) | qa-engineer | a1f4b69d3913010ce | 2026-11-08T21:43:52Z | 2026-11-08T21:48:57Z | 5m | - | 526623 (resumed leg only) | pass | suite 3121 passed, 9 skipped, 0 failed; 0 findings |
-| 17 | Security (round 2) | security-reviewer | af80c5d52b2004eea | 2026-11-08T21:48:57Z | | | - | | | |
+| 17 | Security (round 2) | security-reviewer | af80c5d52b2004eea | 2026-11-08T21:48:57Z | 2026-11-08T21:50:34Z | 1m | - | 138225 (resumed leg only) | pass | S1-S8 closed, no new finding |
+| 18 | Documentation | docs-writer | PENDING | 2026-11-08T21:50:34Z | | | - | | | |
 
 ## Waits
 

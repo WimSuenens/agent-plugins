@@ -38,7 +38,7 @@ case "$1 $2" in
   "project item-edit")
     if [ "${all#* --single-select-option-id }" != "$all" ]; then op=B-set
     elif [ "${all#* --text }" != "$all" ]; then op=B-text; fi ;;
-  "issue view") op=T-view ;;
+  "issue view") op=T-view; case "$all" in *" --json author,body "*) op=T-brief ;; esac ;;
   "issue list") op=T-recent ;;
   "issue create") op=T-create ;;
   "issue comment") op=T-comment ;;

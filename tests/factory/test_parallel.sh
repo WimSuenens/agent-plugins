@@ -34,10 +34,10 @@ ov ac28-c11-file-under-dir 1 "none|a/b.md" "none|a/"
 ov ac28-c12-different-shared 0 "CHANGELOG.md|a/" "CONTEXT.md|b/"
 ov ac28-c13-adr-number 1 "adr-number|a/" "adr-number|b/"
 # QA's own rows
-ov ac28-q14-case-sensitive 0 "none|Plugins/factory/" "none|plugins/factory/a.md"
+ov ac28-q14-case-folded 1 "none|Plugins/factory/" "none|plugins/factory/a.md"
 ov ac28-q15-dir-vs-file-of-same-name 0 "none|a/b" "none|a/b/c.md"
-ov ac28-q16-shared-path-is-not-a-path 0 "CHANGELOG.md|a/" "none|CHANGELOG.md"
-ov ac28-q17-path-is-not-a-shared-entry 0 "none|CHANGELOG.md" "CHANGELOG.md|b/"
+ov ac28-q16-path-equal-to-others-shared-entry-rule-3 1 "CHANGELOG.md|a/" "none|CHANGELOG.md"
+ov ac28-q17-shared-entry-equal-to-others-path-rule-3 1 "none|CHANGELOG.md" "CHANGELOG.md|b/"
 ov ac28-q18-multiple-entries-one-equal 1 "none|x/ y/z.md w/" "none|q/ y/z.md"
 ov ac28-q19-shared-multiple-one-common 1 "CHANGELOG.md, CONTEXT.md|a/" "CONTEXT.md, adr-number|b/"
 ov ac28-q20-version-file-shared 1 "plugins/factory/.claude-plugin/plugin.json|a/" "plugins/factory/.claude-plugin/plugin.json|b/"
@@ -141,7 +141,7 @@ cd "$T" || exit 1
 printf '%s\n' "x" | bash "$PS" check "$T/em.md" >/dev/null 2>&1; ck ac32-check-with-empty-block-exit-3 3 "$?"
 # the agent files and the run text carry the step
 for r in qa-engineer security-reviewer; do
-  has "ac32-$r-diff-command" "$PLUGIN/agents/$r.md" 'git diff --name-only origin/main...item/<id>'
+  has "ac32-$r-diff-command" "$PLUGIN/agents/$r.md" 'git -c core.quotePath=false diff --no-renames --name-only origin/main...item/<id>'
   has "ac32-$r-check-command" "$PLUGIN/agents/$r.md" 'paths.sh" check --ignore work/<id>/ contracts/<id>-*.md'
   has "ac32-$r-severity-medium" "$PLUGIN/agents/$r.md" 'severity at least medium'
   has "ac32-$r-fetch-first" "$PLUGIN/agents/$r.md" 'git fetch origin main'

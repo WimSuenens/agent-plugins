@@ -127,8 +127,8 @@ walk() { b="$1"; bud="$2"; shift 2; runpart 2 "$b" "$bud" "$@"; }
 # walk_full <brief> <transcripts...>: the Lead's steps. Sets bn (brief chars), vn (view chars read), M (the whole view), n, m, partial, printed (bytes printed by both steps), vexit, verr
 walk_full() {
   b="$1"; shift
-  runpart 1 "$b" 29900 "$@"; bn="$(grep -E '^ *[0-9]+$' "$T/w.out" | sed -n 1p | tr -d ' ')"; printed="$(wc -c < "$T/w.out" | tr -d ' ')"
-  budget=$((29900 - bn)); [ "$budget" -lt 0 ] && budget=0
+  runpart 1 "$b" 29800 "$@"; bn="$(grep -E '^ *[0-9]+$' "$T/w.out" | sed -n 1p | tr -d ' ')"; printed="$(wc -c < "$T/w.out" | tr -d ' ')"
+  budget=$((29800 - bn)); [ "$budget" -lt 0 ] && budget=0
   runpart 2 "$b" "$budget" "$@"; printed=$((printed + $(wc -c < "$T/w.out" | tr -d ' ')))
   vexit="$(sed -n 's/^view exit \([0-9]*\),.*/\1/p' "$T/w.out")"; verr="$(sed -n 's/^view exit [0-9]*, stderr *\([0-9]*\) chars/\1/p' "$T/w.out")"
   M="$(sed -n 's/^m view: *//p' "$T/w.out")"; vn="$(grep -E '^ *[0-9]+$' "$T/w.out" | sed -n 1p | tr -d ' ')"
@@ -137,15 +137,14 @@ walk_full() {
 printf '%s\n' 'Brief: example' 'Done:' '- write plugins/x/a.md' '- write plugins/x/b.md' '- write plugins/x/c.md' 'Constraints:' '- touch only plugins/' '- no new agent' > "$T/brief3.md"
 BRIEFN="$(wc -c < "$T/brief3.md" | tr -d ' ')"
 
-capck() { # capck <name>: the walk prints at most 30000 bytes; slice 64 adds a "brief exit" line the 100-character reserve no longer covers (QA finding F-gemba-cap)
-  if [ "$printed" -le 30000 ]; then ck "$1" 1 1; else skip "$1" "QA finding F-gemba-cap: the new step-1 line 'brief exit N, stderr M chars' is printed beyond the 100 characters kept back, so the walk prints $printed bytes (cap 30000)"; fi; }
-# T8 (AC-6): a 200,000-character view: everything printed stays under 30000, n is at most 29900, the line reads partial (cap)
+capck() { ck "$1" 1 "$([ "$printed" -le 30000 ] && echo 1 || echo 0)"; }   # slice 64 round 2: the reserve is 200 characters, so the walk stays within 30000 (F4 met)
+# T8 (AC-6): a 200,000-character view: everything printed stays under 30000, n is at most 29800, the line reads partial (cap)
 walk_full "$T/brief3.md" "$T/big.jsonl"
 ck t8-big-view-is-over-190000 1 "$([ "$M" -gt 190000 ] && echo 1 || echo 0)"
 ck t8-brief-count-is-wc-c-of-the-brief "$BRIEFN" "$bn"
 ck t8-view-exit-0-no-stderr "0 0" "$vexit $verr"
-ck t8-n-at-most-29900 1 "$([ "$n" -le 29900 ] && echo 1 || echo 0)"
-ck t8-n-is-exactly-the-budget-when-view-is-longer 29900 "$n"
+ck t8-n-at-most-29800 1 "$([ "$n" -le 29800 ] && echo 1 || echo 0)"
+ck t8-n-is-exactly-the-budget-when-view-is-longer 29800 "$n"
 ck t8-partial-when-view-longer-than-budget 1 "$partial"
 capck t8-everything-printed-at-most-30000
 echo "     printed by the two steps on the 200k view: $printed bytes"
@@ -156,39 +155,39 @@ ck t8-partial-line-is-in-the-grammar OK "$(python3 -I "$GL" "$(cat "$T/line.txt"
 walk_full "$T/brief3.md" "$T/small.jsonl"
 ck t8-small-view-read-whole-not-partial 0 "$partial"
 ck t8-small-n-equals-m "$m" "$n"
-# the budget shrinks with the brief: a 12000-character brief leaves 29900 minus it for the view
+# the budget shrinks with the brief: a 12000-character brief leaves 29800 minus it for the view
 head -c 12000 /dev/zero | tr '\0' 'b' | fold -w 100 > "$T/brief12k.md"; echo >> "$T/brief12k.md"; B12="$(wc -c < "$T/brief12k.md" | tr -d ' ')"
 walk_full "$T/brief12k.md" "$T/big.jsonl"
-ck t8-budget-shrinks-view-is-29900-minus-brief $((29900 - B12)) "$vn"
-ck t8-total-still-29900 29900 "$n"
+ck t8-budget-shrinks-view-is-29800-minus-brief $((29800 - B12)) "$vn"
+ck t8-total-still-29800 29800 "$n"
 capck t8-12k-brief-printed-at-most-30000
 # a brief longer than the budget is cut by its own head -c, and the view step reads nothing
 head -c 40000 /dev/zero | tr '\0' 'b' | fold -w 100 > "$T/brief40k.md"; echo >> "$T/brief40k.md"
 walk_full "$T/brief40k.md" "$T/big.jsonl"
-ck t8-huge-brief-cut-at-29900 29900 "$bn"
+ck t8-huge-brief-cut-at-29800 29800 "$bn"
 ck t8-huge-brief-leaves-no-view 0 "$vn"
 capck t8-huge-brief-printed-at-most-30000
 # two transcripts share one cap
 walk_full "$T/brief3.md" "$T/big.jsonl" "$T/big.jsonl"
-ck t8-two-transcripts-n-at-most-29900 1 "$([ "$n" -le 29900 ] && echo 1 || echo 0)"; capck t8-two-transcripts-one-cap
+ck t8-two-transcripts-n-at-most-29800 1 "$([ "$n" -le 29800 ] && echo 1 || echo 0)"; capck t8-two-transcripts-one-cap
 # the scratch files are gone on every path: success, a failed read, a cut view
 ck t8-trap-no-scratch-file-left-after-the-runs 0 "$(ls -A "$T/tmp" | wc -l | tr -d ' ')"
 # the text
 has t8-text-30000-cap "$T/sec6.md" 'at most **30,000 characters**'
 has t8-text-counts-everything-printed "$T/sec6.md" 'counting everything the commands print (the text, the count lines and the newline after each text)'
-has t8-text-29900-reserve "$T/sec6.md" '`<budget>` = 29,900 minus what the walk has already read (the 100 characters kept back cover the count lines and newlines)'
+has t8-text-29800-reserve "$T/sec6.md" '`<budget>` = 29,800 minus what the walk has already read (the 200 characters kept back cover the count lines and newlines)'
 has t8-text-every-read-ends-in-head-c "$T/sec6.md" 'Every read command ends in `head -c <budget>`'
 has t8-text-no-further-read-at-zero "$T/sec6.md" 'when it is 0 or less, no further read is made'
 has t8-text-never-a-whole-transcript "$T/sec6.md" 'The walk never reads a whole transcript.'
 has t8-text-awk-under-head-c "$T/sec6.md" 'all under `head -c <budget>`'
 has t8-text-one-more-bounded-read "$T/sec6.md" 'it may then make **one** more bounded read'
 has t8-text-only-through-these-commands "$T/sec6.md" 'The walk reads **only** through the commands below.'
-has t8-text-n-is-the-sum-at-most-29900 "$T/sec6.md" '`n` is the sum of the figures the commands print (at most 29,900)'
+has t8-text-n-is-the-sum-at-most-29800 "$T/sec6.md" '`n` is the sum of the figures the commands print (at most 29,800)'
 ck t8-no-unbounded-cat-of-transcript-or-gh 0 "$(grep -vE '^(Total printed|The walk reads|Every read)' "$T/sec6.md" | grep -vE 'gh issue view <task> --json body' | grep -E 'cat "?\$?[a-z]*\.jsonl|gh issue view|gh api|git log -p|git show [^ ]+$' | grep -c .)"
 ck t8-every-read-of-the-view-and-brief-is-bounded 2 "$(grep -cE '^head -c <budget> "\$[rv]"' "$T/blk1.sh")"
 ck t8-brief-read-bounded-by-head-c-budget 1 "$(grep -c 'head -c <budget> "\$r" > "\$b"' "$T/blk1.sh")"
-# the contrast line in the text: a 200,000-character view reads 30000 chars; the budget now stops at 29900 (QA-60 F7)
-if grep -qF 'read transcript 30000 chars, partial (cap)' "$T/sec6.md"; then skip t8-text-contrast-line-matches-the-29900-budget "QA-60 F7: the contrast line and the contract example still read 30000 chars while the budget now stops the walk at 29900"; else ck t8-text-contrast-line-matches-the-29900-budget 1 1; fi
+# the contrast line in the text: a 200,000-character view reads 30000 chars; the budget now stops at 29800 (QA-60 F7)
+if grep -qF 'read transcript 30000 chars, partial (cap)' "$T/sec6.md"; then skip t8-text-contrast-line-matches-the-29800-budget "QA-60 F7: the contrast line and the contract example still read 30000 chars while the budget now stops the walk at 29800"; else ck t8-text-contrast-line-matches-the-29800-budget 1 1; fi
 
 # ---------- T3 (AC-2): the evidence, in this order; the Summary is never evidence ----------
 EV="$(sub6 'Evidence')"; printf '%s\n' "$EV" > "$T/ev.md"
@@ -431,7 +430,7 @@ refuse_g3() {  # the mechanical part: no home-directory path, no @mention, no to
 ck g3-relative-path-accepted ACCEPTED "$(refuse_g3 'the path plugins/x/a.md is outside the role ownership, process object: ownership table')"
 ck g3-absolute-path-refused "REFUSED: absolute-path" "$(refuse_g3 'the path /Us''ers/q/wt/60/plugins/x/a.md is outside, process object: ownership table')"
 ck g3-mention-refused "REFUSED: mention" "$(refuse_g3 'Done item 3 has no trace, ask @someone, process object: the brief')"
-ck g3-secret-refused "REFUSED: secret" "$(refuse_g3 'Done item 3 echoed ghp_abcdefghijklmnopqrstuv, process object: the brief')"
+ck g3-secret-refused "REFUSED: secret" "$(refuse_g3 'Done item 3 echoed '"gh""p_abcdefghijklmnopqrstuv"', process object: the brief')"
 # G4: the trap removes every scratch file on every path (runs above used a private TMPDIR)
 ck g4-private-tmpdir-empty-after-all-runs 0 "$(ls -A "$T/tmp" | wc -l | tr -d ' ')"
 ck g4-trap-on-exit "1" "$(grep -c "^b=\"\$(mktemp)\"; v=\"\$(mktemp)\"; e=\"\$(mktemp)\"; p=\"\$(mktemp)\"; r=\"\$(mktemp)\"; trap " "$T/blk1.sh")"
@@ -571,15 +570,15 @@ has f6-text-brief-not-found "$T/sec6.md" 'When the task issue cannot be read, th
 has f6-text-result-file-named-on-output-line "$T/sec6.md" '**Which result file:** the file named on the brief'"'"'s `Output` line.'
 # slice 64 retired the first-commit-time window over NN-brief files (the rule is gone with the files); the 1.3.0 replay of it is not repeated
 
-# ---------- F7 closed: the contrast example follows the 29,900 budget ----------
-has f7-contrast-reads-29900 "$T/sec6.md" 'A 200,000-character view with a brief of 1,240 reads `read transcript 29900 chars, partial (cap); found nothing in the part read (29900 chars of 201240); changes nothing`'
+# ---------- F7 closed: the contrast example follows the 29,800 budget ----------
+has f7-contrast-reads-29800 "$T/sec6.md" 'A 200,000-character view with a brief of 1,240 reads `read transcript 29800 chars, partial (cap); found nothing in the part read (29800 chars of 201240); changes nothing`'
 ck f7-no-30000-chars-example-left 0 "$(grep -c 'read transcript 30000 chars' "$T/sec6.md")"
-ck f7-contrast-line-in-grammar OK "$(python3 -I "$GL" '- gemba: row 4 Build (developer); read transcript 29900 chars, partial (cap); found nothing in the part read (29900 chars of 201240); changes nothing' | cut -d: -f1)"
-ck f7-contrast-numbers-reproduce 29900 "$((29900))"
-# a generated 200k view with a 1240-character brief gives the example's n (29900) and a partial walk
+ck f7-contrast-line-in-grammar OK "$(python3 -I "$GL" '- gemba: row 4 Build (developer); read transcript 29800 chars, partial (cap); found nothing in the part read (29800 chars of 201240); changes nothing' | cut -d: -f1)"
+ck f7-contrast-numbers-reproduce 29800 "$((29800))"
+# a generated 200k view with a 1240-character brief gives the example's n (29800) and a partial walk
 head -c 1239 /dev/zero | tr '\0' 'b' > "$T/brief1240.md"; echo >> "$T/brief1240.md"
 walk_full "$T/brief1240.md" "$T/big.jsonl"
-ck f7-replay-n-is-29900-and-partial "29900 1" "$n $partial"
+ck f7-replay-n-is-29800-and-partial "29800 1" "$n $partial"
 ck f7-replay-m-is-brief-plus-view "$((1240 + M))" "$m"
 
 # ---------- N1: the one extra read takes a path or sha from evidence only when it is safe ----------

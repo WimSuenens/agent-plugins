@@ -100,7 +100,7 @@ has ac7-recompute-from-records "$SK" 'recompute the baseline issue from the reco
 has ac7-twice-same-text "$BA" 'Running the update twice gives the same text.'
 has ac7-write-only-if-differs "$BA" '*Edit baseline*: write only if the composed body differs from the one on the issue.'
 has ac7-note-records-and-minutes "$BA" '`#<id> <n> records, <m>m`'
-has ac7-stage-log-gone "$BA" 'The stage log is gone by then (step 8.6)'
+has ac7-stage-log-gone "$BA" 'The ledger comment stays on the ticket after `work/<id>/` goes (step 8.6)'
 has ac7-repair-check "$BA" 'means the previous run stopped before its update. Run the update of section 8.1 and say `Factory baseline: recomputed (<n> record(s) it did not list).`'
 has ac7-hansei-close-list "$HA" '10. Update the baseline (`references/baseline.md`), then the experiment decision.'
 has ac7-hansei-names-run-lines "$HA" "closed in this run"

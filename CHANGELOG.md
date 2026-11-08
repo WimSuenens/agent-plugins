@@ -2,6 +2,60 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.0.0 (#64)
+
+Release: `2.0.0`, the board as run state. **This is a major release.** The project's GitHub Project board now holds the status of every card, each role's work on an item is a sub-issue of its slice, and several slices can run at the same time. A project on 1.x must run `/factory:setup-factory-skill` (its migration step) before `/factory:run` accepts it. The migration shows the status mapping and the item count and waits for a yes; `/factory:run` never applies it, and `/factory:run` refuses a project that has not migrated. Undoing ADR 0014 or ADR 0015 after this release is a 3.0.0 release.
+
+Slice [#64](https://github.com/WimSuenens/agent-plugins/issues/64), map [#50](https://github.com/WimSuenens/agent-plugins/issues/50). Requirement [64-board-as-run-state](docs/requirements/64-board-as-run-state.md). Decisions: [ADR 0014](docs/adr/0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md), [ADR 0015](docs/adr/0015-factory-status-has-six-values-plus-kind-and-role.md) and [ADR 0016](docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md); no new ADR. Contracts: [64-release](contracts/64-release.md), [64-board-status](contracts/64-board-status.md), [64-role-tasks](contracts/64-role-tasks.md), [64-ledger-and-fields](contracts/64-ledger-and-fields.md), [64-gh-calls](contracts/64-gh-calls.md), [64-board-script](contracts/64-board-script.md) and [64-parallel-slices](contracts/64-parallel-slices.md). The contract index is [docs/factory/reference.md](docs/factory/reference.md); the steps and checks are in [docs/factory/release-runbook.md](docs/factory/release-runbook.md), section *Release 2.0.0*.
+
+wayfinding (unversioned): this release changes two wayfinding files, `plugins/wayfinding/skills/wayfinder/SKILL.md` (a *Slices in flight* step in the resurvey) and `plugins/wayfinding/skills/beachhead/SKILL.md` (one line). The wayfinding plugin keeps no `version`: ADR 0012 versions the factory only.
+
+**No acceptance demo gated this slice.** What offline checks cannot show is listed under *Unverified* below. Real use settles that list: each finding goes to this repo as a feedback issue (the *Factory feedback* template, label `plugin:factory`).
+
+**This item ran on the 1.3.0 mechanism.** It ran on the frozen install `9147301f75c3` (1.3.0), so its briefs and feedback were files, its lead state held a stage log, and it had no sub-issues and no migration. **No new-series baseline was written for 2.0.0**: the `2.0` series starts with the next run.
+
+**Installs are frozen.** Merging and tagging 2.0.0 changes nothing on a machine that holds the frozen install, which stays on `9147301f75c3` until the freeze ends. The tag `factory-v2.0.0` is made by hand on the merge commit, as for 1.1.0 to 1.3.0. Once a machine updates (`claude plugin marketplace update wimsuenens`), this release reaches the projects on it.
+
+**Restart your Claude Code sessions after updating.** A session keeps the factory skill text it read when it started. A session that started before the update runs the old text and does not read the board.
+
+### Added
+
+- **The board as status.** The project's board holds the status of every card: the map, each child ticket, each role task and each frontier ticket. `Factory status` has six values: `Backlog`, `Ready`, `Running`, `Waiting on you`, `Blocked` and `Done`. Two single-select fields are added: `Kind` (`map`, `slice`, `role task`, `frontier ticket`) and `Role` (set only on a role task). Five text fields hold the numbers: `Tokens`, `Minutes`, `Hours`, `Rework rounds` and `Person touches`.
+- **Two views.** `Needs you` lists the cards that wait on the person. `History` lists the closed slices and role tasks, newest first. The filter tokens are `factory-status:"Waiting on you"` and `is:closed kind:slice,"role task"`.
+- **A waiting card says what to do.** Before a card goes to `Waiting on you`, the lead posts a needs-you comment: its cause, the ask, the options, and what happens after the answer.
+- **Role tasks as sub-issues.** Each spawn of a role on an item is one sub-issue of its slice. The brief is its body and the result is its closing comment; a result longer than one comment is split into parts. Findings go back to a role as a new rework sub-issue, and earlier role tasks stay closed and unedited.
+- **The ledger.** The lead's working record of an item is one comment on the slice ticket, holding the Tasks, Waits and Person's touches tables. It replaces the tables the 1.x lead state held.
+- **Parallel slices.** Slices run at the same time, up to `parallel-limit` (default `2`), when their path lists do not overlap. Each contract names its paths in a `Paths:` block; a slice's list is the union of its contracts' blocks. A path that overlaps another slice's list or its `shared:` entry keeps the slice waiting.
+- **The `factory-state` line.** Line 1 of `docs/agents/factory.md` reads `factory-state: 2`. `/factory:run` refuses a project without it.
+- **Four scripts.** `board.sh` (setup, the three-phase migration, the views, `finish`), `paths.sh` (path lists and the overlap rule), `factory-config.sh` (the `factory-state` and `parallel-limit` lines) and `post-text.sh` (the scan of text before it is posted, and the rendering, elision and splitting of long comments).
+- **The migration.** `/factory:setup-factory-skill` migrates a 1.x project. It writes a snapshot of every item and field value under the machine's state folder, outside the repository, before any change. It then adds the new options, re-sets the items, and drops the old options only when no item holds one.
+
+### Changed
+
+- **Status moves to the board.** The lead state no longer holds a status. The 1.x values `Designed`, `In progress`, `In review` and `Ready to deploy` are replaced by the six values above. The migration maps Designed to Ready, In progress and In review to Running, and Ready to deploy to Waiting on you; Backlog, Ready and Done are unchanged. **In progress and In review both become Running, so the old distinction survives only in the snapshot.**
+- **Removed from the standard.** The `## Stage log`, `## Waits` and `## Person's touches` sections of the lead state (their data is in the ledger and the sub-issues); the lead state's `Status:` line; the brief and feedback files `NN-brief-<role>.md` and `NN-feedback-<role>.md`; and the one-item-at-a-time rule, which the limit replaces.
+- **The hansei record stays at schema v5.** Its header key `stage-log cross-check` keeps its 1.x name and checks the Tasks table of the ledger. The seven measures keep their keys, order and grammar; their sources now read the ledger and the sub-issues. A frontier round has no ledger, so its role tasks read `not captured (frontier round keeps no ledger)` in `Tokens` and `Minutes`.
+- **Readers re-pointed.** Every reader of a 1.x table now reads the ledger or the sub-issues. The gemba walk, the baseline and the A3 keep their 1.3.0 grammar.
+- **Files.** Standard work under `plugins/factory/`: `skills/run/SKILL.md`, `references/protocol.md`, `references/hansei.md`, the seven `agents/*.md` and the setup skill. Tooling: the four scripts above. `plugins/factory/.claude-plugin/plugin.json` is at `2.0.0`.
+- **Bump.** `scripts/check-bump.sh` is unchanged. It passes `1.3.0 -> 2.0.0` (`pass: minor bump needed, 1.3.0 -> 2.0.0`). The script's word "minor" is a floor; the major level is the architect's decision, because no path pattern can tell a breaking change.
+- **Wayfinding.** The run text says that where an installed older wayfinding text describes slices running one at a time, the run's rule governs.
+
+### Unverified
+
+Offline checks, replays and reviews cover the text of this release. **None was exercised on a live Project or in a live session**: none was exercised. The following is named here as unverified:
+
+1. **Limits and result size under real load.** The usage-limit gate (`N = 1` after a limit is hit), the cut of a long result, and the limits the tracker sets.
+2. **Anything needing a live Project.** The `Needs you` filter token `factory-status:"Waiting on you"`; the shape of `gh project item-list` that `board.sh` reads (the lower-case field keys and option names); `createProjectV2View`; `updateProjectV2Field` keeping the option ids (if it regenerates them, the damage comes before the check and the snapshot is the only recovery); a real restore from the snapshot.
+3. **Whether the board alone tells the person what to do next.** The needs-you comment and its card, in the first real run.
+4. **Parallel running.** Path lists, the off-list catch, merge conflicts and the resurvey pause.
+5. **Hansei numbers across a real run**, including `Tokens` per role task and the frontier-round fields that read `not captured`.
+6. **Migrating a project other than agent-plugins.**
+7. **A live role following the brief check.** The role-side check of a brief's author and marker, and of the path list, is an instruction to the role: its text is pinned and its logic replayed on fixtures.
+8. **jq 1.6 and mawk.** Not tried. The suite ran on bash 5 with jq 1.8.1, and on `/bin/bash` 3.2.57.
+9. **Accepted limits (security review).** The scan finds home paths and the listed token shapes, but not instruction-like text or an unlisted secret. Anyone with write access to the repository can edit a sub-issue body; the lead's own-login filter narrows this and does not remove it.
+
+**Migration try.** Not run when this entry was written. The lead runs the migration once on a scratch Project before the merge, and the outcome is added after that try. A failed try is an andon, not a line in this entry.
+
 ## factory 1.3.0 (#60)
 
 Release: `1.3.0`, the gemba sample. At each item's close the Lead walks one stage of the item, chosen by a counted rule. It reads what that agent actually did, in its transcript or, where no transcript can be read, in its commits and result file, and compares it with the brief and with the stage-log row. The hansei record then carries one line, `gemba`, that says which stage was walked, what the walk found, and whether it changes anything. A finding is a question about the process, and it goes to a 5 Whys; it is never a verdict on a person, a role or a model. A walk that could not be done reads `not captured (<reason>)`, never `found nothing` and never `0`. The version lives in `plugins/factory/.claude-plugin/plugin.json` only. Tag: `factory-v1.3.0`, created by hand by the Lead on the merge commit at merge. This item ran on the frozen install `9147301f75c3`, whose text has neither the walk nor a tag step, so the tag is made by hand, as for 1.1.0 and 1.2.0.

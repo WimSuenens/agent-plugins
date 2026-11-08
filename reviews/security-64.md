@@ -4,6 +4,8 @@ Reviewer: security-reviewer. Diff: `origin/main...item/64`, `work/64/` ignored. 
 
 Verdict: findings (no critical, no high; three medium, five low). Under the authority rule nothing here blocks the merge, but the three medium findings are required fixes before QA's re-verify is read as final. Re-verify after the developer's round.
 
+Round 2 verdict (final build, QA round 3 pass): pass. See "Round 2" at the end.
+
 ## Findings
 
 | # | Location | Severity | Finding | Required fix |

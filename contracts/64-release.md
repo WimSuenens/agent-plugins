@@ -93,6 +93,17 @@ No one-way door was found. The three of this map are decided (ADRs 0014 to 0016)
 21. **A role task created but not linked is found by `T-recent`** (the lead's 100 newest issues) when the parent's sub-issues do not hold the marker. Rejected: a search query (index latency); the lead state alone (may be lost). Undo: one operation.
 22. **A cut-off or unlinked state is never lost to a lead restart:** the open person wait is the needs-you comment's `Asked:` line; other open waits are found again by the close scan. Rejected: an open-wait row in the ledger (a PATCH at every stop). Undo: one rule.
 
+Feedback round 13 (QA and security reviews), decisions 23 to 30:
+
+23. **Review diff is `git -c core.quotePath=false diff --no-renames --name-only origin/main...item/<id>`** everywhere. Rejected: `-z` with NUL-separated names (the `check` subcommand reads lines; a control-character name already fails safe as off-list). Undo: one line in five files.
+24. **Path comparison folds ASCII case; empty, `.` and `..` components are malformed; a directory without its slash is warned, not rejected.** Rejected: reject case-only differences (a slice cannot know its neighbour's spelling), reject the directory case (passes at the gate, fails at review). Undo: one function in `paths.sh`.
+25. **A path overlaps the other list's `shared:` entry when equal or a prefix** (rule 3 of [64-parallel-slices](64-parallel-slices.md) §2). Rejected: leaving shared and paths apart (a slice that owns the directory holding the version file would not collide with one that bumps it). Undo: one rule and its table rows.
+26. **Everything the lead posts is scanned first, titles included; posting operations take `--body-file`.** Rejected: scanning only the listed kinds (the list grows with each release and leaves the rest public). Undo: the scan step in one section of the run skill.
+27. **Secret patterns are `grep -E` with a left boundary, more token shapes, and a fail-closed canary.** Rejected: awk intervals (fail open on mawk), no boundary (blocks the ADR 0014 file name). Undo: the pattern table.
+28. **A split over-long line gets one newline per cut, reported on stderr.** Rejected: a cut marker (adds text to the byte record). Undo: one `split` message.
+29. **Rule 5.6 also covers the `parallel-limit:` and `factory-state:` lines; roles verify the brief's author and marker.** Rejected: reading the limit from `origin/main` (the person sets it on main, so the worktree edit is the signal to flag). Undo: two lines in rule 5.6; the check in seven agent files.
+30. **Gemba reserve is 200 characters, `n` at most 29,800.** Rejected: leaving the check lines out of the count (the 30,000 cap would no longer hold). Undo: three numbers in `hansei.md` and the QA pins.
+
 ## 7. The requirement's open questions, answered
 
 | Open question | Answer |

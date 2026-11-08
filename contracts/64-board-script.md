@@ -38,7 +38,7 @@ board.sh finish [--owner <O>] [--project <N>] [--project-id <P>] --views-confirm
 | 2 | usage, project not given, project id unknown (`apply`, `finish`), state dir inside the repo, `gh` or `jq` missing, `--yes` missing for `apply` |
 | 3 | a read call failed |
 | 5 | a **verification difference**: an item's field value differs from the snapshot beyond the expected status change. Stderr names the item and the field; no later phase runs |
-| 6 | phase 3 refused: an item still holds an old value. Stderr names the item |
+| 6 | phase 3 refused: an item still holds an old value after phase 2 re-set it (a `B-set` did not take). Stderr names the item |
 | 7 | a mutation call failed (stderr: the call's op id and `gh`'s message) |
 | 10 | the views need the person's confirmation (printed what to check); nothing is wrong |
 
@@ -100,7 +100,7 @@ Written when a migration has anything to do (not for `already migrated`, not for
 
 1. **Add.** One `B-foptions` call whose `singleSelectOptions` is the **full list**: every existing option **with its id, name, colour and description** (read by `B-options`), then `Running`, `Waiting on you`, `Blocked` without ids. At no point is the list overwritten without the old ids (AC-35). Then **verify** (below).
 2. **Re-set.** For each item whose current value is an old option: one `B-set` to the new option by the table (`Designed` to `Ready`, `In progress` and `In review` to `Running`, `Ready to deploy` to `Waiting on you`). Items on `Backlog`, `Ready`, `Done` and items with no value receive **no** call (AC-38). Then **verify**.
-3. **Drop.** Re-read the items. If any item holds an old option id: exit 6, name the item, **drop nothing**, report not done. Otherwise one `B-foptions` call whose list is the six final options in order, each **with its id** (the old `Backlog`, `Ready`, `Done` and the three new ones). Then **verify**.
+3. **Drop.** Re-read the items. Phase 2 has already re-set every old item itself, so an item still on an old option here means **a `B-set` did not take** (the call reported success and the re-read shows the old value, or a person set an old option in between); it does not mean the board started with an old item, which phase 2 handles. If any item holds an old option id: exit 6, name the item, **drop nothing**, report not done. Otherwise one `B-foptions` call whose list is the six final options in order, each **with its id** (the old `Backlog`, `Ready`, `Done` and the three new ones). Then **verify**.
 
 ### Verify (AC-38)
 
@@ -157,7 +157,7 @@ The skill also holds, under a heading `Version 1.x records`, the 1.3.0 worked st
 
 ## 9. What QA can check offline
 
-Fixtures: **Board-v1**, **Board-v2**, **Board-mid** (after phase 1; after phase 2 with one item still old), fresh project, and the fake `gh` of [64-gh-calls](64-gh-calls.md) §3. Each check reads the call log.
+Fixtures: **Board-v1**, **Board-v2**, **Board-mid** (after phase 1; and Board-mid-stuck: after phase 2 where one `B-set` did not take, the fake ignoring it, so one item is still old), fresh project, and the fake `gh` of [64-gh-calls](64-gh-calls.md) §3. Each check reads the call log.
 
 | Check | AC | How |
 |---|---|---|
@@ -165,7 +165,7 @@ Fixtures: **Board-v1**, **Board-v2**, **Board-mid** (after phase 1; after phase 
 | snapshot outside the repo, never overwritten | 36 | `--state-dir` inside the repo exits 2; the file holds every item and every field value; `git status` unchanged; a re-run on Board-mid writes `snapshot-2.json` and keeps `snapshot-1.json` byte for byte |
 | table and counts, no change before yes | 37 | `plan` output lines for Board-v1; `plan` and `apply` without `--yes` leave no mutation in the log; the skill text asks and treats silence as no |
 | exact mapping, nothing else touched | 38 | the final board equals Board-v2; Backlog, Ready and Done items got no `B-set`; the no-status item and the `Priority` value are as before. The fault fake that clears `Priority` after phase 1: exit 5 naming the item and the field, no phase 2 call |
-| phase 3 only when nothing is old | 39 | Board-mid with one old item: exit 6, no second `B-foptions`; after the fixture is updated the next run drops and exits 0 |
+| phase 3 only when nothing is old | 39 | Two cases. (a) Board-v1 with one old item: phase 2 re-sets it, phase 3 drops, exit 0 (the build does this; exit 6 does not occur). (b) Board-mid-stuck, a `B-set` that does not take: exit 6, no second `B-foptions`, the item named; after the fixture is updated the next run drops and exits 0 |
 | idempotent | 40 | Board-v2: `already migrated`, zero mutation, no second snapshot; the three interruption variants end at the same board and file contents as one clean run |
 | files and the last line | 41 | after a clean run `finish` leaves the diff of §7 and nothing else; with a forced failure in step 2 line 1 is not written and `factory-config.sh state` exits 3 |
 | no live project | 42 | grep of `plugins/`, `tests/factory/` and this contract's fixtures for the real number, id and owner of this repo's Project: none; with `gh` removed from `PATH` the tests fail with a clear message |

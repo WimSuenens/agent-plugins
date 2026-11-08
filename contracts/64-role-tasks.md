@@ -150,11 +150,11 @@ post-text.sh split <in> <outdir>
 |---|---|---|
 | `scan` | reads each file; a line matching one of the **home-path** patterns (an absolute path that starts at a user's home directory on macOS, Linux or Windows; `~/` is allowed, as in ADR 0013) or one of the **secret** patterns (below) is a hit. With `--needs-you` a line naming a path under `work/` followed by a digit, `frontier-<digit>` or `settle-<digit>`, or a branch `item/<n>`, `frontier/<n>` or `settle/<n>` (`<n>` digits), is also a hit (the `Citations` rule of the protocol covers all three places). Prints one line per hit: `scan: <basename>:<line>: home-path`, `…: secret`, or `…: work-path`. **Self-check first:** before reading a file it matches its own canary list (below); a canary that does not hit prints `scan: self-check failed (<pattern name>)` | 0 clean; 1 at least one hit; 2 usage, a file unreadable, or the self-check failed |
 
-**The secret patterns.** All written as `grep -E` (POSIX extended; `{n,}` intervals are portable there). **No awk interval expression** is used for matching (mawk, the default awk on several Linux distributions, can read `{20,}` as literal text and then match nothing, silently). Let `B` be the left boundary `(^|[^A-Za-z0-9_-])` and `T` the token class `[A-Za-z0-9_-]`. **Every token prefix is preceded by `B`**:
+**The secret patterns.** All written as `grep -E` (POSIX extended; `{n,}` intervals are portable there). **No awk interval expression** is used for matching (mawk, the default awk on several Linux distributions, can read `{20,}` as literal text and then match nothing, silently). Let `B` be the left boundary `(^|[^A-Za-z0-9_-])` and `T` the token class `[A-Za-z0-9_-]` (so `T{20,}` stands for `[A-Za-z0-9_-]{20,}`). A `\|` in the table is the regex alternation bar. **Every token prefix is preceded by `B`**:
 
 | Name | Pattern (after `B`) |
 |---|---|
-| github | `(ghp|gho|ghs|ghu|ghr)_T{20,}` and `github_pat_T{20,}` |
+| github | `(ghp\|gho\|ghs\|ghu\|ghr)_T{20,}` and `github_pat_T{20,}` |
 | aws | `AKIA[A-Z0-9]{16}` |
 | slack | `xox[abprs]-T{10,}` |
 | openai-style | `sk-T{20,}` |

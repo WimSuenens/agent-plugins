@@ -41,6 +41,8 @@ docs/requirements/64-board-as-run-state.md" "$(sed 's/^off-list: //' "$T/offlist
       txt="$(sed -n "${ln}p" "$f")"
       # known false positive F-sk-prefix: the ADR file name 0014-each-role-task-is-a-sub-issue-... contains the s""k- shape
       case "$txt" in *role-task-is-a-sub-issue*) continue ;; esac
+      # a line that main already carries (an old fixture of an earlier item) is not added by this diff
+      git show "origin/main:$f" 2>/dev/null | grep -qxF -- "$txt" && continue
       echo "$f:$ln:$kind"
     done >>"$T/scanhits.txt"
   done <"$T/scanlist.txt"

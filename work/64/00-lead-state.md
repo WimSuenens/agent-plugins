@@ -44,7 +44,8 @@
 | 12 | Build (round 2) | developer | a4839e0a7cd352b02 | 2026-11-08T21:09:20Z | 2026-11-08T21:28:32Z | 19m | - | 111413 | done | items 1-9 built; QA pins to update listed; 4 two-way decisions |
 | 13 | QA (round 2) | qa-engineer | a1f4b69d3913010ce | 2026-11-08T21:28:32Z | 2026-11-08T21:40:50Z | 12m | - | 516921 | block | F7 low (run text stale); round-1 findings met; suite 3111 passed, 10 skipped, 0 failed; paused by A1 after reading |
 | 14 | Andon A1 | lead | - | 2026-11-08T21:40:50Z | 2026-11-08T21:40:50Z | 0m | W2 | - | done | kind 2 same-finding-twice; override none |
-| 15 | Build (round 3) | developer | a4839e0a7cd352b02 | 2026-11-08T21:40:50Z | | | - | | | |
+| 15 | Build (round 3) | developer | a4839e0a7cd352b02 | 2026-11-08T21:40:50Z | 2026-11-08T21:43:52Z | 3m | - | not captured (completion notice not yet read) | done | F7 fixed; restatement search found 2 more stale statements (updated); 0 decisions |
+| 16 | QA (round 3) | qa-engineer | a1f4b69d3913010ce | 2026-11-08T21:43:52Z | | | - | | | |
 
 ## Waits
 

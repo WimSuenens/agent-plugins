@@ -34,7 +34,7 @@ shared: CHANGELOG.md, plugins/factory/.claude-plugin/plugin.json
 ```
 
 - After `Paths:`, one entry per line, each `- <path>`; the entries end at the first line that does not start with `- `, which must be the `shared:` line (so the `shared:` line follows the list directly).
-- A **path** is repo-relative, `/`-separated, no leading `./` or `/`, no `..` component, no spaces, commas, backticks or glob characters (`*`, `?`, `[`). A **file** has no trailing `/`; a **directory prefix** ends in `/`. A directory without its slash is a file to the rule (§2), so write the slash.
+- A **path** is repo-relative and `/`-separated. Split on `/`: **no component may be empty** (so no `//`, no leading `/`; a single trailing `/` is the directory marker and not an empty component), **none may be `.` or `..`** (so no `./`, `p/./q`, `p/..`, trailing `/.`), and the path has no spaces, commas, backticks or glob characters (`*`, `?`, `[`). A violation is malformed (`paths.sh` exit 3, naming the line number). A **file** has no trailing `/`; a **directory prefix** ends in `/`. A directory without its slash is a file to the rule (§2): `paths.sh` cannot tell, so it **warns** (not rejects) when an entry without a slash names an existing directory relative to the current directory: stderr `paths: line <n>: <basename of the contract> names a directory without a trailing slash; it will be read as a file`, exit code unchanged. (Rejected: exit 3, because the same contract would pass at the gate, when the directory does not exist yet, and fail at the review, when it does.) The architect writes the slash.
 - **Every role's paths are included**: `plugins/` for the developer, `tests/` and `reviews/qa-<id>.md` for QA, `reviews/security-<id>.md`, `docs/` for the docs-writer, and so on. A path outside the list is a finding at review (§6).
 - `shared:` is `shared: none` or `shared: ` followed by entries separated by `, `. A shared entry is an exact path without a trailing `/`, or the word `adr-number`. The shared set the standard names is: **the plugin version files** (`plugins/<name>/.claude-plugin/plugin.json`), **`CHANGELOG.md`**, **`CONTEXT.md`** and **the next ADR number** (`adr-number`). A slice names on its `shared:` line each of these it will change.
 - **`Paths:` is mandatory.** A contract with no block, a block that does not parse, or no `shared:` line fails the architect's Done list (AC-27). The architect's agent file adds this to its Done list.
@@ -45,9 +45,10 @@ shared: CHANGELOG.md, plugins/factory/.claude-plugin/plugin.json
 Two slices **overlap** when:
 
 1. some path P in one list is **equal to** a path Q in the other, or P is a **directory prefix of** Q, or Q of P (`P` ends in `/` and `Q` starts with `P`); **or**
-2. their `shared:` lines both name the same entry (exact string; `none` names nothing).
+2. their `shared:` lines both name the same entry (exact string; `none` names nothing); **or**
+3. a path P in one list is **equal to** a shared entry S of the other list, or P is a directory prefix of S (`P` ends in `/` and `S` starts with `P`). `adr-number` is not a path and takes no part in rule 3. (Architect decision, two-way: a slice that owns `plugins/factory/` owns the version file under it, so a slice that names that version file on its `shared:` line collides with it. Only the other list's `shared:` is compared with this list's paths; one list's own paths and `shared:` are never compared with each other.)
 
-Shared entries are not paths for rule 1, and paths are not shared entries for rule 2. Comparison is on strings, character for character, case-sensitive. A name that merely starts the same is not a prefix: `plugins/factory/` is not a prefix of `plugins/factory-x/a.md`.
+Shared entries of the *same* name are rule 2; a shared entry against the other list's *paths* is rule 3; two path lists are rule 1. Comparison is on strings, character for character, **case-insensitive for ASCII letters** (both sides folded with `LC_ALL=C` `tr 'A-Z' 'a-z'`; the default macOS and Windows volumes are case-insensitive, so `A/b.md` and `a/b.md` are one file there). Bytes outside ASCII compare exactly. A name that merely starts the same is not a prefix: `plugins/factory/` is not a prefix of `plugins/factory-x/a.md`. The same folding applies in `check` (§2, below) and to the `--ignore` prefix.
 
 | List 1 | List 2 | Overlap |
 |---|---|---|
@@ -64,6 +65,12 @@ Shared entries are not paths for rule 1, and paths are not shared entries for ru
 | `a/b.md` | `a/` | yes (prefix) |
 | `shared: CHANGELOG.md`, `a/` | `shared: CONTEXT.md`, `b/` | no |
 | `shared: adr-number`, `a/` | `shared: adr-number`, `b/` | yes |
+| `A/b.md` | `a/` | yes (case folded) |
+| `A/B.md` | `a/b.md` | yes (case folded, equal) |
+| `plugins/factory/` | `shared: plugins/factory/.claude-plugin/plugin.json`, `b/` | yes (rule 3: a path is a prefix of the other list's shared entry) |
+| `CHANGELOG.md` | `shared: CHANGELOG.md`, `b/` | yes (rule 3: equal) |
+| `a/` | `shared: adr-number`, `b/` | no (`adr-number` is not a path) |
+| `shared: CHANGELOG.md`, `a/` | `shared: none`, `a/x.md` | yes (rule 1) |
 
 ### `scripts/paths.sh` (tooling)
 
@@ -77,13 +84,15 @@ paths.sh check [--ignore <prefix>]... <contract-file>...   (names on stdin, one 
 
 | Subcommand | Prints | Exit |
 |---|---|---|
-| `list` | one line per entry of the union: `path <p>` or `shared <s>` (`shared none` is not printed) | 0; 2 a file has no `Paths:` block or no `shared:` line; 3 an entry is malformed (names it by line number, not text) |
-| `overlap` | `overlap: no`, or `overlap: yes <p> <q>` / `overlap: yes shared <s>` (the first pair found, in list order) | 0 no overlap; 1 overlap; 2 and 3 as `list` |
+| `list` | one line per entry of the union: `path <p>` or `shared <s>` (`shared none` is not printed); entries as written, not folded | 0; 2 a file has no `Paths:` block or no `shared:` line; 3 an entry is malformed, including an empty or `.` or `..` component (names it by line number, not text) |
+| `overlap` | `overlap: no`, or `overlap: yes <p> <q>` / `overlap: yes shared <s>` (the first pair found, in list order: rule 1, then rule 3, then rule 2) | 0 no overlap; 1 overlap; 2 and 3 as `list` |
 | `check` | for each stdin name not on the list: `off-list: <name>`. A name is **on the list** when it equals, or lies under, a path entry, or equals a shared entry. A name that starts with an `--ignore` prefix is skipped (the reviewer passes `--ignore work/<id>/`: the protocol's own folder is in the branch's history by design, ADR 0013, and is on no list) | 0 none off-list; 1 at least one; 2 and 3 as `list` |
 
 The files given may be contracts or plain files in the same grammar (a test passes a two-line list). An empty `Paths:` block (no entry) is malformed (3).
 
 ## 3. The two lines of `docs/agents/factory.md` (AC-29, AC-34)
+
+**Rule 5.6 covers both lines.** `skills/run/SKILL.md` rule 5.6 (`rules-touched-by-non-lead`) flags, besides the `## Overrides` text and the ownership table, **any change to a line that starts at column 0 with `parallel-limit:` or `factory-state:`** (a line changed, added or removed; compare before and after the commit, any difference counts), unless the subject starts `#<id> lead: ` and the author is the lead's git user, exactly as for the other two. A role that raises the limit or edits line 1 is flagged. QA row: a scratch repo with a commit `#12 developer: ...` that changes `parallel-limit: 2` to `parallel-limit: 9` is flagged `rules-touched-by-non-lead`; the same change in `#12 lead: ...` by the lead's user is not. (Reading the limit from `origin/main` instead was rejected: the person sets it on main anyway, and a worktree edit is exactly what the flag shows.)
 
 Read by `scripts/factory-config.sh` (tooling; `bash` 3.2). Both lines are matched at column 0 and nowhere else.
 
@@ -146,7 +155,7 @@ A slice is **cut** first, and its list exists only after the architect stage. Th
 
 A QA or security brief for item `<id>` carries, in its `Done` list, this step, and the two agent files carry it too:
 
-1. `git fetch origin main`, then `git diff --name-only origin/main...item/<id>` (the three-dot form: changes on the branch since it left `main`; `origin/main` rather than a local `main`, which may be stale and would show main's own commits).
+1. `git fetch origin main`, then **exactly** `git -c core.quotePath=false diff --no-renames --name-only origin/main...item/<id>` (the three-dot form: changes on the branch since it left `main`; `origin/main` rather than a local `main`, which may be stale and would show main's own commits). `--no-renames` lists **both** the old and the new name of a move, so a moved or deleted off-list file shows its source; without it git lists only the new name. `core.quotePath=false` prints non-ASCII names as they are, so they match a list entry; a name with a control character is still printed quoted and never matches (off-list, fail-safe). This one command is the review diff everywhere. **The build carries it in** `agents/qa-engineer.md` and `agents/security-reviewer.md` (the *Done* line), `skills/run/SKILL.md` (the QA and security step, and the Resurvey call of §8), and `skills/wayfinder/SKILL.md` Resurvey step 6 (the `<merge>^1 <merge>` form takes the same two options). A search of `plugins/` for `--name-only` finds only forms with both options.
 2. Pipe the names into `bash "<plugin root>/scripts/paths.sh" check --ignore work/<id>/ contracts/<id>-*.md` in the item worktree.
 3. Each `off-list:` line is a **finding** with the path named, severity at least `medium`. No line, no finding.
 
@@ -164,7 +173,7 @@ After each merge the wayfinding **Resurvey** checks every slice in flight. The s
 
 > A slice in flight is questioned when the merge changes a decision its frame rests on, contradicts one of its Under test lines, or changes a path in its list.
 
-- **`wayfinder/SKILL.md`, Resurvey**, gains a step "Slices in flight": for each slice in flight, compare its requirement, contract and path list with what this merge taught (the Under test results, any new or changed decision, the paths the merge changed: `git diff --name-only <merge>^1 <merge>` through `paths.sh check` against the slice's contracts). The step ends by naming each questioned slice and the question. It does not pause anything: how a slice is paused belongs to the runner.
+- **`wayfinder/SKILL.md`, Resurvey**, gains a step "Slices in flight": for each slice in flight, compare its requirement, contract and path list with what this merge taught (the Under test results, any new or changed decision, the paths the merge changed: `git -c core.quotePath=false diff --no-renames --name-only <merge>^1 <merge>` through `paths.sh check` against the slice's contracts). The step ends by naming each questioned slice and the question. It does not pause anything: how a slice is paused belongs to the runner.
 - **`beachhead/SKILL.md`** gains one line: a slice may be cut while another is in flight; its path list is compared before it is built.
 - **`run/SKILL.md` step 8.8** invokes the Resurvey and then applies the pause for every slice it named: the slice becomes `Waiting on you` with the needs-you comment of [64-board-status](64-board-status.md) §4 (`Cause: resurvey pause`, the question as `Ask`); its running roles finish the step in hand; **no further role starts for it until the person answers**. A slice with no question stays `Running`, and the lead says it checked.
 - **The factory calls the wayfinding text and does not copy it.** The run text carries the pause sentence above and the pause action, and points to the Resurvey for the comparison.
@@ -187,7 +196,10 @@ Unverified until two slices run side by side.
 | the gate | 29 | table-driven replay of §4 with `factory-config.sh limit` fixtures (`0`, `-1`, `two`, empty, absent, `2`) and in-flight sets built as fake `B-items` answers |
 | no build role before the comparison | 30 | text check that the build briefs of step 6 follow the comparison; fixture of an overlapping second slice stays `Ready` |
 | the pause | 31 | the three fixtures; the sentence of §8 appears verbatim in both `wayfinder/SKILL.md` and `run/SKILL.md` |
-| off-list path | 32 | a throwaway repo with a branch touching `contracts/x.md` and one off-list file: `check` prints `off-list: <file>`, exit 1; an on-list diff gives exit 0 |
+| off-list path | 32 | a throwaway repo with a branch touching `contracts/x.md` and one off-list file: `check` prints `off-list: <file>`, exit 1; an on-list diff gives exit 0. **Moved file:** `git mv b/g a/g` with `a/` on the list and `b/` off it: the §6 command lists `a/g` and `b/g`, and `check` prints `off-list: b/g`; the old command (without `--no-renames`) would not. **Non-ASCII name:** `a/é.txt` with `a/` on the list gives no finding, and `b/é.txt` gives `off-list: b/é.txt` unquoted. A search of `plugins/` finds no `--name-only` without both options |
+| path grammar | 27, 28 | `list` exit 3 on each of `p//q/x.md`, `p/./q/x.md`, `p/../q`, `./p`, `/p`, `p/.`; exit 0 on `p/q/` and `p/q/x.md`; a directory entry without the slash, run where the directory exists, exits 0 with the stderr warning of §1 and none where it does not exist |
+| case and shared rows | 28 | the added rows of §2 (`A/b.md` against `a/` yes; `plugins/factory/` against a shared version file yes; `CHANGELOG.md` against `shared: CHANGELOG.md` yes; `a/` against `shared: adr-number` no); `check` of `A/B.md` against a list holding `a/b.md` is on the list |
+| rule 5.6 and the two lines | 34 | the scratch-repo pair of §3 |
 | one rule | 33 | search for `one at a time` |
 | the config lines | 34 | the table of §3 |
 

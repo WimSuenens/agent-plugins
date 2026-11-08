@@ -14,7 +14,7 @@ shared: none
 
 ## 1. The rule
 
-Every `gh` call the lead, a factory script (`scripts/board.sh`) or a test-driven step makes matches **exactly one** operation below. A call that matches none is a defect (AC-3: "each call is one the standard names"). A role makes none of the **mutation** operations (AC-16); the architect and product-owner may make the read operations `T-view` and `T-comments`, and a developer, QA, security, devops or docs-writer role may make any read operation its task needs.
+Every `gh` call the lead, a factory script (`scripts/board.sh`) or a test-driven step makes matches **exactly one** operation below. A call that matches none is a defect (AC-3: "each call is one the standard names"). A role makes none of the **mutation** operations (AC-16); the architect and product-owner may make the read operations `T-view`, `T-comments` and `T-brief`, and a developer, QA, security, devops or docs-writer role may make any read operation its task needs.
 
 **Mutation call** is the requirement's term: `gh issue create|edit|comment|close`, `gh project item-add|item-edit|field-create|item-create`, `gh api` with `--method` other than GET, and `gh api graphql` whose query text starts with `mutation`. A read is any other call.
 
@@ -22,7 +22,16 @@ Placeholders: `<O>` owner, `<R>` repo, `<N>` project number, `<P>` project id, `
 
 ## 2. The operations
 
-Existing operations that 2.0.0 keeps unchanged keep their 1.3.0 text: **Run state**, **Stage summary**, **Find hansei**, **Post hansei**, **Edit hansei**, **Find/Create/Pin/Read/Edit baseline**, **Find records**, **Find A3s**, **Find/Post/Edit A3**, **Decision card**, **Task request**, **Open PR**, **Merge PR**, **Commit reference**. The ones below are new, or replace a 1.3.0 operation of the same family.
+Existing operations that 2.0.0 keeps unchanged keep their 1.3.0 text: **Run state**, **Find hansei**, **Post hansei**, **Edit hansei**, **Find/Create/Pin/Read/Edit baseline**, **Find records**, **Find A3s**, **Find/Post/Edit A3**, **Decision card**, **Open PR**, **Merge PR**, **Commit reference**. Two 1.3.0 operations change their text, and one rule applies to every operation that posts text. The ones below are new, or replace a 1.3.0 operation of the same family.
+
+**Changed: Stage summary and Task request.** Both put role-result text into the call, so neither may use `--body "<text>"` (a `$(...)`, a backtick or a quote in a summary would be run by the lead's shell). Both write the text to a `mktemp` file, **scan it** ([64-role-tasks](64-role-tasks.md) §9), and post with `--body-file`:
+
+| Id | Call |
+|---|---|
+| Stage summary | `gh issue comment <id> --body-file <file>`, the file holding `<stage>: <summary>` (at most five lines) and the `Decisions:` list, as in 1.3.0 |
+| Task request | `gh issue comment <ticket> --body-file <file>`, the file holding `Task for you: <what, and why it blocks>`, on the map's `task` ticket |
+
+**One rule for every posting operation.** Every operation that sends text (`T-create`, `T-comment`, `T-edit-comment`, Stage summary, Task request, Post/Edit hansei, Post/Edit A3, Decision card, baseline create and edit, andon comment) takes it from a scratch file that has passed `post-text.sh scan`. No operation takes text on the command line (`--body`, `--title` excepted: see [64-role-tasks](64-role-tasks.md) §9 for titles, which are scanned the same way and passed with a quoted variable read from the scanned file). A grep of the operations in `references/issue-tracker-github.factory.md` finds `--body "` in none.
 
 ### Reads
 
@@ -33,7 +42,8 @@ Existing operations that 2.0.0 keeps unchanged keep their 1.3.0 text: **Run stat
 | `B-items` | `gh project item-list <N> --owner <O> --format json --limit 1000` | `{"items":[{"id","title","content":{"type","number","title"}, "<field name, lower case>": <value>}]}`; a single-select value is the option **name**; a number or text value is the plain value; an item with no value in a field has no such key |
 | `B-views` | `gh api graphql -f query='query($p: ID!) { node(id: $p) { ... on ProjectV2 { views(first: 50) { nodes { id name filter layout } } } } }' -f p=<P>` | `{"data":{"node":{"views":{"nodes":[{"id","name","filter","layout"}]}}}}` |
 | `T-view` | `gh issue view <n> --json id,number,title,body,state,createdAt,closedAt` (any subset of the fields) | one issue |
-| `T-subissues` | `gh api "repos/{owner}/{repo}/issues/<parent>/sub_issues" --paginate` | JSON array of issues: `number`, `id`, `title`, `body`, `state`, `created_at`, `closed_at`, `user.login`. Only those whose `user.login` is the lead's own login count (as *Find hansei*: a public repo can hold a forged marker). Used to **find** a role task by marker and to read the times of the Tasks table |
+| `T-subissues` | `me="$(gh api user --jq .login)"`, then `gh api "repos/{owner}/{repo}/issues/<parent>/sub_issues" --paginate --jq '.[] | select(.user.login == "'"$me"'") | {number, id, title, body, state, created_at, closed_at}'` | the lead's own sub-issues only (the filter is **in the command**, as *Find hansei*: a public repo can hold a forged marker), one compact JSON object per line. Used to **find** a role task by marker and to read the times of the Tasks table |
+| `T-brief` | `gh issue view <n> --json author,body` | what a **role** runs to read its brief: `{"author":{"login"},"body"}`. The role refuses the brief unless `author.login` equals the login the spawn prompt names and line 1 of `body` is a marker for its own role ([64-role-tasks](64-role-tasks.md) §3 step 5) |
 | `T-comments` | `me="$(gh api user --jq .login)"`, then `gh api "repos/{owner}/{repo}/issues/<n>/comments" --paginate --jq '.[] | select(.user.login == "'"$me"'") | {id, created_at, body}'` | the lead's own comments; **find by the first line** of `body`, never by position or time |
 | `T-recent` | `me="$(gh api user --jq .login)"`, then `gh issue list --state all --author "$me" --limit 100 --json number,title,body,createdAt` | the lead's 100 newest issues; used only to find a role task that was created but never linked (AC-19) |
 | `T-dbid` | `gh api "repos/{owner}/{repo}/issues/<n>" --jq .id` | the numeric database id |

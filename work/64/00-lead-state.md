@@ -50,14 +50,21 @@
 | 18 | Documentation | docs-writer | a3f1f5751c34122ce | 2026-11-08T21:50:34Z | 2026-11-08T22:11:06Z | 20m | - | 220044 | done | suite 3141 passed, 7 skipped, 0 failed; links 204 ok; 5 two-way decisions; the migration try was left to the lead |
 | 19 | Migration try on a scratch Project | lead | - | 2026-11-08T22:06:39Z | 2026-11-08T22:11:06Z | 4m | - | - | done | scratch Project 11 created and deleted; plan, apply, finish run for real; found: createProjectV2View takes no filter |
 | 20 | Documentation (round 2) | docs-writer | a3f1f5751c34122ce | 2026-11-08T22:11:06Z | 2026-11-08T22:17:19Z | 6m | - | 238017 (resumed leg only) | done | scratch-try outcome and the view finding written; suite 3141 passed, 7 skipped, 0 failed |
-| 21 | Merge approval | person | - | 2026-11-08T22:17:19Z | | | - | - | | |
+| 21 | Merge approval | person | - | 2026-11-08T22:17:19Z | 2026-11-08T22:26:35Z | 9m | W9 | - | approved | bump re-check passed (pass: minor bump needed, 1.3.0 -> 2.0.0); the person said ship the views as they are |
 
 ## Waits
 
 | Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |
 |---|---|---|---|---|---|---|
-| W1 | limits | a1f4b69d3913010ce | 2026-11-07T15:13Z | 2026-11-08T21:02Z | yes | QA failed: weekly limit (resets 2026-11-08T21:00Z), resumed the same agent after the reset |
+| W1 | limits | lead | 2026-11-07T15:13Z | 2026-11-08T21:02Z | yes | weekly limit: found at close in the Lead's own session; QA failed on the same limit at the same moment and was resumed after the reset |
 | W2 | andon | lead | 2026-11-08T21:40Z | 2026-11-08T21:40Z | yes | no stop A1 kind 2: same-finding-twice |
+| W3 | interrupted | a1f4b69d3913010ce | 2026-11-07T12:24Z | 2026-11-07T12:29Z | yes | found at close: api-error:server_error; QA recovered by itself, no notice |
+| W4 | interrupted | a1f4b69d3913010ce | 2026-11-07T12:29Z | 2026-11-07T12:44Z | yes | found at close: cut-mid-stream; QA recovered by itself |
+| W5 | interrupted | a1f4b69d3913010ce | 2026-11-07T12:52Z | 2026-11-07T13:07Z | yes | found at close: cut-mid-stream; QA recovered by itself |
+| W6 | interrupted | a1f4b69d3913010ce | 2026-11-07T13:58Z | 2026-11-07T14:14Z | yes | found at close: api-error:server_error; QA recovered by itself |
+| W7 | interrupted | a1f4b69d3913010ce | 2026-11-07T14:22Z | 2026-11-07T14:56Z | yes | found at close: silent-gap with a machine sleep in it (sleep log); QA recovered by itself |
+| W8 | interrupted | a1f4b69d3913010ce | 2026-11-07T14:56Z | 2026-11-07T15:13Z | yes | found at close: silent-gap with a machine sleep in it (sleep log); QA recovered by itself |
+| W9 | person | - | 2026-11-08T22:17Z | 2026-11-08T22:26Z | yes | merge and clean up? |
 
 ## Person's touches
 
@@ -65,6 +72,7 @@
 |---|---|---|
 | 2026-11-07T13:40Z | other | asked whether QA was still running |
 | 2026-11-08T21:02Z | other | told the lead to resume and finish the QA agent |
+| 2026-11-08T22:26Z | approval | merge and clean up: yes (views shipped as they are) |
 
 ## Findings
 

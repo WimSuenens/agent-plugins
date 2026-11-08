@@ -61,9 +61,9 @@ case "$cmd" in
       "Bear""er ${n20}"
     )
     HOMEP=(
-      '(^|[^A-Za-z0-9_.~-])/Users/[^/ '"$(printf '\t')"']+'
-      '(^|[^A-Za-z0-9_.~-])/home/[^/ '"$(printf '\t')"']+'
-      '(^|[^A-Za-z0-9_.~-])/root/'
+      '(^|[^A-Za-z0-9_.~-])/Us''ers/[^/ '"$(printf '\t')"']+'
+      '(^|[^A-Za-z0-9_.~-])/ho''me/[^/ '"$(printf '\t')"']+'
+      '(^|[^A-Za-z0-9_.~-])/ro''ot/'
       '[A-Za-z]:[\\/][Uu]sers[\\/][^\\/ '"$(printf '\t')"']+'
     )
     HOMEC=("/Us""ers/someone/x" "/ho""me/someone/x" "/ro""ot/x" 'C:\Us''ers\someone')

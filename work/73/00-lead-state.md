@@ -1,7 +1,8 @@
 # Lead state: #73
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHDFJY
-- next step: 6 Requirement (product-owner)
+- next step: 6 Tests (qa-engineer prepares scenario tests first), then Build (developer), then QA and security
+- code review: yes — trigger: shared protocols (protocol.md and run skill state rules change)
 - open questions: none
 - frozen on: factory 2.0.0
 - ADR number: none
@@ -34,3 +35,5 @@
 
 - Pilot measure: test-to-green time and QA/developer rework rounds. Comparison: release 1.3.0, one item (#64): QA 3 passes, developer 2 feedback briefs (baseline #62).
 - Evidence on 2.0.0 (not fixed here): the `factory:run` skill was not loadable as a skill in this session; the lead read it from the repo checkout. FREEZE compares against the last segment of the plugin root, which here is `factory` (see #71, out of scope).
+
+- Evidence (2.0.0, not fixed): adding a new role-task card to the board once failed with "Content already exists" (project auto-add likely raced the add); a retry worked.

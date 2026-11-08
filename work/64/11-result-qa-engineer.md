@@ -1,10 +1,10 @@
 # Result: qa-engineer — 64
-Status: working
+Status: done
 Abnormality: none
 Progress:
-  Done: fake gh and board fixtures; test_board_script, test_parallel, test_role_tasks, test_board_status, test_ledger_fields (with W12/C49/L57/k4 replay, expected values committed before reading hansei.md), test_release64, check-bump cases; all new suites green under bash 5 and /bin/bash 3.2 (commits "#64 qa-engineer: ...").
-  Next: update the old tests that pin text this slice changes (andon_text, baseline_a3, fingerprint, gemba, standard_text), mutation-check the new suites on a scratch copy, write reviews/qa-64.md and the final result.
-Summary: in progress
-Artifacts: tests/factory/ (new files above)
-Decisions: none
-Open questions: none
+  Done: all new suites and the updated old ones; mutation checks; full suite run; reviews/qa-64.md written (round 1).
+  Next: none; waits for the developer's round on F1 to F5, then a re-run.
+Summary: Verdict block, round 1: six findings, none a criterion failure; F1 (medium) post-text.sh scan treats any kebab word ending in sk plus 20 characters as a secret, so a brief or comment linking ADR 0014 is refused. F2 to F5 are low (split adds a newline in an over-long line; --needs-you scan misses work/frontier-N and settle paths; the gemba walk prints 30,008 bytes; baseline.md line 216 still names the stage log); F6 cosmetic. Each defect test is a named skip, so the suite is green: `bash tests/run.sh` prints ALL PASSED (2924 passed, 19 skipped, 0 failed; bash 3.2 also run on the new suites). Every AC maps to a test or a named Human-only, Unverified or pending (AC-46 waits for the docs-writer). Replay of W12, C49, L57 equal after the listed differences. Off-list paths: exactly the three expected. Overlap with security: its finding 6 (F1), finding 5.
+Artifacts: reviews/qa-64.md; tests/factory/{fake-gh/gh,lib64.sh,ops_extract.py,replay64.py,test_board_script.sh,test_parallel.sh,test_role_tasks.sh,test_board_status.sh,test_ledger_fields.sh,test_release64.sh}; fixtures/board/; updated test_andon_text, test_baseline_a3, test_fingerprint, test_gemba, test_standard_text, test_check_bump.
+Decisions: the join of split parts I expect is plain concatenation of the body regions (met except for over-long lines) / a stricter byte-exact join for all content rejected / cost to undo: one test; old release-delta pins retired as skips and replaced by test_release64.sh / keeping them failing rejected / cost to undo: remove the skips; a stateful fake gh (option without id clears values) added beside the contract's static answers / static-only rejected because it cannot show the id hazard / cost to undo: none.
+Open questions: architect: contract 64-board-script section 9 says Board-mid with one old item gives exit 6; the build re-sets it and drops (exit 6 only for a stuck set). Both tested; the contract text should say so.

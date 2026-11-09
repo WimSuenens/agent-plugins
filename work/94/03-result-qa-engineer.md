@@ -4,7 +4,20 @@ Abnormality: none
 Progress:
   Done: tests stage complete. Commits `#94 qa-engineer: ...` on item/94: version pins to 2.3.0; A3 template and example pins to v2/v1 and settle-line pin; test_a3_check.sh with fixtures; lean_replay.py with fixtures; test_lean_rules.sh; layout pins that allow the two derived sub-lines.
   Next: nothing in this task. Verification (reviews/qa-94.md) runs after the build.
-Summary: Added `tests/factory/test_a3_check.sh` (299 checks, fixtures under `tests/factory/fixtures/a3/`), `tests/factory/test_lean_rules.sh` (percent rule, per-stage minute rule, waste count, target comparison, text pins) with `tests/factory/lean_replay.py` and fixtures (`fixtures/a3/stage/*.json`, `fixtures/a3/waste/*`), and moved the existing pins to 2.3.0 behaviour. Control check: I wrote a throwaway `a3-check.sh` and minimal contract-conforming text edits in a scratch copy outside the repo (not committed); with them the full suite is green except one pin that my scratch text lacked by construction, so a red now is the missing build and not a typo. The replay reproduces the contract's three worked examples (#12, #73, overlap) to the minute, which also confirms the contract's arithmetic.
+Summary: Tests stage done; nothing under plugins/ touched.
+  Added test_a3_check.sh (299 checks, fixtures/a3/), test_lean_rules.sh with lean_replay.py and fixtures (percent, per-stage, waste, target), and moved the existing pins to 2.3.0 behaviour.
+  Control check: a throwaway reference script and minimal text edits in a scratch copy (not committed) turn the suite green except one pin the scratch text lacked, so today's reds are the missing build.
+  Targeted test: `bash tests/factory/test_a3_check.sh`; fails now with `FAIL a3check-script-exists` and exit 127 (plugins/factory/scripts/a3-check.sh missing).
+  Suite: `bash tests/run.sh` prints FAILURES (was ALL PASSED before); 9 files red until the build and the 2.3.0 bump.
+  Changelog, runbook and README/reference.md checks are named skips until the docs-writer; required in the verification pass.
+  Path check against the item list: no off-list line. Details, the 19-criterion map and four contract findings are below the fields.
+Artifacts: tests/factory/test_a3_check.sh, tests/factory/test_lean_rules.sh, tests/factory/lean_replay.py, tests/factory/fixtures/a3/
+Decisions: pins on exact text are limited to formats (markers, line keys, check output lines, sub-line templates, percent and minute worked examples, andon last line, skip line, settle bullet) / rejected: broad prose assertions on the walk and tagging instructions, which are a scenario read / cost to undo: edit the pins. Changelog and docs checks are named skips until the docs-writer lands them / rejected: red until then / cost: the verification pass must turn them into passes.
+Open questions: none
+Missing: none
+
+## Details
+
 Targeted test: `bash tests/factory/test_a3_check.sh` from the item worktree root. Expected failure now: `FAIL a3check-script-exists` (want 1, got 0) and every check that runs the script, exit 127 (`plugins/factory/scripts/a3-check.sh` does not exist). It must end `fail=0` once the script and the a3.md examples exist. Its three `standard-example-*` checks also need the new a3.md (section 3: v2 block first, then the v1 block).
 Red now, green at the developer's Done: test_a3_check.sh, test_lean_rules.sh, and in test_baseline_a3.sh (ac16-*, ac12-skill-experiment-keys, ac23-experiment-line, ac12-settle-*), test_baseline_replay.sh (v5-a3-md-gemba-targeted-line-is-presence-checked), test_andon_text.sh (ac26-one-line-experiment, ac29 version), test_gemba.sh (t13 version), test_standard_text.sh (ac1 version), test_ownership_tdd.sh (rel version), test_fingerprint.sh (release lines). These need the plugin edits and the `plugin.json` bump; no test needs a docs file.
 Stay skipped until the docs-writer (named skips, required in the verification pass): CHANGELOG `## factory 2.3.0 (#94)` entry with the four changes and the two fingerprints (ac19-changelog-*), release-runbook 2.3.0 note, README/reference.md saying v2 (ac17-docs-say-v2).
@@ -35,6 +48,3 @@ Findings for the architect (contract text, not defects in the build; none blocks
   2. The existing pin `v5-no-script-or-hook-mentions-gemba` would fail on `a3-check.sh` (it names `gemba (targeted)`). I relaxed it to exempt that one script. Not listed in the contract's pins. Low.
   3. Contract section 7 leaves the "any other override" settle bullet unchanged; the brief listed `ac23-other-line` and `ac26-one-line-other`. I left both pins as they are.
   4. `test_gemba.sh` `t6-*` and `test_standard_text.sh` `ac14-example-matches-template` also pinned the record layout; both changed to allow the two sub-lines (not in the contract's list).
-Decisions: pins on exact text are limited to formats (markers, line keys, check output lines, sub-line templates, percent and minute worked examples, andon last line, skip line, settle bullet) / rejected: broad prose assertions on the walk and tagging instructions, which are a scenario read / cost to undo: edit the pins. Changelog and docs checks are named skips until the docs-writer lands them / rejected: red until then / cost: the verification pass must turn them into passes.
-Open questions: none
-Missing: none

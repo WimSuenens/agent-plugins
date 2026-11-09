@@ -229,30 +229,11 @@ f="$SC/73-ac4-code-review-triggers.md"
 
 # =============================================================== release 2.1.0
 PJ="$PLUGIN/.claude-plugin/plugin.json"
-ck rel-plugin-json-version "2.1.0" "$(jq -r .version "$PJ")"
-ck rel-version-own-line 1 "$(grep -c '^  "version": "2.1.0",$' "$PJ")"
+ck rel-plugin-json-version "2.2.0" "$(jq -r .version "$PJ")"
+ck rel-version-own-line 1 "$(grep -c '^  "version": "2.2.0",$' "$PJ")"
 ck rel-marketplace-has-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$REPO/.claude-plugin/marketplace.json")"
 ck rel-factory-state-stays-2 1 "$(head -1 "$TPL" | grep -cx 'factory-state: 2')"
-if git rev-parse --verify -q origin/main >/dev/null; then
-  ck rel-main-version-2.0.0 "2.0.0" "$(git show origin/main:$P/.claude-plugin/plugin.json | jq -r .version)"
-  out="$(bash "$CB" 2>&1)"; rc=$?
-  ck rel-check-bump-exit-0 0 "$rc"
-  ck rel-check-bump-line "pass: minor bump needed, 2.0.0 -> 2.1.0" "$out"
-  rm -rf "$T/mainfp"; mkdir -p "$T/mainfp"; git archive origin/main $P | tar -x -C "$T/mainfp"
-  new="$(bash "$FP" "$PLUGIN" 2>&1)"; old="$(bash "$FP" "$T/mainfp/$P" 2>&1)"
-  ck rel-fingerprint-release-line "release: 2.1.0" "$(printf '%s\n' "$new" | grep '^release')"
-  differ rel-standard-fingerprint-moved "$(printf '%s\n' "$old" | grep '^standard')" "$(printf '%s\n' "$new" | grep '^standard')"
-  # a change only to text: the tooling (scripts and hooks) is untouched by this slice
-  ck rel-tooling-fingerprint-unchanged "$(printf '%s\n' "$old" | grep '^tooling')" "$(printf '%s\n' "$new" | grep '^tooling')"
-  ck rel-no-script-or-hook-changed 0 "$(git diff --name-only origin/main...HEAD -- $P/scripts $P/hooks | wc -l | tr -d ' ')"
-  # the changed paths are the contracts' lists (contracts, work/ and the earlier roles' requirement are ignored as the QA agent file says; the two review files of this item are the QA and security roles' own output and are not an item path)
-  git diff --no-renames --name-only origin/main...HEAD | bash "$PLUGIN/scripts/paths.sh" check --ignore work/73/ contracts/73-*.md 2>&1 | grep -Ev '^off-list: (contracts/73-|reviews/(qa|security)-73\.md$)' >"$T/off.txt"
-  ck rel-no-off-list-path "" "$(cat "$T/off.txt")"
-  ck rel-other-plugins-untouched 0 "$(git diff --name-only origin/main...HEAD -- plugins/wayfinding plugins/design 2>/dev/null | wc -l | tr -d ' ')"
-  ck rel-repo-own-factory-md-untouched 0 "$(git diff --name-only origin/main...HEAD -- docs/agents/factory.md | wc -l | tr -d ' ')"
-else
-  skip rel-needs-origin-main "origin/main is not available in this checkout"
-fi
+skip rel-delta-against-main "retired by the 2.2.0 triage batch: these rows describe the 2.0.0 to 2.1.0 delta against origin/main, which no longer holds once main is 2.1.0"
 # the changelog entry is the docs-writer's, after QA: checked once it exists (as slice 64 did)
 if grep -q '^## factory 2.1.0 (#73)' "$REPO/CHANGELOG.md"; then
   CE="$(awk '/^## factory 2.1.0/{f=1;print;next} /^## /{f=0} f' "$REPO/CHANGELOG.md")"

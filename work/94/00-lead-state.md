@@ -1,7 +1,7 @@
 # Lead state: #94
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHV5no (map: PVTI_lAHOBIbaa84BqOBFzhHV5lk)
-- next step: 6, Requirement (product-owner)
+- next step: 6, Contracts (architect, task #96 running), then path comparison and code-review decision
 - open questions: none
 - frozen on: factory 2.2.0
 - ADR number: 0017 (or none)
@@ -9,7 +9,7 @@
 
 ## Running agents
 
-none
+role task #96: architect a7428dd7db99468b5
 
 ## Shared resources
 

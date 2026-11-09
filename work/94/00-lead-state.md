@@ -1,7 +1,7 @@
 # Lead state: #94
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHV5no (map: PVTI_lAHOBIbaa84BqOBFzhHV5lk)
-- next step: 6, Verification (QA #100, security #101 running); PR #99 open; then docs-writer, merge approval
+- next step: 6, rework 1 (developer, task #102 running); then docs-writer, merge approval
 - open questions: none
 - frozen on: factory 2.2.0
 - ADR number: 0017 (or none)
@@ -9,8 +9,7 @@
 
 ## Running agents
 
-role task #100: qa-engineer ae83f230b6bcf3472
-role task #101: security-reviewer acc417e134b8016e2
+role task #102: developer ac78964e9bd404d4f
 
 ## Shared resources
 
@@ -34,6 +33,7 @@ none
 ## Findings
 
 Role | Round | Id | Severity | Text
+security-reviewer | 1 | F1 | low | a3-check.sh file operand passed to awk unguarded (guard: pass operands to awk as ./path)
 
 ## Abnormalities
 

@@ -151,8 +151,10 @@ ck k56-base-copy-says-developer "developer" "$(git -C "$R4" show base2:docs/agen
 # ---- kind 6(b): a FREEZE line is trusted only when the map body's last editor is the lead's account ----
 freeze() { # last-editor lead-account body-line plugin-root -> outcome
   [ -n "$1" ] && [ "$1" = "$2" ] || { echo "not captured (map body last edited by ${1:-unknown})"; return; }
+  printf '%s\n' "$3" | grep -q 'FREEZE:' || { echo "freeze: none"; return; }
   sha="$(printf '%s\n' "$3" | grep 'FREEZE:' | grep -oE '`[0-9a-f]{12}`' | head -1 | tr -d '`')"
-  [ -n "$sha" ] || { echo "freeze: none"; return; }
+  [ -n "$sha" ] || sha="$(printf '%s\n' "$3" | grep 'FREEZE:' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+  [ -n "$sha" ] || { echo "not captured (no token on the FREEZE line)"; return; }
   seg="${4##*/}"; [ "$sha" = "$seg" ] && echo "freeze: ok" || echo "kind 6: installed $seg, FREEZE line $sha"; }
 BODY='Factory run. FREEZE: `9147301f75c3` frozen install'
 ck k6b-lead-edited-matching-ok "freeze: ok" "$(freeze lead lead "$BODY" /x/factory/9147301f75c3)"
@@ -160,6 +162,9 @@ ck k6b-lead-edited-differs-kind6 "kind 6: installed 1234567890ab, FREEZE line 91
 ck k6b-other-editor-not-captured "not captured (map body last edited by mallory)" "$(freeze mallory lead "$BODY" /x/factory/1234567890ab)"
 ck k6b-editor-unreadable-not-captured "not captured (map body last edited by unknown)" "$(freeze '' lead "$BODY" /x/factory/9147301f75c3)"
 ck k6b-no-freeze-line "freeze: none" "$(freeze lead lead 'no line' /x/factory/9147301f75c3)"
+ck k6b-semver-matching-ok "freeze: ok" "$(freeze lead lead 'Factory run. FREEZE: 1.3.0 frozen install' /x/factory/1.3.0)"
+ck k6b-semver-differs-kind6 "kind 6: installed 1.4.0, FREEZE line 1.3.0" "$(freeze lead lead 'Factory run. FREEZE: 1.3.0 frozen install' /x/factory/1.4.0)"
+ck k6b-freeze-line-without-token "not captured (no token on the FREEZE line)" "$(freeze lead lead 'Factory run. FREEZE: unknown' /x/factory/1.3.0)"
 
 # ---------- kind 4 ----------
 # slow <role> <row#> from a stage log + waits: implements the written steps

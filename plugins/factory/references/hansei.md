@@ -81,7 +81,7 @@ The ledger is **one comment by the lead on the slice ticket**. It carries the Ta
 |---|---|
 | `#` | the row's number, 1, 2, 3 … in table order (lead and person rows are not in this table) |
 | `Task` | the role-task sub-issue's number, `#<n>`. Its `created_at` is the row's **Start**, its `closed_at` the row's **End**, read with *List role tasks*. Never copied into the table (one source). |
-| `Stage` | one of: `Requirement`, `Contracts and ADRs`, `Environment`, `Build`, `QA`, `Security`, `Delivery`, `Documentation`. A rework task appends ` (round <n>)` (`Build (round 2)`). |
+| `Stage` | one of: `Requirement`, `Contracts and ADRs`, `Tests`, `Environment`, `Build`, `QA`, `Security`, `Delivery`, `Documentation`. A rework task appends ` (round <n>)` (`Build (round 2)`). |
 | `Role` | one of the seven roles |
 | `Agents` | every agent handle (agent id) that worked this task, comma-separated; a resume keeps the id, a fresh spawn adds one |
 | `Waits` | ids of the Waits table entries that held this task, or `-` |

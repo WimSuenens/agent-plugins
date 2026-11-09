@@ -22,6 +22,20 @@ One owner per path, as listed in `docs/agents/factory.md`. Propose changes to ot
 Every role writes its own message files in its `work/` folder.
 The `## Overrides` section of `docs/agents/factory.md` is written by the lead.
 
+## Tests
+
+`tests/` is the acceptance suite and belongs to qa-engineer. The developer never creates, edits or deletes a file under `tests/`; a commit that does is a kind-3 hit (see *Andon*). The developer's own tests (unit tests beside the code) sit in the developer's own path and are not the acceptance suite.
+
+The loop, in order:
+
+1. The architect's contracts define the seams and the expected behaviour in terms QA can test without reading code.
+2. QA prepares the next scenario test (the targeted test) in `tests/` before the behaviour slice is built; it fails for the expected reason.
+3. The developer implements and runs the targeted test until green.
+4. When a test or a contract is unclear, the developer changes neither: it writes a *Question* to the lead that names the test or the contract. The lead sends a test to QA and a contract to the architect.
+5. QA verifies with an independent pass or block verdict. The security review stays mandatory.
+
+Test scope: executable behaviour and important safety invariants are automated. Instruction-following is assessed with realistic scenarios and human review, not broad exact-prose assertions. Exact text is asserted only where a machine-readable format or a safety rule needs it.
+
 ## Shell
 
 Every role has a shell. How far it reaches depends on the role:

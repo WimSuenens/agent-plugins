@@ -13,6 +13,9 @@ Paths:
 - docs/factory/reference.md
 - docs/requirements/73-test-ownership-and-tdd-loop.md
 - tests/factory/
+- contracts/73-ownership-and-tdd-loop.md
+- contracts/73-optional-code-review.md
+- contracts/73-release.md
 shared: plugins/factory/.claude-plugin/plugin.json, CHANGELOG.md
 
 ## 1. Version and shared files

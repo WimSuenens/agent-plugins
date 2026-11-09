@@ -182,8 +182,11 @@ has v5-text-item-7-presence-only "$PLUGIN/references/baseline.md" 'The check cou
 has v5-text-item-7-v3-v4-no-entry "$PLUGIN/references/baseline.md" 'A v3 or v4 record has no such line and is read without one; no `not captured` entry is created for it.'
 has v5-text-gemba-line-missing "$PLUGIN/references/baseline.md" '`skipped: #<id> <url> (gemba line missing)`'
 has v5-text-gemba-line-repeated "$PLUGIN/references/baseline.md" 'two or more is `skipped: #<id> <url> (gemba line repeated)`'
-ck v5-a3-md-has-no-gemba 0 "$(grep -ci 'gemba' "$PLUGIN/references/a3.md")"
-ck v5-no-script-or-hook-mentions-gemba 0 "$(grep -rIli 'gemba' "$PLUGIN/scripts" "$PLUGIN/hooks" 2>/dev/null | wc -l | tr -d ' ')"
+# 2.3.0 (#94): a3.md now names the A3's `gemba (targeted)` line; the rule that survives is that nothing reads a walk's content (baseline.md item 7 extends to it)
+has v5-a3-md-gemba-targeted-line-is-presence-checked "$PLUGIN/references/baseline.md" 'The A3'"'"'s `gemba (targeted)` line'
+ck v5-a3-md-no-gemba-line-content-read 0 "$(grep -i 'gemba' "$PLUGIN/references/a3.md" | grep -ci 'parse\|sum of\|mean of\|average')"
+# 2.3.0: scripts/a3-check.sh tests the prefix of the `gemba (targeted)` line and is the one script that may name it; no hook and no other script does
+ck v5-no-script-or-hook-mentions-gemba 0 "$(grep -rIli 'gemba' "$PLUGIN/scripts" "$PLUGIN/hooks" 2>/dev/null | grep -v '/scripts/a3-check\.sh$' | wc -l | tr -d ' ')"
 ck v5-no-hoshin-view-anywhere-in-the-plugin 0 "$(grep -rIli 'hoshin' "$PLUGIN" | wc -l | tr -d ' ')"
 ck v5-no-found-nothing-count-in-baseline-or-a3 0 "$(cat "$PLUGIN/references/baseline.md" "$PLUGIN/references/a3.md" | grep -ci 'found nothing\|gemba line over\|differences against')"
 done_

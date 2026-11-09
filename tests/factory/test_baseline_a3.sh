@@ -132,20 +132,33 @@ has ac9-step9-restates "$S9" 'This is the only instruction that names `--repo Wi
 
 # ---------- AC-16: the A3 template: marker, fixed lines, fixed order ----------
 TEMPL="$(block_after "$A3" '## 2. The template')"
-ck ac16-marker-first-line '<!-- factory:a3 v1 -->' "$(printf '%s\n' "$TEMPL" | sed -n 1p)"
+ck ac16-marker-first-line '<!-- factory:a3 v2 -->' "$(printf '%s\n' "$TEMPL" | sed -n 1p)"
 ck ac16-marker-regex 1 "$(printf '%s\n' "$TEMPL" | sed -n 1p | grep -Ec '^<!-- factory:a3 v([0-9]+) -->$')"
-keys() { grep -E '^- [a-z0-9 ]+:|^  process item to change:' | sed -E 's/^(- [a-z0-9 ]+|  process item to change):.*/\1/'; }
-WANT='- run|- series and release|- problem|- evidence|- 5 whys|  process item to change|- process item to change|- countermeasure|- measure targeted|- before|- after|- change|- items counted|- still uncertain|- other problems seen|- other overrides|- standard changes proposed|- baseline|- answer'
+keys() { grep -E '^- [a-z0-9 ()]+:|^  process item to change:' | sed -E 's/^(- [a-z0-9 ()]+|  process item to change):.*/\1/'; }
+# 2.3.0 (#94): the first block of section 2 is the v2 template; `waste` and `gemba (targeted)` follow `evidence`, `target` follows `change`
+WANT='- run|- series and release|- problem|- evidence|- waste|- gemba (targeted)|- 5 whys|  process item to change|- process item to change|- countermeasure|- measure targeted|- before|- after|- change|- target|- items counted|- still uncertain|- other problems seen|- other overrides|- standard changes proposed|- baseline|- answer'
 ck ac16-line-keys-in-order "$WANT" "$(printf '%s\n' "$TEMPL" | keys | paste -sd'|' -)"
 EXA="$(block_after "$A3" '## 3. Worked example')"
 ck ac16-example-same-keys-as-template "$(printf '%s\n' "$TEMPL" | keys | paste -sd'|' -)" "$(printf '%s\n' "$EXA" | keys | paste -sd'|' -)"
-ck ac16-example-marker '<!-- factory:a3 v1 -->' "$(printf '%s\n' "$EXA" | sed -n 1p)"
+ck ac16-example-marker '<!-- factory:a3 v2 -->' "$(printf '%s\n' "$EXA" | sed -n 1p)"
+# the v1 form stays in the standard: section 2.1 holds the 2.2.0 template, the second block of section 3 the 2.2.0 example (contract 94-a3-v2 sections 2 and 9)
+V1KEYS='- run|- series and release|- problem|- evidence|- 5 whys|  process item to change|- process item to change|- countermeasure|- measure targeted|- before|- after|- change|- items counted|- still uncertain|- other problems seen|- other overrides|- standard changes proposed|- baseline|- answer'
+V1T="$(block_after "$A3" '### 2.1 The v1 template')"
+ck ac16-v1-template-marker '<!-- factory:a3 v1 -->' "$(printf '%s\n' "$V1T" | sed -n 1p)"
+ck ac16-v1-template-keys "$V1KEYS" "$(printf '%s\n' "$V1T" | keys | paste -sd'|' -)"
+has ac16-v1-stays-valid "$A3" 'A3s posted up to factory 2.2.0 have this form; they stay valid and are read as v1.'
+V1E="$(awk '/^## 3\. Worked example/ {s=1} s && /^```/ {g++; next} s && g==3 {print} g==4 {exit}' "$A3")"
+ck ac16-v1-example-marker '<!-- factory:a3 v1 -->' "$(printf '%s\n' "$V1E" | sed -n 1p)"
+ck ac16-v1-example-keys "$V1KEYS" "$(printf '%s\n' "$V1E" | keys | paste -sd'|' -)"
+ck ac16-v1-example-has-no-new-lines 0 "$(printf '%s\n' "$V1E" | grep -cE '^- (waste|gemba \(targeted\)|target):')"
 has ac16-marker-prose-is-the-templates "$A3" 'The body'"'"'s first line is exactly `'"$(printf '%s\n' "$TEMPL" | sed -n 1p)"'`.'
 has ac16-marker-prose-regex "$A3" 'A reader finds an A3 by `^<!-- factory:a3 v([0-9]+) -->$` on the first line'
 has ac16-no-line-left-out "$A3" 'Fixed lines, fixed order, **no line may be left out**; a line with nothing to say reads `none (<reason>)`.'
 has ac16-unknown-version-skipped "$A3" 'a reader that meets a version it does not know skips the comment and says so'
 has ac16-no-experiment-line "$A3" 'There is no line keyed `experiment` in the A3'
 # the six allowed reasons
+# 2.3.0: the new reasons (contract 94-a3-v2 section 4)
+for r in 'no target set' 'after reading not captured' 'readings not comparable' 'no tagged entry' 'no andon or wait in the run'"'"'s items' 'no ledger comment readable' 'problem points at no stage or role' 'ledger comment missing' 'no ledger row for the problem'"'"'s role' 'brief not found' 'transcript and commits unreadable'; do has "ac16-v2-reason-$r" "$A3" "\`$r"; done
 for r in 'no closed item in series <M.N> to measure against' 'needs a plugin change' 'no measure with a captured before-reading' 'refused at the fence (<fenced item>)' 'no problem chosen' 'no countermeasure was tried'; do has "ac16-reason-$r" "$A3" "| \`$r\` |"; done
 # the answer line grammar, cut out of the text and run
 ag="$(grep -F -- '- **`answer`**' "$A3" | sed -E 's/.*Grammar of an entry: `([^`]*)`.*/\1/')"
@@ -207,7 +220,7 @@ has ac12-a3-md-after-stamp-is-a-defect "$A3" 'A commit made after the stamp make
 has ac12-a3-md-nothing-stored "$A3" 'Nothing is stored between 8.10 and step 5; on a resume the rule is applied again from the records.'
 # the experiment block, validated by the text's own grammar
 EXPB="$T/exp.md"; awk '/^The run.s experiment \(`references\/a3.md`, section 5\) carries eight more lines/ {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$SK" > "$EXPB"
-ck ac12-skill-experiment-keys "experiment|problem|measure|direction|series|reference|before|a3" "$(sed -E 's/^- ([a-z0-9]+):.*/\1/' "$EXPB" | paste -sd'|' -)"
+ck ac12-skill-experiment-keys "experiment|problem|measure|direction|target|series|reference|before|a3" "$(sed -E 's/^- ([a-z0-9]+):.*/\1/' "$EXPB" | paste -sd'|' -)"
 MEAS='^[1356] ([a-z0-9 -]+)$'
 valid_exp() {  # valid_exp <file>: keys in order, measure from the table, direction down|up, before never not captured, a3 pending or URL
   awk -F': ' '
@@ -274,10 +287,14 @@ has ac22-entry-from-8-11 "$SK" '- **The map dissolves** → step 9.'
 has ac22-skill-run-identity "$SK" 'from the map'"'"'s creation (step 2) to its dissolving (step 8.11 to step 9)'
 
 # ---------- AC-23: the settle line ----------
-has ac23-experiment-line "$SK" '- The experiment: `<name> — started <date> — before <reading> / after <reading> — keep, promote or drop?`'
+has ac23-experiment-line "$SK" '- The experiment: `<name> — started <date> — before <reading> / target <target> / after <reading> — keep, promote or drop?`'
+has ac12-settle-target-none "$SK" 'target none'
+has ac12-settle-target-reached-form "$SK" '(reached)'
+has ac12-settle-target-not-reached-form "$SK" '(not reached)'
+has ac12-settle-target-is-the-overrides-own-line "$SK" 'except the target, which is the override'"'"'s own line'
 has ac23-other-line "$SK" '- Any other override: `<name> — started <date> — before/after: not measured (not this run'"'"'s experiment) — keep, promote or drop?`'
 has ac23-not-comparable "$SK" 'When the A3'"'"'s `change` starts with `not comparable` or `not captured`, it follows the readings'
-has ac23-no-figure-beyond-a3 "$SK" 'The line never shows a figure the A3 does not.'
+has ac23-no-figure-beyond-a3 "$SK" 'The line never shows a figure the A3 does not'
 ck ac23-no-baseline-yet-anywhere 0 "$(grep -rF 'before/after: no baseline yet' "$PLUGIN" | grep -c .)"
 ck ac23-no-baseline-yet-phrase-anywhere 0 "$(grep -rFi 'no baseline yet' "$PLUGIN" | grep -c .)"
 # the reading form in the settle line is the A3's reading form

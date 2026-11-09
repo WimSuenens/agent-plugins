@@ -2,6 +2,25 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.2.0 (triage batch: #86 #84 #85 #71 #70 #69 #68 #59 #43 #41)
+
+Release: `2.2.0`, fixes and small rules from the open-issue triage. This is a **minor** release (it changes the run skill and agent files). No migration is needed. Restart Claude Code sessions after updating.
+
+- **#86** The path check of QA, security and the lead ignores the item's own review and requirement files.
+- **#84** *Add to board*: "Content already exists" means "already on the board"; look the card up, do not retry.
+- **#85** README: `/factory:run` is user-typed only (`disable-model-invocation`); a session that cannot type it reads `SKILL.md` from the plugin root.
+- **#71** Kind 6(b): the FREEZE token is the install's last path segment, a sha or a semver; a line with no token reads `not captured`.
+- **#70** The gemba walk builds its view from the sampled row's time window when a transcript is shared by several rows.
+- **#69** `board.sh` creates a view first and sets its filter with a second call (`B-vupdate`); a refused update tells the person to set the filter by hand. The update call was checked only against the fake `gh`, not a live Project.
+- **#68** Developer and architect Done lists, and the lead's rework feedback, require a search for every other statement of a changed rule.
+- **#59** The test command is an input for QA and docs-writer, on its own line in the brief; the lead supplies QA's "how to run" when there is no developer stage.
+- **#43** Documentation runs before the Acceptance demo when a Human-only criterion names a document the docs-writer delivers.
+- **#41** Step 4 has a rule for a destination with no one-way doors: cut one slice to the Done-when; never dissolve before a first slice ships.
+
+**Tests.** Three slice-73 checks that required byte-equal baseline lines were relaxed to prefix checks (the lines were extended on purpose). New offline checks for #71, #70 and #69. `rel-*` and `ac44-check-bump-exit-0` rows of slice 73 and 64 describe the 2.0.0 to 2.1.0 delta and were already failing on `main`.
+
+**Unverified.** Nothing ran in a live factory session. #87, #88, #89 and #90 (lean additions to the A3 and hansei) are not part of this release.
+
 ## factory 2.1.0 (#73)
 
 Release: `2.1.0`, test ownership and the TDD loop. This is a **minor** release: it adds rules to the factory's instructions and removes none. No project has to migrate. `factory-state` stays at 2, and `/factory:run` runs as before. Restart Claude Code sessions after updating: a session keeps the factory skill text it read when it started, so a session opened before the update runs the old text.

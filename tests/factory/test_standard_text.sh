@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "2.0.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.0.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "2.1.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.1.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
@@ -56,7 +56,7 @@ has ac11-in-lead-state "$HA" '`work/<id>/00-lead-state.md`'
 has ac11-date-u "$HA" 'Times are always taken from `date -u +%FT%TZ` at the moment, never estimated afterwards'
 has ac11-columns "$HA" '| # | Task | Stage | Role | Agents | Waits | Peak ctx | Result | Notes |'
 has ac11-feedback-rounds "$HA" 'A rework task appends ` (round <n>)` (`Build (round 2)`).'
-has ac11-acceptance-demo-stage "$HA" '`Requirement`, `Contracts and ADRs`, `Environment`, `Build`, `QA`, `Security`, `Delivery`, `Documentation`'
+has ac11-acceptance-demo-stage "$HA" '`Requirement`, `Contracts and ADRs`, `Tests`, `Environment`, `Build`, `QA`, `Security`, `Delivery`, `Documentation`'
 # v2: the Waits table names the agent each wait stopped, and four wait kinds each have a detection row
 has ac11-waits-kinds "$HA" '| Id | Kind | Agent | Start (UTC) | End (UTC) | Held item | What |'
 has ac11-waits-agent-column "$HA" '`Agent`: the agent id the wait stopped, `lead` when it stopped the Lead itself, `-` for a `person` wait.'

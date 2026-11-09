@@ -8,26 +8,23 @@ cd "$REPO" || exit 1
 PJ="$PLUGIN/.claude-plugin/plugin.json"
 
 # ---------- AC-44 ----------
-ck ac44-plugin-json-version-2.0.0 "2.0.0" "$(jq -r .version "$PJ")"
+skip ac44-plugin-json-version-2.0.0 "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-plugin-json-version)"
 ck ac44-version-is-semver 1 "$(jq -r .version "$PJ" | grep -Ec '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$')"
 if git rev-parse --verify -q origin/main >/dev/null; then
-  ck ac44-main-version-1.3.0 "1.3.0" "$(git show origin/main:plugins/factory/.claude-plugin/plugin.json | jq -r .version)"
+  skip ac44-main-version-1.3.0 "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-main-version-2.0.0)"
   out="$(bash "$CB" 2>&1)"; rc=$?
   ck ac44-check-bump-exit-0 0 "$rc"
-  ck ac44-check-bump-line "pass: minor bump needed, 1.3.0 -> 2.0.0" "$out"
+  skip ac44-check-bump-line "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-check-bump-line)"
   # fingerprints: both move against main, and are quoted for the verdict
   rm -rf "$T/mainfp"; mkdir -p "$T/mainfp"; git archive origin/main plugins/factory | tar -x -C "$T/mainfp"
   new="$(bash "$FP" "$PLUGIN" 2>&1)"; old="$(bash "$FP" "$T/mainfp/plugins/factory" 2>&1)"
-  echo "info fingerprint 2.0.0 build: $(printf '%s' "$new" | tr '\n' ' ')"
-  echo "info fingerprint 1.3.0 main:  $(printf '%s' "$old" | tr '\n' ' ')"
-  differ ac44-standard-fingerprint-moved "$(printf '%s\n' "$old" | grep '^standard')" "$(printf '%s\n' "$new" | grep '^standard')"
-  differ ac44-tooling-fingerprint-moved "$(printf '%s\n' "$old" | grep '^tooling')" "$(printf '%s\n' "$new" | grep '^tooling')"
-  ck ac44-new-release-line "release: 2.0.0" "$(printf '%s\n' "$new" | grep '^release')"
+  echo "info fingerprint build: $(printf '%s' "$new" | tr '\n' ' ')"
+  echo "info fingerprint main: $(printf '%s' "$old" | tr '\n' ' ')"
+  skip ac44-standard-fingerprint-moved "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-standard-fingerprint-moved)"
+  skip ac44-tooling-fingerprint-moved "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-tooling-fingerprint-unchanged states the 73 expectation: scripts untouched)"
+  skip ac44-new-release-line "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-fingerprint-release-line)"
   # ---------- AC-45 ----------
-  git diff --name-only origin/main...HEAD | bash "$PS" check --ignore work/64/ contracts/64-*.md >"$T/offlist.txt"
-  ck ac45-off-list-paths-are-only-the-earlier-roles-files "docs/adr/0015-factory-status-has-six-values-plus-kind-and-role.md
-docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md
-docs/requirements/64-board-as-run-state.md" "$(sed 's/^off-list: //' "$T/offlist.txt" | sort)"
+  skip ac45-off-list-paths-are-only-the-earlier-roles-files "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-no-off-list-path)"
   # every changed path outside work/ is accounted for; no snapshot file is committed
   ck ac45-no-snapshot-file-committed 0 "$(git ls-files | grep -ci 'snapshot-[0-9]*\.json')"
   ck ac45-no-state-dir-file-in-the-diff 0 "$(git diff --name-only origin/main...HEAD | grep -c 'factory/board-')"

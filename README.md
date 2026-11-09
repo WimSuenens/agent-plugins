@@ -72,6 +72,8 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 
+**Status: release 2.1.0 (test ownership and the TDD loop) has passed QA and security, and no acceptance demo gated it.** The new text is verified by script tests, scenario cards and reviews. Nothing was run in a live factory session. What only real use can show is listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *2.1.0*, *Unverified*. No project has to migrate.
+
 **Status: release 2.0.0 (the board as run state) has passed QA and security, and no acceptance demo gated it.** The board, the role-task sub-issues, the ledger and parallel slices are verified by offline tests, replays and reviews. Nothing was run against a live Project or in a live session. What only real use can show is listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *2.0.0*, *Unverified*. A project on 1.x must migrate before `/factory:run` accepts it; see [Upgrading a project to 2.0.0](#upgrading-a-project-to-200).
 
 **Status of 1.3.0 (the gemba sample): passed QA and security, and no acceptance demo gated it.** The walk of one stage per item, and its line in the record, are verified by offline tests, replays and reviews. What only real use can show is listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *1.3.0*, *Unverified*.
@@ -173,7 +175,7 @@ Limits, stated plainly: the lead's reading of its results and ledger is the only
 
 ### Versions and updates
 
-The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. Releases: `1.0.0` (the first), `1.1.0` (the andon), `1.2.0` (the per-run A3 and the Factory baseline), `1.3.0` (the gemba sample), and `2.0.0` (the board as run state, role tasks as sub-issues, parallel slices; a major release, see [Upgrading a project to 2.0.0](#upgrading-a-project-to-200)). Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
+The factory is versioned with semver in `plugins/factory/.claude-plugin/plugin.json`. Releases: `1.0.0` (the first), `1.1.0` (the andon), `1.2.0` (the per-run A3 and the Factory baseline), `1.3.0` (the gemba sample), `2.0.0` (the board as run state, role tasks as sub-issues, parallel slices; a major release, see [Upgrading a project to 2.0.0](#upgrading-a-project-to-200)), and `2.1.0` (test ownership and the TDD loop; a minor release, no migration). Each release commit gets the tag `factory-v<semver>`, so a version maps back to one commit. The marketplace entry carries no version. [CHANGELOG.md](CHANGELOG.md) lists each release, with one entry per item.
 
 Any change under `plugins/factory/` needs a bump in `plugin.json`:
 
@@ -432,6 +434,21 @@ The `factory` plugin at 2.0.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | `claude plugin list --json` | `factory@wimsuenens` is 1.3.0, scope user, enabled: the frozen install of this run; nothing was changed |
 
 **Not tested yet, for 2.0.0:** the migration on a Project, including the scratch-Project try the lead runs before the merge; the Needs you and History views; the restore from a snapshot; parallel slices on a real project; the install and update path, and the rollback. The items listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *2.0.0* are the full list.
+
+The `factory` plugin at 2.1.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.57, `jq` 1.8.1, `gh` 2.94.0), on 2026-11-09, from `item/73`. Only read-only and validate-only commands were run, and the user-scope install was not touched: `factory@wimsuenens` is still factory 2.0.0, the frozen install of this run. So install, marketplace and reload commands were not run; nor were `/factory:run` or `/factory:setup-factory-skill`. The scenario cards were played by QA, as one reader.
+
+| Check | Result |
+| --- | --- |
+| `claude plugin validate .` | passed with the four version warnings for the plugins without a `version` (wayfinding, toolkit, discover, design), intentional |
+| `claude plugin validate ./plugins/factory` | passed, no warning |
+| `claude plugin validate ./plugins/factory/skills` | passed, no warning |
+| `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 2.1.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`); the tooling line equals 2.0.0's, the standard line does not |
+| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 2.0.0 -> 2.1.0`, exit 0 |
+| `bash tests/factory/test_ownership_tdd.sh` | `186 passed, 0 skipped, fail=0`; the changelog entry and the README row of this release are checked, and were skipped before they existed |
+| `bash tests/run.sh` | `ALL PASSED`: 3315 passed, 15 skipped, 0 failed, exit 0, across 19 test files |
+| `claude plugin list --json` | `factory@wimsuenens` is 2.0.0, scope user, enabled: the frozen install of this run; nothing was changed |
+
+**Not tested yet, for 2.1.0:** a live session on the new text, including the Tests stage and the code-review decision; the three risk triggers as a real lead judges them; the pilot's measures; a second reader of the scenario cards; the install and update path, and the rollback, which need an unfrozen machine (see the [release runbook](docs/factory/release-runbook.md)). The items listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *2.1.0* are the full list, and they include QA's open finding F1.
 
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 

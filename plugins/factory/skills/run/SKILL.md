@@ -131,6 +131,7 @@ On a resumed item, keep what exists and continue from the lead state.
 |---|---|
 | Requirement | product-owner |
 | Contracts and ADRs | architect |
+| Tests, for each behaviour slice, before the build | qa-engineer |
 | Environment, only when the item needs real infrastructure | devops, alongside the build |
 | Build, tracer bullet first | developer |
 | Verification | qa-engineer and security-reviewer, alongside each other (one after the other once a limit has been hit) |
@@ -139,21 +140,27 @@ On a resumed item, keep what exists and continue from the lead state.
 | Documentation | docs-writer |
 | Merge, on the person's approval | you |
 
+Between the Contracts and ADRs row and the Tests row the lead takes the code-review decision (*Optional code review*); it is a decision, not a role task, and gives the slice no status.
+
 The **stage** of a slice is the role task that is `Running`; no field holds it. Each stage is one or more role tasks (*Role tasks*); the slice card moves by the events of *The board*, not by stage.
 
 For each stage:
 
-1. **Create the role task and spawn the role** (*Role tasks*, create and spawn): the brief is the issue body, filled with **Inputs** from the role's *Inputs needed*. Name tracker issues by number; the role reads them itself, so never copy their content into the brief or a file. The product-owner's inputs include the map's Destination. The brief's `Output` line names the draft result, `work/<id>/NN-result-<role>.md`. Each role commits its own paths.
+1. **Create the role task and spawn the role** (*Role tasks*, create and spawn): the brief is the issue body, filled with **Inputs** from the role's *Inputs needed*. Name tracker issues by number; the role reads them itself, so never copy their content into the brief or a file. The product-owner's inputs include the map's Destination. The brief's `Output` line names the draft result, `work/<id>/NN-result-<role>.md`. Each role commits its own paths. The developer's **Inputs** name the targeted test QA prepared (read from the Tests result); the Tests task's **Inputs** name the contracts and the criteria. No tracker content is copied in.
 2. **Read the result.** Read only the draft's `Status`, `Abnormality:` lines, `Summary`, and `Decisions` (and `Progress` after an interruption). Open an artifact only to check a Done item. When the status is not `working`, **post the result** (*Role tasks*, the closing comment), close the task, set its card, and add its row to the ledger's Tasks table with the agent ids and the completion notice's peak context (`<subagent_tokens>` or `totalTokens`).
 3. Review the `Decisions` (see below). Then read the abnormalities: log the result's findings in `## Findings` and apply kind 2; apply kind 1 to a `blocked` result; after a role stage apply kind 3; on adding the row apply kind 4 (all in `## Andon`, *Detection*). Each `Abnormality:` line other than `none`, and each hit, starts an andon before any dependent brief. Put each in-force override's rule, in your own words, in the Constraints of the briefs it concerns.
 4. On the status:
-   - `done`: with no andon open for this result, check the role's Done list against its artifacts, post a stage summary with its decisions (scan it first, *Scan before posting*; then *Stage summary*), and update the lead state. Every stage summary also lists the overrides in `promote chosen` status, in one line (`promote chosen, still in force: <name> (<date>); …`, or nothing when there are none), because that status ends the expiry and keeps the override in force until a card is decided. After the **architect's** `done`, make the path comparison before any other brief (*Parallel slices*).
+   - `done`: with no andon open for this result, check the role's Done list against its artifacts, post a stage summary with its decisions (scan it first, *Scan before posting*; then *Stage summary*), and update the lead state. Every stage summary also lists the overrides in `promote chosen` status, in one line (`promote chosen, still in force: <name> (<date>); …`, or nothing when there are none), because that status ends the expiry and keeps the override in force until a card is decided. After the **architect's** `done`, make the path comparison before any other brief (*Parallel slices*). Then take the code-review decision (*Optional code review*), then brief QA for the Tests stage.
    - `blocked`: supply what `Missing` lists in the next role task's brief (after the andon, when kind 1 or an `Abnormality:` line applies).
    - `needs-decision`: run step 7.
    - `working` from an agent that has stopped, or an agent that failed on a limit before writing its result: it was cut off; follow *Interruptions*.
 5. QA and security findings go to the developer as a **rework task** (*Role tasks*, rework); repeat until both verdicts are `pass`.
 
+**Tests stage rules.** QA's Tests task runs after the architect's `done`, the path comparison and the code-review decision, and before the Build brief; the Build brief is never written before the Tests result names the targeted test. The contracts define the seams and the expected behaviour, so QA can write the test from them. The stage is skipped only when the contracts define no behaviour to test; the stage summary says so. Tests QA prepared may stay red until the developer's Done. A developer question about a test is routed to QA (a role task for QA), a question about a contract to the architect; you answer neither by editing `tests/` or a contract.
+
 Every wait goes to the ledger's Waits table when it ends, and every touch the person makes to its Person's touches table when you read the answer (`references/hansei.md`, section 1).
+
+When the developer is done, and before *Open PR*, check the diff for breadth. This is not optional: it runs on every slice. In the item worktree, list `git diff --stat origin/main...item/<id>` and compare it with the contracts: every changed file is on the `Paths:` list (QA's off-list check repeats this later and is not replaced), and the size of the change fits the behaviour the contracts name. A change in an area no contract names, a rewrite of a file the contracts only touch in one section, or a diff clearly larger than the contracts imply is unexpected breadth or scope creep: create a rework task (`Source: lead`) naming the files, and run the check again when the developer is done. Otherwise say `breadth: as expected` in the stage summary. The check reads the diff only; it runs no test and no scan.
 
 Open the PR (*Open PR*) when the developer is done, so QA and security review the diff in place. Before `gh pr create`, always:
 
@@ -165,6 +172,20 @@ Open the PR (*Open PR*) when the developer is done, so QA and security review th
 No instruction anywhere opens a PR without this check.
 
 Production actions wait for the person's explicit approval (a needs-you comment first, `Cause: delivery approval`; see *The board*).
+
+### Optional code review
+
+When the architect's stage is done, after the path comparison and before the Tests brief (so before Build), decide from the contracts and their `Paths:` blocks whether to run a code review. The review is optional: a slice with no trigger is not reviewed. Three risk triggers, each decided from the contracts alone:
+
+| Trigger | Fires when |
+|---|---|
+| shared protocols or approval/state rules | a contract's `Paths:` lists text that every role or the lead reads as a rule (the protocol, the run skill's approval, status, andon or gate steps, the `factory.md` template), and the contract changes what is allowed, who approves, or what state an item is in |
+| broad cross-plugin changes | the `Paths:` lists files under two or more `plugins/<name>/` directories (the shared files `CHANGELOG.md`, `README.md` and the version file do not count) |
+| significant refactors | a contract moves, renames or splits files, or changes the shape of a seam without changing behaviour |
+
+Record the decision in one line in the lead state, `code review: yes — trigger: <name>` or `code review: no — trigger: no trigger`, and the same line in the architect stage's stage summary.
+
+The review runs on the diff once the developer is done, beside QA and security, with `/code-review`. It covers standards, spec and scope. It does not repeat QA's execution of the tests and does not repeat the security scan. Duplicate findings are combined: a finding that QA or security also made is kept once, under the verdict that owns it, and the reviewer's copy is dropped. The non-duplicate findings go to the developer in the same rework task as QA's and security's findings (*Role tasks*, rework); the loop repeats until both verdicts are `pass`. The review has no verdict: its findings are fixed or answered by the developer in the same rework task, and they do not block the merge on their own; the QA and security verdicts stay the gates. It cannot replace the QA or the security stage, cannot make either verdict optional or non-binding, and its absence never blocks a merge.
 
 ### Environment and shared resources
 

@@ -179,16 +179,16 @@ kept ac7-qa-authority-line "$QA" agents/qa-engineer.md 'Owns the release verdict
 kept ac7-qa-defect-fields-line "$QA" agents/qa-engineer.md 'Each defect carries reproduction steps'
 kept ac7-qa-done-defect-reproduction "$QA" agents/qa-engineer.md '- Every defect has a reproduction.'
 kept ac7-qa-done-verdict-recorded "$QA" agents/qa-engineer.md '- The verdict is recorded, with its Human-only criteria list.'
-kept ac7-qa-done-changed-paths-line "$QA" agents/qa-engineer.md '- Changed paths checked against the item'
+has ac7-qa-done-changed-paths-line "$QA" '- Changed paths checked against the item'  # line later extended by #86, so no longer byte-equal to the baseline
 has ac7-qa-reads-requirement-sentence "$QA" 'Tests come from the requirement; read the implementation only to locate the cause of a failure.'
 step="$(base agents/qa-engineer.md | grep -F 'Write `reviews/qa-<id>.md`' | sed 's/^[0-9]*\. //')"
 if [ -n "$step" ]; then has ac7-qa-verdict-step-with-human-only-list "$QA" "$step"; else echo "FAIL ac7-qa-verdict-step-with-human-only-list: baseline step not found"; fail=1; fi
-ck ac7-security-reviewer-file-unchanged "" "$(git diff "$BASE" -- "$SEC" | head -5)"
+has ac7-security-reviewer-keeps-changed-paths-line "$SEC" '- Changed paths checked against the item'  # file no longer byte-equal to the baseline since #86
 step5="$(base skills/run/SKILL.md | grep -F 'QA and security findings go to the developer' | sed 's/^[0-9]*\. //')"
 if [ -n "$step5" ]; then has ac7-run-rework-rule-repeat-until-both-pass "$RUN" "$step5"; else echo "FAIL ac7-run-rework-rule: baseline line not found"; fail=1; fi
 has ac7-run-rework-rule-text "$RUN" 'repeat until both verdicts are `pass`'
 has ac7-run-done-when-both-verdicts-pass "$RUN" 'both verdicts are `pass`, every Human-only criterion passed its demo'
-kept ac7-run-qa-and-security-check-the-diff-paragraph "$RUN" skills/run/SKILL.md '**QA and security check the diff against the list.**'
+has ac7-run-qa-and-security-check-the-diff-paragraph "$RUN" '**QA and security check the diff against the list.**'  # extended by #86
 kept ac7-run-done-when-line "$RUN" skills/run/SKILL.md '**Done when** every stage has run or was skipped'
 kept ac7-run-open-pr-bump-check-line "$RUN" skills/run/SKILL.md '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"`'
 kept ac7-run-open-pr-no-instruction "$RUN" skills/run/SKILL.md 'No instruction anywhere opens a PR without this check.'
@@ -229,30 +229,11 @@ f="$SC/73-ac4-code-review-triggers.md"
 
 # =============================================================== release 2.1.0
 PJ="$PLUGIN/.claude-plugin/plugin.json"
-ck rel-plugin-json-version "2.1.0" "$(jq -r .version "$PJ")"
-ck rel-version-own-line 1 "$(grep -c '^  "version": "2.1.0",$' "$PJ")"
+ck rel-plugin-json-version "2.2.0" "$(jq -r .version "$PJ")"
+ck rel-version-own-line 1 "$(grep -c '^  "version": "2.2.0",$' "$PJ")"
 ck rel-marketplace-has-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$REPO/.claude-plugin/marketplace.json")"
 ck rel-factory-state-stays-2 1 "$(head -1 "$TPL" | grep -cx 'factory-state: 2')"
-if git rev-parse --verify -q origin/main >/dev/null; then
-  ck rel-main-version-2.0.0 "2.0.0" "$(git show origin/main:$P/.claude-plugin/plugin.json | jq -r .version)"
-  out="$(bash "$CB" 2>&1)"; rc=$?
-  ck rel-check-bump-exit-0 0 "$rc"
-  ck rel-check-bump-line "pass: minor bump needed, 2.0.0 -> 2.1.0" "$out"
-  rm -rf "$T/mainfp"; mkdir -p "$T/mainfp"; git archive origin/main $P | tar -x -C "$T/mainfp"
-  new="$(bash "$FP" "$PLUGIN" 2>&1)"; old="$(bash "$FP" "$T/mainfp/$P" 2>&1)"
-  ck rel-fingerprint-release-line "release: 2.1.0" "$(printf '%s\n' "$new" | grep '^release')"
-  differ rel-standard-fingerprint-moved "$(printf '%s\n' "$old" | grep '^standard')" "$(printf '%s\n' "$new" | grep '^standard')"
-  # a change only to text: the tooling (scripts and hooks) is untouched by this slice
-  ck rel-tooling-fingerprint-unchanged "$(printf '%s\n' "$old" | grep '^tooling')" "$(printf '%s\n' "$new" | grep '^tooling')"
-  ck rel-no-script-or-hook-changed 0 "$(git diff --name-only origin/main...HEAD -- $P/scripts $P/hooks | wc -l | tr -d ' ')"
-  # the changed paths are the contracts' lists (contracts, work/ and the earlier roles' requirement are ignored as the QA agent file says; the two review files of this item are the QA and security roles' own output and are not an item path)
-  git diff --no-renames --name-only origin/main...HEAD | bash "$PLUGIN/scripts/paths.sh" check --ignore work/73/ contracts/73-*.md 2>&1 | grep -Ev '^off-list: (contracts/73-|reviews/(qa|security)-73\.md$)' >"$T/off.txt"
-  ck rel-no-off-list-path "" "$(cat "$T/off.txt")"
-  ck rel-other-plugins-untouched 0 "$(git diff --name-only origin/main...HEAD -- plugins/wayfinding plugins/design 2>/dev/null | wc -l | tr -d ' ')"
-  ck rel-repo-own-factory-md-untouched 0 "$(git diff --name-only origin/main...HEAD -- docs/agents/factory.md | wc -l | tr -d ' ')"
-else
-  skip rel-needs-origin-main "origin/main is not available in this checkout"
-fi
+skip rel-delta-against-main "retired by the 2.2.0 triage batch: these rows describe the 2.0.0 to 2.1.0 delta against origin/main, which no longer holds once main is 2.1.0"
 # the changelog entry is the docs-writer's, after QA: checked once it exists (as slice 64 did)
 if grep -q '^## factory 2.1.0 (#73)' "$REPO/CHANGELOG.md"; then
   CE="$(awk '/^## factory 2.1.0/{f=1;print;next} /^## /{f=0} f' "$REPO/CHANGELOG.md")"

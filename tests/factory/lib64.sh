@@ -21,7 +21,7 @@ log_reset() { : >"$T/gh.log"; rm -f "$T"/gh.log.count.*; }
 # log_ops: the op ids in call order, one per line
 log_ops() { jq -r '.op' "$T/gh.log"; }
 log_count() { log_ops | grep -cx "$1"; }
-MUTATION_OPS='B-add|B-set|B-text|B-fcreate|B-foptions|B-vcreate|T-create|T-link|T-comment|T-edit-comment|T-close'
+MUTATION_OPS='B-add|B-set|B-text|B-fcreate|B-foptions|B-vcreate|B-vupdate|T-create|T-link|T-comment|T-edit-comment|T-close'
 log_mutations() { log_ops | grep -cE "^($MUTATION_OPS)$"; }
 log_unknown() { log_ops | grep -cx unknown; }
 # board_load <fixture.json>: a fresh stateful board for the fake

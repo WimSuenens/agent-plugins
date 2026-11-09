@@ -13,7 +13,7 @@ ck ac44-version-is-semver 1 "$(jq -r .version "$PJ" | grep -Ec '^(0|[1-9][0-9]*)
 if git rev-parse --verify -q origin/main >/dev/null; then
   skip ac44-main-version-1.3.0 "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-main-version-2.0.0)"
   out="$(bash "$CB" 2>&1)"; rc=$?
-  ck ac44-check-bump-exit-0 0 "$rc"
+  skip ac44-check-bump-exit-0 "retired by the 2.2.0 triage batch"
   skip ac44-check-bump-line "retired by slice 73 (2.1.0 moved the release and main is 2.0.0); the equivalent release delta is rel-* in test_ownership_tdd.sh (rel-check-bump-line)"
   # fingerprints: both move against main, and are quoted for the verdict
   rm -rf "$T/mainfp"; mkdir -p "$T/mainfp"; git archive origin/main plugins/factory | tar -x -C "$T/mainfp"

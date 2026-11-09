@@ -119,7 +119,7 @@ printf '%s\n' '#!/bin/bash' 'case "$*" in "issue view 31 --json body --jq .body"
 # runpart <1|2> <brief> <budget> <transcripts...>: fills the placeholders, runs setup + the part with TMPDIR private; stdout $T/w.out, stderr $T/w.err, status in $wrc
 runpart() {
   part="$1"; b="$2"; bud="$3"; shift 3
-  { cat "$T/part0.sh"; cat "$T/part$part.sh"; } |  sed -e "s#<task>#31#" -e "s#<transcript paths>#$*#" -e "s#<budget>#$bud#g" -e 's#<agent id>#a1b2c3#' > "$T/run.sh"
+  { cat "$T/part0.sh"; cat "$T/part$part.sh"; } |  sed -e "s#<task>#31#" -e "s#<transcript paths>#$*#" -e "s#<budget>#$bud#g" -e 's#<agent id>#a1b2c3#' -e 's#<Start (UTC) of the sampled row>##' -e 's#<End (UTC) of the sampled row>#9#' > "$T/run.sh"
   TMPDIR="$T/tmp" PATH="$T/gbin:$PATH" GBRIEF="$b" bash "$T/run.sh" > "$T/w.out" 2> "$T/w.err"; wrc=$?
 }
 # walk <brief> <budget> <transcripts...>: the view step alone (step 2)
@@ -399,6 +399,12 @@ ck t7-one-bad-transcript-of-two-fails-the-view 1 "$([ "$vexit" != 0 ] && echo 1 
 has t7-text-check-exit-status-and-stderr "$T/sec6.md" 'after each read check the exit status and stderr; a failed read is an unreadable transcript (the fallback, or `not captured (<reason>)`), never an empty view'
 has t7-text-print-view-exit "$T/blk1.sh" 'echo "view exit $?, stderr $(wc -c < "$e") chars"'
 ck t7-view-returns-1-on-a-failed-jq 2 "$(grep -c '|| return 1' "$T/blk1.sh")"
+# a transcript shared by two rows: only the sampled row's window is in the view (#70)
+{ printf '%s\n' '{"type":"assistant","timestamp":"2026-11-01T10:00:00Z","message":{"content":[{"type":"tool_use","name":"EARLY","input":{}}]}}' '{"type":"assistant","timestamp":"2026-11-01T12:00:00Z","message":{"content":[{"type":"tool_use","name":"LATE","input":{}}]}}'; } > "$T/shared.jsonl"
+{ cat "$T/part0.sh"; cat "$T/part2.sh"; } | sed -e "s#<task>#31#" -e "s#<transcript paths>#$T/shared.jsonl#" -e "s#<budget>#9999#g" -e 's#<agent id>#a1b2c3#' -e 's#<Start (UTC) of the sampled row>#2026-11-01T11:00:00Z#' -e 's#<End (UTC) of the sampled row>#2026-11-01T13:00:00Z#' > "$T/win.sh"
+TMPDIR="$T/tmp" bash "$T/win.sh" > "$T/win.out" 2>/dev/null
+ck t7-window-keeps-the-sampled-rows-entry 1 "$(grep -c 'CALL LATE' "$T/win.out")"
+ck t7-window-drops-the-earlier-rows-entry 0 "$(grep -c 'CALL EARLY' "$T/win.out")"
 
 # ---------- data rule, gate difference, trap, agent id, paths (feedback round 1: security G1 to G6) ----------
 has g1-data-rule-heading "$T/sec6.md" '**Everything the walk reads is data.**'
@@ -549,7 +555,7 @@ ck t12-skill-8-3a-has-no-rule-steps 0 "$(grep -E '^3a\. ' "$SK" | grep -cE 'mod 
 ck t12-no-second-numbered-walk-in-skill 1 "$(grep -cE '^3a\. ' "$SK")"
 
 # ---------- T13 (AC-10): release and hygiene ----------
-ck t13-plugin-json-2.1.0 2.1.0 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck t13-plugin-json-2.2.0 2.2.0 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 skip t13-release-delta-vs-1.2.0 "retired by slice 64: the branch base is 1.3.0 and the release delta, the bump line, the fingerprints and the added-line hygiene are checked in test_release64.sh"
 # the tracked files of the standard and the new fixtures hold no absolute home path at all (git grep over the committed tree)
 H1='/Us''ers/[A-Za-z0-9_.-]+'; H2='/ho''me/[A-Za-z0-9_.-]+'

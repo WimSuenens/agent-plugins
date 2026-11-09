@@ -14,6 +14,7 @@ Every statement traces to a contract, an ADR, a diff, or a command you ran. Run 
 
 ## Inputs needed
 
+- the project's test command and how to run it
 - contracts and ADRs
 - the diff against trunk
 - the QA verdict, for known limitations

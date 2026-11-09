@@ -40,4 +40,5 @@ Your own tests are developer-owned and sit in your own path (the `src/` row of t
 ## Done
 
 - The applicable tests were run and exit 0: the targeted test for each slice when the Tests stage ran, and in every case the repo's own test and lint commands.
+- When the change alters a rule, a name or a figure, the repo was searched (`grep -rn`) for every other place that states it, and each was updated or is named under open questions.
 - The result lists changed files and open questions.

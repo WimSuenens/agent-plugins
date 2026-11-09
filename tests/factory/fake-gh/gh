@@ -49,6 +49,7 @@ case "$1 $2" in
       case "$stdin" in
         *updateProjectV2Field*) op=B-foptions ;;
         *createProjectV2View*) op=B-vcreate ;;
+        *updateProjectV2View*) op=B-vupdate ;;
       esac
     else
       case "$all" in
@@ -165,7 +166,12 @@ if [ -n "${FAKE_GH_BOARD:-}" ]; then
       n="$(jq '.next // 1' "$B")"
       view="$(printf '%s' "$stdin" | jq -c --arg n "$n" '.variables.input | {id: ("view_" + $n), name, filter, layout}')"
       upd --argjson v "$view" --argjson n "$n" '.next = ($n + 1) | .views += [$v]'
-      echo '{"data":{"createProjectV2View":{}}}'; exit 0 ;;
+      echo "{\"data\":{\"createProjectV2View\":{\"projectV2View\":{\"id\":\"view_$n\"}}}}"; exit 0 ;;
+    B-vupdate)
+      if [ -n "${FAKE_BOARD_REFUSE_VIEW_UPDATE:-}" ]; then echo "fake gh: updateProjectV2View: not available" >&2; exit 1; fi
+      vid="$(printf '%s' "$stdin" | jq -r '.variables.input.viewId')"; flt="$(printf '%s' "$stdin" | jq -r '.variables.input.filter')"
+      upd --arg id "$vid" --arg f "$flt" '(.views[] | select(.id == $id)) .filter = $f'
+      echo '{"data":{"updateProjectV2View":{}}}'; exit 0 ;;
     B-add)
       url=""; prev=""
       for a in "$@"; do [ "$prev" = "--url" ] && url="$a"; prev="$a"; done

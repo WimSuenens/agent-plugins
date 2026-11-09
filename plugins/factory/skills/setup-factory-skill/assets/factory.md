@@ -29,6 +29,8 @@ Overrides replace a role's default model in this repo, one row per role: `| <rol
 | `docs/` (rest), `README.md`, `CHANGELOG.md` | docs-writer |
 | `docs/agents/factory.md` section `## Overrides` | lead |
 
+Tests. `tests/` is the acceptance suite: QA owns it and the developer never edits it. The developer's own tests (unit tests beside the code) are developer-owned, sit in the path of the developer's `src/` row, and are not the acceptance suite; QA may read, run and ignore them. Where a repo keeps unit tests in a directory of its own, give that directory a row owned by the developer, never a path under the `tests/` row. When the slice's deliverable is a test harness, QA writes it and its first cases in `tests/`.
+
 ## Worktrees
 
 Item worktrees live at `../wt/<id>`, on branch `item/<id>`.

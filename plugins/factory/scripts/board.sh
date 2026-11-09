@@ -6,7 +6,7 @@
 #                             [--factory-md <file>] [--tracker-md <file>] [--ops-template <file>]
 # The owner and the project number come from the flags, else from the Tracker table of --factory-md (default docs/agents/factory.md).
 # The project id comes from --project-id, else from the same table. plan does without it; apply and finish need it.
-# It calls gh only through the operations of the tracker-call list (B-fields, B-options, B-items, B-views, B-set, B-fcreate, B-foptions, B-vcreate).
+# It calls gh only through the operations of the tracker-call list (B-fields, B-options, B-items, B-views, B-set, B-fcreate, B-foptions, B-vcreate, B-vupdate).
 # It asks no question and never reads the terminal: every "ask the person" is the skill's, and the answer arrives as a flag.
 # Exit: 0 done or already migrated; 2 usage, project not given, state dir inside the repo, gh or jq missing, --yes missing;
 #       3 a read call failed; 5 a verification difference; 6 phase 3 refused (an item holds an old value); 7 a mutation call failed;
@@ -377,12 +377,21 @@ make_views() {
     fi
     requested=1
     flt="$(view_filter "$v")"
-    jq -n --arg p "$pid" --arg n "$v" --arg f "$flt" '{
+    # the create input has no filter field: create the view, then set the filter with the update call
+    jq -n --arg p "$pid" --arg n "$v" '{
       query: "mutation($input: CreateProjectV2ViewInput!) { createProjectV2View(input: $input) { projectV2View { id name } } }",
-      variables: { input: { projectId: $p, name: $n, layout: "TABLE_LAYOUT", filter: $f } } }' >"$tmp/body"
-    if "gh" api graphql --input - <"$tmp/body" >"$tmp/mutout" 2>"$tmp/err"; then
+      variables: { input: { projectId: $p, name: $n, layout: "TABLE_LAYOUT" } } }' >"$tmp/body"
+    vid=""
+    if "gh" api graphql --input - <"$tmp/body" >"$tmp/mutout" 2>"$tmp/err" \
+       && vid="$(jq -r '.data.createProjectV2View.projectV2View.id // empty' "$tmp/mutout")" && [ -n "$vid" ] \
+       && jq -n --arg i "$vid" --arg f "$flt" '{
+            query: "mutation($input: UpdateProjectV2ViewInput!) { updateProjectV2View(input: $input) { projectV2View { id filter } } }",
+            variables: { input: { viewId: $i, filter: $f } } }' >"$tmp/body2" \
+       && "gh" api graphql --input - <"$tmp/body2" >"$tmp/mutout2" 2>"$tmp/err"; then
       echo "view: $v: requested; open it once and confirm it shows the filter $flt"
       [ "$v" = History ] && echo "view: History: also set the fields to show (Title, Kind, Role, Parent issue, Tokens, Minutes, Hours, Rework rounds, Person touches) and the order (closed, newest first): the API sets only name, layout and filter"
+    elif [ -n "$vid" ]; then
+      echo "view: $v: created, but its filter was NOT set. Open the view \"$v\" and set the filter by hand: $flt"
     else
       if [ "$v" = History ]; then
         echo "view: $v: NOT created. Build it by hand: name \"$v\", table layout, filter $flt, show Title, Kind, Role, Parent issue, Tokens, Minutes, Hours, Rework rounds, Person touches, order by closed, newest first"

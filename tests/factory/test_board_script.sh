@@ -137,7 +137,8 @@ ck ac36-first-mutation-is-the-option-add "B-foptions" "$(log_ops | grep -E "^($M
 ck ac36-reads-come-before-first-mutation 1 "$([ "$first_mut" -gt 3 ] && echo 1 || echo 0)"
 
 # ---------- AC-6, AC-21: views ----------
-need=$(jq -s '[.[] | select(.op == "B-vcreate") | .stdin | fromjson | .variables.input | {name, layout, filter}]' "$T/gh.log")
+need=$(jq -s '([.[] | select(.op == "B-vcreate") | .stdin | fromjson | .variables.input | {name, layout}]) as $c | ([.[] | select(.op == "B-vupdate") | .stdin | fromjson | .variables.input.filter]) as $f | [range(0; $c | length) | $c[.] + {filter: $f[.]}]' "$T/gh.log")
+ck ac69-create-sends-no-filter 0 "$(jq -s '[.[] | select(.op == "B-vcreate") | .stdin | fromjson | .variables.input | select(has("filter"))] | length' "$T/gh.log")"
 ck ac6-needs-you-view-requested '{"name":"Needs you","layout":"TABLE_LAYOUT","filter":"factory-status:\"Waiting on you\""}' "$(printf '%s' "$need" | jq -c '.[0]')"
 ck ac21-history-view-requested '{"name":"History","layout":"TABLE_LAYOUT","filter":"is:closed kind:slice,\"role task\""}' "$(printf '%s' "$need" | jq -c '.[0 + 1]')"
 has ac6-accepted-asks-to-open-and-confirm "$T/bs.out" 'view: Needs you: requested; open it once and confirm it shows the filter factory-status:"Waiting on you"'
@@ -180,6 +181,13 @@ cp "$T/fin0/factory.md" "$T/fin0/factory.before"
 bash "$BOARD_SH" finish --owner fixt --project 77 --project-id PVT_fixture01 --views-confirmed --factory-md "$T/fin0/factory.md" --tracker-md "$T/fin0/tracker.md" >"$T/bs.out" 2>"$T/bs.err"; rc=$?
 ck ac6-finish-with-a-missing-view-exit-2 2 "$rc"
 ck ac6-finish-with-a-missing-view-writes-nothing 0 "$(cmp -s "$T/fin0/factory.md" "$T/fin0/factory.before" && echo 0 || echo 1)"
+
+# the view is created but the filter update is refused: the person is told to set the filter by hand
+board_load "$FX64/board-v1.json"; rm -rf "$SD"; log_reset
+FAKE_BOARD_REFUSE_VIEW_UPDATE=1 bsa apply --yes
+ck ac69-refused-update-exit-10 10 "$BS_RC"
+has ac69-refused-update-prints-set-filter-by-hand "$T/bs.out" 'view: Needs you: created, but its filter was NOT set. Open the view "Needs you" and set the filter by hand: factory-status:"Waiting on you"'
+hasnt ac69-refused-update-not-reported-requested "$T/bs.out" "Needs you: requested"
 
 # ---------- AC-38: a Project that clears a value when the option list is replaced ----------
 board_load "$FX64/board-v1.json"; rm -rf "$SD"; log_reset

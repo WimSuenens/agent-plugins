@@ -36,7 +36,7 @@ ck ac3-no-command-of-the-list-is-unknown 0 "$(grep -c '^unknown$' "$T/ops.log")"
 for id in B-add B-set B-text B-items T-view T-subissues T-recent T-create T-dbid T-link T-comments T-comment T-close T-edit-comment; do
   ck "ac3-closed-list-id-$id-has-a-runnable-command" 1 "$(grep -cx "$id" "$T/ops.log" | awk '{print ($1>0)}')"
 done
-for id in B-fields B-options B-views B-fcreate B-foptions B-vcreate; do has "ac3-list-names-board-script-op-$id" "$OPS" "\`$id\`"; done
+for id in B-fields B-options B-views B-fcreate B-foptions B-vcreate B-vupdate; do has "ac3-list-names-board-script-op-$id" "$OPS" "\`$id\`"; done
 # the list names only the six status values, no old value (AC-1, AC-7)
 for old in "Designed" "In progress" "In review" "Ready to deploy"; do hasnt "ac1-ops-list-has-no-old-value-$old" "$OPS" "$old"; done
 for v in "Waiting on you"; do has "ac1-ops-list-names-$v" "$OPS" "$v"; done

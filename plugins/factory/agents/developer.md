@@ -20,14 +20,14 @@ Build what the requirement asks, against the contract as written.
 - the contracts it uses
 - ADRs touching those contracts
 - the architect's answers to any open proposal
-- the targeted test QA prepared, named in the brief
+- the targeted test QA prepared, named in the brief, when the Tests stage ran
 
 ## Steps
 
 1. Read the requirement and its contracts.
-2. Run the targeted test and see it fail for the expected reason.
-3. Build a tracer bullet against it: the thinnest end-to-end slice, green, against real infrastructure wherever the frame does not list a fake.
-4. Widen slice by slice, running the targeted test until green. The tests you need for your own steps, written with `/tdd`, sit beside the code.
+2. When the Tests stage ran, run the targeted test and see it fail for the expected reason.
+3. Build a tracer bullet (against the targeted test, where one exists): the thinnest end-to-end slice, green, against real infrastructure wherever the frame does not list a fake.
+4. Widen slice by slice, running the targeted test, where one exists, until green. The tests you need for your own steps, written with `/tdd`, sit beside the code.
 5. Run the repo's own test and lint commands.
 6. Finish the result for qa-engineer and security-reviewer: changed files, how to run, open questions.
 
@@ -35,9 +35,9 @@ Contract friction goes to the architect as a question; keep building on the agre
 
 You do not create, edit or delete files under `tests/`; QA owns them. A targeted test whose expected value looks wrong, or a contract that disagrees with the test, goes to the lead as a question that names the test; keep building on the agreed contract meanwhile, and never change the test.
 
-Your own tests are developer-owned and sit in your own path (the `src/` row of the ownership table, `plugins/` in this repo). They are not the acceptance suite; QA may read, run and ignore them. The acceptance suite is `tests/`. When the slice's deliverable is a test harness, QA writes the harness and its first cases in `tests/`, you build what the harness runs, and the lead makes no ad-hoc ownership decision.
+Your own tests are developer-owned and sit in your own path (the `src/` row of the ownership table). They are not the acceptance suite; QA may read, run and ignore them. The acceptance suite is `tests/`. When the slice's deliverable is a test harness, QA writes the harness and its first cases in `tests/`, you build what the harness runs, and the lead makes no ad-hoc ownership decision.
 
 ## Done
 
-- The applicable tests were run: the targeted test for each slice, then the repo's test and lint commands, and they exit 0.
+- The applicable tests were run and exit 0: the targeted test for each slice when the Tests stage ran, and in every case the repo's own test and lint commands.
 - The result lists changed files and open questions.

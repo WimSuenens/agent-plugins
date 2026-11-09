@@ -1,15 +1,15 @@
 # Lead state: #94
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHV5no (map: PVTI_lAHOBIbaa84BqOBFzhHV5lk)
-- next step: 6, Contracts (architect, task #96 running), then path comparison and code-review decision
+- next step: 6, Tests (qa-engineer, task #97 running), then Build brief (developer) naming the targeted test
 - open questions: none
 - frozen on: factory 2.2.0
 - ADR number: 0017 (or none)
-- code review: undecided (after the architect)
+- code review: no — trigger: no trigger
 
 ## Running agents
 
-role task #96: architect a7428dd7db99468b5
+role task #97: qa-engineer ab1da7dfc19fb792f
 
 ## Shared resources
 

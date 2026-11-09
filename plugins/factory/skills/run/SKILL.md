@@ -109,6 +109,8 @@ A card decided after its round merged, or one-way doors reopened by a resurvey, 
 
 Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unblocked. Its number is `<id>`.
 
+**No one-way doors.** When charting found none, the map has no `lock now` ticket and `/wayfinding:beachhead` finds an empty exposure list. Do not follow its route back to the wayfinder's Advance step, and do not dissolve the map: dissolving is not allowed before a first slice ships. Cut one slice that reaches the Destination's **Done when**. Take its **Under test** lines from the standing constraints recorded in the map's Notes, or from the Done-when outcomes themselves when Notes holds none.
+
 Add the new ticket to the board now: `Kind` slice, `Factory status` `Ready`. A slice may be cut while another is in flight; its path list is compared before it is built (*Parallel slices*).
 
 **Done when** one slice ticket with a complete frame (Question, Behaviour, Under test, Deliberately faked) is the item and is on the board.
@@ -146,7 +148,7 @@ The **stage** of a slice is the role task that is `Running`; no field holds it. 
 
 For each stage:
 
-1. **Create the role task and spawn the role** (*Role tasks*, create and spawn): the brief is the issue body, filled with **Inputs** from the role's *Inputs needed*. Name tracker issues by number; the role reads them itself, so never copy their content into the brief or a file. The product-owner's inputs include the map's Destination. The brief's `Output` line names the draft result, `work/<id>/NN-result-<role>.md`. Each role commits its own paths. The developer's **Inputs** name the targeted test QA prepared (read from the Tests result); the Tests task's **Inputs** name the contracts and the criteria. No tracker content is copied in.
+1. **Create the role task and spawn the role** (*Role tasks*, create and spawn): the brief is the issue body, filled with **Inputs** from the role's *Inputs needed*. Name tracker issues by number; the role reads them itself, so never copy their content into the brief or a file. The product-owner's inputs include the map's Destination. For a role whose *Inputs needed* lists the project's test command (qa-engineer, docs-writer), put the command and how to run it on its own line in `Inputs`, never only inside a constraint. For a slice with no developer stage, the lead supplies QA's "how to run" input: the same test command, plus the targeted test from the Tests result if there is one. The brief's `Output` line names the draft result, `work/<id>/NN-result-<role>.md`. Each role commits its own paths. The developer's **Inputs** name the targeted test QA prepared (read from the Tests result); the Tests task's **Inputs** name the contracts and the criteria. No tracker content is copied in.
 2. **Read the result.** Read only the draft's `Status`, `Abnormality:` lines, `Summary`, and `Decisions` (and `Progress` after an interruption). Open an artifact only to check a Done item. When the status is not `working`, **post the result** (*Role tasks*, the closing comment), close the task, set its card, and add its row to the ledger's Tasks table with the agent ids and the completion notice's peak context (`<subagent_tokens>` or `totalTokens`).
 3. Review the `Decisions` (see below). Then read the abnormalities: log the result's findings in `## Findings` and apply kind 2; apply kind 1 to a `blocked` result; after a role stage apply kind 3; on adding the row apply kind 4 (all in `## Andon`, *Detection*). Each `Abnormality:` line other than `none`, and each hit, starts an andon before any dependent brief. Put each in-force override's rule, in your own words, in the Constraints of the briefs it concerns.
 4. On the status:
@@ -200,7 +202,7 @@ A role's question announcing a disruptive action on a shared resource (see the p
 
 ### Acceptance demo
 
-QA's verdict lists the **Human-only criteria**: acceptance criteria only a person can judge in a real client. When it says `none`, skip this step. Otherwise, before Delivery:
+QA's verdict lists the **Human-only criteria**: acceptance criteria only a person can judge in a real client. When it says `none`, skip this step. Otherwise, before Delivery. **Order:** when any Human-only criterion names a document the docs-writer delivers (for example "a newcomer follows the README word for word"), run Documentation first, and then the demo; the demo cannot run before the document exists. Otherwise the table's order stands.
 
 1. Have the environment prepared: by devops when the item had an Environment stage, by you otherwise.
 2. Write a short script in plain language: what to open, what to do, what to expect, one step per criterion.

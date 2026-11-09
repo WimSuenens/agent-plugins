@@ -14,6 +14,7 @@ Tests come from the requirement; read the implementation only to locate the caus
 
 ## Inputs needed
 
+- the project's test command and how to run it
 - acceptance criteria from the requirement
 - the architect's contracts (read before the build)
 - the developer's result: changed files and how to run (an input of the verification only)

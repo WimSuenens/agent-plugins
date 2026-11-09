@@ -485,6 +485,8 @@ In this order of preference:
 
 **Not evidence, never read as such:** the result's `Summary`, the completion notice's text, the stage summary comment, and the final reply of a transcript. The final reply stays in the view only so you see what the agent claimed. A claim becomes a difference only when the calls, results or diffs contradict it; a `Done` item is traced only by a tool call, a tool result or a diff, never by a sentence of the agent's. In the commits fallback the result file's `Progress`, `Artifacts` and `Decisions` lines are claims in the same way: an artifact path is traced only when a commit diff touches it.
 
+**A transcript shared by several rows.** A resumed agent has one transcript for all its rows. Build the view only from the entries whose `timestamp` lies between the sampled row's `Start (UTC)` and `End (UTC)` (the two `select` filters in the view command below), and count `m` over that window, so the part read is the sampled row's own work and not an earlier row's. If no entry of a transcript carries a readable `timestamp`, treat that transcript as unreadable and use the commits and result file for the whole row, as for any unreadable transcript. The row boundaries are your own clock, so the window can cut an entry in two; that is accepted.
+
 **Which commits:** the sampled role's, on `item/<id>`, with committer time not before the `created_at` of the row's `Task` sub-issue and before the `created_at` of the role's next task, if any (omit the test when a time cannot be read). **Which brief:** the row's `Task` sub-issue: `gh issue view <task> --json body,createdAt,closedAt` (one extra read, inside the cap below, ending in `head -c`); its body, after the marker line, is the brief or the rework feedback. **Which result file:** the file named on the brief's `Output` line. When the task issue cannot be read, the line reads `not captured (brief not found)`.
 
 ### The commands and the cap
@@ -503,12 +505,12 @@ head -c <budget> "$r" > "$b"; wc -c < "$b"; cat "$b"; echo
 view() {
   for t in <transcript paths>; do
     echo "== agent <agent id>"
-    jq -r 'def blocks: (.message.content | if type == "array" then .[] else empty end);
-           select(.type == "assistant" or .type == "user") | blocks
+    jq -r --arg s "<Start (UTC) of the sampled row>" --arg e "<End (UTC) of the sampled row>" 'def blocks: (.message.content | if type == "array" then .[] else empty end);
+           select(.type == "assistant" or .type == "user") | select((.timestamp // "") >= $s and (.timestamp // "") <= $e) | blocks
            | if .type == "tool_use" then "CALL " + .name + " " + ((.input | tojson) | .[0:300])
              elif .type == "tool_result" then "RESULT " + ((.content | if type == "array" then (map(.text? // "") | join("")) else tostring end) | split("\n")[0] | .[0:200])
              else empty end' "$t" || return 1
-    jq -rs '[ .[] | select(.type == "assistant") | .message.content | if type == "array" then .[] else empty end | select(.type == "text") | .text ] | last // "" | "FINAL " + .[0:1500]' "$t" || return 1
+    jq -rs --arg s "<Start (UTC) of the sampled row>" --arg e "<End (UTC) of the sampled row>" '[ .[] | select(.type == "assistant") | select((.timestamp // "") >= $s and (.timestamp // "") <= $e) | .message.content | if type == "array" then .[] else empty end | select(.type == "text") | .text ] | last // "" | "FINAL " + .[0:1500]' "$t" || return 1
   done
 }
 view > "$v" 2> "$e"; echo "view exit $?, stderr $(wc -c < "$e") chars"   # non-zero exit or any stderr: unreadable

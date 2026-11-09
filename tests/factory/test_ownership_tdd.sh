@@ -245,8 +245,8 @@ if git rev-parse --verify -q origin/main >/dev/null; then
   # a change only to text: the tooling (scripts and hooks) is untouched by this slice
   ck rel-tooling-fingerprint-unchanged "$(printf '%s\n' "$old" | grep '^tooling')" "$(printf '%s\n' "$new" | grep '^tooling')"
   ck rel-no-script-or-hook-changed 0 "$(git diff --name-only origin/main...HEAD -- $P/scripts $P/hooks | wc -l | tr -d ' ')"
-  # the changed paths are the contracts' lists (contracts, work/ and the earlier roles' requirement are ignored as the QA agent file says)
-  git diff --no-renames --name-only origin/main...HEAD | bash "$PLUGIN/scripts/paths.sh" check --ignore work/73/ contracts/73-*.md 2>&1 | grep -v '^off-list: contracts/73-' >"$T/off.txt"
+  # the changed paths are the contracts' lists (contracts, work/ and the earlier roles' requirement are ignored as the QA agent file says; the two review files of this item are the QA and security roles' own output and are not an item path)
+  git diff --no-renames --name-only origin/main...HEAD | bash "$PLUGIN/scripts/paths.sh" check --ignore work/73/ contracts/73-*.md 2>&1 | grep -Ev '^off-list: (contracts/73-|reviews/(qa|security)-73\.md$)' >"$T/off.txt"
   ck rel-no-off-list-path "" "$(cat "$T/off.txt")"
   ck rel-other-plugins-untouched 0 "$(git diff --name-only origin/main...HEAD -- plugins/wayfinding plugins/design 2>/dev/null | wc -l | tr -d ' ')"
   ck rel-repo-own-factory-md-untouched 0 "$(git diff --name-only origin/main...HEAD -- docs/agents/factory.md | wc -l | tr -d ' ')"

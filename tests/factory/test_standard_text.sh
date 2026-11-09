@@ -124,7 +124,8 @@ ck ac14-seven-measures-in-order "1. lead time|2. first-pass yield|3. rework|4. e
 has ac14-overrides-none "$HA" '`none` when both sets are empty, or when the file has no `## Overrides` section.'
 # the worked example follows the template's line keys in the same order
 EXAMPLE="$(block_after "$HA" '### Worked example')"
-keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z-]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
+# 2.3.0 (#94): the two derived sub-lines under measure 1 are keyed `   - flow efficiency:` and `   - per stage:` (a key with a space)
+keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z -]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
 ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
 ck ac14-example-marker '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
 ck ac14-no-v1-marker-left 0 "$(grep -c 'factory:hansei v1 -->' "$HA" "$SK" "$TP" | awk -F: '{s+=$2} END {print s+0}')"

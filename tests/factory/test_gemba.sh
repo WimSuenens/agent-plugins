@@ -307,9 +307,11 @@ ck t6-gemba-is-not-a-numbered-line 0 "$(grep -cE '^[0-9]+\. gemba' "$T/layout.tx
 ck t6-measures-numbered-1-to-7-only "1 2 3 4 5 6 7" "$(grep -E '^[0-9]+\. ' "$T/layout.txt" | cut -d. -f1 | paste -sd' ' -)"
 if git -C "$REPO" rev-parse --verify --quiet main >/dev/null 2>&1; then
   git -C "$REPO" show main:plugins/factory/references/hansei.md > "$T/hansei-main.md"; fblock "$T/hansei-main.md" '### Layout' > "$T/layout-main.txt"
-  ck t6-measures-block-identical-to-v4 "$(awk '/^### Measures/{f=1} f' "$T/layout-main.txt")" "$(awk '/^### Measures/{f=1} f' "$T/layout.txt")"
+  # 2.3.0 (#94): the layout gains exactly the two derived sub-lines under measure 1 (contract 94-hansei-lean section 5); nothing else of the record moves
+  nosub() { grep -vE '^   - (flow efficiency|per stage): '; }
+  ck t6-measures-block-identical-to-v4 "$(awk '/^### Measures/{f=1} f' "$T/layout-main.txt" | nosub)" "$(awk '/^### Measures/{f=1} f' "$T/layout.txt" | nosub)"
   trim_end() { awk 'NF{last=NR} {l[NR]=$0} END{for(i=1;i<=last;i++)print l[i]}'; }
-  ck t6-layout-block-identical-to-main-v5 "$(cat "$T/layout-main.txt" | trim_end)" "$(cat "$T/layout.txt" | trim_end)"   # slice 64: main is already v5; 2.0.0 changes no key, order or grammar of the record
+  ck t6-layout-block-identical-to-main-v5-but-the-two-sub-lines "$(cat "$T/layout-main.txt" | nosub | trim_end)" "$(cat "$T/layout.txt" | nosub | trim_end)"   # slice 64: main is already v5; 2.0.0 changes no key, order or grammar of the record
 else skip t6-measures-identical-to-v4 "no main ref in this checkout"; fi
 WEX="$(fblock "$HA" '### Worked example')"
 ck t6-worked-example-first-line '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$WEX" | sed -n 1p)"

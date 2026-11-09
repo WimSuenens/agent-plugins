@@ -179,16 +179,16 @@ kept ac7-qa-authority-line "$QA" agents/qa-engineer.md 'Owns the release verdict
 kept ac7-qa-defect-fields-line "$QA" agents/qa-engineer.md 'Each defect carries reproduction steps'
 kept ac7-qa-done-defect-reproduction "$QA" agents/qa-engineer.md '- Every defect has a reproduction.'
 kept ac7-qa-done-verdict-recorded "$QA" agents/qa-engineer.md '- The verdict is recorded, with its Human-only criteria list.'
-kept ac7-qa-done-changed-paths-line "$QA" agents/qa-engineer.md '- Changed paths checked against the item'
+has ac7-qa-done-changed-paths-line "$QA" '- Changed paths checked against the item'  # line later extended by #86, so no longer byte-equal to the baseline
 has ac7-qa-reads-requirement-sentence "$QA" 'Tests come from the requirement; read the implementation only to locate the cause of a failure.'
 step="$(base agents/qa-engineer.md | grep -F 'Write `reviews/qa-<id>.md`' | sed 's/^[0-9]*\. //')"
 if [ -n "$step" ]; then has ac7-qa-verdict-step-with-human-only-list "$QA" "$step"; else echo "FAIL ac7-qa-verdict-step-with-human-only-list: baseline step not found"; fail=1; fi
-ck ac7-security-reviewer-file-unchanged "" "$(git diff "$BASE" -- "$SEC" | head -5)"
+has ac7-security-reviewer-keeps-changed-paths-line "$SEC" '- Changed paths checked against the item'  # file no longer byte-equal to the baseline since #86
 step5="$(base skills/run/SKILL.md | grep -F 'QA and security findings go to the developer' | sed 's/^[0-9]*\. //')"
 if [ -n "$step5" ]; then has ac7-run-rework-rule-repeat-until-both-pass "$RUN" "$step5"; else echo "FAIL ac7-run-rework-rule: baseline line not found"; fail=1; fi
 has ac7-run-rework-rule-text "$RUN" 'repeat until both verdicts are `pass`'
 has ac7-run-done-when-both-verdicts-pass "$RUN" 'both verdicts are `pass`, every Human-only criterion passed its demo'
-kept ac7-run-qa-and-security-check-the-diff-paragraph "$RUN" skills/run/SKILL.md '**QA and security check the diff against the list.**'
+has ac7-run-qa-and-security-check-the-diff-paragraph "$RUN" '**QA and security check the diff against the list.**'  # extended by #86
 kept ac7-run-done-when-line "$RUN" skills/run/SKILL.md '**Done when** every stage has run or was skipped'
 kept ac7-run-open-pr-bump-check-line "$RUN" skills/run/SKILL.md '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"`'
 kept ac7-run-open-pr-no-instruction "$RUN" skills/run/SKILL.md 'No instruction anywhere opens a PR without this check.'

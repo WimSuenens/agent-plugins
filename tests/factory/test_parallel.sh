@@ -142,7 +142,7 @@ printf '%s\n' "x" | bash "$PS" check "$T/em.md" >/dev/null 2>&1; ck ac32-check-w
 # the agent files and the run text carry the step
 for r in qa-engineer security-reviewer; do
   has "ac32-$r-diff-command" "$PLUGIN/agents/$r.md" 'git -c core.quotePath=false diff --no-renames --name-only origin/main...item/<id>'
-  has "ac32-$r-check-command" "$PLUGIN/agents/$r.md" 'paths.sh" check --ignore work/<id>/ contracts/<id>-*.md'
+  has "ac32-$r-check-command" "$PLUGIN/agents/$r.md" 'paths.sh" check --ignore work/<id>/ --ignore reviews/qa-<id>.md --ignore reviews/security-<id>.md --ignore docs/requirements/<id>- contracts/<id>-*.md'
   has "ac32-$r-severity-medium" "$PLUGIN/agents/$r.md" 'severity at least medium'
   has "ac32-$r-fetch-first" "$PLUGIN/agents/$r.md" 'git fetch origin main'
 done

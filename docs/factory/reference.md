@@ -1,12 +1,12 @@
-# Factory reference (release 2.0.0)
+# Factory reference (release 2.1.0)
 
 One entry per contract that governs the factory, with the file that implements it and the acceptance criteria it answers. The contracts are the source; this page only points at them. Where a later contract changes what an earlier one says, the earlier entry says so and points at the newer one.
 
-Requirements and decisions: [docs/requirements/39-hansei-record.md](../requirements/39-hansei-record.md), [docs/requirements/49-andon.md](../requirements/49-andon.md), [docs/requirements/57-per-run-a3-and-baseline.md](../requirements/57-per-run-a3-and-baseline.md), [docs/requirements/60-gemba-sample.md](../requirements/60-gemba-sample.md), [docs/requirements/64-board-as-run-state.md](../requirements/64-board-as-run-state.md), [ADR 0011](../adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md), [ADR 0013](../adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md), [ADR 0014](../adr/0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md), [ADR 0015](../adr/0015-factory-status-has-six-values-plus-kind-and-role.md) and [ADR 0016](../adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md).
+Requirements and decisions: [docs/requirements/39-hansei-record.md](../requirements/39-hansei-record.md), [docs/requirements/49-andon.md](../requirements/49-andon.md), [docs/requirements/57-per-run-a3-and-baseline.md](../requirements/57-per-run-a3-and-baseline.md), [docs/requirements/60-gemba-sample.md](../requirements/60-gemba-sample.md), [docs/requirements/64-board-as-run-state.md](../requirements/64-board-as-run-state.md), [ADR 0011](../adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md), [ADR 0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md), [ADR 0013](../adr/0013-factory-items-merge-with-their-history-and-work-files-carry-no-home-paths.md), [ADR 0014](../adr/0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md), [ADR 0015](../adr/0015-factory-status-has-six-values-plus-kind-and-role.md) and [ADR 0016](../adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md). From 2.1.0: [docs/requirements/73-test-ownership-and-tdd-loop.md](../requirements/73-test-ownership-and-tdd-loop.md) (no ADR).
 
 ## Contracts
 
-Twenty-five contracts: four from 1.0.0 (`39-*`, the record, the stage log, the scripts and the release rules), five from 1.1.0 (`49-*`, the andon and local countermeasures), five from 1.2.0 (`57-*`, the Factory baseline, the per-run A3, the v4 record and override fields, the run close and the release), four from 1.3.0 (`60-*`, the gemba sample: the rule, the walk, the gemba line with schema v5, and the release) and seven from 2.0.0 (`64-*`, the board as run state: the status fields, the role tasks, the ledger and the fields, the parallel slices, the board script, the tracker calls and the release). The `49-*` contracts change some `39-*` text, the `57-*` contracts change some `39-*` and `49-*` text, the `60-*` contracts change `39-hansei-record`, `57-records-and-overrides` and `57-baseline`, and the `64-*` contracts change `39-stage-log`, `39-plugin-scripts`, `39-hansei-record` and the lead state's sections; each entry below names what changed.
+Twenty-eight contracts: four from 1.0.0 (`39-*`, the record, the stage log, the scripts and the release rules), five from 1.1.0 (`49-*`, the andon and local countermeasures), five from 1.2.0 (`57-*`, the Factory baseline, the per-run A3, the v4 record and override fields, the run close and the release), four from 1.3.0 (`60-*`, the gemba sample: the rule, the walk, the gemba line with schema v5, and the release) and seven from 2.0.0 (`64-*`, the board as run state: the status fields, the role tasks, the ledger and the fields, the parallel slices, the board script, the tracker calls and the release), and three from 2.1.0 (`73-*`, test ownership and the TDD loop: the text of each file, the optional code review, and the release). The `49-*` contracts change some `39-*` text, the `57-*` contracts change some `39-*` and `49-*` text, the `60-*` contracts change `39-hansei-record`, `57-records-and-overrides` and `57-baseline`, and the `64-*` contracts change `39-stage-log`, `39-plugin-scripts`, `39-hansei-record` and the lead state's sections; the `73-*` contracts change standard text only, and no earlier contract changes. Each entry below names what changed.
 
 ### 39-hansei-record: the hansei record (schema v2, then v3, v4, now v5)
 
@@ -182,6 +182,27 @@ Twenty-five contracts: four from 1.0.0 (`39-*`, the record, the stage log, the s
 - **Governs**: the version `2.0.0`, a major bump, which the unchanged bump check accepts from `1.3.0` (§1); the files of the release (§2); the fence, which does not move (§3); the wayfinding plugin, which stays unversioned (§4); the changelog entry and the docs (§5); the decisions of the architect (§6); and the map of every criterion to its contract (§9).
 - **Implemented in**: `plugins/factory/.claude-plugin/plugin.json`, `CHANGELOG.md`, `README.md`, `docs/factory/`.
 - **Acceptance criteria**: AC-44 to AC-46. The tag `factory-v2.0.0` is made by hand on the merge commit, as [release-runbook.md](release-runbook.md) *Release 2.0.0* says.
+
+### 73-ownership-and-tdd-loop: test ownership, the TDD loop, test scope and the developer's Done list
+
+- **Contract**: [contracts/73-ownership-and-tdd-loop.md](../../contracts/73-ownership-and-tdd-loop.md). Builds on [64-role-tasks](#64-role-tasks-role-tasks-as-sub-issues) (the kind-3 path rule). No ADR.
+- **Governs**: the shared terms and the loop in order; the `tests/` ownership on the qa-engineer row; the developer's rule that it never changes a file under `tests/` and that its Done list requires the applicable tests to exit 0; the QA test-preparation stage (`Tests`, before Build); the test-scope rule; and the wording each file keeps word for word. The fenced section of the protocol is not changed.
+- **Implemented in**: `plugins/factory/references/protocol.md` (`## Tests`); `plugins/factory/agents/developer.md`, `plugins/factory/agents/qa-engineer.md` and `plugins/factory/agents/architect.md`; `plugins/factory/skills/run/SKILL.md` (the Tests stage rules); `plugins/factory/references/hansei.md` (the stage list); `plugins/factory/skills/setup-factory-skill/assets/factory.md` (the `Tests` paragraph of the template). The acceptance suite is checked by `tests/factory/test_ownership_tdd.sh`.
+- **Acceptance criteria**: AC-1, AC-2, AC-3, AC-5, AC-6, AC-8 and AC-9 of [the requirement](../requirements/73-test-ownership-and-tdd-loop.md).
+
+### 73-optional-code-review: the lead's code-review decision, the risk triggers and the breadth check
+
+- **Contract**: [contracts/73-optional-code-review.md](../../contracts/73-optional-code-review.md). No ADR.
+- **Governs**: the lead's decision after the architect's stage and before the Tests brief, with its three risk triggers and the one-line record of the decision; the optional review of the diff, which covers standards, spec and scope and has no verdict; the breadth check of the diff, which runs on every slice before the PR opens.
+- **Implemented in**: `plugins/factory/skills/run/SKILL.md` only (*Optional code review*, the stage-loop item for the architect's `done`, and the breadth paragraph before *Open PR*).
+- **Acceptance criteria**: AC-4 and AC-7 of [the requirement](../requirements/73-test-ownership-and-tdd-loop.md). The gate lines of the run skill are checked in `tests/factory/test_ownership_tdd.sh`.
+
+### 73-release: release 2.1.0
+
+- **Contract**: [contracts/73-release.md](../../contracts/73-release.md). Builds on [64-release](#64-release-release-200) and ADR [0012](../adr/0012-factory-releases-carry-a-semver-and-this-run-is-calibration.md); no new ADR.
+- **Governs**: the version `2.1.0`, a minor bump, which the bump check accepts from `2.0.0`; the files of the release; the existing script tests that pin the 2.0.0 wording and the slice-64 release deltas, which this release updates or retires; the answers to the requirement's open questions; the criteria map.
+- **Implemented in**: `plugins/factory/.claude-plugin/plugin.json`, `CHANGELOG.md`, `README.md`, `docs/factory/reference.md`.
+- **Acceptance criteria**: AC-7, AC-8 and AC-9 (with the two contracts above). The release checks are the `rel-*` checks of `tests/factory/test_ownership_tdd.sh`.
 
 ## Maintainer procedure: changing the factory
 

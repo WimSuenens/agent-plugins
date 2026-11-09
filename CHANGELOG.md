@@ -2,6 +2,40 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.1.0 (#73)
+
+Release: `2.1.0`, test ownership and the TDD loop. This is a **minor** release: it adds rules to the factory's instructions and removes none. No project has to migrate. `factory-state` stays at 2, and `/factory:run` runs as before. Restart Claude Code sessions after updating: a session keeps the factory skill text it read when it started, so a session opened before the update runs the old text.
+
+Slice [#73](https://github.com/WimSuenens/agent-plugins/issues/73), map [#72](https://github.com/WimSuenens/agent-plugins/issues/72). Requirement [73-test-ownership-and-tdd-loop](docs/requirements/73-test-ownership-and-tdd-loop.md). Decision: [#42, "Agreed direction"](https://github.com/WimSuenens/agent-plugins/issues/42). No ADR was needed: each change is text that a later edit reverts. Contracts: [73-ownership-and-tdd-loop](contracts/73-ownership-and-tdd-loop.md), [73-optional-code-review](contracts/73-optional-code-review.md) and [73-release](contracts/73-release.md). The contract index is [docs/factory/reference.md](docs/factory/reference.md).
+
+**What changed for the person who runs the factory:**
+
+- **Who owns the tests.** `tests/` is QA's. The developer never creates, edits or deletes a file there. A developer who meets a test or a contract it doubts writes a question to the lead, names the test, and keeps building. It does not change the test.
+- **The TDD loop.** The architect's contracts define the expected behaviour. QA writes the next targeted test before that behaviour is built, and the test fails for the expected reason. The developer runs the targeted test until it is green. When a test or a contract is unclear, the lead sends the test to QA and the contract to the architect. QA still gives the independent pass or block verdict, and the security review stays mandatory.
+- **Test scope.** Executable behaviour and important safety invariants are automated. Whether an agent follows an instruction is checked with realistic scenarios and human review. Exact prose is asserted only where a machine-readable format or a safety rule needs it.
+- **Optional code review.** After the contracts and before the build, the lead decides whether to run a code review. Three risk triggers decide it: shared protocols or approval and state rules, broad changes across two or more plugins, and significant refactors. The decision is one line in the lead state. A slice with no trigger is not reviewed. The review never replaces QA or the security review, and its findings do not block a merge on their own. The lead also checks every slice's diff for unexpected breadth or scope creep.
+- **The developer's Done list.** The developer is done only when the applicable tests have run and exit 0: the targeted test when the Tests stage ran, and the repo's own test and lint commands. The developer does not write the acceptance suite.
+- **A new ledger stage, `Tests`.** QA's test preparation is its own role task, in its own stage, before Build.
+
+**The gates are not weakened.** The QA and security gates stand as before. The fenced section *Never overridable locally* of the protocol is unchanged. The optional code review adds a check; it removes none.
+
+**Files.** The standard text changed: the protocol (a new `## Tests` section, outside the fenced section), the run skill, `references/hansei.md` (the stage list), the developer, QA and architect agent files, the setup skill and its `factory.md` template. No script and no hook changed, and no other agent changed.
+
+**Pilot.** This release's first use is the pilot named on #42. It compares test-to-green time and QA and developer rework rounds with #64, built on 1.3.0. The lead records the pilot's numbers in the hansei record; this entry does not state them.
+
+**No acceptance demo gated this slice.** Offline checks, scenario cards and reviews cover the text. What they cannot show is listed under *Unverified* below.
+
+### Unverified
+
+Nothing in this release ran in a live factory session. The following is unverified:
+
+1. **The new text in a live session.** The Tests stage and the code-review decision are text the lead follows. No live lead has yet followed them.
+2. **The three risk triggers.** A real lead has not yet judged a slice with them. A script or checklist for the triggers is deferred until a pilot run shows the lead misjudges one.
+3. **The loop itself.** The first run that uses the loop is this item's own pilot. Its outcome is not known when this entry is written.
+4. **The Human-only scenarios.** QA played the scenario cards once, as one reader, reading only the named files. A second reader, the lead or a person, has not yet played them.
+5. **A path-check command (QA finding F1, medium, open).** The changed-paths command in the QA agent file does not ignore the item's own review files, so it lists them as off-list. The acceptance suite ignores them; the command's wording does not yet. The architect owns the wording.
+6. **The release check needs its base commit (security, informational).** The release test reads the baseline commit `4086c9c`. Where that commit is missing, the test skips itself, and a shallow clone passes without a check.
+
 ## factory 2.0.0 (#64)
 
 Release: `2.0.0`, the board as run state. **This is a major release.** The project's GitHub Project board now holds the status of every card, each role's work on an item is a sub-issue of its slice, and several slices can run at the same time. A project on 1.x must run `/factory:setup-factory-skill` (its migration step) before `/factory:run` accepts it. The migration shows the status mapping and the item count and waits for a yes; `/factory:run` never applies it, and `/factory:run` refuses a project that has not migrated. Undoing ADR 0014 or ADR 0015 after this release is a 3.0.0 release.

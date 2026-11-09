@@ -1,7 +1,7 @@
 # Lead state: #94
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHV5no (map: PVTI_lAHOBIbaa84BqOBFzhHV5lk)
-- next step: 6, Tests (qa-engineer, task #97 running), then Build brief (developer) naming the targeted test
+- next step: 6, Build (developer, task #98 running); then diff breadth check, bump check, Open PR, QA and security
 - open questions: none
 - frozen on: factory 2.2.0
 - ADR number: 0017 (or none)
@@ -9,7 +9,7 @@
 
 ## Running agents
 
-role task #97: qa-engineer ab1da7dfc19fb792f
+role task #98: developer (agent id in spawn result)
 
 ## Shared resources
 

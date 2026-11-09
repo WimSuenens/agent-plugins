@@ -1,7 +1,7 @@
 # Lead state: #73
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHDFJY
-- next step: 6 Tests (qa-engineer prepares scenario tests first), then Build (developer), then QA and security
+- next step: 8.7 merge PR 80, tag factory-v2.1.0, then resurvey (approved 2026-11-09T06:30Z)
 - code review: yes — trigger: shared protocols (protocol.md and run skill state rules change)
 - open questions: none
 - frozen on: factory 2.0.0
@@ -25,6 +25,9 @@
 
 | Role | Round | Id | Severity | Text |
 |---|---|---|---|---|
+| architect | 1 | L1 | medium | the three contract files were in no Paths block; fixed in rework #78 |
+| developer | 1 | L2 | medium | four text fixes from the optional code review; fixed in rework #79 |
+| qa-engineer | 1 | F1 | medium | the Done-list path check names the item's own review files as off-list; QA test now ignores them; the standard gap is open for the feedback offer |
 
 ## Abnormalities
 

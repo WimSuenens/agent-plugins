@@ -156,7 +156,7 @@ For each stage:
    - `blocked`: supply what `Missing` lists in the next role task's brief (after the andon, when kind 1 or an `Abnormality:` line applies).
    - `needs-decision`: run step 7.
    - `working` from an agent that has stopped, or an agent that failed on a limit before writing its result: it was cut off; follow *Interruptions*.
-5. QA and security findings go to the developer as a **rework task** (*Role tasks*, rework); repeat until both verdicts are `pass`.
+5. QA and security findings go to the developer as a **rework task** (*Role tasks*, rework); repeat until both verdicts are `pass`. When a finding is about a rule that a script or contract states, search the plugin for every other text that states the same rule (`grep -rn`) and list those files in the feedback's `Constraints`, so the developer fixes them in the same round.
 
 **Tests stage rules.** QA's Tests task runs after the architect's `done`, the path comparison and the code-review decision, and before the Build brief; the Build brief is never written before the Tests result names the targeted test. The contracts define the seams and the expected behaviour, so QA can write the test from them. The stage is skipped only when the contracts define no behaviour to test; the stage summary says so. Tests QA prepared may stay red until the developer's Done. A developer question about a test is routed to QA (a role task for QA), a question about a contract to the architect; you answer neither by editing `tests/` or a contract.
 

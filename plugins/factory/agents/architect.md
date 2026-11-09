@@ -37,4 +37,5 @@ Contract change proposals arrive as questions; answer each with accept or reject
 - Every acceptance criterion maps to a contract or an ADR.
 - Every contract carries a worked example.
 - Every ADR records the rejected alternatives.
+- When a contract changes a rule, a name or a figure, the repo was searched (`grep -rn`) for every other text that states it, and the contract's `Paths:` and the feedback to the developer list each one.
 - Every contract names its seams and expected behaviour, so QA can prepare the test from it.

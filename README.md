@@ -468,6 +468,18 @@ The `factory` plugin at 2.3.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 
 **Not tested yet, for 2.3.0:** a live session on the new text, including a run that closes with an A3 v2 and a settle answer for an experiment with a `target:`; the waste tags, the derived lines and the targeted walk as a live lead applies them; the install and update path, and the rollback, which need an unfrozen machine (see the [release runbook](docs/factory/release-runbook.md)). The security pass predates the fix of its low finding, which has not been re-reviewed. The items listed as unverified in [CHANGELOG.md](CHANGELOG.md) under *2.3.0* are the full list.
 
+The `factory` plugin at 2.3.1 (#106), on macOS, on 2026-11-10, from `fix/106-awk-operand-guard`. Only read-only and validate-only commands were run; the user-scope install was not touched (`factory@wimsuenens` is still 2.2.0, the frozen install of this run).
+
+| Check | Result |
+| --- | --- |
+| `claude plugin validate ./plugins/factory` | passed |
+| `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 2.3.1`; the standard fingerprint is the same as for 2.3.0 and the tooling fingerprint moved; both are on the last line of the 2.3.1 entry in [CHANGELOG.md](CHANGELOG.md) |
+| `bash plugins/factory/scripts/check-bump.sh` | `pass: patch bump needed, 2.3.0 -> 2.3.1`, exit 0 |
+| `bash tests/factory/test_awk_operand_guard.sh` | 17 passed; before the fix it failed 10 checks |
+| `bash tests/run.sh` | `ALL PASSED`: 3784 passed, 17 skipped, 0 failed, across 22 test files |
+
+**Not tested yet, for 2.3.1:** a live session; the install and update path. The 2.3.0 note that the same awk file-operand pattern sat in `post-text.sh` and `board.sh` is closed by this release, and the 2.3.0 low finding in `a3-check.sh` is covered by the 2.3.0 fix. The security review of the 2.3.1 branch found nothing. The earlier 2.3.0 notes above stay as they were at that release.
+
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 
 ## Known costs

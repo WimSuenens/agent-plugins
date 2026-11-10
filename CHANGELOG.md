@@ -16,7 +16,7 @@ Slice [#94](https://github.com/WimSuenens/agent-plugins/issues/94), map [#93](ht
 - **#90 the targeted walk.** One walk per run, at the stage or role the problem points at, before the A3's chain is written. The A3's `gemba (targeted)` line holds its result, and the chain cites it. A difference is evidence for the chain; it raises no andon.
 - **The A3 check.** `scripts/a3-check.sh` checks an A3 before it is posted. It applies the lines of v2 or v1 and names any line that is missing, blank, out of order or outside its grammar. A reader that meets a version it does not know skips the comment and says so.
 
-**Tests.** The pinned 2.2.0 version rows move to 2.3.0. New offline checks cover AC-1 to AC-17: the `a3-check.sh` fixtures in `tests/factory/test_a3_check.sh`, replays of the count, minute and percent rules, and text pins in `tests/factory/test_lean_rules.sh`. The checks of the changelog, the runbook and the docs for AC-17 and AC-19 pass with this entry in place. `bash tests/run.sh` prints `ALL PASSED`.
+**Tests.** The pinned 2.2.0 version rows move to 2.3.0. New offline checks cover AC-1 to AC-17: the `a3-check.sh` fixtures in `tests/factory/test_a3_check.sh`, replays of the count, minute and percent rules, and text pins in `tests/factory/test_lean_rules.sh`. The three checks that waited for this entry, the runbook note and the docs (AC-17 and AC-19) pass now. `bash tests/run.sh` prints `ALL PASSED`.
 
 **Known limitations at release.**
 

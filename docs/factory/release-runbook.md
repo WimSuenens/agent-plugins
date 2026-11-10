@@ -318,8 +318,40 @@ Still unverified after the try: that the view filters correctly in the UI with t
 
 **Monitoring added by 2.0.0.** No process, port or service. The alerts are the exit codes of `board.sh` (2 usage or a missing `gh` or `jq`, 3 a failed read, 5 a verification difference, 6 an item still holds an old value, 7 a failed mutation, 10 the views need the person's confirmation), `factory-config.sh state` (exit 3 on a 1.x project) and `paths.sh check` (an off-list path at review). No port is opened; the scripts run only short-lived commands and leave no process running.
 
+## Release 2.3.0 (slice #94, the A3 at v2 and the lean extensions)
+
+**Minor release 2.3.0, no migration.** Standard work changed (the run skill and the references), so the baseline starts a new `2.3` series with its first item run on 2.3.0; the `2.2` series stays as history (`references/baseline.md`, section 3, item 2). Nothing in a project has to change: A3 v1 comments, hansei v3 to v5 records, and 2.2.0 ledgers and overrides are read as before. New runs post an A3 v2, which adds the lines `waste`, `gemba (targeted)` and `target`, and the hansei record gains two derived sub-lines under measure 1 (`flow efficiency`, `per stage`), which are never stored. A 2.2.0 install reads a v2 A3 as a version it does not know: it skips the comment and says so.
+
+**Release checks** (read-only; on the branch after `git fetch origin main`, in the item/94 worktree):
+
+1. `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills` exit 0 with no warning.
+2. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 2.2.0 -> 2.3.0`, exit 0.
+3. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 2.3.0`. The two fingerprints are kept on the last line of the 2.3.0 entry in [CHANGELOG.md](../../CHANGELOG.md), not repeated here: they move with any edit under `plugins/factory/`, and any later change under the same release is a forgotten bump.
+4. `bash tests/run.sh` prints `ALL PASSED` with no named skip. The three checks that waited for this release's changelog, runbook and docs (`ac19-changelog-2.3.0`, `ac19-runbook-2.3.0-note`, `ac17-docs-say-v2`) are passes.
+5. `bash plugins/factory/scripts/a3-check.sh <file>` on an A3 saved to a file prints `ok v2` (exit 0) for a v2 A3 and `ok v1` for a v1 A3 of 2.2.0. It is a format check; the *Scan before posting* step stays the gate for secrets and paths.
+
+**Tag (the Lead, after the person approved the merge).** Tags on origin run from `factory-v1.0.0` to `factory-v2.1.0`. The 2.2.0 release has no tag on origin (`git ls-remote --tags origin 'factory-v*'`, read on 2026-11-10). `factory-v2.3.0` must not exist before the merge. In the item/94 worktree, with `<pr>` the number of the item/94 pull request:
+
+```
+git fetch origin main
+bash plugins/factory/scripts/check-bump.sh        # expect exit 0
+gh pr merge <pr> --merge
+printf '%s' "2.3.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
+git ls-remote --tags origin factory-v2.3.0        # must print nothing, else the tag exists: stop
+git fetch origin main
+git tag factory-v2.3.0 "$(gh pr view <pr> --json mergeCommit --jq .mergeCommit.oid)"
+git push origin factory-v2.3.0
+```
+
+**Post-merge checks.** `git ls-remote --tags origin 'factory-v*'` lists `refs/tags/factory-v2.3.0`, and `git show factory-v2.3.0:plugins/factory/.claude-plugin/plugin.json` shows `"version": "2.3.0"`. Do not move or delete a published tag.
+
+**Frozen install.** `claude plugin list --json`, read on 2026-11-10, reports `factory@wimsuenens` at version 2.2.0 with user scope: the frozen install of this run. Merging and tagging 2.3.0 changes nothing on this machine until the freeze ends. Then `claude plugin marketplace update wimsuenens` brings the release in, and the person restarts running sessions: an open session keeps the skill text it read at start.
+
+**Rollback.** There is nothing to roll back in a project: the A3 v2 lines and the derived sub-lines are additions, and the 2.2.0 text skips the one and does not read the other. To put the plugin back on the 2.2.0 text, publish a new version above 2.3.0 whose content is the 2.2.0 text, as the *Release 2.0.0* section describes for its own rollback; installs follow the version string.
+
 ## Not verified
 
+- **2.3.0:** nothing ran in a live factory session. Not run: the install and update path and the rollback (the machine is frozen), a run that closes with a v2 A3, and a settle answer on an experiment with a `target:`. The three unverified items of [CHANGELOG.md](../../CHANGELOG.md) under *2.3.0* are the full list. The checks above are offline.
 - **2.0.0:** no migration, view check or board write was run against a live Project; `board.sh plan` was run read-only against the live Project. The scratch-Project try ran on 2026-11-08 (outcome in *Release 2.0.0*). Not run: a restore from a snapshot, a first run on 2.0.0 and an install. The Unverified list of [CHANGELOG.md](../../CHANGELOG.md) under *2.0.0* names every item.
 - Install and update were not run (frozen machine). `--plugin-dir` use of a pre-release worktree and `marketplace update` behaviour are from the README, ADR 0012 and #35's findings, not exercised here. Rollback (A) was reasoned, not run; the Delivery Done item "rollback has run successfully in test" is therefore open for 1.0.0 and should be run in a scratch HOME after the freeze ends: install 1.0.0, then repeat steps A and B, and confirm the installed version string follows.
 - Pinning the user-scope install itself to the pre-release commit (a `ref`/`sha` source for the factory) was not tried; the marketplace entry is a relative path today.

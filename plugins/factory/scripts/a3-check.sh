@@ -18,7 +18,7 @@ fi
 if [ "$1" = "-" ]; then
   awk_in=/dev/stdin
 else
-  awk_in="$1"
+  case "$1" in /*) awk_in="$1" ;; *) awk_in="./$1" ;; esac # ./ keeps awk from reading name=value as an assignment
 fi
 
 awk -v EM='—' '

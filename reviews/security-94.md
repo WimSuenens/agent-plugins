@@ -24,7 +24,7 @@ All 6 files under plugins/factory/ changed by the item (a3-check.sh, a3.md, hans
 - work/ hygiene: `git log -S"$HOME/"` over work/ finds nothing; every changed work/94 file is `NN-<type>-<role>.md` or 00-lead-state.md.
 - Off-list check: no `off-list:` line over the full final diff.
 - Dependency audit: none to run (no manifest; bash and awk only).
-- Fingerprint test (test_fingerprint.sh) run against the final tree; see the result file for the outcome.
+- Fingerprint test (test_fingerprint.sh) run against the final tree: 77 passed, 0 failed.
 
 ## Final verdict: pass
 No open critical, high or medium finding. Finding 1 (low) closed; finding 2 (info) stands by design.

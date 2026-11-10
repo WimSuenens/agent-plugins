@@ -16,6 +16,11 @@
 
 CAP=60000
 
+# awk_operand <path>: a relative path gets ./ so awk reads name=value as a file, not as a variable assignment; an absolute path and - stay.
+awk_operand() {
+  case "$1" in /* | -) printf '%s' "$1" ;; *) printf './%s' "$1" ;; esac
+}
+
 usage() {
   echo "usage: post-text.sh scan [--needs-you] <file>... | render <draft> <out> | elide <in> <out> <ref> [--max <bytes>] | split <in> <outdir>" >&2
   exit 2
@@ -161,7 +166,7 @@ case "$cmd" in
           print ""
           print "</details>"
         }
-      }' "$draft" >"$tmpf"
+      }' "$(awk_operand "$draft")" >"$tmpf"
     rc=$?
     if [ "$rc" != 0 ]; then
       echo "render: $(basename "$draft"): needs Status and a Summary of at most 10 lines" >&2
@@ -209,7 +214,7 @@ case "$cmd" in
           if (substr(s, 1, 1) == fch && length(s) >= flen) flushblock()
         }
       }
-      END { if (inblock) flushblock(); print elided + 0 }' "$in")" || exit 2
+      END { if (inblock) flushblock(); print elided + 0 }' "$(awk_operand "$in")")" || exit 2
     cat "$tmpf" >"$out" || exit 2
     printf '%s\n' "$count"
     exit 0
@@ -290,7 +295,7 @@ case "$cmd" in
           close(fk)
         }
         print m
-      }' "$in"
+      }' "$(awk_operand "$in")"
     rc=$?
     if [ "$rc" = 4 ]; then
       echo "split: Status and Summary alone exceed the cap" >&2

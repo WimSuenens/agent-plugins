@@ -1,7 +1,7 @@
 # Lead state: #94
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHV5no (map: PVTI_lAHOBIbaa84BqOBFzhHV5lk)
-- next step: 8.1, merge approval asked; then steps 8.2 to 8.11
+- next step: 8.7 merge (approved 2026-11-10T00:38Z), then resurvey and measure 7
 - open questions: none
 - frozen on: factory 2.2.0
 - ADR number: 0017 (or none)

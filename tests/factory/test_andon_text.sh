@@ -263,7 +263,7 @@ ck ac24-example-andon-in-header-and-part "1 1" "$(printf '%s\n' "$EXAMPLE" | gre
 has ac26-step9-close "$SK" '## 9. Close the run'
 ck ac26-no-step10 0 "$(grep -c '^## 10\.' "$SK")"
 has ac26-no-report-closed "$SK" 'Do not report the run closed before 9.3 has an answer, applied and merged, for every override of the run.'
-has ac26-one-line-experiment "$AN" '- The experiment: `<name> — started <date> — before <reading> / after <reading> — keep, promote or drop?`'
+has ac26-one-line-experiment "$AN" '- The experiment: `<name> — started <date> — before <reading> / target <target> / after <reading> — keep, promote or drop?`'
 has ac26-one-line-other "$AN" '- Any other override: `<name> — started <date> — before/after: not measured (not this run'"'"'s experiment) — keep, promote or drop?`'
 has ac26-ask-keep-promote-drop "$AN" 'show one line and ask `keep`, `promote` or `drop`.'
 has ac26-promote-not-asked-again "$AN" '`promote chosen` ones are named in the summary and not asked again.'
@@ -418,7 +418,7 @@ else skip docs-changelog-1.1.0 "QA-49 O3: CHANGELOG.md has no 1.1.0 entry yet (d
 
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
-ck ac29-version-is-minor-above-1.1.0 "2.2.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac29-version-is-minor-above-1.1.0 "2.3.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 # the changed files under plugins/ are standard work or other, never a script (tooling fingerprint does not move)
 skip ac29-no-script-changed "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
 : ck ac29-no-script-changed-retired 0 "$(git -C "$REPO" diff --name-only "$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null || echo HEAD)" HEAD -- plugins/factory/scripts plugins/factory/hooks 2>/dev/null | grep -c .)"

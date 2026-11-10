@@ -2,6 +2,33 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.3.0 (#94)
+
+Release: `2.3.0`, lean extensions to the A3 and the hansei record. This is a **minor** release: it adds lines and one script and removes no rule, so no project has to migrate. A3 v1 comments, hansei v3 to v5 records, and 2.2.0 ledgers and overrides stay valid. New runs post an **A3 v2** (`<!-- factory:a3 v2 -->`). Restart Claude Code sessions after updating: a session keeps the factory skill text it read when it started.
+
+Slice [#94](https://github.com/WimSuenens/agent-plugins/issues/94), map [#93](https://github.com/WimSuenens/agent-plugins/issues/93). Requirement [94-lean-extensions](docs/requirements/94-lean-extensions.md). Contracts [94-a3-v2](contracts/94-a3-v2.md), [94-hansei-lean](contracts/94-hansei-lean.md) and [94-release](contracts/94-release.md); the contract index is [docs/factory/reference.md](docs/factory/reference.md). No ADR: each change is text that a later edit reverts.
+
+**What changed for the person who runs the factory:**
+
+- **#87 waste tags.** An optional `waste:` tag, one of the eight TIMWOODS names (transport, inventory, motion, waiting, overproduction, over-processing, defects, skills), on an andon comment (a last line), on a ledger Waits row (in `What`) and Tasks row (in `Notes`), and on a `## Findings` row (a sixth column). The A3's `waste` line counts the tagged entries per type and says how many were untagged. The tagging guide is in `references/hansei.md`, section 1. Untagged stays valid everywhere.
+- **#88 flow efficiency and the per-stage view.** Two sub-lines under measure 1 of the hansei record, derived at close from the ledger's Tasks and Waits tables: `flow efficiency` (agent working time as a whole percent of total lead time) and `per stage` (working and waiting minutes for each stage). The record stays at v5. Nothing is stored, and the baseline and the A3 measure table do not read the sub-lines.
+- **#89 the target.** An experiment may state an optional `target:` line, written with the override and never edited. The A3's `target` line reads `reached`, `not reached` or `none (<reason>)`, and the settle question shows the target beside before and after.
+- **#90 the targeted walk.** One walk per run, at the stage or role the problem points at, before the A3's chain is written. The A3's `gemba (targeted)` line holds its result, and the chain cites it. A difference is evidence for the chain; it raises no andon.
+- **The A3 check.** `scripts/a3-check.sh` checks an A3 before it is posted. It applies the lines of v2 or v1 and names any line that is missing, blank, out of order or outside its grammar. A reader that meets a version it does not know skips the comment and says so.
+
+**Tests.** The pinned 2.2.0 version rows move to 2.3.0. New offline checks cover AC-1 to AC-17: the `a3-check.sh` fixtures in `tests/factory/test_a3_check.sh`, replays of the count, minute and percent rules, and text pins in `tests/factory/test_lean_rules.sh`. The three checks that waited for this entry, the runbook note and the docs (AC-17 and AC-19) pass now. `bash tests/run.sh` prints `ALL PASSED`.
+
+**Known limitations at release.**
+
+- Security's low finding 1 (the file operand of `a3-check.sh` passed to awk) is fixed in this release. The fix came after security's pass and security has not re-reviewed it.
+- The same awk file-operand pattern is in `scripts/post-text.sh` and `scripts/board.sh`, unchanged here because no slice path lists them. It needs a follow-up issue.
+- `a3-check.sh` is a format gate, not a secret scan. The *Scan before posting* step stays the gate.
+- A 2.2.0 install reads a v2 A3 as a version it does not know: it skips the comment and says so. That is the 2.2.0 text; no install was run to see it.
+
+**Unverified.** Nothing ran in a live factory session. What only real use shows: whether the waste tags are applied consistently by the lead across a real run, whether the targeted walk finds anything, and whether the waste Pareto changes which improvement the person picks. The install and update path was not run, because the machine stays on its frozen install.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-10: standard `99f1c24c685fc0cfd5fb9b9134596ed2b031bfe2b4f7b40844beb9d389be1930`, tooling `d1147172c1056068edc50a8a7b44bc45d16215e98229d585c83309aba48ac070`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.2.0 (triage batch: #86 #84 #85 #71 #70 #69 #68 #59 #43 #41)
 
 Release: `2.2.0`, fixes and small rules from the open-issue triage. This is a **minor** release (it changes the run skill and agent files). No migration is needed. Restart Claude Code sessions after updating.

@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "2.2.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.2.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "2.3.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.3.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
@@ -124,7 +124,8 @@ ck ac14-seven-measures-in-order "1. lead time|2. first-pass yield|3. rework|4. e
 has ac14-overrides-none "$HA" '`none` when both sets are empty, or when the file has no `## Overrides` section.'
 # the worked example follows the template's line keys in the same order
 EXAMPLE="$(block_after "$HA" '### Worked example')"
-keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z-]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
+# 2.3.0 (#94): the two derived sub-lines under measure 1 are keyed `   - flow efficiency:` and `   - per stage:` (a key with a space)
+keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z -]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
 ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
 ck ac14-example-marker '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
 ck ac14-no-v1-marker-left 0 "$(grep -c 'factory:hansei v1 -->' "$HA" "$SK" "$TP" | awk -F: '{s+=$2} END {print s+0}')"

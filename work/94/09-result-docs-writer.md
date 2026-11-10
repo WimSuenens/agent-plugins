@@ -2,7 +2,7 @@
 Status: done
 Abnormality: none
 Progress:
-  Done: CHANGELOG.md 2.3.0 entry (5501c8d-era draft in 37beabb, wording in 1faf603); docs/factory/reference.md (37beabb: title 2.3.0, 31 contracts indexed, three 94 entries, changed-for-2.3.0 pointers); README.md and docs/factory/release-runbook.md (0bdc6d3: A3 v2 line, derived lines and waste tags, releases list, 2.3.0 verification block, runbook 2.3.0 section and Not verified bullet). Suite ALL PASSED on 1faf603. Link check 0 failures. Own commits pass the 94-release Paths check.
+  Done: CHANGELOG.md 2.3.0 entry (37beabb, wording in 1faf603); docs/factory/reference.md (37beabb: title 2.3.0, 31 contracts indexed, three 94 entries, changed-for-2.3.0 pointers); README.md and docs/factory/release-runbook.md (0bdc6d3: A3 v2 line, derived lines and waste tags, releases list, 2.3.0 verification block, runbook 2.3.0 section and Not verified bullet). Suite ALL PASSED on 1faf603. Link check 0 failures. Own commits pass the 94-release Paths check.
   Next: none. Lead: merge approval, then the tag steps in the runbook's 2.3.0 section.
 Summary: Verdict docs-writer done. Named skips ac19-changelog-2.3.0, ac19-runbook-2.3.0-note and ac17-docs-say-v2 are passes; test_lean_rules.sh 132 passed, 0 skipped; suite 3767 passed, 17 skipped (was 3756 and 20), 0 failed.
   Fingerprints recomputed 2026-11-10 by fingerprint.sh: release 2.3.0, standard 99f1c24c685fc0cfd5fb9b9134596ed2b031bfe2b4f7b40844beb9d389be1930, tooling d1147172c1056068edc50a8a7b44bc45d16215e98229d585c83309aba48ac070. They match the brief and the changelog's last line.

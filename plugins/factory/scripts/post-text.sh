@@ -116,7 +116,6 @@ case "$cmd" in
   render)
     [ $# -eq 2 ] || usage
     draft="$1"
-    case "$draft" in /*) ;; *) draft="./$draft" ;; esac
     out="$2"
     [ -f "$draft" ] && [ -r "$draft" ] || { echo "render: $(basename "$draft"): unreadable" >&2; exit 2; }
     tmpf="$(mktemp)" || exit 2
@@ -175,7 +174,6 @@ case "$cmd" in
   elide)
     [ $# -ge 3 ] || usage
     in="$1"
-    case "$in" in /*) ;; *) in="./$in" ;; esac
     out="$2"
     ref="$3"
     shift 3
@@ -220,7 +218,6 @@ case "$cmd" in
   split)
     [ $# -eq 2 ] || usage
     in="$1"
-    case "$in" in /*) ;; *) in="./$in" ;; esac
     dir="$2"
     [ -f "$in" ] && [ -r "$in" ] || { echo "split: $(basename "$in"): unreadable" >&2; exit 2; }
     [ -d "$dir" ] || mkdir -p "$dir" || exit 2

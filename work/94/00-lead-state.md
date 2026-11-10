@@ -1,7 +1,7 @@
 # Lead state: #94
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhHV5no (map: PVTI_lAHOBIbaa84BqOBFzhHV5lk)
-- next step: 6, rework 1 (developer, task #102 running); then docs-writer, merge approval
+- next step: 8.1, merge approval asked; then steps 8.2 to 8.11
 - open questions: none
 - frozen on: factory 2.2.0
 - ADR number: 0017 (or none)
@@ -9,7 +9,7 @@
 
 ## Running agents
 
-role task #102: developer ac78964e9bd404d4f
+none
 
 ## Shared resources
 

@@ -2,6 +2,18 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.3.1 (#106)
+
+Release: `2.3.1`, a **patch** release: `scripts/post-text.sh` and `scripts/board.sh` read a relative file named like `name=value` as a file. No rule, text or output changes, and no project has to migrate. Restart Claude Code sessions after updating: a session keeps the script it read when it started.
+
+Issue [#106](https://github.com/WimSuenens/agent-plugins/issues/106). Before this, awk read such a name as a variable assignment, so the script read nothing, or waited on stdin. Each script now has one helper, `awk_operand`, that returns a relative path as `./<path>` and leaves an absolute path and `-` unchanged. It guards every awk file operand: in `post-text.sh` the draft of `render` and the input of `elide` and `split`; in `board.sh` the file of `table_get`, the `factory.md` and tracker doc reads of `finish`, and the scratch copy of the tracker doc. `-v` values are not file operands and are untouched. Exit codes and output are as before. This is the fix `a3-check.sh` got in 2.3.0, and it closes the known limitation of the 2.3.0 entry.
+
+**Tests.** New `tests/factory/test_awk_operand_guard.sh` runs each path twice, with a plain name and with a file literally named `x=1`, and compares exit code and output. It failed on 10 checks before the fix and passes after. The version pins move from 2.3.0 to 2.3.1 and the fingerprint pin in `tests/factory/test_lean_rules.sh` reads this entry.
+
+**Unverified.** Nothing ran in a live factory session. `post-text.sh` is the scan gate; its `scan` command is unchanged, and the security review of the branch is in the pull request.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-10: standard `99f1c24c685fc0cfd5fb9b9134596ed2b031bfe2b4f7b40844beb9d389be1930`, tooling `bdb54576a6e0a6e88fd2910d59c7cf874a9132937b42ac9c0d6d7e23d255f992`. The standard fingerprint is the same as for 2.3.0: scripts are in the tooling fingerprint. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.3.0 (#94)
 
 Release: `2.3.0`, lean extensions to the A3 and the hansei record. This is a **minor** release: it adds lines and one script and removes no rule, so no project has to migrate. A3 v1 comments, hansei v3 to v5 records, and 2.2.0 ledgers and overrides stay valid. New runs post an **A3 v2** (`<!-- factory:a3 v2 -->`). Restart Claude Code sessions after updating: a session keeps the factory skill text it read when it started.

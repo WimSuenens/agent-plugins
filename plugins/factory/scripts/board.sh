@@ -50,12 +50,17 @@ command -v gh >/dev/null 2>&1 || { echo "board: gh: not found" >&2; exit 2; }
 tmp="$(mktemp -d)" || { echo "board: cannot make a scratch folder" >&2; exit 2; }
 trap 'rm -rf "$tmp"' EXIT
 
+# awk_operand <path>: a relative path gets ./ so awk reads name=value as a file, not as a variable assignment; an absolute path and - stay.
+awk_operand() {
+  case "$1" in /* | -) printf '%s' "$1" ;; *) printf './%s' "$1" ;; esac
+}
+
 # the value of a row of the Tracker key table: | <key> | <value> |
 table_get() {
   [ -r "$2" ] || return 0
   awk -F'|' -v k="$1" '
     /^\|/ { a = $2; b = $3; gsub(/^ +| +$/, "", a); gsub(/^ +| +$/, "", b); if (a == k) { print b; exit } }
-  ' "$2"
+  ' "$(awk_operand "$2")"
 }
 t_owner="$(table_get owner "$factory_md")"
 t_project="$(table_get "project number" "$factory_md")"
@@ -548,7 +553,7 @@ do_finish() {
       if (!has_kind || !has_role) emit_new_tables()
       if (!has_limit && !done_limit) { print ""; print "## Parallel slices"; print ""; print "parallel-limit: 2" }
     }
-  ' "$factory_md" >"$factory_md.board.$$" || { rm -f "$factory_md.board.$$"; echo "board: could not build factory.md" >&2; exit 7; }
+  ' "$(awk_operand "$factory_md")" >"$factory_md.board.$$" || { rm -f "$factory_md.board.$$"; echo "board: could not build factory.md" >&2; exit 7; }
   write_file "$factory_md.board.$$" "$factory_md"
 
   # 2. the tracker doc: replace the Factory operations section
@@ -565,9 +570,9 @@ do_finish() {
     skipping { next }
     { print }
     END { if (!placed) { print ""; put() } }
-  ' "$tracker_md" >"$tracker_md.board.$$" || { rm -f "$tracker_md.board.$$"; echo "board: could not build the tracker doc" >&2; exit 7; }
+  ' "$(awk_operand "$tracker_md")" >"$tracker_md.board.$$" || { rm -f "$tracker_md.board.$$"; echo "board: could not build the tracker doc" >&2; exit 7; }
   # a section ending a file leaves one trailing blank line from the replacement: trim trailing blank lines, keep one newline
-  awk '{ a[NR] = $0 } END { n = NR; while (n > 0 && a[n] == "") n--; for (i = 1; i <= n; i++) print a[i] }' "$tracker_md.board.$$" >"$tracker_md.board2.$$" && mv -f "$tracker_md.board2.$$" "$tracker_md.board.$$"
+  awk '{ a[NR] = $0 } END { n = NR; while (n > 0 && a[n] == "") n--; for (i = 1; i <= n; i++) print a[i] }' "$(awk_operand "$tracker_md.board.$$")" >"$tracker_md.board2.$$" && mv -f "$tracker_md.board2.$$" "$tracker_md.board.$$"
   write_file "$tracker_md.board.$$" "$tracker_md"
 
   # 3. the last act: line 1 of factory.md

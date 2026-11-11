@@ -26,6 +26,9 @@ const waited = (s: number | null) => {
   return `${Math.floor(s / 86400)} d`
 }
 const goal = (p: ProjectView) => p.directions[0]
+// The headline in the page header is the first project with a direction; that project does not repeat it below.
+const lead = computed(() => props.view.projects.find((p) => p.state === 'ok' && p.directions.length) ?? null)
+const count = (p: ProjectView, status: string) => p.board.find((c) => c.status === status)?.items.length ?? 0
 </script>
 
 <template>
@@ -33,7 +36,17 @@ const goal = (p: ProjectView) => p.directions[0]
     <header class="hd">
       <div class="roundel" aria-hidden="true"><span class="rd" /><span class="rd-name">OBEYA</span></div>
       <h1 class="sr-only">Obeya, route map</h1>
-      <p class="lens" data-test="lens-badge">read-only lens &middot; bound to {{ view.bindAddress }}</p>
+      <div class="headline">
+        <template v-if="lead">
+          <p class="proj-label">{{ lead.name }}</p>
+          <p class="goal big">{{ goal(lead)!.goal }}</p>
+          <p class="heading"><b>Next stop</b> {{ goal(lead)!.current }}</p>
+        </template>
+        <p class="meta">
+          <span class="lens" data-test="lens-badge">read-only lens &middot; bound to {{ view.bindAddress }}</span>
+          <template v-if="lead"> &middot; {{ count(lead, 'Running') }} running &middot; {{ count(lead, 'Waiting on you') }} waiting on you &middot; {{ count(lead, 'Blocked') }} blocked</template>
+        </p>
+      </div>
     </header>
 
     <section class="board needs-you" data-test="departures" aria-labelledby="dep-h">
@@ -65,7 +78,7 @@ const goal = (p: ProjectView) => p.directions[0]
     <section v-for="p in view.projects" :key="p.id" class="project" :data-project="p.id">
       <template v-if="p.state === 'ok'">
         <h2 class="proj" data-test="project-name">{{ p.name }}</h2>
-        <template v-if="goal(p)">
+        <template v-if="goal(p) && lead?.id !== p.id">
           <p class="goal">{{ goal(p)!.goal }}</p>
           <p class="heading"><b>Heading</b> {{ goal(p)!.current }}</p>
         </template>
@@ -141,7 +154,17 @@ const goal = (p: ProjectView) => p.directions[0]
         </template>
         <template v-else>Hover, focus or press a station for its details. Dashed track and hollow stations are decisions still ahead.</template>
       </div>
-      <p class="legend">Station shapes: check = done, pulsing ring = running, hollow = ready, "!" = waiting on you, cross = blocked, small grey = backlog, dashed ring = in flight, hazard bar = track closed.</p>
+      <ul class="legend" aria-label="Legend">
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#c4161c" stroke="#1c1c1c" stroke-width="3" /><path d="M8 12l3 3.5 5-7" stroke="#fff" stroke-width="2" fill="none" /></svg>done</li>
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#fff" stroke="#1c1c1c" stroke-width="4" /><circle cx="12" cy="12" r="4" fill="#c4161c" /></svg>running</li>
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#fff" stroke="#1c1c1c" stroke-width="4" /></svg>ready</li>
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#fff" stroke="#1c1c1c" stroke-width="4" /><circle cx="19" cy="5" r="5" fill="#ff8a00" /></svg>waiting on you</li>
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#1c1c1c" /><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2" /></svg>blocked</li>
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="#f4efe3" stroke="#9a9484" stroke-width="3" /></svg>backlog</li>
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#f4efe3" stroke="#1c1c1c" stroke-width="3" stroke-dasharray="4 3" /></svg>in flight / decision ahead</li>
+        <li><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3" y="8" width="18" height="8" fill="url(#hazard)" stroke="#1c1c1c" /></svg>track closed (andon)</li>
+        <li>solid track = the past, dashed = the future</li>
+      </ul>
 
       <div class="two">
         <section class="board" data-test="item-board" aria-labelledby="ib-h">
@@ -179,11 +202,15 @@ const goal = (p: ProjectView) => p.directions[0]
 </template>
 
 <style scoped>
-.transit { --paper: #f4efe3; --ink: #1c1c1c; --mute: #5a5547; --amber: #ffb400; background: var(--paper); color: var(--ink); font-family: system-ui, 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 92rem; margin: 0 auto; padding: 0 1rem 4rem; line-height: 1.45; }
+.transit { --paper: #f4efe3; --ink: #1c1c1c; --mute: #5a5547; --amber: #ffb400; box-sizing: border-box; width: 100%; min-height: 100dvh; background: var(--paper); color: var(--ink); font-family: system-ui, 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0 max(1rem, calc((100% - 92rem) / 2)) 4rem; line-height: 1.45; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.hd { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; padding: 1rem 0; border-bottom: 6px solid var(--ink); }
+.hd { display: flex; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; padding: 1.4rem 3rem 1rem 0; border-bottom: 6px solid var(--ink); }
+.headline { flex: 1; min-width: 14rem; }
+.proj-label { margin: 0; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
+.goal.big { font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -0.02em; margin: 0.1rem 0; }
+.meta { margin: 0.4rem 0 0; font-size: 0.85rem; color: var(--mute); }
 .roundel { position: relative; display: flex; align-items: center; }
-.rd { width: 3.4rem; height: 3.4rem; border-radius: 50%; border: 0.55rem solid #c4161c; }
+.rd { width: 4rem; height: 4rem; border-radius: 50%; border: 0.55rem solid #c4161c; }
 .rd-name { position: absolute; left: -0.9rem; right: -0.9rem; text-align: center; background: #0a4fa8; color: #fff; font: 800 0.7rem/1 Arial, sans-serif; letter-spacing: 0.14em; padding: 0.3rem 0; }
 .lens { margin: 0; border: 2px solid var(--ink); background: #fff; border-radius: 999px; padding: 0 0.9rem; font-size: 0.9rem; }
 .board { background: #111; color: #fff; border: 6px solid #2c2c2c; border-radius: 8px; padding: 0.8rem 1rem; margin: 1rem 0; min-width: 0; }
@@ -224,7 +251,8 @@ const goal = (p: ProjectView) => p.directions[0]
 .detail { background: var(--ink); color: #fff; padding: 0.5rem 0.8rem; font-size: 0.9rem; min-height: 2.6rem; }
 .detail b { color: var(--amber); }
 .chip { border: 1px solid #fff; padding: 0 0.5rem; margin-left: 0.4rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.legend { font-size: 0.85rem; color: var(--mute); margin: 0.4rem 0; }
+.legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; font-size: 0.85rem; color: var(--mute); margin: 0.5rem 0; }
+.legend li { display: inline-flex; align-items: center; gap: 0.35rem; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) 24rem; gap: 1.5rem; align-items: start; }
 .notices h2 { margin: 1rem 0 0.4rem; font-size: 0.9rem; letter-spacing: 0.16em; text-transform: uppercase; border-bottom: 4px solid var(--ink); padding-bottom: 0.3rem; }
 .notices :deep(section), .notices :deep(article) { background: #fff; border: 2px solid var(--ink); border-left-width: 12px; padding: 0.4rem 0.8rem; margin: 0.6rem 0; overflow-wrap: anywhere; }

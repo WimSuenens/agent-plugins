@@ -22,7 +22,7 @@ async function wall(fn, sourceModule = join(here, 'wall-source.mjs')) {
 test('the wall theme is selectable, shows the project name and the parse-failure card', async () => {
   await wall((html) => {
     assert.match(html, /data-theme="wall"/)
-    assert.match(html, /data-theme-option="wall"[^>]*aria-pressed="true"/)
+    assert.match(html, /<input[^>]*data-theme-option="wall"[^>]*checked/)
     assert.match(html, /wall-project/)
     assert.match(html, /data-test="parse-failure"/)
     assert.match(html, /docs\/adr\/0002-broken\.md/)
@@ -75,4 +75,18 @@ test('the wall works offline and respects reduced motion', () => {
   assert.doesNotMatch(src, /https?:\/\/|@import/)
   assert.match(src, /prefers-reduced-motion:\s*reduce/)
   assert.doesNotMatch(src, /\b(useFetch|useAsyncData|\$fetch|fetch\()/)
+})
+
+test('the wall looks like the room: nameplate, taped whiteboards, a three-lamp tower, a dated timeline and tilted, pinned notes', async () => {
+  await wall((html) => {
+    assert.match(html, /<h1 class="plank marker"[^>]*>Obeya<\/h1>/)
+    assert.match(html, /class="tape tl"/)
+    assert.match(html, /class="compass"/)
+    assert.match(html, /<li[^>]*data-test="direction-history-entry"[^>]*><time[^>]*datetime="2026-01-02"[^>]*>2026-01-02<\/time>/)
+    assert.equal((html.match(/<span class="(?:on )?lamp (?:red|amber|green)/g) || []).length, 3)
+    assert.match(html, /class="pole"/)
+    assert.match(html, /class="note card-note[^"]*eff-3[^"]*"[^>]*style="--tilt:/)
+    assert.match(html, /class="pin"/)
+    assert.match(html, /class="postit"/)
+  })
 })

@@ -32,6 +32,7 @@ const waited = (s: number | null) => {
   if (s < 86400) return `${Math.floor(s / 3600)} h`
   return `${Math.floor(s / 86400)} d`
 }
+const countOf = (status: string) => props.view.projects.reduce((n, p) => n + (p.board.find((c) => c.status === status)?.items.length ?? 0), 0)
 const doorOf = (e: NeedsYouEntry) => (e.decision ? `${e.decision.door} door` : null)
 
 interface Slot { item: Item; x: number; y: number }
@@ -90,6 +91,14 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
         <span>sync every {{ syncSeconds }}s</span>
       </div>
     </header>
+
+    <div class="hud" data-test="hud" role="group" aria-label="Status">
+      <span class="hud-i"><span class="lbl">Lens</span> read-only</span>
+      <span class="hud-i"><span class="lbl">Bind</span> {{ view.bindAddress }}</span>
+      <span class="hud-i run" data-test="hud-running"><b>{{ countOf('Running') }}</b> running</span>
+      <span class="hud-i wait" data-test="hud-waiting"><b>{{ view.needsYou.length }}</b> waiting on you</span>
+      <span class="hud-i blk" data-test="hud-blocked"><b>{{ countOf('Blocked') }}</b> blocked</span>
+    </div>
 
     <section class="panel needs" data-test="needs-you" aria-labelledby="orbit-needs-h">
       <h2 id="orbit-needs-h">Needs you <em>{{ view.needsYou.length }}</em></h2>
@@ -207,19 +216,6 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
               </div>
             </section>
 
-            <section v-if="p.andon.length" class="panel andon" data-test="andon" aria-label="Andon">
-              <h3>Andon</h3>
-              <article v-for="a in p.andon.filter((x) => !x.resolved)" :key="a.id" class="alert" role="alert" data-test="andon-open">
-                <b>LINE STOPPED</b> {{ a.reason }}
-                <p>{{ a.item === null ? 'no item' : `item #${a.item}` }}, owner {{ a.owner ?? 'unknown' }}<template v-if="a.since">, since {{ a.since }}</template></p>
-                <code>{{ a.ref }}</code> <span class="tag" data-test="provenance">{{ from(a.provenance) }}</span>
-              </article>
-              <article v-for="a in p.andon.filter((x) => x.resolved)" :key="a.id" class="ok-line" data-test="andon-resolved">
-                <b>RESOLVED</b> {{ a.reason }}
-                <p>{{ a.item === null ? 'no item' : `item #${a.item}` }}, owner {{ a.owner ?? 'unknown' }}. Countermeasure: {{ a.countermeasure }}</p>
-                <code>{{ a.ref }}</code> <span class="tag" data-test="provenance">{{ from(a.provenance) }}</span>
-              </article>
-            </section>
           </div>
 
           <div class="col">
@@ -243,6 +239,20 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
                 </dl>
               </template>
               <p v-else class="dim">The board is empty.</p>
+            </section>
+
+            <section v-if="p.andon.length" class="panel andon" data-test="andon" aria-label="Andon">
+              <h3>Andon</h3>
+              <article v-for="a in p.andon.filter((x) => !x.resolved)" :key="a.id" class="alert" role="alert" data-test="andon-open">
+                <b>LINE STOPPED</b> {{ a.reason }}
+                <p>{{ a.item === null ? 'no item' : `item #${a.item}` }}, owner {{ a.owner ?? 'unknown' }}<template v-if="a.since">, since {{ a.since }}</template></p>
+                <code>{{ a.ref }}</code> <span class="tag" data-test="provenance">{{ from(a.provenance) }}</span>
+              </article>
+              <article v-for="a in p.andon.filter((x) => x.resolved)" :key="a.id" class="ok-line" data-test="andon-resolved">
+                <b>RESOLVED</b> {{ a.reason }}
+                <p>{{ a.item === null ? 'no item' : `item #${a.item}` }}, owner {{ a.owner ?? 'unknown' }}. Countermeasure: {{ a.countermeasure }}</p>
+                <code>{{ a.ref }}</code> <span class="tag" data-test="provenance">{{ from(a.provenance) }}</span>
+              </article>
             </section>
           </div>
         </div>
@@ -296,13 +306,18 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
   background: radial-gradient(1000px 600px at 50% 30%, #0c2240, transparent 70%), var(--bg);
   color: var(--ink);
   font: 13px/1.5 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  min-height: 100vh;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100dvh;
   padding: 0 1rem 2rem;
 }
 .orbit a { color: var(--cy); }
 .orbit code { color: var(--am); overflow-wrap: anywhere; }
 .orbit h1, .orbit h2, .orbit h3, .orbit h4 { margin: 0; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
-.top { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.6rem 0; border-bottom: 1px solid rgba(61, 245, 255, 0.35); }
+.hud { display: flex; flex-wrap: wrap; gap: 0.3rem 1.4rem; padding: 0.5rem 3rem 0.5rem 0; border-bottom: 1px solid rgba(61, 245, 255, 0.2); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+.hud b { font-size: 14px; margin-right: 0.2rem; }
+.hud .run b { color: var(--cy); } .hud .wait b { color: var(--mg); } .hud .blk b { color: var(--rd); }
+.top { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.6rem 3rem 0.6rem 0; border-bottom: 1px solid rgba(61, 245, 255, 0.35); }
 .brand { font-size: 15px; color: var(--cy); }
 .brand span { color: var(--dim); }
 .chip, .tag { display: inline-block; border: 1px solid currentColor; padding: 0 0.5rem; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0.2rem; }

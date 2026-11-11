@@ -9,14 +9,7 @@ const clock = (iso: string) => iso.slice(11, 19) + ' UTC'
 
 <template>
   <main :data-refresh-seconds="refreshSeconds">
-    <div class="chrome">
-      <ThemeSwitcher :active="active" @select="(id) => (cookie = id)" />
-      <p class="refresh">
-        Last refreshed:
-        <time data-test="last-refreshed" :datetime="state.refreshedAt ?? undefined">{{ state.refreshedAt ? clock(state.refreshedAt) : 'never' }}</time>
-        (every {{ refreshSeconds }}s)
-      </p>
-    </div>
+    <ThemeSwitcher :active="active" :refreshed-at="state.refreshedAt" :refresh-seconds="refreshSeconds" @select="(id) => (cookie = id)" />
     <p v-if="state.error" role="alert" data-test="refresh-error" class="banner">
       Refresh failed: {{ state.error }}. Last good refresh: {{ state.refreshedAt ? clock(state.refreshedAt) : 'never' }}.
     </p>
@@ -25,7 +18,5 @@ const clock = (iso: string) => iso.slice(11, 19) + ' UTC'
 </template>
 
 <style scoped>
-.chrome { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.5rem 1rem; }
-.refresh { margin: 0; font-size: 0.9rem; }
-.banner { margin: 0 1rem; padding: 0.5rem 0.8rem; border: 2px solid currentColor; font-weight: bold; }
+.banner { margin: 0; padding: 0.5rem 3.5rem 0.5rem 1rem; border-bottom: 2px solid #8a0f14; background: #fff1f0; color: #5c0a0e; font-weight: bold; }
 </style>

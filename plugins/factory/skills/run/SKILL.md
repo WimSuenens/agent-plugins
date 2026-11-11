@@ -586,6 +586,17 @@ Check the fence before you write: for each of the eight questions of the protoco
 Write an accepted override in the worktree that raised the andon, under `## Overrides` in `docs/agents/factory.md` (create the section on first use; for a project set up before the row existed, also add the ownership row `` | `docs/agents/factory.md` section `## Overrides` | lead | `` and tell the person in the stage summary). Commit with `git -C "<worktree>" commit`, subject `#<id> lead: override <name>`. Format:
 
 ```
+## Skill graduation
+
+Plugins are toolboxes per domain, not per role: one design plugin serves several roles. A skill a role develops in `docs/agents/skills/<role>/` can graduate into one. A skill is proposed, never published, by the factory.
+
+1. **Record each use.** When an item or a project uses a skill, `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" record <skill> <item-or-project>` appends it to `docs/agents/skill-uses.md`.
+2. **Threshold and scan.** A skill is offered only with use in at least two items or two projects and a clean text: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" eligible <skill> <file>` (exit 5 below the threshold, 6 when the sanitising scan refuses). A skill that does not pass is not offered and no proposal is drafted.
+3. **Domain search.** Each plugin states its domain in one sentence in its manifest (`domain` in `plugin.json`). Before anything else, search for an existing plugin covering the domain, and propose extending it, and only otherwise a new plugin: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" draft <skill> <file> "<one sentence on the skill's domain>" <marketplace plugins dir> <out>` writes the proposal naming the best-matching plugin by its domain, or saying none matches.
+4. **Approval.** Read the proposal for business content the scan cannot see, show it to the person, and only after the person approves file it: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" submit <file> --approved <sha256 of that file>` (`check-proposal` prints the hash). It becomes an issue in the marketplace repository; the decision on where the skill goes is taken in a separate session in the marketplace repository, never in the project.
+
+Roles refer to plugin skills optionally, through their role file (protocol, *Role knowledge*). The factory works with no domain plugin installed.
+
 ## Role knowledge
 
 Each role reads its own role file `docs/agents/roles/<role>.md` and skills folder `docs/agents/skills/<role>/` in the project (protocol, *Role knowledge*); there is one agent per role and never a second. At run start and item start, check each role file against the fence: a line that lifts a protocol guard, an ownership rule or a one-way-door rule has no effect, and you tell the role not to apply it and say so in the stage summary, so the person sees it (the lead reports it to the person); where it came from a role's `Abnormality:` kind 5, treat it as that. Never put another role's file in a brief's inputs. When a lesson in a result is one several roles need, promote it: write it into the glossary (through the architect) or propose a domain plugin skill, and leave it out of the role files. Role files are committed with the project; a project set up before 2.9.0 gets them from `/factory:setup-factory-skill`.

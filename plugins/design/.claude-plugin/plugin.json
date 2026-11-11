@@ -1,6 +1,7 @@
 {
   "name": "design",
   "description": "A design layer over mattpocock/skills: UX-psychology vocabulary graded by evidence, UI reviews that flag dark patterns, design systems built from mechanism, an interview-driven design direction, and per-repo setup so upstream skills honour all of it.",
+  "domain": "Visual design, user interface review, UX psychology and design systems.",
   "author": {
     "name": "Wim Suenens",
     "url": "https://wim.suenens.me"

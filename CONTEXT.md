@@ -39,6 +39,10 @@ _Avoid_: global fix, upstream patch
 **Improvement trace** — one row in `docs/agents/improvements.md` per project-local improvement: date, name, role, the measure it moves, its reading before, what changed and why. A later cycle reports before and after for it, with `not captured` where the measure was not read.
 _Avoid_: changelog (of the project), log
 
+**Plugin domain** — the one sentence in a plugin's manifest (`domain` in `plugin.json`) saying what field of work it is a toolbox for. Plugins are organised by domain, not by role. The factory searches the domains for an existing plugin before it proposes a new one.
+
+**Skill graduation** — a project skill that proved itself in at least two items or two projects and passed the sanitising scan is drafted as a proposal naming the best-matching plugin by its domain (or saying none matches). It is proposed, never published, by the factory: it reaches the marketplace repository only after the person approves, and the decision is taken there in a separate session. A role file may refer to plugin skills optionally; the factory works with none installed. See [119](contracts/119-skill-graduation.md).
+
 **Role file** — a role's project-specific rules, checks and knowledge, at `docs/agents/roles/<role>.md` with its skills folder `docs/agents/skills/<role>/`, under version control. It adds to the standard and never lifts the fence; only its own role reads it. There is still one agent per role.
 _Avoid_: role memory (the user-scope store it replaces), second agent
 

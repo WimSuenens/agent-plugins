@@ -24,7 +24,7 @@ Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/integrator.sh" plan <board.json>` (scri
 - `merge` lines: approved PRs merge before any start, and their paths stay held until they merge.
 - `order` and `advise` lines: the Ready slices in the order that respects dependencies. Where a dependency changes the order you advise a different order and say why.
 - `start` and `pause` lines: one per Ready slice. A pause names its reason: an overlap with a slice in flight (`overlaps <id> on <path>`), a dependency not done, or no path list yet.
-- `measure` lines: waiting time, lead time, batch size and slices in flight (waiting time, lead time and batch size are your flow measures). A value the board does not hold is written `not captured`; never guess one.
+- `measure` lines: waiting time, lead time, batch size and slices in flight (waiting time, lead time and batch size are your flow measures), then `measure skipped` (the roles the lead skipped, counted from the snapshot's `skipped` lists) and `measure rework skipped` / `measure rework full` (the mean rework rounds of Done slices with and without skips, from `rework_rounds`), so a skip that raises rework shows as a finding for the improvement loop. A value the board does not hold is written `not captured`; never guess one.
 
 ## Merge train
 

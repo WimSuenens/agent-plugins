@@ -42,7 +42,18 @@ interface Found {
   failure?: ParseFailure
 }
 
-function parseAdr(rel: string, text: string, provenance: Provenance): Found {
+/** The web address of a tree's origin remote (GitHub only), or null. */
+async function webBase(treePath: string): Promise<string | null> {
+  try {
+    const url = (await run('git', ['-C', treePath, 'remote', 'get-url', 'origin'])).stdout.trim()
+    const m = url.match(/github\.com[:/]([^/\s]+\/[^/\s]+?)(?:\.git)?\/?$/)
+    return m ? `https://github.com/${m[1]}` : null
+  } catch {
+    return null
+  }
+}
+
+function parseAdr(rel: string, text: string, provenance: Provenance, web: string | null): Found {
   const fail = (reason: string): Found => ({ failure: { path: rel, reason, provenance } })
   const num = basename(rel).match(/^(\d{4})-.+\.md$/)
   if (!num) return fail('file name does not start with a four digit number and a dash')
@@ -53,12 +64,13 @@ function parseAdr(rel: string, text: string, provenance: Provenance): Found {
   const title = text.slice(fm[0].length).match(/^#\s+(\S.*?)\s*$/m)?.[1]
   if (!title) return fail('missing a "# title" heading')
   const order = Number(num[1])
-  return { decision: { id: `adr-${num[1]}`, kind: 'adr', title, status, order, date: null, ref: rel, provenance } }
+  return { decision: { id: `adr-${num[1]}`, kind: 'adr', title, status, order, date: null, ref: rel, url: web && `${web}/blob/${provenance.kind === 'in-flight' ? provenance.item : 'HEAD'}/${rel}`, provenance } }
 }
 
 /** ADR artifacts of every tree. A worktree's copy that equals the main one is not repeated; a changed one replaces it. */
 async function adrs(p: ProjectConfig): Promise<Found[]> {
   const [main, ...others] = await trees(p)
+  const web = await webBase(main.path)
   const read = async (tree: Tree) => {
     const dir = join(tree.path, 'docs', 'adr')
     let names: string[] = []
@@ -74,7 +86,7 @@ async function adrs(p: ProjectConfig): Promise<Found[]> {
   const found: Found[] = []
   const ids = new Set<string>()
   for (const f of [...base.filter((b) => !replaced.has(b.rel)), ...changed]) {
-    const r = parseAdr(f.rel, f.text, f.tree.provenance)
+    const r = parseAdr(f.rel, f.text, f.tree.provenance, web)
     if (r.decision) {
       if (ids.has(r.decision.id) && f.tree.provenance.kind === 'in-flight') r.decision.id += `@${f.tree.provenance.item}`
       ids.add(r.decision.id)
@@ -111,7 +123,7 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
       return (await cards(p)).flatMap((c): Item[] =>
         c.number === null
           ? []
-          : [{ id: `item-${c.number}`, number: c.number, title: c.title, url: c.url, factoryStatus: c.factoryStatus ?? 'No status', kind: c.kind, role: c.role, effort: c.effort, provenance: { kind: 'event' } }],
+          : [{ id: `item-${c.number}`, number: c.number, title: c.title, url: c.url, factoryStatus: c.factoryStatus ?? 'No status', kind: c.kind, role: c.role, effort: c.effort, ...(c.blockedBy ? { blockedBy: c.blockedBy } : {}), provenance: { kind: 'event' } }],
       )
     },
     async directions(p) {

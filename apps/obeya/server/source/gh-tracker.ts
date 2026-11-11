@@ -30,6 +30,11 @@ function effortOf(v: unknown): TrackerCard['effort'] {
   return null
 }
 
+function blockersOf(v: unknown): number[] | null {
+  const nums = (Array.isArray(v) ? v.map(String) : typeof v === 'string' ? [v] : []).flatMap((s) => [...s.matchAll(/(\d+)/g)].map((m) => Number(m[1])))
+  return nums.length ? nums : null
+}
+
 export class GhTracker implements TrackerAdapter {
   async cards(t: TrackerConfig): Promise<TrackerCard[]> {
     const out = await gh(['project', 'item-list', String(t.projectNumber), '--owner', t.owner, '--format', 'json', '--limit', '1000'])
@@ -54,6 +59,7 @@ export class GhTracker implements TrackerAdapter {
         kind: text(field('Kind')),
         role: text(field('Role')),
         effort: effortOf(field('Parent issue')),
+        blockedBy: blockersOf(field('Blocked by')),
         raw: String(it?.id ?? ''),
       }
     })

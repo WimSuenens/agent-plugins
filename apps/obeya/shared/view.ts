@@ -1,7 +1,13 @@
-import type { Direction, ParseFailure, ProjectSummary } from './types'
+import type { Decision, Direction, Item, ParseFailure, ProjectSummary } from './types'
 
 /** One project as a theme sees it: the summary plus the read-model objects the base views need. */
-export type ProjectView = ProjectSummary & { parseFailures: ParseFailure[]; directions: Direction[] }
+export type ProjectView = ProjectSummary & { parseFailures: ParseFailure[]; board: BoardColumn[]; decisions: Decision[]; directions: Direction[] }
+
+/** One board column: a factory status and its items, in issue order. */
+export interface BoardColumn {
+  status: string
+  items: Item[]
+}
 
 /**
  * Everything a theme gets. Themes receive this and nothing else: they may not fetch, compute or reshape data.
@@ -9,7 +15,7 @@ export type ProjectView = ProjectSummary & { parseFailures: ParseFailure[]; dire
  */
 export interface PageView {
   projects: ProjectView[]
-  needsYou: unknown[]
+  needsYou: Item[]
   /** The read-only lens badge: the address the server is bound to. */
   bindAddress: string
 }

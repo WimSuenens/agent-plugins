@@ -56,8 +56,8 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 
 | Piece | What it does |
 |---|---|
-| `run` (user) | The lead. Clarifies the destination, has wayfinding chart the map, clears its one-way doors in a frontier round merged as one PR of ADRs (research and prototypes AFK, the decision to the person), cuts each slice, starts a branch and worktree per item, runs up to `parallel-limit` slices at once, briefs each role as a sub-issue, reviews their two-way decisions, moves each card across the `Factory status` board, and resurveys after each merge until the map dissolves. |
-| `setup-factory-skill` (user) | Writes `docs/agents/factory.md` (decision-maker level, role model overrides, path ownership, worktree location, parallel limit, tracker ids), patches the tracker doc, and prepares the GitHub Project board. On a 1.x project it runs the migration to 2.0.0, after the person's yes. |
+| `run` (user) | The lead. Clarifies the destination, has wayfinding chart the map, clears its one-way doors in a frontier round merged as one PR of ADRs (research and prototypes AFK, the decision to the person), cuts each slice, starts a branch and worktree per item, runs every slice whose path list does not overlap another's at once, briefs each role as a sub-issue, reviews their two-way decisions, moves each card across the `Factory status` board, and resurveys after each merge. A run is one cycle over the map's standing backlog: it starts with intake and ends when the backlog is empty, the optional `run-budget` is reached or you stop it. |
+| `setup-factory-skill` (user) | Writes `docs/agents/factory.md` (decision-maker level, role model overrides, path ownership, worktree location, optional run budget, tracker ids), patches the tracker doc, and prepares the GitHub Project board. On a 1.x project it runs the migration to 2.0.0, after the person's yes. |
 | 7 role agents | `factory:<role>`, each with checkable *Inputs needed* and *Done* lists, sharing one [protocol](plugins/factory/references/protocol.md). |
 | Role models | Each role picks a model by the cost of its mistakes: product owner, architect, QA engineer, and security reviewer `inherit` the lead's model; developer and DevOps run on `sonnet`; the docs writer on `haiku`. A repo overrides any role in the `## Role models` table of `docs/agents/factory.md`, with `haiku`, `sonnet`, `opus`, or `fable`. |
 | Private role memory | Each role keeps craft notes in its own memory; a plugin hook stops one role reading another's. |
@@ -96,7 +96,7 @@ A card that waits on the person always has a needs-you comment first, which says
 
 Each spawn of a role on an item is one **role task**: a sub-issue of the slice, titled and marked for its role, with the brief as its body and the role's result as its closing comment. Findings from QA or security reach a role as a new `rework <k>` sub-issue; the earlier ones stay closed.
 
-Slices run in parallel up to `parallel-limit` (default `2`, in the `## Parallel slices` section of `docs/agents/factory.md`) when their path lists do not overlap. Each contract names its paths in a `Paths:` block; a path that overlaps another slice's list, or its `shared:` entry, keeps the second slice waiting. `factory-state: 2` on line 1 of `docs/agents/factory.md` is what says the project has migrated. Contracts: [64-board-status](contracts/64-board-status.md), [64-role-tasks](contracts/64-role-tasks.md), [64-parallel-slices](contracts/64-parallel-slices.md) and [64-board-script](contracts/64-board-script.md).
+Slices run in parallel whenever their path lists do not overlap, with no count limit (since 2.6.0; the old `parallel-limit` line is ignored and setup removes it). The only brake is the optional `run-budget: <N> tokens|hours` line in the `## Run budget` section of `docs/agents/factory.md` (`none` by default): when it is reached, nothing new starts and work in flight stays resumable. Each contract names its paths in a `Paths:` block; a path that overlaps another slice's list, or its `shared:` entry, keeps the second slice waiting. `factory-state: 2` on line 1 of `docs/agents/factory.md` is what says the project has migrated. Contracts: [64-board-status](contracts/64-board-status.md), [64-role-tasks](contracts/64-role-tasks.md), [64-parallel-slices](contracts/64-parallel-slices.md) and [64-board-script](contracts/64-board-script.md).
 
 ### Upgrading a project to 2.0.0
 
@@ -144,7 +144,8 @@ Four scripts were added in 2.0.0. The lead and the setup skill call them, and ea
 ```bash
 bash plugins/factory/scripts/paths.sh overlap <file>... -- <file>...          # do two path lists overlap (rules 1 to 3 of the contract)
 bash plugins/factory/scripts/factory-config.sh state [docs/agents/factory.md]  # exit 3 when line 1 is not factory-state: 2
-bash plugins/factory/scripts/factory-config.sh limit [docs/agents/factory.md]  # prints the parallel limit (2 when the line is absent)
+bash plugins/factory/scripts/factory-config.sh budget [docs/agents/factory.md]  # prints the run budget ("none", "<N> tokens" or "<N> hours")
+bash plugins/factory/scripts/factory-config.sh reached <spent> [docs/agents/factory.md]  # exit 1 when the budget is reached
 bash plugins/factory/scripts/post-text.sh scan [--needs-you] <file>...        # refuses home paths and secrets; with --needs-you, also the names of work folders and branches
 bash plugins/factory/scripts/board.sh plan --owner <owner> --project <number>  # reads the board and prints the mapping; changes nothing
 ```

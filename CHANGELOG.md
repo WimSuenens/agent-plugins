@@ -2,6 +2,26 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.6.0 (#111)
+
+Release: `2.6.0`, a **minor** release: a run becomes one cycle over a standing backlog, and the slice maximum is gone. Standard text changes, so the baseline resets. No `factory-state` change. Restart Claude Code sessions after updating: a session keeps the text it read when it started.
+
+Issue [#111](https://github.com/WimSuenens/agent-plugins/issues/111), map [#108](https://github.com/WimSuenens/agent-plugins/issues/108). [ADR 0017](docs/adr/0017-a-run-is-a-cycle-over-a-standing-backlog.md) revises [0007](docs/adr/0007-factory-owns-destination-and-slicing.md) and [0016](docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md); the glossary terms **Run** and **Parallel limit** are revised (**Run budget** replaces the latter).
+
+**What changed for the person who runs the factory:**
+
+- **A run is a cycle.** It starts with intake and restarts every mechanism (intake, maintenance, improvement, slice building). It ends when the backlog is empty, the budget is reached, or you stop it, and closes with the A3 and baseline as before.
+- **A map is long-lived.** It is not dissolved when the backlog empties; the map card goes to `Backlog` and waits for new ideas.
+- **No slice maximum.** `parallel-limit` is no longer read. Slices whose path lists do not overlap run side by side with no count limit; overlapping ones wait as `Ready`. A leftover `parallel-limit` line is ignored with a note from `factory-config.sh state`, and setup removes its `## Parallel slices` section.
+- **Optional run budget.** `run-budget: <N> tokens` or `<N> hours` in the new `## Run budget` section of `docs/agents/factory.md` (`none` by default). Reaching it starts nothing new; work in flight finishes the step in hand and stays resumable with `/factory:run #<slice>`.
+- **`factory-config.sh`** loses `limit` and gains `budget` and `reached <spent>`.
+
+**Tests.** New `tests/factory/test_run_cycle.sh` (scripts seam: budget reading, reaching it, no-limit overlap; standard-text seam: end conditions, map persistence, budget). `test_parallel.sh`, `test_board_script.sh`, `test_board_status.sh`, `test_baseline_a3.sh`, `test_round2_64.sh` and the version pins are updated.
+
+**Unverified.** Nothing ran in a live factory session. Parallel running with no count limit has not been tried on a real project, and the budget is measured by the lead from token and time records, which no script sums for a whole run. This repo's `docs/agents/factory.md` was edited by hand, not by setup.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `cfa85de8fca263c8380b0a71a92b68546e51c53c4d6f199448c9e86f0546595b`, tooling `953bfb2f7e009ee9b44b3a2a9c4103fbe9ce1c44e678d726a6d61115ac25e8c5`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.5.0 (#110)
 
 Release: `2.5.0`, a **minor** release: the factory takes ideas in at any time and triages each one to an outcome with a reason. Standard text changes, so the baseline resets. No `factory-state` change. Restart Claude Code sessions after updating: a session keeps the text it read when it started.

@@ -172,7 +172,7 @@ Thirty-one contracts: four from 1.0.0 (`39-*`, the record, the stage log, the sc
 ### 64-parallel-slices: the path lists, the limit, and the start gate
 
 - **Contract**: [contracts/64-parallel-slices.md](../../contracts/64-parallel-slices.md). Builds on ADR [0016](../adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md), which amends [ADR 0007](../adr/0007-factory-owns-destination-and-slicing.md).
-- **Governs**: the `Paths:` block of each contract (§1); the overlap rule (§2); the two lines of `docs/agents/factory.md`, `factory-state: 2` and `parallel-limit` (§3); the start gate and the pause after a usage-limit hit (§4); when the list is compared (§5); the diff check of QA and security (§6); the merge handling (§7); the resurvey pause (§8); and the architect's Done list (§10).
+- **Governs**: the `Paths:` block of each contract (§1); the overlap rule (§2); the lines of `docs/agents/factory.md` (§3; since 2.6.0 `factory-state: 2` and the optional `run-budget`, not `parallel-limit`, see ADR [0017](../adr/0017-a-run-is-a-cycle-over-a-standing-backlog.md)); the start gate and the pause after a usage-limit hit (§4; no slice maximum since 2.6.0); when the list is compared (§5); the diff check of QA and security (§6); the merge handling (§7); the resurvey pause (§8); and the architect's Done list (§10).
 - **Implemented in**: `plugins/factory/scripts/paths.sh`, `plugins/factory/scripts/factory-config.sh`; `plugins/factory/skills/run/SKILL.md`, section *Parallel slices*; the architect, QA and security agent files; the Resurvey step of `plugins/wayfinding/skills/wayfinder/SKILL.md` and `beachhead/SKILL.md`.
 - **Acceptance criteria**: AC-27 to AC-34.
 

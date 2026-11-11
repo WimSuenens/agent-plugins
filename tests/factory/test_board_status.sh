@@ -68,8 +68,8 @@ has ac4-blocked-role-task "$RUN" '| role task | its result is `blocked`, comment
 has ac4-andon-stops-agent-blocked "$RUN" '| role task | you stop its agent for an andon | `Blocked`; `Running` when the agent is resumed |'
 has ac4-slice-blocked-on-andon "$RUN" '| slice | you stop work on the slice for an andon |'
 has ac4-working-stays-running "$RUN" '| role task | its result is `working` (cut off) | stays `Running`, issue open |'
-has ac4-ready-waits-on-overlap "$RUN" '| slice | the start gate fails (limit reached, or a path overlap) | stays `Ready`; you say why |'
-has ac4-map-done-on-close "$RUN" '| map | the run is reported closed (step 9) | `Done` |'
+has ac4-ready-waits-on-overlap "$RUN" '| slice | the start gate fails (budget reached, or a path overlap) | stays `Ready`; you say why |'
+has ac4-map-done-on-close "$RUN" '| map | the run is reported closed (step 9) | `Backlog`; `Running` when the next run starts |'
 has ac4-map-running-on-adopt "$RUN" '| map | you create or adopt it (step 2) | `Running` |'
 has ac4-frontier-ticket-row "$RUN" '| frontier ticket | it waits on the frontier | `Backlog`'
 while IFS="$(printf '\t')" read -r step card ev st; do

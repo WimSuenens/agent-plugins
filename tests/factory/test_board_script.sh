@@ -349,8 +349,9 @@ for f in "Factory status" Kind Role Tokens Minutes Hours "Rework rounds" "Person
   ck "ac20-tracker-table-field-id-$f" "$want" "$got"
 done
 ck ac41-owner-and-number-and-project-id-kept "fixt 77 PVT_fixture01" "$(awk -F'|' '/^\| (owner|project number|project id) /{b=$3;gsub(/^ +| +$/,"",b);printf "%s ", b}' "$T/factory.md" | sed 's/ $//')"
-ck ac29-parallel-limit-added-with-default-2 "2" "$(bash "$SCRIPTS/factory-config.sh" limit "$T/factory.md")"
-ck ac41-parallel-slices-section-once 1 "$(grep -c '^## Parallel slices$' "$T/factory.md")"
+ck ac29-run-budget-added-with-default-none "none" "$(bash "$SCRIPTS/factory-config.sh" budget "$T/factory.md")"
+ck ac41-run-budget-section-once 1 "$(grep -c '^## Run budget$' "$T/factory.md")"
+ck ac41-no-parallel-slices-section 0 "$(grep -c '^## Parallel slices$' "$T/factory.md")"
 # the tracker doc
 ck ac41-tracker-doc-one-factory-operations-section 1 "$(grep -c '^## Factory operations$' "$T/tracker.md")"
 ck ac41-tracker-doc-other-sections-unchanged "$(awk '/^## Factory operations$/{f=1;next} /^## /{f=0} !f' "$T/tracker.before")" "$(awk '/^## Factory operations$/{f=1;next} /^## /{f=0} !f' "$T/tracker.md")"
@@ -361,11 +362,12 @@ cp "$T/factory.md" "$T/factory.once"; cp "$T/tracker.md" "$T/tracker.once"
 bash "$BOARD_SH" finish --owner fixt --project 77 --project-id PVT_fixture01 --views-confirmed --factory-md "$T/factory.md" --tracker-md "$T/tracker.md" >/dev/null 2>&1
 ck ac41-finish-twice-factory-md-identical 0 "$(cmp -s "$T/factory.md" "$T/factory.once" && echo 0 || echo 1)"
 ck ac41-finish-twice-tracker-doc-identical 0 "$(cmp -s "$T/tracker.md" "$T/tracker.once" && echo 0 || echo 1)"
-# an existing parallel-limit value is kept
-cp "$FX64/factory-1x.md" "$T/f2.md"; printf '\n## Parallel slices\n\nparallel-limit: 4\n' >>"$T/f2.md"; cp "$FX64/tracker-1x.md" "$T/t2.md"
+# an existing run-budget value is kept; an old parallel-limit section is removed
+cp "$FX64/factory-1x.md" "$T/f2.md"; printf '\n## Parallel slices\n\nparallel-limit: 4\n\nHow many.\n\n## Run budget\n\nrun-budget: 5 hours\n' >>"$T/f2.md"; cp "$FX64/tracker-1x.md" "$T/t2.md"
 bash "$BOARD_SH" finish --owner fixt --project 77 --project-id PVT_fixture01 --views-confirmed --factory-md "$T/f2.md" --tracker-md "$T/t2.md" >/dev/null 2>&1
-ck ac41-existing-parallel-limit-kept "4" "$(bash "$SCRIPTS/factory-config.sh" limit "$T/f2.md")"
-ck ac41-existing-parallel-limit-not-duplicated 1 "$(grep -c '^parallel-limit:' "$T/f2.md")"
+ck ac41-existing-run-budget-kept "5 hours" "$(bash "$SCRIPTS/factory-config.sh" budget "$T/f2.md")"
+ck ac41-run-budget-not-duplicated 1 "$(grep -c '^run-budget:' "$T/f2.md")"
+ck ac41-old-parallel-limit-removed 0 "$(grep -c 'parallel-limit' "$T/f2.md")"
 # a failure in step 2: line 1 is not written, factory-config.sh state exits 3
 cp "$FX64/factory-1x.md" "$T/f3.md"; cp "$FX64/tracker-1x.md" "$T/t3.md"
 mkdir -p "$T/shim"; cat >"$T/shim/mv" <<'S'

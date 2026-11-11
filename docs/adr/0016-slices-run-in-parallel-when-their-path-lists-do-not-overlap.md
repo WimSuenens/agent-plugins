@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: proposed, amended by 0017
 ---
 
 # Slices run in parallel when their path lists do not overlap

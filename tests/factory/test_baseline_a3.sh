@@ -283,8 +283,8 @@ has ac22-stopped-run-line "$S9" 'with the A3'"'"'s `run:` line reading `run stop
 # 'report ... closed' appears as an instruction only at 9.5 and in the settle round's pointer to 9.5
 ck ac22-report-closed-instructions 2 "$(grep -nE '(^|[^a-z])Report the run closed' "$SK" | grep -c .)"
 before ac22-report-after-settle "$SK" '3. **The settle round**' '5. **Report the run closed**'
-has ac22-entry-from-8-11 "$SK" '- **The map dissolves** → step 9.'
-has ac22-skill-run-identity "$SK" 'from the map'"'"'s creation (step 2) to its dissolving (step 8.11 to step 9)'
+has ac22-entry-from-8-11 "$SK" '- **Backlog empty, or the budget reached** → step 9.'
+has ac22-skill-run-identity "$SK" 'from its start (step 0) to its close (step 9)'
 
 # ---------- AC-23: the settle line ----------
 has ac23-experiment-line "$SK" '- The experiment: `<name> — started <date> — before <reading> / target <target> / after <reading> — keep, promote or drop?`'

@@ -485,13 +485,13 @@ do_finish() {
     jq -r '.fields[] | select(.name == "Role") | .options[] | "Role\t\(.name)\t\(.id)"' "$tmp/fields.json"
   } >"$tmp/spec.tsv"
 
-  local has_limit has_kind has_role
-  grep -q '^parallel-limit:' "$factory_md" && has_limit=1 || has_limit=0
+  local has_budget has_kind has_role
+  grep -q '^run-budget:' "$factory_md" && has_budget=1 || has_budget=0
   grep -q '^| Kind | Option id |' "$factory_md" && has_kind=1 || has_kind=0
   grep -q '^| Role | Option id |' "$factory_md" && has_role=1 || has_role=0
 
-  # 1. factory.md: the Tracker tables, the Parallel slices section
-  awk -F'|' -v spec="$tmp/spec.tsv" -v has_limit="$has_limit" -v has_kind="$has_kind" -v has_role="$has_role" '
+  # 1. factory.md: the Tracker tables; the old Parallel slices section goes, the Run budget section comes
+  awk -F'|' -v spec="$tmp/spec.tsv" -v has_budget="$has_budget" -v has_kind="$has_kind" -v has_role="$has_role" '
     function trim(s) { gsub(/^ +| +$/, "", s); return s }
     function emit_tbl(t,   i) { for (i = 1; i <= n[t]; i++) print "| " nm[t, i] " | " id[t, i] " |" }
     function emit_new_tables() {
@@ -511,6 +511,8 @@ do_finish() {
     {
       FS = "|"
       line = $0
+      if (line == "## Parallel slices") { skip = 1; next }
+      if (skip) { if (line ~ /^## /) skip = 0; else next }
       if (mode == "key") {
         if (line !~ /^\|/) {
           for (i = 1; i <= kn; i++) if (!(kk[i] in seen)) print "| " kk[i] " | " kv[i] " |"
@@ -540,10 +542,10 @@ do_finish() {
       if (line ~ /^\| Status \| Option id \|/) { mode = "tbl"; tbl = "Status"; print line; next }
       if (line ~ /^\| Kind \| Option id \|/) { mode = "tbl"; tbl = "Kind"; print line; next }
       if (line ~ /^\| Role \| Option id \|/) { mode = "tbl"; tbl = "Role"; print line; next }
-      if (line == "## Tracker" && !has_limit && !done_limit) {
-        print "## Parallel slices"; print ""; print "parallel-limit: 2"; print ""
-        print "How many slices may run at the same time, when their path lists do not overlap. `1` means one at a time."; print ""
-        done_limit = 1
+      if (line == "## Tracker" && !has_budget && !done_budget) {
+        print "## Run budget"; print ""; print "run-budget: none"; print ""
+        print "An optional brake on one run, in tokens or hours: `run-budget: <N> tokens` or `run-budget: <N> hours`. `none` means no brake."; print ""
+        done_budget = 1
       }
       print line
     }
@@ -551,7 +553,7 @@ do_finish() {
       if (mode == "key") for (i = 1; i <= kn; i++) if (!(kk[i] in seen)) print "| " kk[i] " | " kv[i] " |"
       if (mode == "tbl") { emit_tbl(tbl); if (tbl == "Status") emit_new_tables() }
       if (!has_kind || !has_role) emit_new_tables()
-      if (!has_limit && !done_limit) { print ""; print "## Parallel slices"; print ""; print "parallel-limit: 2" }
+      if (!has_budget && !done_budget) { print ""; print "## Run budget"; print ""; print "run-budget: none" }
     }
   ' "$(awk_operand "$factory_md")" >"$factory_md.board.$$" || { rm -f "$factory_md.board.$$"; echo "board: could not build factory.md" >&2; exit 7; }
   write_file "$factory_md.board.$$" "$factory_md"

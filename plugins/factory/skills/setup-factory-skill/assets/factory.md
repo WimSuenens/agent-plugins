@@ -38,11 +38,11 @@ Frontier-round worktrees live at `.claude/worktrees/frontier-<map>`, on branch `
 
 The folder is inside the project, in the agent tool's own worktree folder, and is ignored in `.gitignore`. Every test, lint and search run excludes `.claude/worktrees`, so the main checkout never scans the worktrees (for example `grep -rn --exclude-dir=worktrees`, `git grep`, or the runner's ignore setting).
 
-## Parallel slices
+## Run budget
 
-parallel-limit: 2
+run-budget: none
 
-How many slices may run at the same time, when their path lists do not overlap. `1` means one at a time.
+An optional brake on one run, in tokens or hours: `run-budget: <N> tokens` or `run-budget: <N> hours`. `none` means no brake.
 
 ## Tracker
 

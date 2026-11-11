@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "2.5.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.5.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "2.6.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.6.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback

@@ -9,3 +9,5 @@
 Run: `npm ci && npm run build && npm test` in `apps/obeya`. `bash tests/run.sh` runs the same suite through `tests/factory/test_obeya_app.sh`.
 
 Server configuration: `OBEYA_PROJECTS` (JSON list of `{id, path}`), `OBEYA_HOST` (loopback only, default `127.0.0.1`), `OBEYA_PORT`. The container sets `OBEYA_IN_CONTAINER=1` and binds `0.0.0.0` inside; the host must publish the port on `127.0.0.1` only.
+
+Theme tests (`themes.test.mjs`) build a temporary copy of the app with one trivial extra theme dropped in; `OBEYA_REFRESH_SECONDS` tunes the page refresh (default 15).

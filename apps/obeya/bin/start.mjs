@@ -12,4 +12,6 @@ if (!loopback && !inContainer) {
 }
 process.env.NITRO_HOST = host
 process.env.NITRO_PORT = process.env.OBEYA_PORT || process.env.NITRO_PORT || '3000'
+process.env.NUXT_PUBLIC_BIND_ADDRESS = `${host}:${process.env.NITRO_PORT}`
+if (process.env.OBEYA_REFRESH_SECONDS) process.env.NUXT_PUBLIC_REFRESH_SECONDS = process.env.OBEYA_REFRESH_SECONDS
 await import(fileURLToPath(new URL('../.output/server/index.mjs', import.meta.url)))

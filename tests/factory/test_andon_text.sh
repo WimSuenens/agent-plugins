@@ -16,7 +16,7 @@ before() { la="$(ln_of "$2" "$3")"; lb="$(ln_of "$2" "$4")"
   if [ "$la" -gt 0 ] && [ "$lb" -gt 0 ] && [ "$la" -lt "$lb" ]; then echo "ok   $1"; passed=$((passed + 1)); else echo "FAIL $1: '$3' ($la) not before '$4' ($lb)"; fail=1; fi; }
 
 # ---------- AC-1: the list, the line, the fence ----------
-ck ac1-section-order "## Doors|## Andon|## Never overridable locally|## Overrides|## Memory" "$(grep -E '^## (Doors|Andon|Never overridable locally|Overrides|Memory)$' "$PR" | paste -sd'|' -)"
+ck ac1-section-order "## Doors|## Andon|## Never overridable locally|## Overrides|## Role knowledge" "$(grep -E '^## (Doors|Andon|Never overridable locally|Overrides|Role knowledge)$' "$PR" | paste -sd'|' -)"
 before ac1-andon-after-doors "$PR" '## Doors' '## Andon'
 LIST="$(awk '/^### The list$/ {f=1; next} f && /^\| [1-7] \|/ {print} f && /^### /{exit}' "$PR")"
 ck ac1-seven-kinds-in-order "blocked-input|same-finding-twice|role-outside-role|slow-stage|fence-crossing|version-drift|other" \

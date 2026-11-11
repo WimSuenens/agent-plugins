@@ -375,7 +375,7 @@ if [ -s "$T/proto-main.md" ]; then
   ck f-never-overridable-locally-unchanged "$(sect "$T/proto-main.md" "Never overridable locally")" "$(sect "$PROTO" "Never overridable locally")"
   ck f-processes-and-ports-unchanged "$(sect "$T/proto-main.md" "Processes and ports")" "$(sect "$PROTO" "Processes and ports")"
   ck f-shared-resources-unchanged "$(sect "$T/proto-main.md" "Shared resources")" "$(sect "$PROTO" "Shared resources")"
-  ck f-memory-section-unchanged "$(sect "$T/proto-main.md" "Memory")" "$(sect "$PROTO" "Memory")"
+  ck f-memory-section-replaced-by-role-knowledge "" "$(sect "$PROTO" "Memory")"  # slice 115 revises the section into *Role knowledge*
   ck f-overrides-section-unchanged "$(sect "$T/proto-main.md" "Overrides")" "$(sect "$PROTO" "Overrides")"
   ck f-doors-unchanged "$(sect "$T/proto-main.md" "Doors")" "$(sect "$PROTO" "Doors")"
   ck f-missing-input-unchanged "$(sect "$T/proto-main.md" "Missing input")" "$(sect "$PROTO" "Missing input")"

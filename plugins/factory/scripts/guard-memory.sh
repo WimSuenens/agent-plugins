@@ -29,4 +29,16 @@ while IFS= read -r seg; do
   echo "Blocked: agent memory of other factory roles is private. Ask the lead for what you need." >&2
   exit 2
 done < <(printf '%s' "$input" | grep -oE "agent-memory(-local)?/[^/\"' ,*]*" | sed -E 's#.*/##')
+
+# Role knowledge in the project: docs/agents/roles/<role>.md and docs/agents/skills/<role>/ belong to that role.
+# An empty name (the folder itself, or a wildcard) reads every role's knowledge.
+while IFS= read -r seg; do
+  target="${seg%.md}"
+  if [ -n "$target" ]; then
+    case "$roles" in *" $target "*) ;; *) continue ;; esac
+    [ "$target" = "$caller" ] && continue
+  fi
+  echo "Blocked: role knowledge of other factory roles is private. Ask the lead for what you need." >&2
+  exit 2
+done < <(printf '%s' "$input" | grep -oE "docs/agents/(roles|skills)/[^/\"' ,*]*" | sed -E 's#.*/##')
 exit 0

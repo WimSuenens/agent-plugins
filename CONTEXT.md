@@ -29,7 +29,10 @@ _Avoid_: local fix, workaround (a **countermeasure experiment** is how one is me
 **Override** — the written form of a local countermeasure in a project's `docs/agents/factory.md`, with its start date; it ends at the close of the run it started in unless the person keeps, promotes or drops it there.
 _Avoid_: patch, exception
 
-**Fence** — the "Never overridable locally" list in the standard: what no override may touch (approvals, the decision-card route, QA and security gates, the andon, memory and shell-scope rules, the honesty rule for measures).
+**Role file** — a role's project-specific rules, checks and knowledge, at `docs/agents/roles/<role>.md` with its skills folder `docs/agents/skills/<role>/`, under version control. It adds to the standard and never lifts the fence; only its own role reads it. There is still one agent per role.
+_Avoid_: role memory (the user-scope store it replaces), second agent
+
+**Fence** — the "Never overridable locally" list in the standard: what no override may touch (approvals, the decision-card route, QA and security gates, the andon, memory and shell-scope rules, the honesty rule for measures); it binds role files as well, and permanently.
 _Avoid_: guardrail, allowlist
 
 **Yokoten** — spreading a proven local countermeasure into the plugin for every project; always the person's decision card.

@@ -2,6 +2,23 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.8.0 (#113)
+
+Release: `2.8.0`, a **minor** release: the integrator now does the mechanical merge of approved slices (the merge train). The standard text changes, so the fingerprints change. No `factory-state` change. Restart Claude Code sessions after updating.
+
+Issue [#113](https://github.com/WimSuenens/agent-plugins/issues/113), map [#108](https://github.com/WimSuenens/agent-plugins/issues/108). Contract [113-merge-train](contracts/113-merge-train.md).
+
+**What changed for the person who runs the factory:**
+
+- **The integrator merges.** After you approve *merge and clean up?*, the lead gives the integrator the approved slices in the plan's order. For each one, `scripts/merge-train.sh run` rebases on the slice before it, applies the version bump and the changelog line after the rebase, gives a new ADR the next free number when main already uses its own, re-runs the bump check, merges the PR, tags the release, and removes the item's branch and worktree. Parallel slices that share the version or the ADR numbers stop colliding.
+- **A clash is resolved or reported, never dropped.** A clash in the version or the changelog is resolved and the line says so; a clash anywhere else, or a missing changelog entry, stops the slice with a message.
+- **A failed merge keeps the worktree.** The train stops there, nothing after it runs, and the lead tells you.
+- **You still decide.** The integrator never merges a slice the lead did not mark approved, and the lead still sets the card `Done`.
+
+**Tests.** `test_merge_train.sh` covers the script (train order, bump and changelog after the rebase, ADR numbers, failure paths) and the text that says who owns the steps; the version pins move to 2.8.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `a97923379320d2f3685648cc9cc34fbd3b029cb6fc0fc335081566d601cc01dd`, tooling `cc109f583e396ab3861aba72bc26c6d95533092e34afc4bacb1c7a64e35e6f0d`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.7.1 (#112)
 
 Release: `2.7.1`, a **patch** release: the integrator runs on `sonnet` instead of `haiku`. The standard text changes, so the fingerprints change; no `factory-state` change. Restart Claude Code sessions after updating.

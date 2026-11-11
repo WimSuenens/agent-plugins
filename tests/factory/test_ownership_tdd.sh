@@ -207,7 +207,9 @@ ck ac8-question-E-present 1 "$(grep -c '^> \*\*E\. Data egress\.\*\*' "$PROTO")"
 # the protocol minus its ## Tests section is the baseline protocol, byte for byte
 awk '/^## Tests$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$PROTO" > "$T/proto-minus-tests.md"
 # slice 112 adds one shell line for the integrator; it is the only other change allowed here
-ck ac8-protocol-minus-tests-section-is-baseline "$(shasum -a 256 < "$T/proto-base.md" | cut -d' ' -f1)" "$(grep -v '^- \*\*integrator\*\*' "$T/proto-minus-tests.md" | shasum -a 256 | cut -d' ' -f1)"
+# slice 115 replaces the final ## Memory section with ## Role knowledge (tested in test_role_knowledge.sh); both are cut out here
+nomem() { awk '/^## (Memory|Role knowledge)$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$1"; }
+ck ac8-protocol-minus-tests-section-is-baseline "$(nomem "$T/proto-base.md" | shasum -a 256 | cut -d' ' -f1)" "$(nomem "$T/proto-minus-tests.md" | grep -v '^- \*\*integrator\*\*' | shasum -a 256 | cut -d' ' -f1)"
 
 # =============================================================== AC-9 the files agree on whose test to change (script part; the cards are human review)
 for f in $FILES; do

@@ -16,8 +16,8 @@ The schemas in `contracts/obeya/*.schema.json` (JSON Schema draft-07) are the co
 
 | Schema | Meaning |
 |---|---|
-| `item.schema.json` | A board card: factory status, kind, role, and the **effort** it belongs to (its parent map, or `null`). |
-| `decision.schema.json` | An ADR or a decision card, with an `order` (and a `date` where there is one). |
+| `item.schema.json` | A board card: factory status, kind, role, and the **effort** it belongs to (its parent map, or `null`). Optional `blockedBy`: the issue numbers (integers) from the board's "Blocked by" field; absent when the source does not know (added by #128). |
+| `decision.schema.json` | An ADR or a decision card, with an `order` (and a `date` where there is one). Optional `url` (string or `null`): a link that opens the artifact, when the source can build one; the repo source builds a GitHub blob link for ADRs (added by #128). |
 | `direction.schema.json` | The project's goal and current direction. |
 | `andon.schema.json` | An andon, with its item, reason and whether it is resolved. |
 | `intake-entry.schema.json` | An idea in the intake queue, its outcome and reason. |
@@ -26,7 +26,7 @@ The schemas in `contracts/obeya/*.schema.json` (JSON Schema draft-07) are the co
 
 No object assumes a file origin. `ref` and `path` are names in the source's own terms (a path for the repo source, a url for a tracker).
 
-Provenance in v1: an artifact on the main checkout is `merged`; an artifact that exists only in a live worktree, or differs from the main copy, is `in-flight` on that worktree's branch; a fact read from the tracker is `event`.
+Provenance in v1: an artifact on the main checkout is `merged`; an artifact that exists only in a live worktree, or that the worktree's branch changed since its merge-base with main, is `in-flight` on that worktree's branch (a worktree copy that differs from main only because the worktree is stale is not in flight: main's copy is used); a fact read from the tracker is `event`.
 
 ## 2. API
 
@@ -51,6 +51,10 @@ An artifact that is missing a required block or fails its schema becomes one par
 ## 5. Tracker adapter
 
 `TrackerAdapter.cards(tracker)` returns board cards. The `gh` implementation runs only `project item-list`, `issue list|view` and `pr list|view`; any other command is refused in code. A project names its board with `tracker: {owner, projectNumber}` in `OBEYA_PROJECTS`; without it there are no items.
+
+## 5a. Project configuration and refresh behaviour
+
+`OBEYA_PROJECTS` is a JSON list of `{id, path, tracker?}`. A malformed value, an entry without `id` and `path`, or a duplicate `id` is a visible error: `GET /api/projects` answers 500 naming `OBEYA_PROJECTS`, and the page shows the refresh banner; it is never read as an empty list. When one project's reads fail, the page shows that project in `error` state and still renders the others. Ids in the page (needs-you entries, selection) are scoped by project id. Tracker reads are shared by the endpoints of one refresh through a short cache (`OBEYA_CACHE_SECONDS`, default 5, `0` turns it off).
 
 ## 6. Generated types
 

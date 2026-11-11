@@ -16,7 +16,7 @@ const active = (p: ProjectView) => {
   const m = maps.value.get(p.id)!
   const id = peeked.value ?? selected.value
   if (!id) return null
-  return [...m.decisions, ...m.pending, ...m.ideas, ...m.lines.flatMap((l) => l.stations)].find((s) => s.id === id) ?? null
+  return [...m.decisions, ...m.pending, ...m.ideas, ...m.lines.flatMap((l) => l.stations)].find((s) => scopedKey(p.id, s.id) === id) ?? null
 }
 const items = (p: ProjectView) => p.board.flatMap((c) => c.items)
 const waited = (s: number | null) => {
@@ -108,7 +108,7 @@ const count = (p: ProjectView, status: string) => p.board.find((c) => c.status =
             <path :d="`M${X0 - 30} ${ROUTE_Y} H${m.youX}`" stroke="#1c1c1c" stroke-width="10" stroke-linecap="round" fill="none" />
             <path :d="`M${m.youX} ${ROUTE_Y} H${m.routeEndX}`" stroke="#1c1c1c" stroke-width="10" stroke-dasharray="16 10" fill="none" />
             <path :d="`M${m.routeEndX - 4} ${ROUTE_Y - 12} L${m.routeEndX + 20} ${ROUTE_Y} L${m.routeEndX - 4} ${ROUTE_Y + 12}Z`" fill="#1c1c1c" />
-            <Station v-for="s in m.decisions" :key="s.id" :station="s" colour="#1c1c1c" :selected="selected === s.id" @pick="pick" @peek="(id) => (peeked = id)" />
+            <Station v-for="s in m.decisions" :key="s.id" :station="s" colour="#1c1c1c" :selected="selected === scopedKey(p.id, s.id)" @pick="(id) => pick(scopedKey(p.id, id))" @peek="(id) => (peeked = id && scopedKey(p.id, id))" />
 
             <g data-test="you-are-here">
               <circle :cx="m.youX" :cy="ROUTE_Y" r="12" fill="#c4161c" stroke="#fff" stroke-width="3" />
@@ -116,13 +116,13 @@ const count = (p: ProjectView, status: string) => p.board.find((c) => c.status =
               <path :d="`M${m.youX - 6} 40 L${m.youX} 50 L${m.youX + 6} 40Z`" fill="#c4161c" />
               <text class="yah" :x="m.youX" y="31">YOU ARE HERE</text>
             </g>
-            <Station v-for="s in m.pending" :key="s.id" :station="s" colour="#1c1c1c" :selected="selected === s.id" @pick="pick" @peek="(id) => (peeked = id)" />
+            <Station v-for="s in m.pending" :key="s.id" :station="s" colour="#1c1c1c" :selected="selected === scopedKey(p.id, s.id)" @pick="(id) => pick(scopedKey(p.id, id))" @peek="(id) => (peeked = id && scopedKey(p.id, id))" />
 
             <!-- Feeder line: ideas merge into the route at the interchange -->
             <g data-test="feeder">
               <text class="rowname" x="16" :y="FEEDER_Y + 4">IDEAS FEEDER</text>
               <path v-if="m.ideas.length" :d="`M${m.ideas[0].x - 20} ${FEEDER_Y} H${m.interchangeX - 30} Q${m.interchangeX} ${FEEDER_Y} ${m.interchangeX} ${ROUTE_Y + 10}`" stroke="#0a7a41" stroke-width="7" fill="none" stroke-linecap="round" />
-              <Station v-for="s in m.ideas" :key="s.id" :station="s" colour="#0a7a41" :selected="selected === s.id" @pick="pick" @peek="(id) => (peeked = id)" />
+              <Station v-for="s in m.ideas" :key="s.id" :station="s" colour="#0a7a41" :selected="selected === scopedKey(p.id, s.id)" @pick="(id) => pick(scopedKey(p.id, id))" @peek="(id) => (peeked = id && scopedKey(p.id, id))" />
             </g>
             <g data-test="interchange">
               <circle :cx="m.interchangeX" :cy="ROUTE_Y" r="13" fill="#fff" stroke="#1c1c1c" stroke-width="5" />
@@ -135,7 +135,7 @@ const count = (p: ProjectView, status: string) => p.board.find((c) => c.status =
               <text class="rowname" x="16" :y="l.y - 2"><title>{{ l.title }}</title>{{ l.name }}</text>
               <rect x="16" :y="l.y + 6" width="130" height="5" :fill="l.colour" />
               <path :d="`M${X0 - 30} ${l.y} H${l.endX + STEP / 2}`" :stroke="l.colour" stroke-width="8" stroke-linecap="round" fill="none" />
-              <Station v-for="s in l.stations" :key="s.id" :station="s" :colour="l.colour" :selected="selected === s.id" @pick="pick" @peek="(id) => (peeked = id)" />
+              <Station v-for="s in l.stations" :key="s.id" :station="s" :colour="l.colour" :selected="selected === scopedKey(p.id, s.id)" @pick="(id) => pick(scopedKey(p.id, id))" @peek="(id) => (peeked = id && scopedKey(p.id, id))" />
             </g>
 
             <!-- Track closures -->
@@ -171,8 +171,8 @@ const count = (p: ProjectView, status: string) => p.board.find((c) => c.status =
           <h2 id="ib-h">Items <small>{{ items(p).length }}</small></h2>
           <p v-if="!items(p).length" class="none">No items on the board.</p>
           <ol class="rows scroll" tabindex="0" aria-label="Items, scrolls">
-            <li v-for="i in items(p)" :key="i.id" :class="['s-' + statusKey(i.factoryStatus), { hl: selected === i.id }]" data-test="departure-item" :data-test-board-item="i.id">
-              <button type="button" :aria-pressed="selected === i.id ? 'true' : 'false'" @click="pick(i.id)">
+            <li v-for="i in items(p)" :key="i.id" :class="['s-' + statusKey(i.factoryStatus), { hl: selected === scopedKey(p.id, i.id) }]" data-test="departure-item" :data-test-board-item="i.id">
+              <button type="button" :aria-pressed="selected === scopedKey(p.id, i.id) ? 'true' : 'false'" @click="pick(scopedKey(p.id, i.id))">
                 <span class="flag">#{{ i.number }}</span>
                 <span class="what">{{ i.title }}</span>
                 <span class="when" data-test="item-status">{{ i.factoryStatus }}</span>
@@ -191,7 +191,7 @@ const count = (p: ProjectView, status: string) => p.board.find((c) => c.status =
         <aside class="notices" aria-label="Service notices">
           <h2>Service notices</h2>
           <AndonList :andon="p.andon" />
-          <ParseFailureCard v-for="f in p.parseFailures" :key="f.path" :failure="f" />
+          <ParseFailureCard v-for="f in p.parseFailures" :key="failureKey(p.id, f)" :failure="f" />
           <IntakeQueue v-if="p.state === 'ok'" :entries="p.intake" />
           <DirectionPanel :directions="p.directions" :parse-failures="p.parseFailures" />
           <div class="scroll tall"><DecisionList :decisions="p.decisions" /></div>

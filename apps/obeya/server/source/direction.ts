@@ -1,7 +1,8 @@
 // The direction document (docs/direction.md): front matter `goal` and `current`, then a `## History` list.
-// Same rule as the ADRs: a worktree copy that equals the main one is not repeated; a changed or new one is in flight.
+// Same rule as the ADRs: a worktree copy is in flight only when its branch changed it since its merge-base with main (or main lacks it).
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { pickInFlight } from './in-flight'
 import type { Direction, ParseFailure, Provenance } from '../../shared/types'
 
 export const DIRECTION_PATH = 'docs/direction.md'
@@ -20,7 +21,7 @@ function parse(text: string, provenance: Provenance): FoundDirection {
   const fail = (reason: string): FoundDirection => ({ failure: { path: DIRECTION_PATH, reason, provenance } })
   const fm = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)
   if (!fm) return fail('missing front matter block with goal and current')
-  const field = (name: string) => fm[1].match(new RegExp(`^${name}:\\s*(\\S.*?)\\s*$`, 'm'))?.[1]
+  const field = (name: string) => fm[1].match(new RegExp(`^${name}:[ \\t]*(\\S.*?)[ \\t]*$`, 'm'))?.[1]
   const goal = field('goal')
   if (!goal) return fail('front matter has no goal')
   const current = field('current')
@@ -48,10 +49,13 @@ export async function readDirections([main, ...others]: DirectionTree[]): Promis
   }
   const mainText = await read(main)
   const found: FoundDirection[] = []
+  const base = mainText === null ? [] : [{ rel: DIRECTION_PATH, text: mainText, tree: main }]
   if (mainText !== null) found.push(parse(mainText, main.provenance))
+  const copies = []
   for (const t of others) {
     const text = await read(t)
-    if (text !== null && text !== mainText) found.push(parse(text, t.provenance))
+    if (text !== null) copies.push({ rel: DIRECTION_PATH, text, tree: t })
   }
+  for (const f of await pickInFlight(main.path, base, copies)) if (f.tree !== main) found.push(parse(f.text, f.tree.provenance))
   return found
 }

@@ -27,7 +27,9 @@ export interface BoardColumn {
 /** One line of the "needs you" slot: a pending decision, a board item or an idea waiting on the person. */
 export interface NeedsYouEntry {
   kind: 'decision' | 'waiting' | 'idea'
+  /** Scoped by project: `<projectId>:<id>`, unique across projects. */
   id: string
+  projectId: string
   title: string
   /** When the wait began; null when the source does not know (board items, ideas). */
   since: string | null

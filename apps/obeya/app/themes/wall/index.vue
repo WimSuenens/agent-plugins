@@ -129,7 +129,7 @@ const isOpen = (p: { andon: { resolved: boolean }[] }) => p.andon.some((a) => !a
               <span class="tag" data-test="provenance">{{ from(a.provenance) }}</span>
             </article>
             <p v-if="!p.andon.length" class="meta">No andon pulled.</p>
-            <ParseFailureCard v-for="f in p.parseFailures" :key="f.path" :failure="f" class="pf" />
+            <ParseFailureCard v-for="f in p.parseFailures" :key="failureKey(p.id, f)" :failure="f" class="pf" />
           </div>
         </section>
       </div>

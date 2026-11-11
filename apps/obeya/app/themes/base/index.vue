@@ -23,7 +23,7 @@ const props = defineProps<{ view: PageView }>()
       <DecisionList :decisions="p.decisions" />
       <IntakeQueue v-if="p.state === 'ok'" :entries="p.intake" />
       <AndonList :andon="p.andon" />
-      <ParseFailureCard v-for="f in p.parseFailures" :key="f.path" :failure="f" />
+      <ParseFailureCard v-for="f in p.parseFailures" :key="failureKey(p.id, f)" :failure="f" />
     </section>
   </div>
 </template>

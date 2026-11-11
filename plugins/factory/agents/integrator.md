@@ -28,12 +28,12 @@ Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/integrator.sh" plan <board.json>` (scri
 
 ## Merge train
 
-The lead gives you the approved slices in the order of the plan's `merge` lines, each with `Approved: <time>` (the person's approval, copied from the lead), its item number and its worktree. You never merge a slice the lead did not mark approved: without `Approved:` you write `Status: blocked` and stop. The mechanical steps are one script, run once per slice, in order, each after the one before it has merged, so a slice is rebased on that result:
+The lead gives you the approved slices in the order of the plan's `merge` lines, each with `Approved: <time>` (the person's approval, copied from the lead), its item number and its worktree. You never merge a slice the lead did not mark approved (the person's yes, or `Approved: gate <time>` from a passed `scripts/merge-gate.sh`; no proof, no merge): without `Approved:` you write `Status: blocked` and stop. The mechanical steps are one script, run once per slice, in order, each after the one before it has merged, so a slice is rebased on that result:
 
 `bash "${CLAUDE_PLUGIN_ROOT}/scripts/merge-train.sh" run <worktree> <id> --approved <time>` (scripts/merge-train.sh). It rebases on `origin/main`, gives a new ADR the next free number when main already uses its own, applies the version bump and the changelog entry after the rebase, re-runs the bump check, merges the PR (`--merge`), tags the release when the version changed, and removes the item's branch and worktree. A clash in the version or the changelog is resolved and the line says so; a clash anywhere else is reported (exit 3). Copy the script's lines into your result, one block per slice.
 
 - **A step fails** (any exit but 0): stop the train there. Do not run the next slice. Keep the worktree, and report the script's line and exit code to the lead, who tells the person. Never merge around a refusal, and never push by any means but the script's own lease push of the rebased branch.
-- **The card is the lead's.** You make no tracker write: when the script prints `done <id>`, the lead sets the card Done. The person still approves each merge; you only do the mechanical work.
+- **The card is the lead's.** You make no tracker write: when the script prints `done <id>`, the lead sets the card Done. Either the person or the gate approved each merge; you only do the mechanical work.
 
 ## Principles
 

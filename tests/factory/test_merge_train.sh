@@ -120,6 +120,6 @@ has agent-no-merge-without-approval "$AG" 'never merge a slice the lead did not 
 has agent-failure-reported "$AG" 'Keep the worktree'
 has agent-card-is-lead "$AG" 'the lead sets the card Done'
 has run-integrator-merges "$RUN" 'the integrator does the mechanical merge'
-has run-approval-stays "$RUN" 'the person still approves'
+has run-approval-or-gate "$RUN" 'approved by the person or has passed the gate'
 has protocol-shell-train "$PLUGIN/references/protocol.md" 'scripts/merge-train.sh'
 done_

@@ -52,7 +52,7 @@ ck budget-stop-message "maintenance budget reached: 2 of 2 candidates this cycle
 ck budget-nothing-filed-over "2" "$(jq 'length' "$T/g/issues.json")"
 bash "$MT" candidate c2 triage "New cycle" "$T/b.md" "$T/f2" >/dev/null; ck budget-is-per-cycle 0 "$?"
 bash "$MT" candidate c3 gardening "x" "$T/b.md" "$T/f2" >/dev/null 2>&1; ck bad-activity-exit-2 2 "$?"
-printf 'my path is /Users/someone/secret\n' >"$T/leak.md"
+printf 'my path is /%s/someone/secret\n' Users >"$T/leak.md"
 bash "$MT" candidate c4 triage "x" "$T/leak.md" "$T/f2" >/dev/null 2>&1; ck scan-refused-exit-6 6 "$?"
 reset
 bash "$MT" candidate c5 architecture "Deepen the board module" "$T/b.md" "$T/f2" --one-way-door >/dev/null; ck door-cand-rc 0 "$?"

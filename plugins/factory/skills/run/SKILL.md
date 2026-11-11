@@ -43,13 +43,27 @@ A slice ticket the factory did not cut is not an entry point; point the person a
 
 A run is one cycle over the standing backlog. The backlog is every open idea, candidate slice, ready slice and frontier ticket of the map. The map is a long-lived direction: new ideas refine its Destination and Decisions so far, and it is never dissolved by the factory. When `/wayfinding:wayfinder` reports the map dissolvable, keep it and say so.
 
-**Each run restarts every mechanism**, in this order: intake (*Idea intake*), maintenance, improvement (the Settle round of an earlier run, *Run start*), then slice building (steps 3 to 8). Maintenance and improvement are the mechanisms that exist; new ones join this list as slices ship.
+**Each run restarts every mechanism**, in this order: intake (*Idea intake*), maintenance, improvement (the Settle round of an earlier run, *Run start*), then slice building (steps 3 to 8). Maintenance runs only when its signals say so (*Maintenance cycle*).
 
 **Slices start whenever they can.** Every `Ready` slice whose path list does not overlap a slice in flight starts (*Parallel slices*). No configured maximum is read or required.
 
 **The budget.** `run-budget` in `docs/agents/factory.md` is `none`, `<N> tokens` or `<N> hours`, read by `factory-config.sh budget`. Measure the spent amount in the unit of the budget: tokens from `bash "${CLAUDE_PLUGIN_ROOT}/scripts/token-spend.sh"` over the run's items, hours from the run's start. Check `factory-config.sh reached <spent>` before every start of a slice or role task and at every item close. On exit 1 the budget is reached: start nothing new, let each role in hand finish its step, record the next step in each lead state and in the Factory run section so every slice in flight stays resumable with `/factory:run #<slice>`, say `budget reached` to the person, and go to step 9.
 
 **A run ends** when the backlog is empty (after intake and after the last merge), when the budget is reached, or when the person stops it. It closes at step 9 with the A3 and the baseline.
+
+## Maintenance cycle
+
+The factory decides on its own whether a maintenance cycle is opportune. It evaluates concrete signals: backlog empty or nearly empty (at most 1 ready slice), red CI or repeated rework on a path (2 or more), 5 or more merges since the last cycle, an untriaged inbox item older than a run, a known vulnerable dependency. With none present, no cycle runs.
+
+**Announce.** At run start, before intake, state in one line whether maintenance runs and on which signal. Build a snapshot file `{"backlog_ready", "ci", "rework": [{"path", "count"}], "merges_since_cycle", "inbox_aged", "vulnerable_deps"}` from the board, `gh run list` (or the project's CI), the ledger, the merge count since the last cycle's candidates and `intake.sh untriaged`, then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/maintenance.sh" decide <snapshot>` and say its line to the person unchanged.
+
+**The cycle.** When the line says `run`, work through the activities that the signals call for, using the upstream skills for triage, bug diagnosis, architecture improvement, code review and retrospective; those a model cannot invoke are read and followed by hand, as the research and triage skills are. Each activity is done by the role best placed for it, with the lead's brief.
+
+**Candidates only.** Maintenance produces backlog candidates of the maintenance kind and changes no code, file or issue directly. File each result with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/maintenance.sh" candidate <cycle> <triage|diagnose|architecture|review|retrospective> <title> <body-file>`; a candidate then goes through the same pipeline as any slice, and the integrator ranks them beside the feature candidates (*The integrator*).
+
+**One-way doors.** A candidate that touches a one-way door is filed with `--one-way-door` and is not executed: it waits for the person as a decision card (step 7).
+
+**The budget.** The per-cycle budget is `maintenance-budget` in `docs/agents/factory.md` (`<N> candidates`, default 10; `maintenance.sh budget`). `maintenance.sh candidate` counts the candidates of the cycle id; exit 7 stops the cycle: file nothing more, say `maintenance budget reached`, and go on to improvement and slice building.
 
 ## The integrator
 
@@ -478,7 +492,7 @@ An **idea** is a tracker issue labelled `idea`: a thought, a reference (URL, doc
 4. **One-way doors.** An idea that touches a one-way door is put to the person as a decision card; you do not decide it. Brief it as step 7 does, post the card on the idea (*Decision card*, scanned with `--needs-you`), set its card `Waiting on you`, and post the outcome comment only after the answer, citing the card. Everything else you decide yourself: a two-way triage needs no question.
 5. **Record.** Write the reason to a scratch file, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" triage <n> <outcome> <file>`. It scans the text (exit 6 on a hit: rewrite and run again), posts the comment `<!-- factory:triage v1 -->` and, for `rejected`, closes the issue. Never post an outcome without a reason; never leave an idea with no outcome when you end a run's intake.
 
-Maintenance, budgets and a standing backlog are other slices of the map; this section only collects and triages.
+This section collects and triages; maintenance is *Maintenance cycle*.
 
 ## Andon
 

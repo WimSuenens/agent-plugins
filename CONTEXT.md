@@ -88,6 +88,8 @@ _Avoid_: log, journal (the 1.x **Stage log** is the term it replaces)
 **Board** — the GitHub Project of the repo, where each map, slice, frontier ticket and role task is a card with a `Factory status`, a `Kind` and (for a role task) a `Role`. The only place a status lives.
 _Avoid_: dashboard, kanban (the board is the state, not a view of it)
 
+**Maintenance cycle** — the part of a run, decided by the factory on concrete signals (backlog nearly empty, red CI or repeated rework, many merges, aged inbox items, a vulnerable dependency) and announced in one line at run start, that triages, diagnoses, reviews and looks for architecture friction. It only files backlog candidates of the maintenance kind, within a per-cycle budget; a candidate that touches a one-way door is not executed.
+
 **Run budget** — the optional `run-budget: <N> tokens|hours` line of `docs/agents/factory.md` (default `none`): the only brake on a run. Reaching it starts nothing new and leaves work in flight resumable. There is no slice maximum: slices are in flight whenever they have an item branch and are Running, Waiting on you or Blocked, and run side by side when their path lists do not overlap. See [0017](docs/adr/0017-a-run-is-a-cycle-over-a-standing-backlog.md).
 _Avoid_: concurrency, worker count
 

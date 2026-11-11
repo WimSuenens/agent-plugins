@@ -2,6 +2,12 @@
 
 ## Factory
 
+**Integrator** — the factory role that reads the board afresh at each run event and returns a **dispatch plan**: which slices start, in which order, which merges come first, and which pause, each with a reason. It keeps no state and makes no tracker write; the Lead spawns the roles the plan names. See [0112](contracts/112-integrator.md).
+
+**Board snapshot** — the board as a JSON file the Lead gives the integrator at each event; the input of `scripts/integrator.sh plan`.
+
+**Flow measures** — waiting time (a Ready slice since it became ready), lead time (a Done slice from creation to close), batch size (slices started together) and in-flight count (slices Running, Waiting on you or Blocked). Each is a value or "not captured".
+
 **Lead** — the main session running `/factory:run`; it briefs the roles, reads their results, and stands between them and the person.
 _Avoid_: orchestrator, coordinator
 

@@ -5,7 +5,7 @@ A personal Claude Code marketplace. Its main plugins:
 - **`mattpocock-skills`** — upstream, unmodified, fetched straight from `mattpocock/skills`.
 - **`wayfinding`** — the planning overlay: `wayfinder`, `beachhead`, `reversibility`, `setup-wayfinding-skill`, `ask-me`.
 - **`design`** — the design overlay: `ux-psychology`, `ux-review`, `design-system`, `direction`, `setup-design-skill`. See [The design overlay](#the-design-overlay).
-- **`factory`** — a lead and seven role agents that take an idea to a destination, slice by slice: `run`, `setup-factory-skill`. See [The factory](#the-factory).
+- **`factory`** — a lead, seven role agents and the integrator (the dispatch plan) that take an idea to a destination, slice by slice: `run`, `setup-factory-skill`. See [The factory](#the-factory).
 
 It also lists `toolkit` (`source-to-pptx`) and `discover` (`debrief`).
 

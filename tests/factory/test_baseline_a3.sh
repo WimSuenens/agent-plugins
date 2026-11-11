@@ -439,7 +439,7 @@ if [ -n "$base" ] && [ "$base" != "$(git -C "$REPO" rev-parse HEAD)" ]; then
   chg="$(git -C "$REPO" diff --name-only "$base" HEAD -- plugins/factory)"
   out_of_list="$(printf '%s\n' "$chg" | grep -vE '^plugins/factory/(skills/run/SKILL\.md|references/[^/]+\.md|scripts/[^/]+|\.claude-plugin/plugin\.json)$' | grep . || true)"
   skip ac26-no-path-outside-the-list "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
-  ck ac26-no-new-agent-file 0 "$(git -C "$REPO" diff --name-only --diff-filter=ACR "$base" HEAD -- plugins/factory/agents | grep -c .)"
+  skip ac26-no-new-agent-file "retired by slice 112 (2.7.0 adds the integrator agent by design); the release delta is test_integrator.sh"
   skip ac26-no-agent-changed "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
   skip ac26-no-new-script "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
 else

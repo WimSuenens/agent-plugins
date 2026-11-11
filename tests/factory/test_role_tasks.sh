@@ -370,7 +370,8 @@ has ac14-closing-comment-is-for-non-working "$RUN" 'When you read a finished res
 git -C "$REPO" show origin/main:plugins/factory/references/protocol.md >"$T/proto-main.md" 2>/dev/null
 sect() { awk -v h="$2" '$0 == "## " h {f=1; print; next} /^## /{f=0} f' "$1"; }
 if [ -s "$T/proto-main.md" ]; then
-  ck ac16-shell-section-word-for-word-unchanged "$(sect "$T/proto-main.md" Shell)" "$(sect "$PROTO" Shell)"
+  # slice 112 adds one shell line for the integrator; the rest of the section stays word for word
+  ck ac16-shell-section-word-for-word-unchanged "$(sect "$T/proto-main.md" Shell)" "$(sect "$PROTO" Shell | grep -v '^- \*\*integrator\*\*')"
   ck f-never-overridable-locally-unchanged "$(sect "$T/proto-main.md" "Never overridable locally")" "$(sect "$PROTO" "Never overridable locally")"
   ck f-processes-and-ports-unchanged "$(sect "$T/proto-main.md" "Processes and ports")" "$(sect "$PROTO" "Processes and ports")"
   ck f-shared-resources-unchanged "$(sect "$T/proto-main.md" "Shared resources")" "$(sect "$PROTO" "Shared resources")"

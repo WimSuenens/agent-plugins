@@ -5,7 +5,7 @@
 **Lead** — the main session running `/factory:run`; it briefs the roles, reads their results, and stands between them and the person.
 _Avoid_: orchestrator, coordinator
 
-**Run** — one destination taken from idea to a dissolved map.
+**Run** — one cycle over a map's standing backlog: intake, maintenance, improvement and slice building all restart; it ends when the backlog is empty, the run budget is reached, or the person stops it, and closes with the improvement record. The map is a long-lived direction and outlives the run. See [0017](docs/adr/0017-a-run-is-a-cycle-over-a-standing-backlog.md).
 
 **Item** — one slice of a run, built on its own branch and merged on its own PR.
 _Avoid_: task, story
@@ -82,7 +82,7 @@ _Avoid_: log, journal (the 1.x **Stage log** is the term it replaces)
 **Board** — the GitHub Project of the repo, where each map, slice, frontier ticket and role task is a card with a `Factory status`, a `Kind` and (for a role task) a `Role`. The only place a status lives.
 _Avoid_: dashboard, kanban (the board is the state, not a view of it)
 
-**Parallel limit** — the number in the `parallel-limit: <N>` line of `docs/agents/factory.md` (default 2): how many slices may be in flight at once, when their path lists do not overlap. `1` means one at a time. A slice is in flight when it has an item branch and is Running, Waiting on you or Blocked. See [0016](docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md).
+**Run budget** — the optional `run-budget: <N> tokens|hours` line of `docs/agents/factory.md` (default `none`): the only brake on a run. Reaching it starts nothing new and leaves work in flight resumable. There is no slice maximum: slices are in flight whenever they have an item branch and are Running, Waiting on you or Blocked, and run side by side when their path lists do not overlap. See [0017](docs/adr/0017-a-run-is-a-cycle-over-a-standing-backlog.md).
 _Avoid_: concurrency, worker count
 
 **History view** — the board view of closed slices and closed role tasks with their hansei fields (`Tokens`, `Minutes`, `Hours`, `Rework rounds`, `Person touches`), newest first. The fields are text so that `not captured (<reason>)` is a legal value and a blank never stands for it.

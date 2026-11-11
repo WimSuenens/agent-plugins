@@ -81,17 +81,17 @@ bad="$(cd "$REPO" && grep -rn -- '--name-only' plugins | grep -v 'git -c core.qu
 ck r2-name-only-only-the-intended-forms 0 "$bad"
 ck r2-check-bump-uses-the-z-form "yes" "$(grep -q 'diff -z --no-renames --name-only' "$SCRIPTS/check-bump.sh" && echo yes || echo no)"
 
-# ---------- rule 5.6 on parallel-limit and factory-state (S7) ----------
-has r2-rule-5-6-names-both-lines "$RUN" 'or a line that starts at column 0 with `parallel-limit:` or `factory-state:` (a line changed, added or removed; compare before and after the commit; any difference counts)'
+# ---------- rule 5.6 on run-budget and factory-state (S7) ----------
+has r2-rule-5-6-names-both-lines "$RUN" 'or a line that starts at column 0 with `run-budget:` or `factory-state:` (a line changed, added or removed; compare before and after the commit; any difference counts)'
 has r2-rule-5-6-lead-exception "$RUN" 'unless both hold: the subject starts `#<id> lead: `'
 # the comparison the rule asks for, run on a scratch repo: a developer commit that changes the limit differs before and after; a commit on another line does not
 G="$T/r56"; mkdir -p "$G" && cd "$G" && git init -q -b main . 2>/dev/null
-printf 'factory-state: 2\n\n# Factory\n\n## Parallel slices\n\nparallel-limit: 2\n\nother text\n' >factory.md; git add -A; git commit -qm base
-line_changes() { git diff "$1^" "$1" -- factory.md | grep -cE '^[+-](parallel-limit:|factory-state:)'; }
-sed -i.bak 's/parallel-limit: 2/parallel-limit: 9/' factory.md; rm -f factory.bak; git commit -qam "#12 developer: raise the limit"; ck r2-5-6-limit-change-is-seen 2 "$(line_changes HEAD)"
+printf 'factory-state: 2\n\n# Factory\n\n## Parallel slices\n\nrun-budget: 2\n\nother text\n' >factory.md; git add -A; git commit -qm base
+line_changes() { git diff "$1^" "$1" -- factory.md | grep -cE '^[+-](run-budget:|factory-state:)'; }
+sed -i.bak 's/run-budget: 2/run-budget: 9/' factory.md; rm -f factory.bak; git commit -qam "#12 developer: raise the limit"; ck r2-5-6-limit-change-is-seen 2 "$(line_changes HEAD)"
 sed -i.bak 's/^factory-state: 2/factory-state: 1/' factory.md; rm -f factory.bak; git commit -qam "#12 developer: edit line 1"; ck r2-5-6-state-change-is-seen 2 "$(line_changes HEAD)"
 sed -i.bak 's/other text/other words/' factory.md; rm -f factory.bak; git commit -qam "#12 developer: prose"; ck r2-5-6-other-change-not-flagged 0 "$(line_changes HEAD)"
-printf 'parallel-limit: 3\n' >>factory.md; git commit -qam "#12 developer: add a second line"; ck r2-5-6-added-line-is-seen 1 "$(line_changes HEAD)"
+printf 'run-budget: 3\n' >>factory.md; git commit -qam "#12 developer: add a second line"; ck r2-5-6-added-line-is-seen 1 "$(line_changes HEAD)"
 cd "$T" || exit 1
 
 # ---------- scan scope (S3), S4 ----------

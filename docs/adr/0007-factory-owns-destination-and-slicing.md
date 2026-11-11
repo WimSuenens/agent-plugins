@@ -1,5 +1,5 @@
 ---
-status: proposed, amended by 0016
+status: proposed, amended by 0016 and 0017
 ---
 
 # The factory owns the destination and the slicing; wayfinding charts the route

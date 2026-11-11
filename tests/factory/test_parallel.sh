@@ -150,89 +150,37 @@ has ac32-run-text-severity "$RUN" 'each `off-list:` line is a finding with the p
 has ac32-run-text-lead-changes-version-at-merge "$RUN" 'The version file, the changelog line and the ADR number as assigned are applied by you at merge (not in the diff when the review runs)'
 
 # ---------- AC-33: one rule ----------
-hits="$(grep -rniE "one at a time|one slice at a time|items run one at a time" "$REPO/plugins/factory" "$REPO/plugins/wayfinding" "$REPO/README.md" "$REPO/docs/factory" 2>/dev/null | grep -vE "parallel-limit|\`1\` means one at a time|installed older wayfinding text" | wc -l | tr -d ' ')"
-ck ac33-no-text-states-the-old-rule-except-as-limit-1 0 "$hits"
-has ac33-run-cites-adr-0016-amends-0007 "$RUN" 'ADR 0016, which amends the closing rule of ADR 0007'
-has ac33-run-limit-1-means-one-at-a-time "$RUN" '`parallel-limit: 1` means one at a time'
+hits="$(grep -rniE "one at a time|one slice at a time|items run one at a time" "$REPO/plugins/factory" "$REPO/plugins/wayfinding" "$REPO/README.md" "$REPO/docs/factory" 2>/dev/null | grep -vE "installed older wayfinding text" | wc -l | tr -d ' ')"
+ck ac33-no-text-states-the-old-rule 0 "$hits"
+has ac33-run-cites-adr-0016-amended-by-0017 "$RUN" 'ADR 0016, amended by ADR 0017'
 has ac33-adr-number-assigned-at-slice-start "$RUN" 'Assign the next free number at slice start and record it in the lead state'
 has ac33-version-bump-at-merge-after-rebase "$RUN" 'Apply the version bump and the changelog line, and the ADR number as assigned, after rebasing on `main`'
 has ac33-factory-run-section-lists-items-in-flight "$RUN" 'in flight: #<id> (item/<id>), … | none'
 has ac33-beachhead-line "$BH" 'path list'
-ck ac33-adr-0016-status-amends-0007 1 "$(grep -c '0007' "$REPO/docs/adr/0016-slices-run-in-parallel-when-their-path-lists-do-not-overlap.md" | awk '{print ($1>0)}')"
 
-# ---------- AC-29: the limit setting and the start gate ----------
+# ---------- AC-29, revised by 2.6.0: no limit setting; the start gate is the budget and the overlap ----------
 fcfile() { printf '%s\n' "$2" >"$T/$1"; }
-lim() { bash "$FC" limit "$T/$1" 2>"$T/lim.err"; echo "rc=$?"; }
-fcfile f-abs "factory-state: 2"
-ck ac29-line-absent-is-2 "2
-rc=0" "$(lim f-abs)"
-fcfile f-2 "$(printf 'factory-state: 2\n\n## Parallel slices\n\nparallel-limit: 2\n')"
-ck ac29-line-2 "2
-rc=0" "$(lim f-2)"
-fcfile f-1 "$(printf 'parallel-limit: 1\n')"; ck ac29-line-1 "1
-rc=0" "$(lim f-1)"
-fcfile f-10 "$(printf 'parallel-limit: 10\n')"; ck ac29-line-10 "10
-rc=0" "$(lim f-10)"
-fcfile f-trail "$(printf 'parallel-limit: 3  \n')"; ck ac29-trailing-spaces-ok "3
-rc=0" "$(lim f-trail)"
-for bad in 0 -1 two "" 2.5 02 " 2" "+2" "2x"; do
-  fcfile f-bad "parallel-limit: $bad"
-  out="$(lim f-bad)"
-  ck "ac29-bad-value-[$bad]-exit-5" "rc=5" "$out"
-  ck "ac29-bad-value-[$bad]-names-the-line" "factory.md line \"parallel-limit: $bad\": parallel-limit must be a whole number of 1 or more" "$(cat "$T/lim.err")"
-done
-fcfile f-bad "parallel-limit:"; ck ac29-empty-value-no-space-exit-5 "rc=5" "$(lim f-bad)"
-fcfile f-two "$(printf 'parallel-limit: 2\nparallel-limit: 3\n')"; ck ac29-doubled-exit-5 "rc=5" "$(lim f-two)"
-ck ac29-doubled-message "factory.md has parallel-limit more than once" "$(cat "$T/lim.err")"
-fcfile f-indent "$(printf '  parallel-limit: 0\n')"; ck ac29-indented-line-not-matched-so-default "2
-rc=0" "$(lim f-indent)"
-fcfile f-quote "$(printf 'Note: parallel-limit: 0 is bad\n')"; ck ac29-line-inside-text-not-matched "2
-rc=0" "$(lim f-quote)"
-bash "$FC" limit "$T/none-such.md" >/dev/null 2>"$T/lim.err"; ck ac29-missing-file-exit-2 2 "$?"
+bash "$FC" limit "$T/none-such.md" >/dev/null 2>&1; ck ac29-limit-command-is-gone 2 "$?"
 bash "$FC" nope >/dev/null 2>&1; ck ac29-bad-command-exit-2 2 "$?"
-# the setting is read from the file and nowhere else: an environment variable or an argument changes nothing
-ck ac29-env-var-does-not-change-the-setting "2" "$(PARALLEL_LIMIT=7 parallel_limit=7 FACTORY_PARALLEL_LIMIT=7 bash "$FC" limit "$T/f-abs")"
-ck ac29-extra-argument-does-not-change-the-setting "2" "$(bash "$FC" limit "$T/f-abs" 9)"
-# the gate, table-driven (contract 64-parallel-slices section 4): a reference gate built from the two scripts
-gate() { # gate <factory.md> <k in flight> <overlap 0|1>  -> prints start | wait:limit | wait:overlap | stop
-  local n; n="$(bash "$FC" limit "$1" 2>/dev/null)" || { echo stop; return; }
-  if [ "$2" -ge "$n" ]; then echo wait:limit; return; fi
-  if [ "$3" = 1 ]; then echo wait:overlap; return; fi
-  echo start
-}
-fcfile g1 "parallel-limit: 1"; ck ac29-gate-n1-one-in-flight "wait:limit" "$(gate "$T/g1" 1 0)"
-fcfile g2 "parallel-limit: 2"
-ck ac29-gate-n2-one-in-flight-no-overlap "start" "$(gate "$T/g2" 1 0)"
-ck ac29-gate-n2-two-in-flight "wait:limit" "$(gate "$T/g2" 2 0)"
-ck ac29-gate-n2-one-in-flight-overlap "wait:overlap" "$(gate "$T/g2" 1 1)"
-ck ac29-gate-absent-behaves-as-2-first "start" "$(gate "$T/f-abs" 1 0)"
-ck ac29-gate-absent-behaves-as-2-second "wait:limit" "$(gate "$T/f-abs" 2 0)"
-ck ac29-gate-none-in-flight-starts-at-n1 "start" "$(gate "$T/g1" 0 0)"
-for bad in 0 -1 two ""; do fcfile gb "parallel-limit: $bad"; ck "ac29-gate-bad-[$bad]-stops" "stop" "$(gate "$T/gb" 0 0)"; done
-# the text of the gate in the run skill
-has ac29-run-limit-and-list-both "$RUN" 'You start the next `Ready` slice only when **both** hold'
+has ac29-run-gate-budget-and-list-both "$RUN" 'You start the next `Ready` slice only when **both** hold'
 has ac29-run-in-flight-definition "$RUN" 'a slice card with an item branch whose `Factory status` is `Running`, `Waiting on you` or `Blocked`'
-has ac29-run-says-why "$RUN" '`limit (<k> of <N> in flight)` or `overlaps #<id> on <path>`'
+has ac29-run-says-why "$RUN" '`budget reached` or `overlaps #<id> on <path>`'
+has ac29-run-no-maximum "$RUN" 'There is no maximum of slices in flight.'
 has ac29-run-reads-lists-from-worktrees "$RUN" '`.claude/worktrees/<id>/contracts/<id>-*.md`'
-has ac29-run-bad-value-stops "$RUN" 'on exit 5 stop and name the line to fix, as for a bad role model value, and start nothing'
-has ac29-run-after-usage-limit-n1 "$RUN" 'After a usage-limit hit the gate behaves as `N = 1` until the slices in flight have closed'
-# the template carries the setting with the default and the explanation
+if grep -q 'factory-config.sh limit' "$RUN"; then ck ac29-run-reads-no-limit 0 1; else ck ac29-run-reads-no-limit 0 0; fi
 TPL="$PLUGIN/skills/setup-factory-skill/assets/factory.md"
-ck ac29-template-parallel-limit-2 "2" "$(bash "$FC" limit "$TPL")"
-has ac29-template-section "$TPL" '## Parallel slices'
-has ac29-template-explains-one "$TPL" '`1` means one at a time'
-has ac29-template-explains-purpose "$TPL" 'How many slices may run at the same time, when their path lists do not overlap.'
+ck ac29-template-has-no-parallel-limit 0 "$(grep -c 'parallel-limit' "$TPL")"
 
 # ---------- AC-30: no build role before the list was compared ----------
 has ac30-comparison-after-architect-result "$RUN" 'The comparison is made **when the architect'"'"'s result is read, before the first brief of any other role**'
 has ac30-no-build-role-before-gate "$RUN" 'No developer, QA or security role is spawned for the slice before it passes the gate.'
 has ac30-overlapping-slice-stays-ready-with-files-kept "$RUN" 'A slice whose list overlaps stays `Ready`, with its requirement and contracts kept in its worktree'
-has ac30-product-owner-architect-may-start "$RUN" 'The product-owner and architect stages may start for a second slice while another runs (limit part only).'
+has ac30-product-owner-architect-may-start "$RUN" 'The product-owner and architect stages may start for a second slice while another runs (budget part only).'
 has ac30-step-6-comparison-after-architect-done "$RUN" "After the **architect's** \`done\`, make the path comparison before any other brief"
 # the comparison comes before the build stage in the step 6 text
 a="$(grep -n "make the path comparison before any other brief" "$RUN" | head -1 | cut -d: -f1)"; b="$(grep -n '^| Build, tracer bullet first' "$RUN" | head -1 | cut -d: -f1)"
 ck ac30-text-order-table-then-comparison 1 "$([ -n "$a" ] && [ -n "$b" ] && [ "$b" -lt "$a" ] && echo 1 || echo 0)"
-has ac30-start-gate-limit-part-in-step-5 "$RUN" '**The start gate, limit part**'
+has ac30-start-gate-budget-part-in-step-5 "$RUN" '**The start gate, budget part**'
 has ac30-re-check-on-contract-change "$RUN" 'run `overlap` again for that slice against the others'
 
 # ---------- AC-31: the pause ----------

@@ -61,6 +61,13 @@
         }
       ]
     },
+    "blockedBy": {
+      "description": "Issue numbers that block this item. Absent when the source does not know.",
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
     "provenance": {
       "$ref": "provenance.schema.json"
     }

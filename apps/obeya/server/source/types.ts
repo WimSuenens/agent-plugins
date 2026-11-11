@@ -21,6 +21,8 @@ export interface TrackerCard {
   kind: string | null
   role: string | null
   effort: { number: number; title: string | null } | null
+  /** Issue numbers from the board's "Blocked by" field; null when the board has none. */
+  blockedBy: number[] | null
   raw: string
 }
 

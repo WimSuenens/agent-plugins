@@ -1,5 +1,18 @@
-import type { ParseFailure, ProjectSummary } from '../../shared/types'
-import type { PageView } from '../../shared/view'
+import type { Decision, Item, ParseFailure, ProjectSummary } from '../../shared/types'
+import type { BoardColumn, PageView } from '../../shared/view'
+
+/** The factory statuses, in board order. A status the tracker has that is not here follows them, never dropped. */
+const FACTORY_STATUSES = ['Backlog', 'Ready', 'Running', 'Waiting on you', 'Blocked', 'Done']
+
+/** Groups items by factory status: the six known statuses first (even when empty), then any other status the tracker has. */
+function boardOf(items: Item[]): BoardColumn[] {
+  const known = FACTORY_STATUSES
+  const extra = [...new Set(items.map((i) => i.factoryStatus))].filter((s) => !known.includes(s))
+  return [...known, ...extra].map((status) => ({
+    status,
+    items: items.filter((i) => i.factoryStatus === status).sort((a, b) => a.number - b.number),
+  }))
+}
 
 interface Loaded {
   view: PageView
@@ -21,12 +34,14 @@ export async function useObeyaView() {
     try {
       const summaries = await $fetch<ProjectSummary[]>('/api/projects')
       const projects = await Promise.all(
-        summaries.map(async (s) => ({
-          ...s,
-          parseFailures: s.state === 'ok' ? await $fetch<ParseFailure[]>(`/api/projects/${s.id}/parse-failures`) : [],
-        })),
+        summaries.map(async (s) => {
+          const get = <T,>(kind: string): Promise<T[]> => (s.state === 'ok' ? $fetch<T[]>(`/api/projects/${s.id}/${kind}`) : Promise.resolve([]))
+          const [parseFailures, items, decisions] = await Promise.all([get<ParseFailure>('parse-failures'), get<Item>('items'), get<Decision>('decisions')])
+          return { ...s, parseFailures, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) }
+        }),
       )
-      state.value = { view: { ...state.value.view, projects }, refreshedAt: new Date().toISOString(), error: null }
+      const needsYou = projects.flatMap((p) => p.board.find((c) => c.status === 'Waiting on you')?.items ?? [])
+      state.value = { view: { ...state.value.view, projects, needsYou }, refreshedAt: new Date().toISOString(), error: null }
     } catch (e) {
       const err = e as { statusMessage?: string; message?: string }
       state.value = { ...state.value, error: err.statusMessage || err.message || 'unknown error' }

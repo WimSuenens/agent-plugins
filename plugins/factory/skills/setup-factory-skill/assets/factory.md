@@ -44,6 +44,12 @@ run-budget: none
 
 An optional brake on one run, in tokens or hours: `run-budget: <N> tokens` or `run-budget: <N> hours`. `none` means no brake.
 
+## Maintenance budget
+
+maintenance-budget: 10 candidates
+
+The most candidates one maintenance cycle may file: `maintenance-budget: <N> candidates`. Default 10 when the line is absent.
+
 ## Tracker
 
 Factory operations are in `docs/agents/issue-tracker.md`, under `## Factory operations`. The board view groups by `Factory status`; the project's built-in `Status` field is not used by the factory.

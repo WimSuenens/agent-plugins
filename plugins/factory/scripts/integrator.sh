@@ -3,7 +3,7 @@
 # Usage: bash integrator.sh plan <board.json>
 # The snapshot is JSON: {"now": "<UTC ISO time>", "slices": [<slice>, ...]}, the slices in the priority order of the lead and the person.
 # A slice: {"id", "status" (Backlog, Ready, Running, Waiting on you, Blocked, Done), "contracts": [<contract file>, ...],
-#           "depends_on": [<id>, ...], "pr", "merge_ready": true, "created", "ready_since", "closed" (UTC ISO times)}. Every field but id and status may be left out.
+#           "depends_on": [<id>, ...], "kind" (feature or maintenance: both rank by their place in the list), "one_way_door": true (never started), "pr", "merge_ready": true, "created", "ready_since", "closed" (UTC ISO times)}. Every field but id and status may be left out.
 # Output lines, in this order:
 #   merge <id> -- PR <pr> approved; merges before any start          (slices with merge_ready, in priority order)
 #   order: <id> ...                                                    (the Ready slices, dependencies first, else priority order)
@@ -27,6 +27,8 @@ jq -e '(.slices | type) == "array" and all(.slices[]; (.id != null) and ((.id | 
 rows="$(jq -r '.slices[] | [(.id|tostring), .status, ((.pr // "")|tostring), ((.merge_ready // false)|tostring),
   ((.depends_on // []) | map(tostring) | join(" ")), ((.contracts // []) | join(" ")), (.created // ""), (.ready_since // ""), (.closed // "")] | join("\u001f")' "$2")"
 now="$(jq -r '.now // ""' "$2")"
+snapshot="$2"
+door() { jq -r --arg id "$1" '[.slices[] | select((.id | tostring) == $id) | (.one_way_door // false)] | first' "$snapshot"; }
 
 secs() { [ -n "$1" ] && jq -n -r --arg t "$1" '$t | fromdateiso8601' 2>/dev/null; }
 hm() { local s="$1"; [ "$s" -ge 0 ] 2>/dev/null || { echo "not captured"; return; }; echo "$((s / 3600))h$(((s % 3600) / 60))m"; }
@@ -98,6 +100,7 @@ for id in $ordered; do
     if ! exists "$d"; then reasons="${reasons:+$reasons; }waits for $d (dependency not on the board)"; break
     elif [ "$(field "$d" 2)" != Done ]; then reasons="${reasons:+$reasons; }waits for $d (dependency not done)"; break; fi
   done
+  [ "$(door "$id")" = true ] && reasons="${reasons:+$reasons; }one-way door: waits for the person's decision card, not executed"
   mine="$(field "$id" 6)"; ok=1
   for f in $mine; do [ -r "$f" ] || ok=0; done
   if [ -z "$mine" ] || [ $ok = 0 ]; then

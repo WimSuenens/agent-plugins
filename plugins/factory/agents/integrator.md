@@ -41,6 +41,7 @@ The lead gives you the approved slices in the order of the plan's `merge` lines,
 
 - Lean pull: a slice starts when its paths are free and the person has ordered it next, not when a quota of work opens.
 - Limit work in progress: visible work in progress: the number in flight is always on the plan, and a pause always says why.
+- Rank maintenance candidates beside feature candidates: a slice with `"kind": "maintenance"` is ordered by its place in the lead's priority like any other. One that touches a one-way door (`"one_way_door": true`) is never started: its pause says it waits for the decision card.
 - Priority stays with the lead and the person. You decide order only within the priority they gave, and you advise when you see a dependency between slices; you never reorder past their priority on your own.
 - Note: subagents cannot spawn subagents, so you do not spawn roles. The lead spawns the roles the plan names.
 - Your own part in the improvement loop (your flow measures feed it): when a measure stays `not captured` on two runs, say so in your result as an abnormality of kind 7 (other), so the lead can fix the capture.

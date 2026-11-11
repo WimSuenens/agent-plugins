@@ -4,6 +4,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { promisify } from 'node:util'
 import type { Decision, Item, ParseFailure, Provenance, ProjectConfig, ProjectSummary } from '../../shared/types'
+import { ideaEntries, inboxEntries } from './intake'
 import { SourceError, type ReadModelSource, type TrackerAdapter } from './types'
 
 const run = promisify(execFile)
@@ -13,7 +14,7 @@ interface Tree {
   provenance: Provenance
 }
 
-async function trees(p: ProjectConfig): Promise<Tree[]> {
+export async function trees(p: ProjectConfig): Promise<Tree[]> {
   let out: string
   try {
     out = (await run('git', ['-C', p.path, 'worktree', 'list', '--porcelain'])).stdout
@@ -84,6 +85,11 @@ async function adrs(p: ProjectConfig): Promise<Found[]> {
 }
 
 export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
+  const ideas = async (p: ProjectConfig) => {
+    if (!p.tracker) return { entries: [], failures: [] }
+    const { login, issues } = await tracker.ideas(p.path)
+    return ideaEntries(login, issues)
+  }
   const cards = async (p: ProjectConfig) => (p.tracker ? tracker.cards(p.tracker) : [])
   return {
     async project(p): Promise<ProjectSummary> {
@@ -104,7 +110,7 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
       const board = (await cards(p))
         .filter((c) => c.number === null)
         .map((c): ParseFailure => ({ path: `tracker:${c.raw}`, reason: 'board card is not linked to an issue', provenance: { kind: 'event' } }))
-      return [...artifact, ...board]
+      return [...artifact, ...board, ...(await ideas(p)).failures]
     },
     async items(p) {
       return (await cards(p)).flatMap((c): Item[] =>
@@ -119,8 +125,8 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
     async andon() {
       return []
     },
-    async intake() {
-      return []
+    async intake(p) {
+      return [...(await ideas(p)).entries, ...(await inboxEntries(await trees(p)))]
     },
   }
 }

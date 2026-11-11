@@ -1,4 +1,4 @@
-import type { ParseFailure, ProjectSummary } from '../../shared/types'
+import type { IntakeEntry, ParseFailure, ProjectSummary } from '../../shared/types'
 import type { PageView } from '../../shared/view'
 
 interface Loaded {
@@ -24,9 +24,12 @@ export async function useObeyaView() {
         summaries.map(async (s) => ({
           ...s,
           parseFailures: s.state === 'ok' ? await $fetch<ParseFailure[]>(`/api/projects/${s.id}/parse-failures`) : [],
+          intake: s.state === 'ok' ? await $fetch<IntakeEntry[]>(`/api/projects/${s.id}/intake`) : [],
         })),
       )
-      state.value = { view: { ...state.value.view, projects }, refreshedAt: new Date().toISOString(), error: null }
+      // Ideas waiting on a human also go into the needs-you slot.
+      const ideas = projects.flatMap((p) => p.intake.filter((e) => e.waitingOnHuman).map((entry) => ({ kind: 'idea', projectId: p.id, entry })))
+      state.value = { view: { ...state.value.view, projects, needsYou: [...ideas] }, refreshedAt: new Date().toISOString(), error: null }
     } catch (e) {
       const err = e as { statusMessage?: string; message?: string }
       state.value = { ...state.value, error: err.statusMessage || err.message || 'unknown error' }

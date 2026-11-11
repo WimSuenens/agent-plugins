@@ -143,6 +143,16 @@
           "untriaged"
         ]
       },
+      "channel": {
+        "enum": [
+          "slack",
+          "mail",
+          "teams",
+          "inbox",
+          "terminal",
+          "unknown"
+        ]
+      },
       "reason": {
         "type": [
           "string",
@@ -163,6 +173,7 @@
       "id",
       "title",
       "outcome",
+      "channel",
       "reason",
       "waitingOnHuman",
       "ref",

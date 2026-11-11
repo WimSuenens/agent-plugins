@@ -27,6 +27,18 @@ export interface TrackerCard {
 /** The tracker behind an adapter. v1 is gh; a token-based client or another tracker implements the same interface. Read-only. */
 export interface TrackerAdapter {
   cards(tracker: TrackerConfig): Promise<TrackerCard[]>
+  /** Every issue labelled `idea` (open and closed) with its comments, and the login of whoever the tracker is read as. */
+  ideas(projectPath: string): Promise<{ login: string; issues: TrackerIdea[] }>
+}
+
+/** An idea issue in the tracker's own terms. `state` is 'open' or 'closed'. */
+export interface TrackerIdea {
+  number: number
+  title: string
+  body: string
+  state: string
+  url: string
+  comments: { author: string; body: string }[]
 }
 
 /** The source could not answer. `status` is the HTTP status the API gives it. */

@@ -1,0 +1,16 @@
+{
+  "name": "obeya",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "start": "node bin/start.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "nuxt": "4.1.2",
+    "vue": "^3.5.0"
+  }
+}

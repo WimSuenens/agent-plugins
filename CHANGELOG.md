@@ -2,6 +2,21 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.10.0 (#125)
+
+Release: `2.10.0`, a **minor** release: the plugin shell of the Obeya (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#125](https://github.com/WimSuenens/agent-plugins/issues/125)). A project that does not opt in is untouched.
+
+**What changed for the person who runs the factory:**
+
+- **`/factory:obeya`.** With `obeya: on` in `docs/agents/factory.md` (the setup template carries `obeya: off` in a `## Obeya` section), the command starts the Obeya in a container and prints `http://127.0.0.1:4777`; a second call stops it. Without the key it refuses in one line. Script: `scripts/obeya.sh`; compose file: `obeya/compose.yml`, pinned to the published app version.
+- **Read-only, loopback, no secret on disk.** The project is mounted read-only at its own absolute path, the port is published on `127.0.0.1` only, and the token travels through the environment: a read-only token from the untracked `~/.config/obeya/env` (documented path), or `--login-token` for your own `gh auth token` with a printed warning.
+- **One-line failures** for opt-in missing, Docker missing, no token, port in use and image not pullable.
+- **Release check.** `bash plugins/factory/scripts/obeya.sh check-pin` fails when the pinned image tag is not in the registry; it is step 5 of the runbook's release checks.
+
+**Tests.** `tests/factory/test_obeya_plugin.sh` covers all of the above with a stub `docker` (`tests/factory/stub-docker`) and a stub `gh`. The version pins move to 2.10.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `2dfb9cd715b771e99ef16e2e51d65822726cac077a59dcc23720977d032cc0ad`, tooling `2f9312d4b81b1562df2af15eb0b6e507d930865b75cf13defd6eef07642fada4`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.9.0 (#114 to #119)
 
 Release: `2.9.0`, a **minor** release: six slices of the continuous factory (map [#108](https://github.com/WimSuenens/agent-plugins/issues/108)). The standard text and the tooling change, so both fingerprints change. No `factory-state` change. Restart Claude Code sessions after updating.

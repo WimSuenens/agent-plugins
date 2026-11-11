@@ -1,17 +1,17 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import type { TrackerConfig } from '../../shared/types'
-import { SourceError, type TrackerAdapter, type TrackerCard } from './types'
+import { SourceError, type TrackerAdapter, type TrackerCard, type TrackerIdea } from './types'
 
 const run = promisify(execFile)
 
 /** The only gh commands the app may run. All read. */
-const READ_ONLY = ['project item-list', 'issue list', 'issue view', 'pr list', 'pr view']
+const READ_ONLY = ['project item-list', 'api user', 'issue list', 'issue view', 'pr list', 'pr view']
 
-async function gh(args: string[]): Promise<string> {
+async function gh(args: string[], cwd?: string): Promise<string> {
   if (!READ_ONLY.includes(args.slice(0, 2).join(' '))) throw new Error(`gh ${args.slice(0, 2).join(' ')} is not a read command`)
   try {
-    return (await run('gh', args, { maxBuffer: 32 * 1024 * 1024 })).stdout
+    return (await run('gh', args, { maxBuffer: 32 * 1024 * 1024, cwd })).stdout
   } catch (e: any) {
     if (e?.code === 'ENOENT') throw new SourceError('gh is not installed', 502)
     throw new SourceError(`gh ${args.slice(0, 2).join(' ')} failed: ${String(e?.stderr || e?.message).trim().split('\n')[0]}`, 502)
@@ -36,6 +36,27 @@ function blockersOf(v: unknown): number[] | null {
 }
 
 export class GhTracker implements TrackerAdapter {
+  async ideas(projectPath: string): Promise<{ login: string; issues: TrackerIdea[] }> {
+    const login = (await gh(['api', 'user', '--jq', '.login'], projectPath)).trim()
+    const out = await gh(['issue', 'list', '--label', 'idea', '--state', 'all', '--limit', '1000', '--json', 'number,title,body,state,url,comments'], projectPath)
+    let list: any[]
+    try {
+      list = JSON.parse(out)
+      if (!Array.isArray(list)) throw new Error('not a list')
+    } catch {
+      throw new SourceError('gh issue list did not return a JSON list', 502)
+    }
+    const issues = list.map((i): TrackerIdea => ({
+      number: Number(i.number),
+      title: String(i.title ?? ''),
+      body: String(i.body ?? ''),
+      state: String(i.state ?? '').toLowerCase(),
+      url: String(i.url ?? ''),
+      comments: (Array.isArray(i.comments) ? i.comments : []).map((c: any) => ({ author: String(c?.author?.login ?? ''), body: String(c?.body ?? '') })),
+    }))
+    return { login, issues }
+  }
+
   async cards(t: TrackerConfig): Promise<TrackerCard[]> {
     const out = await gh(['project', 'item-list', String(t.projectNumber), '--owner', t.owner, '--format', 'json', '--limit', '1000'])
     let items: any[]

@@ -1,5 +1,5 @@
-import type { Decision, Item, ParseFailure, ProjectSummary } from '../../shared/types'
-import type { BoardColumn, PageView } from '../../shared/view'
+import type { Decision, IntakeEntry, Item, ParseFailure, ProjectSummary } from '../../shared/types'
+import type { BoardColumn, IdeaNeed, PageView } from '../../shared/view'
 
 /** The factory statuses, in board order. A status the tracker has that is not here follows them, never dropped. */
 const FACTORY_STATUSES = ['Backlog', 'Ready', 'Running', 'Waiting on you', 'Blocked', 'Done']
@@ -36,11 +36,14 @@ export async function useObeyaView() {
       const projects = await Promise.all(
         summaries.map(async (s) => {
           const get = <T,>(kind: string): Promise<T[]> => (s.state === 'ok' ? $fetch<T[]>(`/api/projects/${s.id}/${kind}`) : Promise.resolve([]))
-          const [parseFailures, items, decisions] = await Promise.all([get<ParseFailure>('parse-failures'), get<Item>('items'), get<Decision>('decisions')])
-          return { ...s, parseFailures, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) }
+          const [parseFailures, items, decisions, intake] = await Promise.all([get<ParseFailure>('parse-failures'), get<Item>('items'), get<Decision>('decisions'), get<IntakeEntry>('intake')])
+          return { ...s, parseFailures, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), intake }
         }),
       )
-      const needsYou = projects.flatMap((p) => p.board.find((c) => c.status === 'Waiting on you')?.items ?? [])
+      // Needs-you slot: items waiting on you, then ideas waiting on a human.
+      const waiting: Array<Item | IdeaNeed> = projects.flatMap((p) => p.board.find((c) => c.status === 'Waiting on you')?.items ?? [])
+      const ideas: IdeaNeed[] = projects.flatMap((p) => p.intake.filter((e) => e.waitingOnHuman).map((entry) => ({ kind: 'idea' as const, projectId: p.id, entry })))
+      const needsYou = [...waiting, ...ideas]
       state.value = { view: { ...state.value.view, projects, needsYou }, refreshedAt: new Date().toISOString(), error: null }
     } catch (e) {
       const err = e as { statusMessage?: string; message?: string }

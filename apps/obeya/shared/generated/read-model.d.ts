@@ -59,6 +59,7 @@ export interface IntakeEntry {
   id: string;
   title: string;
   outcome: "direction" | "slice-candidate" | "research-ticket" | "parked" | "rejected" | "untriaged";
+  channel: "slack" | "mail" | "teams" | "inbox" | "terminal" | "unknown";
   reason: string | null;
   waitingOnHuman: boolean;
   ref: string;

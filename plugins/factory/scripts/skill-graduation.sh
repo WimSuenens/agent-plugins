@@ -37,7 +37,7 @@ uses="$main/docs/agents/skill-uses.md"
 
 count_uses() { [ -f "$uses" ] || { echo 0; return; }; grep "^| $1 |" "$uses" | awk -F'|' '{gsub(/ /,"",$3); print $3}' | sort -u | grep -c .; }
 
-# eligible_check <skill> <file>: threshold then scan; prints the eligible line
+# eligible_check <skill> <file> [noscan]: threshold then scan (the scan is skipped for "noscan": draft scans the whole proposal once); prints the eligible line
 eligible_check() {
   name_ok "$1" || usage
   [ -r "$2" ] || { echo "skill-graduation: $2: no such file" >&2; exit 2; }
@@ -46,6 +46,7 @@ eligible_check() {
     s=s; [ "$n" = 1 ] && s=""
     echo "skill-graduation: not offered: $1 has $n use$s; it needs at least two items or two projects" >&2; exit 5
   fi
+  if [ "${3:-}" = noscan ]; then echo "eligible"; return; fi
   out="$(bash "$here/improvement.sh" check "$2")"
   rc=$?; [ $rc = 0 ] || exit $rc
   echo "eligible ${out#clean }"
@@ -65,7 +66,7 @@ find_match() {
   done
   echo "${best:-none}"
 }
-tmpw="$(mktemp)"; trap 'rm -f "$tmpw"' EXIT
+tmpw="$(mktemp)"; trap 'rm -f "$tmpw" "$tmpw.prop"' EXIT
 
 case "$cmd" in
   record)
@@ -90,7 +91,7 @@ case "$cmd" in
   draft)
     [ $# -eq 6 ] || usage
     [ -d "$5" ] || { echo "skill-graduation: $5: no such directory" >&2; exit 2; }
-    eligible_check "$2" "$3" >/dev/null
+    eligible_check "$2" "$3" noscan >/dev/null
     res="$(find_match "$4" "$5")"
     { printf 'Skill proposal: %s\n\n## Domain of the skill\n\n%s\n\n## Where it goes\n\n' "$2" "$4"
       if [ "$res" = none ]; then
@@ -101,7 +102,7 @@ case "$cmd" in
       fi
       printf '\n## Evidence\n\nThe skill proved itself in %s distinct items or projects.\n\n## The skill\n\n' "$(count_uses "$2")"
       cat "$3"; } >"$tmpw.prop"
-    bash "$here/improvement.sh" check "$tmpw.prop" >/dev/null || { rc=$?; rm -f "$tmpw.prop"; exit $rc; }
+    bash "$here/improvement.sh" check "$tmpw.prop" >/dev/null || exit $?
     mv "$tmpw.prop" "$6"
     echo "drafted $6"
     ;;

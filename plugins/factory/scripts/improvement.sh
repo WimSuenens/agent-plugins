@@ -44,16 +44,22 @@ main="$(main_checkout)"
 file="$main/docs/agents/improvements.md"
 tmp="$(mktemp -d)" || exit 2; trap 'rm -rf "$tmp"' EXIT
 
+generic_names="project projects repo repos app apps code test tests main work src docs demo sample example site web api lib build agent agents skill skills plugin plugins factory claude workspace portfolio temp tmp home user users"
+
 # sanitise <file>: scan hits on stdout-merged stderr; returns 6 on any hit
 sanitise() {
-  local f="$1" b hits=0 pname
+  local f="$1" b hits=0 pname n
   b="$(basename "$f")"
   bash "$here/post-text.sh" scan "$f" >&2 || hits=1
-  pname="$(basename "$main" | tr 'A-Z' 'a-z')"
-  if [ "${#pname}" -ge 3 ]; then
-    grep -inF -- "$pname" "$f" | cut -d: -f1 | while read -r n; do echo "scan: $b:$n: project-name" >&2; done
-    grep -iqF -- "$pname" "$f" && hits=1
-  fi
+  # the project's own name: the main checkout's directory (never a worktree's) and the origin repository's name; whole words only;
+  # names under 4 characters and generic ones are ignored, so a short or common name never refuses a clean text
+  for pname in "$(basename "$main")" "$(basename "$(git -C "$main" remote get-url origin 2>/dev/null)" .git)"; do
+    pname="$(printf '%s' "$pname" | tr 'A-Z' 'a-z')"
+    [ "${#pname}" -ge 4 ] || continue
+    case " $generic_names " in *" $pname "*) continue ;; esac
+    grep -iwnF -- "$pname" "$f" | cut -d: -f1 | while read -r n; do echo "scan: $b:$n: project-name" >&2; done
+    grep -iwqF -- "$pname" "$f" && hits=1
+  done
   grep -nE 'https?://' "$f" | cut -d: -f1 | while read -r n; do echo "scan: $b:$n: url" >&2; done
   grep -qE 'https?://' "$f" && hits=1
   grep -nE '(^|[^A-Za-z0-9_&])#[0-9]+' "$f" | cut -d: -f1 | while read -r n; do echo "scan: $b:$n: issue-reference" >&2; done
@@ -77,10 +83,14 @@ case "$cmd" in
   trace)
     [ $# -eq 7 ] || usage
     name="$2"; role="$3"; measure="$4"; before="$5"; what="${6//|//}"; why="${7//|//}"
-    printf '%s' "$name" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$' || usage
-    printf '%s' "$role" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$' || usage
-    printf '%s' "$measure" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$' || usage
-    before="${before//|//}"
+    # a table row is one line: newlines (and CR, tabs) in free text collapse to a space; name, role and measure are matched whole
+    # (a "|" cannot occur in them, and a newline fails the match)
+    what="$(printf '%s' "$what" | tr '\r\n\t' '   ')"; why="$(printf '%s' "$why" | tr '\r\n\t' '   ')"
+    before="$(printf '%s' "${before//|//}" | tr '\r\n\t' '   ')"
+    re='^[a-z0-9]+(-[a-z0-9]+)*$'
+    [[ "$name" =~ $re ]] || usage
+    [[ "$role" =~ $re ]] || usage
+    [[ "$measure" =~ $re ]] || usage
     [ -n "$what" ] && [ -n "$why" ] && [ -n "$before" ] || usage
     printf '%s\n%s\n%s\n' "$what" "$why" "$before" >"$tmp/t"
     bash "$here/post-text.sh" scan "$tmp/t" >&2 || { echo "improvement: the scan refused the text; nothing written" >&2; exit 6; }

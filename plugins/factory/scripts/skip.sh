@@ -5,11 +5,13 @@
 # <role>: product-owner, architect, developer, devops, docs-writer, security-reviewer (skippable); qa-engineer or runtime-proof (never).
 # <area> (declared by the lead): contracts, authentication, secrets, data-migration, one-way-door.
 # protected: prints "protected: no" (exit 0) or "protected: <why>" (exit 1). A slice is protected when its path list holds a path under
-#   contracts/ or a path naming auth, secret or migration, or when the lead declares an area with --touches.
+#   contracts/ or a path the shared definition (protected-areas.sh) marks: contracts, auth/oauth/login, secret or migration, or when the lead declares an area with --touches.
 # check: prints "skip ok <role>" (exit 0) or "refused: <why>" (exit 1). Refused: QA and the runtime proof (never skipped), a missing or
 #   blank reason, and any protected slice (no role is skipped for it).
 # Exit: 0 allowed / not protected; 1 refused / protected; 2 usage, an unknown role or area, an unreadable path list.
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=protected-areas.sh
+. "$here/protected-areas.sh"
 cmd="${1:-}"; [ $# -gt 0 ] && shift
 usage() { echo "usage: skip.sh check <role> --reason <text> [--touches <area>]... <contract-file>... | skip.sh protected [--touches <area>]... <contract-file>..." >&2; exit 2; }
 role=""; reason=""; areas=""; files=()
@@ -38,10 +40,7 @@ if [ -z "$prot" ]; then
   list="$(bash "$here/paths.sh" list "${files[@]}")" || { echo "skip: path list unreadable" >&2; exit 2; }
   while read -r kind p; do
     [ "$kind" = path ] || continue
-    lp="$(printf '%s' "$p" | LC_ALL=C tr 'A-Z' 'a-z')"
-    case "$lp" in
-      contracts | contracts/* | *auth* | *secret* | *migrat*) prot="$p"; break ;;
-    esac
+    protected_path_area "$p" >/dev/null && { prot="$p"; break; }
   done <<LIST
 $list
 LIST

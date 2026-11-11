@@ -98,6 +98,24 @@ ck trace-appends-two-rows 2 "$(grep -c '^| 20' "$TR")"
 ck trace-header-once 1 "$(grep -c '^# Improvements' "$TR")"
 ck trace-duplicate-name-rc 2 "$(run trace dev-names-paths developer none 'not captured' 'x' 'y' >/dev/null 2>&1; echo $?)"
 ck trace-bad-name-rc 2 "$(run trace 'Bad Name' developer none 'not captured' 'x' 'y' >/dev/null 2>&1; echo $?)"
+# a table row stays one line
+run trace multi-line-row developer none 'not captured' $'line one\nline two | x' $'why\r\nmore' >/dev/null
+ck trace-multiline-one-row 1 "$(grep -c 'multi-line-row' "$TR")"
+ck trace-multiline-rows-total 3 "$(grep -c '^| 20' "$TR")"
+has trace-multiline-collapsed "$TR" '| line one line two / x | why'
+grep -v multi-line-row "$TR" >"$T/tr.tmp" && cp "$T/tr.tmp" "$TR"   # keep the later row counts as they were
+ck trace-newline-in-name-rc 2 "$(run trace $'ok-name\nbad name' developer none 'not captured' 'x' 'y' >/dev/null 2>&1; echo $?)"
+ck trace-newline-in-role-rc 2 "$(run trace nl-role $'developer\nx' none 'not captured' 'x' 'y' >/dev/null 2>&1; echo $?)"
+ck trace-newline-in-measure-rc 2 "$(run trace nl-measure developer $'none\nx' 'not captured' 'x' 'y' >/dev/null 2>&1; echo $?)"
+# project name: whole words, at least 4 characters, not generic, never a worktree's name
+ck check-name-substring-clean 0 "$(chk x 'The acme-shopping cart is slow')"
+S="$T/app"; mkrepo "$S"
+ck check-short-name-clean 0 "$(cd "$S" && printf 'The app broke\n' >"$T/p.md" && bash "$IM" check "$T/p.md" >/dev/null 2>&1; echo $?)"
+G="$T/project"; mkrepo "$G"
+ck check-generic-name-clean 0 "$(cd "$G" && printf 'This project broke\n' >"$T/p.md" && bash "$IM" check "$T/p.md" >/dev/null 2>&1; echo $?)"
+git -C "$R" worktree add -q "$T/wt-zebra-lane" -b wt-branch >/dev/null 2>&1
+ck check-worktree-name-not-used 0 "$(cd "$T/wt-zebra-lane" && printf 'The wt-zebra-lane checkout\n' >"$T/p.md" && bash "$IM" check "$T/p.md" >/dev/null 2>&1; echo $?)"
+ck check-worktree-uses-main-name 6 "$(cd "$T/wt-zebra-lane" && printf 'The acme-shop checkout\n' >"$T/p.md" && bash "$IM" check "$T/p.md" >/dev/null 2>&1; echo $?)"
 ck trace-scan-refused-rc 6 "$(run trace leaky developer none 'not captured' "See $HP/someone/x" 'y' >/dev/null 2>&1; echo $?)"
 ck trace-leaky-not-written 0 "$(grep -c '| leaky |' "$TR")"
 ck trace-pipe-in-text-kept-one-row 2 "$(run trace pipe-ok developer none 'not captured' 'a | b' 'c' >/dev/null; grep -c '^| 20' "$TR" | awk '{print $1-1}')"

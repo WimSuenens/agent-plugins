@@ -32,7 +32,7 @@ The loop, in order:
 2. QA prepares the next scenario test (the targeted test) in `tests/` before the behaviour slice is built; it fails for the expected reason.
 3. The developer implements and runs the targeted test until green.
 4. When a test or a contract is unclear, the developer changes neither: it writes a *Question* to the lead that names the test or the contract. The lead sends a test to QA and a contract to the architect.
-5. QA verifies with an independent pass or block verdict. The security review stays mandatory.
+5. QA verifies with an independent pass or block verdict. The security review stays mandatory, except that the lead may skip it for a trivial slice outside the protected areas (`scripts/skip.sh`); the merge gate then accepts the verdict `skipped` with the written reason. QA and the proof are never skipped.
 
 Test scope: executable behaviour and important safety invariants are automated. Instruction-following is assessed with realistic scenarios and human review, not broad exact-prose assertions. Exact text is asserted only where a machine-readable format or a safety rule needs it.
 

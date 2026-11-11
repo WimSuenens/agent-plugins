@@ -3,6 +3,9 @@
 # Usage: role-knowledge.sh init
 #        role-knowledge.sh migrate [--from <agent-memory dir>] [--remove-source]
 # Run from the project root. init is idempotent; migrate copies each role's user-scope memory into its role file once.
+# migrate scans each memory file first (post-text.sh scan: home paths, secrets, work paths). A flagged file is not migrated:
+# it is reported ("skipped <file>: flagged by the scan (<kinds>)"), exit stays 0, and --remove-source never removes it.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 roles="product-owner architect developer qa-engineer security-reviewer devops docs-writer integrator"
 rdir="docs/agents/roles"; sdir="docs/agents/skills"
 cmd="${1:-}"; [ $# -gt 0 ] && shift
@@ -38,13 +41,18 @@ migrate)
   done
   [ -d "$from" ] || { echo "nothing to migrate"; exit 0; }
   bash "$0" init >/dev/null
-  n=0
+  n=0; nskip=0
   for r in $roles; do
     for d in "$from/$r" "$from/factory-$r" "$from/factory:$r"; do
       [ -d "$d" ] || continue
-      f="$rdir/$r.md"
+      f="$rdir/$r.md"; skipped=0
       for m in "$d"/*.md; do
         [ -f "$m" ] || continue
+        if ! hits="$(bash "$here/post-text.sh" scan "$m" 2>&1)"; then
+          kinds="$(printf '%s\n' "$hits" | sed -n 's/^scan: [^:]*:[0-9]*: //p' | sort -u | tr '\n' ',' | sed 's/,$//; s/,/, /g')"
+          echo "skipped $(basename "$d")/$(basename "$m"): flagged by the scan (${kinds:-unreadable}); not migrated, source kept"
+          skipped=$((skipped + 1)); nskip=$((nskip + 1)); continue
+        fi
         mark="<!-- migrated: $(basename "$d")/$(basename "$m") -->"
         if ! grep -qF -- "$mark" "$f"; then
           grep -q '^## Migrated memory$' "$f" || printf '\n## Migrated memory\n' >>"$f"
@@ -52,10 +60,20 @@ migrate)
           n=$((n + 1))
         fi
       done
-      [ "$rm_src" = 1 ] && rm -rf "$d"
+      if [ "$rm_src" = 1 ]; then
+        if [ "$skipped" = 0 ]; then rm -rf "$d"
+        else
+          # a flagged file stays: remove only the files that were migrated, then the directory if nothing is left
+          for m in "$d"/*.md; do
+            [ -f "$m" ] && grep -qF -- "<!-- migrated: $(basename "$d")/$(basename "$m") -->" "$f" && rm -f "$m"
+          done
+          rmdir "$d" 2>/dev/null
+        fi
+      fi
     done
   done
   echo "migrated $n files"
+  [ "$nskip" = 0 ] || echo "skipped $nskip flagged files; the person reviews them before they leave the user scope"
   ;;
 *) echo "usage: role-knowledge.sh init | migrate [--from <dir>] [--remove-source]" >&2; exit 64 ;;
 esac

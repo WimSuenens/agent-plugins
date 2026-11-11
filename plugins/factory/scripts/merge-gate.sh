@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # The auto-merge gate: decides whether the factory may merge its own PR without the person.
-# Usage: bash merge-gate.sh check <pr> --qa <verdict> --security <verdict> [--touches <list>] [--paths "<file> ..."]
+# Usage: bash merge-gate.sh check <pr> --qa <verdict> --security <verdict> [--skip-reason <text>] [--touches <list>] [--paths "<file> ..."]
 #   <pr>        the PR number or branch; its description and checks are read with `gh pr view <pr> --json body,statusCheckRollup`.
-#   --qa, --security   the verdicts of the QA and security tasks; only `pass` lets the slice merge.
+#   --qa, --security   the verdicts of the QA and security tasks; QA must be `pass`; security is `pass`, or `skipped` with --skip-reason when the lead skipped the role by skip.sh's rule (a written reason, no protected area; a skip on a protected slice blocks). Anything else, or a missing verdict, blocks.
 #   --touches   comma-separated: contract, authentication, secrets, migration, door (what the lead knows about the slice).
 #   --paths     the files the slice changed; migration, secret and authentication paths count as touches too.
 # Output: `gate <pr>: auto-merge | pause | blocked`, then `reason: ...` lines. A pause is followed by `validation script:`
@@ -10,13 +10,13 @@
 # Exit: 0 auto-merge; 10 pause (a human must decide); 11 blocked (a gate is not met; the reasons say which); 2 usage or no PR.
 # No proof means no auto-merge: the description needs a `## Proof` section with a screenshot link or a log block.
 
-usage() { echo "usage: merge-gate.sh check <pr> --qa <verdict> --security <verdict> [--touches <list>] [--paths \"<files>\"]" >&2; exit 2; }
+usage() { echo "usage: merge-gate.sh check <pr> --qa <verdict> --security <verdict> [--skip-reason <text>] [--touches <list>] [--paths \"<files>\"]" >&2; exit 2; }
 [ "${1:-}" = check ] && [ -n "${2:-}" ] || usage
 pr="$2"; shift 2
-qa=""; sec=""; touches=""; paths=""
+qa=""; sec=""; touches=""; paths=""; skipreason=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --qa) qa="${2-}" ;; --security) sec="${2-}" ;; --touches) touches="${2-}" ;; --paths) paths="${2-}" ;;
+    --qa) qa="${2-}" ;; --security) sec="${2-}" ;; --touches) touches="${2-}" ;; --paths) paths="${2-}" ;; --skip-reason) skipreason="${2-}" ;;
     *) usage ;;
   esac
   [ $# -ge 2 ] || usage
@@ -26,11 +26,20 @@ command -v jq >/dev/null 2>&1 || { echo "merge-gate: jq missing" >&2; exit 2; }
 json="$(gh pr view "$pr" --json body,statusCheckRollup 2>/dev/null)" && jq -e . >/dev/null 2>&1 <<<"$json" || { echo "merge-gate: cannot read PR $pr" >&2; exit 2; }
 
 blocks=""; humans=""
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=protected-areas.sh
+. "$here/protected-areas.sh"
 addb() { blocks="${blocks}reason: $1"$'\n'; }
 addh() { humans="${humans}$1"$'\n'; }
 
 [ "$qa" = pass ] || addb "QA verdict is ${qa:-missing}, not pass"
-[ "$sec" = pass ] || addb "security verdict is ${sec:-missing}, not pass"
+# security: `pass`, or `skipped` when the lead skipped the role legitimately (skip.sh allowed it: a written reason, not a protected area)
+case "$sec" in
+  pass) ;;
+  skipped)
+    case "$skipreason" in *[![:space:]]*) ;; *) addb "security review skipped without a written reason (--skip-reason)" ;; esac ;;
+  *) addb "security verdict is ${sec:-missing}, not pass" ;;
+esac
 
 # CI: at least one check, every one finished green (success, neutral or skipped)
 notgreen="$(jq -r '(.statusCheckRollup // []) as $c | if ($c|length) == 0 then "none" else ([$c[] | select(((.conclusion // .state // "") | ascii_upcase) as $k | ($k=="SUCCESS" or $k=="NEUTRAL" or $k=="SKIPPED") | not)] | length | tostring) end' <<<"$json")"
@@ -41,20 +50,15 @@ proof="$(jq -r '.body // ""' <<<"$json" | awk '/^## /{p = ($0 ~ /^## Proof[ \t]*
 if printf '%s\n' "$proof" | grep -Eq '!\[[^]]*\]\([^)]+\)|^```'; then :; else addb "no proof in the PR description (a Proof section with screenshots or a run log)"; fi
 
 # always human
+set -f   # no glob expansion of the path and touch lists
 for t in $(printf '%s' "$touches" | tr ',' ' '); do
-  case "$t" in
-    contract|authentication|secrets|migration|door) addh "$t" ;;
-    *) ;;
-  esac
+  a="$(protected_touch_area "$t")" && addh "$a"
 done
 for p in $paths; do
-  case "$p" in
-    */migrations/*|migrations/*|*/migrate/*|*.sql) addh migration ;;
-    .env*|*/.env*|*secret*|*credential*|*.pem|*.key) addh secrets ;;
-    */auth/*|auth/*|*/authentication/*|*oauth*|*login*) addh authentication ;;
-    */contracts/*|contracts/*) addh contract ;;
-  esac
+  a="$(protected_path_area "$p")" && addh "$a"
 done
+set +f
+[ "$sec" = skipped ] && [ -n "$humans" ] && addb "security review cannot be skipped for a protected area ($(printf '%s' "$humans" | sort -u | tr '\n' ' ' | sed 's/ $//'))"
 humans="$(printf '%s' "$humans" | sort -u)"
 
 if [ -n "$blocks" ]; then

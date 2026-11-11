@@ -66,6 +66,11 @@ run draft brief-inputs "$T/skill.md" 'database migration rollback' "$mp" "$T/pro
 has draft-none-matches "$T/prop2.md" 'No existing plugin matches'
 has draft-none-new "$T/prop2.md" 'Propose a new plugin'
 ck draft-below-threshold-rc 5 "$(run draft other-skill "$T/skill.md" 'x y' "$mp" "$T/prop3.md" >/dev/null 2>&1; echo $?)"
+# a refused draft leaves no temporary file behind, and writes nothing
+mkdir -p "$T/tmpd"; printf '## Skill\nsee https://example.com/x\n' >"$T/dirty.md"
+ck draft-refused-rc 6 "$(cd "$R" && TMPDIR="$T/tmpd" bash "$SG" draft brief-inputs "$T/dirty.md" 'user interface review' "$mp" "$T/prop4.md" >/dev/null 2>&1; echo $?)"
+ck draft-refused-no-temp-files 0 "$(ls -A "$T/tmpd" | wc -l | tr -d ' ')"
+ck draft-refused-writes-nothing "no" "$([ -e "$T/prop4.md" ] && echo yes || echo no)"
 ck draft-below-threshold-no-file no "$([ -e "$T/prop3.md" ] && echo yes || echo no)"
 ck draft-dirty-rc 6 "$(run draft brief-inputs "$T/leak.md" 'x' "$mp" "$T/prop4.md" >/dev/null 2>&1; echo $?)"
 ck draft-dirty-no-file no "$([ -e "$T/prop4.md" ] && echo yes || echo no)"

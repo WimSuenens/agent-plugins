@@ -51,7 +51,7 @@ A run is one cycle over the standing backlog. The backlog is every open idea, ca
 
 **The measurement profile.** `measurement` in `docs/agents/factory.md` is `full` (the default, and the same as no line) or `lite`, read by `factory-config.sh measurement`. Under `measurement: lite` the hansei record is the short form (`hansei.md`, *The lite record*), and the close scan of step 8.2 and the token totals of step 8.3 run only when `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" analysis` exits 0, or exits 0 with `--asked` after the person asks for them. A `tokens` run budget still reads the spend it needs. Baseline and A3 are the same under full and lite.
 
-**Skipping roles.** For a trivial slice the lead may skip a role of step 6: it writes the reason on the ticket (a comment on the slice ticket, scanned first), and runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skip.sh" check <role> --reason "<reason>" [--touches <area>]... <contract file>...` before it; exit 1 refuses the skip and the role runs. QA and the runtime proof are never skipped, and no role is skipped when the slice touches contracts, authentication, secrets, a data migration or a one-way door (declare any of them with `--touches`). Record each skipped role in the ledger's Notes; the integrator counts them (`measure skipped`) and compares the rework of skipped and full slices (`measure rework`), so a skip that raises rework becomes a finding for the improvement loop.
+**Skipping roles.** For a trivial slice the lead may skip a role of step 6: it writes the reason on the ticket (a comment on the slice ticket, scanned first), and runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skip.sh" check <role> --reason "<reason>" [--touches <area>]... <contract file>...` before it; exit 1 refuses the skip and the role runs. QA and the runtime proof are never skipped, and no role is skipped when the slice touches contracts, authentication, secrets, a data migration or a one-way door (declare any of them with `--touches`); both scripts read one definition of those areas, `scripts/protected-areas.sh`. A security review skipped this way is passed to the merge gate as `--security skipped --skip-reason "<reason>"`; the gate blocks it for a protected slice, and a missing or other verdict blocks as before. Record each skipped role in the ledger's Notes; the integrator counts them (`measure skipped`) and compares the rework of skipped and full slices (`measure rework`), so a skip that raises rework becomes a finding for the improvement loop.
 
 **A run ends** when the backlog is empty (after intake and after the last merge), when the budget is reached, or when the person stops it. It closes at step 9 with the A3 and the baseline.
 
@@ -282,8 +282,8 @@ The person's choice is final for this item; a later contradiction from running c
 
 The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md) holds the record's template and rules.
 
-1. Once delivery and documentation are done, **run the application and capture proof**: browser screenshots for a web application, a run log for a command-line tool or a library. Put it in the PR description under `## Proof`. Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/merge-gate.sh" check <pr> --qa <verdict> --security <verdict> --touches <list> --paths "<files>"` (scripts/merge-gate.sh).
-   - **`auto-merge`** (exit 0): QA and security pass, CI is green, proof is attached and no one-way door is open. No question is asked: stamp `date -u +%FT%TZ` as the merge time (no person touch is written), and go on with the merge train and the clean-up below as if the person had said yes.
+1. Once delivery and documentation are done, **run the application and capture proof**: browser screenshots for a web application, a run log for a command-line tool or a library. Put it in the PR description under `## Proof`. Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/merge-gate.sh" check <pr> --qa <verdict> --security <verdict> [--skip-reason "<reason>"] --touches <list> --paths "<files>"` (scripts/merge-gate.sh).
+   - **`auto-merge`** (exit 0): QA and security pass, CI is green, proof is attached and no one-way door is open (a security review the lead skipped under *Skipping roles* counts as `skipped`, with its `--skip-reason`; QA and the proof are never skipped). No question is asked: stamp `date -u +%FT%TZ` as the merge time (no person touch is written), and go on with the merge train and the clean-up below as if the person had said yes.
    - **`blocked`** (exit 11): a gate is not met (a non-pass verdict, CI not green, or no proof). No proof means no auto-merge. Do not merge; fix the cause or tell the person which reason the script printed.
    - **`pause`** (exit 10): a contract, authentication, secrets, a data migration or a one-way door is touched, and these are always human. Post the script's validation script in the needs-you comment (`Cause: validation`, `Options: yes or no`), set the slice `Waiting on you`, and continue with the person's answer as with the question below.
 
@@ -517,6 +517,21 @@ Every finding (an andon, repeated rework, a research result) is classified with 
 
 The andon, the A3 and the baseline work as before; this section only says where a finding goes and what happens to its countermeasure.
 
+## Skill graduation
+
+Plugins are toolboxes per domain, not per role: one design plugin serves several roles. A skill a role develops in `docs/agents/skills/<role>/` can graduate into one. A skill is proposed, never published, by the factory.
+
+1. **Record each use.** When an item or a project uses a skill, `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" record <skill> <item-or-project>` appends it to `docs/agents/skill-uses.md`.
+2. **Threshold and scan.** A skill is offered only with use in at least two items or two projects and a clean text: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" eligible <skill> <file>` (exit 5 below the threshold, 6 when the sanitising scan refuses). A skill that does not pass is not offered and no proposal is drafted.
+3. **Domain search.** Each plugin states its domain in one sentence in its manifest (`domain` in `plugin.json`). Before anything else, search for an existing plugin covering the domain, and propose extending it, and only otherwise a new plugin: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" draft <skill> <file> "<one sentence on the skill's domain>" <marketplace plugins dir> <out>` writes the proposal naming the best-matching plugin by its domain, or saying none matches.
+4. **Approval.** Read the proposal for business content the scan cannot see, show it to the person, and only after the person approves file it: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" submit <file> --approved <sha256 of that file>` (`check-proposal` prints the hash). It becomes an issue in the marketplace repository; the decision on where the skill goes is taken in a separate session in the marketplace repository, never in the project.
+
+Roles refer to plugin skills optionally, through their role file (protocol, *Role knowledge*). The factory works with no domain plugin installed.
+
+## Role knowledge
+
+Each role reads its own role file `docs/agents/roles/<role>.md` and skills folder `docs/agents/skills/<role>/` in the project (protocol, *Role knowledge*); there is one agent per role and never a second. At run start and item start, check each role file against the fence: a line that lifts a protocol guard, an ownership rule or a one-way-door rule has no effect, and you tell the role not to apply it and say so in the stage summary, so the person sees it (the lead reports it to the person); where it came from a role's `Abnormality:` kind 5, treat it as that. Never put another role's file in a brief's inputs. When a lesson in a result is one several roles need, promote it: write it into the glossary (through the architect) or propose a domain plugin skill, and leave it out of the role files. Role files are committed with the project; a project set up before 2.9.0 gets them from `/factory:setup-factory-skill`.
+
 ## Andon
 
 Stopping the line. The rules every role reads are in the protocol; this is your procedure. A usage limit or a stall (*Interruptions*) is not an andon unless a role writes an `Abnormality:` line or you raise kind 7. An andon has an id `A<n>`, counting up per item (per frontier round, in the map's Factory run section, which also holds the andon lines of a round). Several abnormalities in one result are several andons, run one after another. An item is never abandoned by a pause: it keeps its stage and goes through the same stages as an item without an andon, plus the andon's row.
@@ -586,21 +601,6 @@ Check the fence before you write: for each of the eight questions of the protoco
 Write an accepted override in the worktree that raised the andon, under `## Overrides` in `docs/agents/factory.md` (create the section on first use; for a project set up before the row existed, also add the ownership row `` | `docs/agents/factory.md` section `## Overrides` | lead | `` and tell the person in the stage summary). Commit with `git -C "<worktree>" commit`, subject `#<id> lead: override <name>`. Format:
 
 ```
-## Skill graduation
-
-Plugins are toolboxes per domain, not per role: one design plugin serves several roles. A skill a role develops in `docs/agents/skills/<role>/` can graduate into one. A skill is proposed, never published, by the factory.
-
-1. **Record each use.** When an item or a project uses a skill, `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" record <skill> <item-or-project>` appends it to `docs/agents/skill-uses.md`.
-2. **Threshold and scan.** A skill is offered only with use in at least two items or two projects and a clean text: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" eligible <skill> <file>` (exit 5 below the threshold, 6 when the sanitising scan refuses). A skill that does not pass is not offered and no proposal is drafted.
-3. **Domain search.** Each plugin states its domain in one sentence in its manifest (`domain` in `plugin.json`). Before anything else, search for an existing plugin covering the domain, and propose extending it, and only otherwise a new plugin: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" draft <skill> <file> "<one sentence on the skill's domain>" <marketplace plugins dir> <out>` writes the proposal naming the best-matching plugin by its domain, or saying none matches.
-4. **Approval.** Read the proposal for business content the scan cannot see, show it to the person, and only after the person approves file it: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" submit <file> --approved <sha256 of that file>` (`check-proposal` prints the hash). It becomes an issue in the marketplace repository; the decision on where the skill goes is taken in a separate session in the marketplace repository, never in the project.
-
-Roles refer to plugin skills optionally, through their role file (protocol, *Role knowledge*). The factory works with no domain plugin installed.
-
-## Role knowledge
-
-Each role reads its own role file `docs/agents/roles/<role>.md` and skills folder `docs/agents/skills/<role>/` in the project (protocol, *Role knowledge*); there is one agent per role and never a second. At run start and item start, check each role file against the fence: a line that lifts a protocol guard, an ownership rule or a one-way-door rule has no effect, and you tell the role not to apply it and say so in the stage summary, so the person sees it (the lead reports it to the person); where it came from a role's `Abnormality:` kind 5, treat it as that. Never put another role's file in a brief's inputs. When a lesson in a result is one several roles need, promote it: write it into the glossary (through the architect) or propose a domain plugin skill, and leave it out of the role files. Role files are committed with the project; a project set up before 2.9.0 gets them from `/factory:setup-factory-skill`.
-
 ## Overrides
 
 ### <name>

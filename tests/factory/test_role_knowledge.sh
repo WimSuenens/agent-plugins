@@ -62,6 +62,17 @@ ck migrate-remove-source-dev no "$([ -e "$M/developer" ] && echo yes || echo no)
 ck migrate-remove-source-arch no "$([ -e "$M/factory-architect" ] && echo yes || echo no)"
 ck migrate-leaves-foreign yes "$([ -f "$M/other-agent/MEMORY.md" ] && echo yes || echo no)"
 ck migrate-none-rc 0 "$(cd "$R" && bash "$RK" migrate --from "$T/nonexistent" >/dev/null 2>&1; echo $?)"
+# the sanitising scan: a flagged file is reported, not migrated, and its source stays even with --remove-source
+M2="$T/mem2"; mkdir -p "$M2/devops"
+echo "devops clean note" >"$M2/devops/clean.md"
+printf 'devops path note /%s/someone/work\n' "Users" >"$M2/devops/dirty.md"
+out="$(cd "$R" && bash "$RK" migrate --from "$M2" --remove-source 2>&1)"; rc=$?
+ck migrate-flagged-rc 0 "$rc"
+has migrate-flagged-reported "$(printf '%s' "$out" >"$T/o3"; echo "$T/o3")" 'skipped devops/dirty.md: flagged by the scan (home-path)'
+has migrate-clean-file-moved "$R/docs/agents/roles/devops.md" 'devops clean note'
+ck migrate-flagged-not-copied 0 "$(grep -c 'devops path note' "$R/docs/agents/roles/devops.md")"
+ck migrate-flagged-source-kept yes "$([ -f "$M2/devops/dirty.md" ] && echo yes || echo no)"
+ck migrate-clean-source-removed no "$([ -f "$M2/devops/clean.md" ] && echo yes || echo no)"
 
 # --- standard-text seam
 has std-section "$PR_" '## Role knowledge'

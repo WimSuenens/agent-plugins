@@ -25,12 +25,10 @@ command -v jq >/dev/null 2>&1 || { echo "integrator: jq missing" >&2; exit 2; }
 jq -e '(.slices | type) == "array" and all(.slices[]; (.id != null) and ((.id | tostring | length) > 0) and ((.status | type) == "string"))' "$2" >/dev/null 2>&1 ||
   { echo "integrator: $2: not a board snapshot" >&2; exit 2; }
 
-# one row per slice, fields separated by the unit separator (not tab: empty tab fields would collapse): id, status, pr, merge_ready, depends (space-joined), contracts (space-joined), created, ready_since, closed
+# one row per slice, fields separated by the unit separator (not tab: empty tab fields would collapse): id, status, pr, merge_ready, depends (space-joined), contracts (space-joined), created, ready_since, closed, one_way_door
 rows="$(jq -r '.slices[] | [(.id|tostring), .status, ((.pr // "")|tostring), ((.merge_ready // false)|tostring),
-  ((.depends_on // []) | map(tostring) | join(" ")), ((.contracts // []) | join(" ")), (.created // ""), (.ready_since // ""), (.closed // "")] | join("\u001f")' "$2")"
+  ((.depends_on // []) | map(tostring) | join(" ")), ((.contracts // []) | join(" ")), (.created // ""), (.ready_since // ""), (.closed // ""), ((.one_way_door // false)|tostring)] | join("\u001f")' "$2")"
 now="$(jq -r '.now // ""' "$2")"
-snapshot="$2"
-door() { jq -r --arg id "$1" '[.slices[] | select((.id | tostring) == $id) | (.one_way_door // false)] | first' "$snapshot"; }
 
 secs() { [ -n "$1" ] && jq -n -r --arg t "$1" '$t | fromdateiso8601' 2>/dev/null; }
 hm() { local s="$1"; [ "$s" -ge 0 ] 2>/dev/null || { echo "not captured"; return; }; echo "$((s / 3600))h$(((s % 3600) / 60))m"; }
@@ -44,7 +42,7 @@ add_holder() { holders="${holders}$1"$'\037'"$2"$'\n'; }
 inflight=0
 
 # merges first; they and the slices in flight hold their paths
-while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl; do
+while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl dr; do
   [ -n "$id" ] || continue
   case "$st" in Running | "Waiting on you" | Blocked) inflight=$((inflight + 1)) ;; esac
   if [ "$mr" = true ]; then
@@ -59,7 +57,7 @@ EOF
 
 # the Ready slices in priority order, then dependencies first
 ready=""
-while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl; do
+while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl dr; do
   [ -n "$id" ] && [ "$st" = Ready ] && [ "$mr" != true ] && ready="$ready $id"
 done <<EOF
 $rows
@@ -102,7 +100,7 @@ for id in $ordered; do
     if ! exists "$d"; then reasons="${reasons:+$reasons; }waits for $d (dependency not on the board)"; break
     elif [ "$(field "$d" 2)" != Done ]; then reasons="${reasons:+$reasons; }waits for $d (dependency not done)"; break; fi
   done
-  [ "$(door "$id")" = true ] && reasons="${reasons:+$reasons; }one-way door: waits for the person's decision card, not executed"
+  [ "$(field "$id" 10)" = true ] && reasons="${reasons:+$reasons; }one-way door: waits for the person's decision card, not executed"
   mine="$(field "$id" 6)"; ok=1
   for f in $mine; do [ -r "$f" ] || ok=0; done
   if [ -z "$mine" ] || [ $ok = 0 ]; then
@@ -135,14 +133,14 @@ HOLDERS
 done
 
 # measures
-while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl; do
+while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl dr; do
   [ -n "$id" ] && [ "$st" = Ready ] || continue
   a="$(secs "$now")"; b="$(secs "$rs")"
   if [ -n "$a" ] && [ -n "$b" ]; then echo "measure waiting $id $(hm $((a - b)))"; else echo "measure waiting $id not captured"; fi
 done <<EOF
 $rows
 EOF
-while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl; do
+while IFS=$'\037' read -r id st pr mr dep ctr cr rs cl dr; do
   [ -n "$id" ] && [ "$st" = Done ] || continue
   a="$(secs "$cl")"; b="$(secs "$cr")"
   if [ -n "$a" ] && [ -n "$b" ]; then echo "measure lead-time $id $(hm $((a - b)))"; else echo "measure lead-time $id not captured"; fi

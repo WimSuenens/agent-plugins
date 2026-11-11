@@ -23,6 +23,7 @@ Overrides replace a role's default model in this repo, one row per role: `| <rol
 | `docs/requirements/` | product-owner |
 | `contracts/`, `docs/adr/`, `CONTEXT.md` | architect |
 | `plugins/` | developer |
+| `apps/obeya/` (the app; its `Dockerfile` and CI files stay with devops) | developer |
 | `tests/`, `reviews/qa-*` | qa-engineer |
 | `reviews/security-*` | security-reviewer |
 | pipeline, infra, deploy scripts, runbooks | devops |

@@ -13,6 +13,8 @@
 #   measure lead-time <id> <XhYm|not captured>                         (each Done slice: closed minus created)
 #   measure batch-size <n>                                             (slices the plan starts together)
 #   measure in-flight <n>                                              (Running, Waiting on you and Blocked slices)
+#   measure skipped <n> roles in <n> slices                            (roles the lead skipped; slice field "skipped": [<role>, ...])
+#   measure rework skipped|full <mean rounds>|not captured            (Done slices, with and without skips; slice field "rework_rounds")
 # A slice in flight or merge-ready holds its paths until it is merged. Overlap is decided by paths.sh overlap.
 # Exit: 0 plan printed; 2 usage, jq missing, unreadable or malformed snapshot.
 
@@ -149,3 +151,13 @@ $rows
 EOF
 echo "measure batch-size $started"
 echo "measure in-flight $inflight"
+# skipped roles (slice field "skipped": the roles the lead skipped) and the rework of skipped versus full Done slices (field "rework_rounds")
+# measure skipped <roles> roles in <n> slices; measure rework skipped|full <mean rounds, one decimal|not captured>
+jq -r '
+  def mean(a): if (a | length) == 0 then "not captured" else "\((a | add) / (a | length) * 10 | round / 10 | tostring | if test("\\.") then . else . + ".0" end) (\(a | length) slices)" end;
+  .slices as $s
+  | ([$s[] | select(((.skipped // []) | length) > 0)]) as $sk
+  | "measure skipped \([$sk[] | (.skipped | length)] | add // 0) roles in \($sk | length) slices",
+    "measure rework skipped \(mean([$s[] | select(.status == "Done" and ((.skipped // []) | length) > 0 and (.rework_rounds | type) == "number") | .rework_rounds]))",
+    "measure rework full \(mean([$s[] | select(.status == "Done" and ((.skipped // []) | length) == 0 and (.rework_rounds | type) == "number") | .rework_rounds]))"
+' "$2"

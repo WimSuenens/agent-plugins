@@ -144,6 +144,16 @@ At close, before the cross-check (section 5, step 2), complete the ledger's Wait
 
 A wait found at close carries no `~`: its times are recorded clocks. When the script fails for a transcript (exit 3 or 4), the cross-check names it: `cut-offs not captured (transcript <basename> unreadable)`, and that role's spend reads `not captured` (`--require-end` exits with the same code). A role agent's transcript holds only this item's work, and your window is cut by `--since`/`--until`, so no further filter is needed.
 
+### The lite record
+
+Under `measurement: lite` (`factory-config.sh measurement`) the record is the short form. It keeps the marker, the title line and every line of the layout, in order, so a reader of v3 to v5 reads it as before and the baseline and the A3 are the same under full and lite. What changes is how much is measured:
+
+- Cut-offs are not scanned and token spend is not totalled unless the person asks (`factory-config.sh analysis --asked`). Measure 5 and the `stalled` and `interrupted` parts of measure 1 then read `not captured (lite)`; the sub-lines of measure 1 are left out.
+- The `gemba` line reads `not captured (lite)` unless the person asks for the walk.
+- Everything else (header, `abnormalities`, measures 2, 3, 6 and 7, and the `skipped` roles noted in the ledger) is filled as under full.
+
+`not captured (lite)` is the honest value: the figure was not computed, never `0`.
+
 ### Done, then stopped
 
 An agent that stalls or fails **after** writing its result with `Status: done` is not an interrupted agent. When its notice arrives and:

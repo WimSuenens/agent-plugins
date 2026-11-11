@@ -4,6 +4,10 @@
 
 **Integrator** — the factory role that reads the board afresh at each run event and returns a **dispatch plan**: which slices start, in which order, which merges come first, and which pause, each with a reason. It keeps no state and makes no tracker write; the Lead spawns the roles the plan names. See [0112](contracts/112-integrator.md).
 
+**Measurement profile** — the per-project setting `measurement: full | lite` in `docs/agents/factory.md`. Full (the default) is the whole measurement; lite gives a short hansei record and computes cut-offs and token spend only when asked. Baseline and A3 are the same under both.
+
+**Role skip** — the Lead leaving a role out of a trivial slice, with the reason written on the ticket. QA and the runtime proof are never skipped, and no role is skipped for a slice touching contracts, authentication, secrets, a data migration or a one-way door (`scripts/skip.sh check`). The integrator counts skipped roles and compares the rework of skipped and full slices.
+
 **Board snapshot** — the board as a JSON file the Lead gives the integrator at each event; the input of `scripts/integrator.sh plan`.
 
 **Flow measures** — waiting time (a Ready slice since it became ready), lead time (a Done slice from creation to close), batch size (slices started together) and in-flight count (slices Running, Waiting on you or Blocked). Each is a value or "not captured".

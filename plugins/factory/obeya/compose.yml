@@ -1,0 +1,16 @@
+# The Obeya, pinned to a published app version (ADR 0020). Started by scripts/obeya.sh, which sets
+# OBEYA_PROJECT_PATH (absolute path of the project) and passes GH_TOKEN through the environment.
+# The project is mounted read-only at the same absolute path so worktree git links resolve (ADR 0021);
+# the port is published on loopback only. No secret is written here.
+name: obeya
+services:
+  obeya:
+    image: ghcr.io/wimsuenens/obeya:0.1.0
+    ports:
+      - "127.0.0.1:${OBEYA_PORT:-4777}:3000"
+    volumes:
+      - "${OBEYA_PROJECT_PATH}:${OBEYA_PROJECT_PATH}:ro"
+    environment:
+      - GH_TOKEN
+      - 'OBEYA_PROJECTS=[{"id":"project","path":"${OBEYA_PROJECT_PATH}"}]'
+    restart: "no"

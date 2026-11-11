@@ -21,7 +21,8 @@ Read-only; none of these touch the installed plugin.
 2. `claude plugin validate ./plugins/factory` and `./plugins/factory/skills` pass with no warning.
 3. `bash plugins/factory/scripts/check-bump.sh` in the branch's worktree, after `git fetch origin main`: `pass: minor bump needed, 0.0.0 -> 1.0.0`, exit 0.
 4. `bash tests/run.sh` prints `ALL PASSED`. A tag waits while the suite reports any named skip; the Lead tags only when none is left, or the person accepts them by name.
-5. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 1.0.0` and both fingerprints. Note them; any later change to either under the same release is a forgotten bump.
+5. `bash plugins/factory/scripts/obeya.sh check-pin` prints `pinned image ... exists` (needs Docker; #125). It fails when the image tag pinned in `plugins/factory/obeya/compose.yml` is not in the registry: publish the app first (see *Obeya image* below) or move the pin.
+6. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 1.0.0` and both fingerprints. Note them; any later change to either under the same release is a forgotten bump.
 
 ## Tag (the Lead, after the person approved the merge)
 
@@ -359,7 +360,7 @@ The Obeya app ships as `ghcr.io/wimsuenens/obeya:<semver>`, built for `linux/amd
 1. The `obeya-image` run is green. A failed build or publish fails the run; nothing partial is tagged.
 2. `docker buildx imagetools inspect ghcr.io/wimsuenens/obeya:<semver>` lists `linux/amd64` and `linux/arm64` under the one tag.
 3. First publish only: a package created by a workflow is private. In the repository's Packages, set `obeya` to public and link it to this repository, then check once from a machine that is not logged in to GHCR: `docker logout ghcr.io && docker pull ghcr.io/wimsuenens/obeya:<semver>`. If the person turns the ADR decision to private, document the pull token instead (ADR 0020, way back).
-4. A plugin that pins the tag (a later slice) is released only after step 2 passes for that tag.
+4. The plugin pins the tag in `plugins/factory/obeya/compose.yml` (#125). It is released only after step 2 passes for that tag; release check 5 (`obeya.sh check-pin`) enforces it.
 
 Rollback: a published tag is never overwritten or deleted; publish a fixed version and move the plugin's pin.
 

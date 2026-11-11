@@ -232,8 +232,8 @@ f="$SC/73-ac4-code-review-triggers.md"
 
 # =============================================================== release 2.1.0
 PJ="$PLUGIN/.claude-plugin/plugin.json"
-ck rel-plugin-json-version "2.9.0" "$(jq -r .version "$PJ")"
-ck rel-version-own-line 1 "$(grep -c '^  "version": "2.9.0",$' "$PJ")"
+ck rel-plugin-json-version "2.10.0" "$(jq -r .version "$PJ")"
+ck rel-version-own-line 1 "$(grep -c '^  "version": "2.10.0",$' "$PJ")"
 ck rel-marketplace-has-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$REPO/.claude-plugin/marketplace.json")"
 ck rel-factory-state-stays-2 1 "$(head -1 "$TPL" | grep -cx 'factory-state: 2')"
 skip rel-delta-against-main "retired by the 2.2.0 triage batch: these rows describe the 2.0.0 to 2.1.0 delta against origin/main, which no longer holds once main is 2.1.0"

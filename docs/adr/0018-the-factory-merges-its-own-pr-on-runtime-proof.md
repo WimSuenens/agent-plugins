@@ -11,6 +11,7 @@ Amends the merge-approval rule of `/factory:run` step 8.1 ("Merging is never aut
 - Before it merges, the factory runs the application and attaches proof to the PR description under `## Proof`: browser screenshots for a web application, a run log for a command-line tool or a library.
 - `scripts/merge-gate.sh` decides. It merges without the person when QA and security pass, CI is green, proof is attached and no one-way door is open. No proof means no auto-merge.
 - Always human: contracts, authentication, secrets, data migrations and anything involving a one-way door. The slice pauses, carries a plain-language validation script and shows `Waiting on you` (`Cause: validation`).
+- A security review the lead legitimately skipped (`scripts/skip.sh`: a written reason, a slice outside the protected areas) reaches the gate as `skipped` and is accepted; QA and the proof are never skipped. A skip on a protected slice, a skip without a reason, or any other or missing verdict blocks. `skip.sh` and the gate read one definition of the protected areas (`scripts/protected-areas.sh`).
 - The fence F1 stays: no override widens this, and the person's earlier approvals (a production action, a run-close answer) are not covered by the gate.
 
 ## Consequences

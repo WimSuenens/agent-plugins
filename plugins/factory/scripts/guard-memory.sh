@@ -3,7 +3,7 @@
 # Rejects tool calls in which one factory role touches another role's agent-memory
 # directory. The calling role comes from the hook input's agent_type field.
 # Guards against accidental peeking; it is not a security boundary.
-roles=" product-owner architect developer qa-engineer security-reviewer devops docs-writer "
+roles=" product-owner architect developer qa-engineer security-reviewer devops docs-writer integrator "
 
 raw="$(cat)"
 if command -v jq >/dev/null 2>&1; then

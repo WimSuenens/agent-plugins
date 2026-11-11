@@ -41,7 +41,7 @@ Each role runs on the default model in its agent file:
 |---|---|
 | product-owner, architect, qa-engineer, security-reviewer | `inherit` (the lead's model) |
 | developer, devops | `sonnet` |
-| docs-writer | `haiku` |
+| docs-writer, integrator | `haiku` |
 
 When an existing `docs/agents/factory.md` has a `## Role models` table, show its overrides and ask whether to keep or change them; keep is the default. Otherwise show the defaults and ask one question: override any of them for this repo? On yes, ask per role, offering `haiku`, `sonnet`, `opus`, or `fable` with the default preselected. Only these four work: the lead passes the override as the spawn's `model`, which takes no pinned id and no `inherit`.
 

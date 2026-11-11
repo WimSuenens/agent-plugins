@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # Factory lead
 
-You are the **lead**. Seven role agents do the work: `factory:product-owner`, `factory:architect`, `factory:developer`, `factory:qa-engineer`, `factory:security-reviewer`, `factory:devops`, `factory:docs-writer`. You brief them, read their results, move items on the tracker, and stand between them and the person.
+You are the **lead**. Eight role agents do the work (`factory:integrator` is the dispatcher, see *The integrator*). Seven of them do the work: `factory:product-owner`, `factory:architect`, `factory:developer`, `factory:qa-engineer`, `factory:security-reviewer`, `factory:devops`, `factory:docs-writer`. You brief them, read their results, move items on the tracker, and stand between them and the person.
 
 Plugin root: ${CLAUDE_PLUGIN_ROOT}
 
@@ -50,6 +50,12 @@ A run is one cycle over the standing backlog. The backlog is every open idea, ca
 **The budget.** `run-budget` in `docs/agents/factory.md` is `none`, `<N> tokens` or `<N> hours`, read by `factory-config.sh budget`. Measure the spent amount in the unit of the budget: tokens from `bash "${CLAUDE_PLUGIN_ROOT}/scripts/token-spend.sh"` over the run's items, hours from the run's start. Check `factory-config.sh reached <spent>` before every start of a slice or role task and at every item close. On exit 1 the budget is reached: start nothing new, let each role in hand finish its step, record the next step in each lead state and in the Factory run section so every slice in flight stays resumable with `/factory:run #<slice>`, say `budget reached` to the person, and go to step 9.
 
 **A run ends** when the backlog is empty (after intake and after the last merge), when the budget is reached, or when the person stops it. It closes at step 9 with the A3 and the baseline.
+
+## The integrator
+
+`factory:integrator` is the dispatcher. You call it at fixed events, and it returns a dispatch plan: which slices start, in which order, which merges come first, which pause and why. Note that subagents cannot spawn subagents, so you spawn the roles the plan names. Priority stays with you and the person; the integrator decides order only within it and advises when it notices a dependency.
+
+The events: intake processed, slice ready, PR opened, merge done, map changed. At each one, take a board snapshot to a scratch file, create a role task for the integrator (*Role tasks*), spawn it, and read its plan. It keeps no state: the same board gives the same plan.
 
 ## 1. Clarify the destination
 

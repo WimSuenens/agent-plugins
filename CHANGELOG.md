@@ -2,6 +2,26 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.7.0 (#112)
+
+Release: `2.7.0`, a **minor** release: a new role, the integrator, computes the dispatch plan at each run event. Standard text changes, so the baseline resets. No `factory-state` change. Restart Claude Code sessions after updating: a session keeps the text it read when it started.
+
+Issue [#112](https://github.com/WimSuenens/agent-plugins/issues/112), map [#108](https://github.com/WimSuenens/agent-plugins/issues/108). Contract [112-integrator](contracts/112-integrator.md).
+
+**What changed for the person who runs the factory:**
+
+- **Integrator role.** `factory:integrator` reads the board afresh at each event (intake processed, slice ready, PR opened, merge done, map changed) and returns a plan: which slices start, in which order, which merges come first, and which pause, each with a reason. It keeps no state and writes nothing to the tracker; the lead spawns the roles the plan names.
+- **New script `scripts/integrator.sh plan <board.json>`.** It reads a board snapshot and prints the plan and the flow measures (waiting time, lead time, batch size, slices in flight). A value the board does not hold is `not captured`.
+- **Priority is unchanged.** The integrator orders slices only within the priority the lead and the person set, and advises a different order when a dependency requires it.
+
+**Not in this release.** The integrator is not yet a value of the board's `Role` field: adding it is left to the next board setup. Its ownership row is in this repo's `docs/agents/factory.md` and in the setup template.
+
+**Tests.** New `tests/factory/test_integrator.sh` (scripts seam and standard-text seam). The version pins, the protocol baseline and the shell-section check now allow the integrator's one shell line.
+
+**Unverified.** Nothing ran in a live factory session; the events are written as text, and the lead's calls to the integrator have not been exercised on a real board.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `f49cc58095d948396a26cb5f6e0afa10cf98a0a160b161e78117d03bbe16a66e`, tooling `832d3e58befa0a72248e9b2afb745999565fd6ba61c4df1e164bf441e0a6fd57`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.6.0 (#111)
 
 Release: `2.6.0`, a **minor** release: a run becomes one cycle over a standing backlog, and the slice maximum is gone. Standard text changes, so the baseline resets. No `factory-state` change. Restart Claude Code sessions after updating: a session keeps the text it read when it started.

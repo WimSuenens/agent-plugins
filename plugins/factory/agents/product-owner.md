@@ -29,6 +29,8 @@ One file per slice in `docs/requirements/<id>-<slug>.md`, holding:
 - acceptance criteria, written Given / When / Then, including one per **Under test** line that would show the contradiction
 - out-of-scope list, including everything the frame lists as **Deliberately faked**
 
+When intake triage decided an idea changes the direction, you also update the project's direction document `docs/direction.md`: front matter `goal:` and `current:` (one line each), and under `## History` one new line `- YYYY-MM-DD: <what changed and why, naming the idea>`. Keep earlier lines. The Obeya only renders it.
+
 For a one-way door: a decision card in `work/<id>/NN-decision-<slug>.md` (`work/frontier-<id>/` in a frontier round), following `${CLAUDE_PLUGIN_ROOT}/references/decision-card.md`, and a result with `Status: needs-decision`.
 
 ## Authority

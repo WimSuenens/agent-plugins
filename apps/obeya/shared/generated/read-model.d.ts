@@ -48,6 +48,13 @@ export interface Direction {
   id: string;
   goal: string;
   current: string;
+  /**
+   * What changed the direction and when, oldest first.
+   */
+  history: {
+    date: string;
+    change: string;
+  }[];
   ref: string;
   provenance: Provenance;
 }

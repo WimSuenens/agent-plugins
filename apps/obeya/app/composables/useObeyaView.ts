@@ -1,4 +1,4 @@
-import type { ParseFailure, ProjectSummary } from '../../shared/types'
+import type { Direction, ParseFailure, ProjectSummary } from '../../shared/types'
 import type { PageView } from '../../shared/view'
 
 interface Loaded {
@@ -24,6 +24,7 @@ export async function useObeyaView() {
         summaries.map(async (s) => ({
           ...s,
           parseFailures: s.state === 'ok' ? await $fetch<ParseFailure[]>(`/api/projects/${s.id}/parse-failures`) : [],
+          directions: s.state === 'ok' ? await $fetch<Direction[]>(`/api/projects/${s.id}/directions`) : [],
         })),
       )
       state.value = { view: { ...state.value.view, projects }, refreshedAt: new Date().toISOString(), error: null }

@@ -4,6 +4,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { promisify } from 'node:util'
 import type { Decision, Item, ParseFailure, Provenance, ProjectConfig, ProjectSummary } from '../../shared/types'
+import { readDirections } from './direction'
 import { SourceError, type ReadModelSource, type TrackerAdapter } from './types'
 
 const run = promisify(execFile)
@@ -100,7 +101,7 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id))
     },
     async parseFailures(p) {
-      const artifact = (await adrs(p)).flatMap((f) => (f.failure ? [f.failure] : []))
+      const artifact = [...(await adrs(p)), ...(await readDirections(await trees(p)))].flatMap((f) => (f.failure ? [f.failure] : []))
       const board = (await cards(p))
         .filter((c) => c.number === null)
         .map((c): ParseFailure => ({ path: `tracker:${c.raw}`, reason: 'board card is not linked to an issue', provenance: { kind: 'event' } }))
@@ -113,8 +114,8 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
           : [{ id: `item-${c.number}`, number: c.number, title: c.title, url: c.url, factoryStatus: c.factoryStatus ?? 'No status', kind: c.kind, role: c.role, effort: c.effort, provenance: { kind: 'event' } }],
       )
     },
-    async directions() {
-      return []
+    async directions(p) {
+      return (await readDirections(await trees(p))).flatMap((f) => (f.direction ? [f.direction] : []))
     },
     async andon() {
       return []

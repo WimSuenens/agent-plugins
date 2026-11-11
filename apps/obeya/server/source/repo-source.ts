@@ -6,6 +6,7 @@ import { promisify } from 'node:util'
 import type { Decision, Item, ParseFailure, Provenance, ProjectConfig, ProjectSummary } from '../../shared/types'
 import { ideaEntries, inboxEntries } from './intake'
 import { readWorkArtifacts } from './work-artifacts'
+import { readDirections } from './direction'
 import { SourceError, type ReadModelSource, type TrackerAdapter } from './types'
 
 const run = promisify(execFile)
@@ -119,7 +120,7 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id))
     },
     async parseFailures(p) {
-      const artifact = [...(await adrs(p)).flatMap((f) => (f.failure ? [f.failure] : [])), ...(await readWorkArtifacts(await trees(p))).failures]
+      const artifact = [...(await adrs(p)), ...(await readDirections(await trees(p)))].flatMap((f) => (f.failure ? [f.failure] : [])).concat((await readWorkArtifacts(await trees(p))).failures)
       const board = (await cards(p))
         .filter((c) => c.number === null)
         .map((c): ParseFailure => ({ path: `tracker:${c.raw}`, reason: 'board card is not linked to an issue', provenance: { kind: 'event' } }))
@@ -132,8 +133,8 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
           : [{ id: `item-${c.number}`, number: c.number, title: c.title, url: c.url, factoryStatus: c.factoryStatus ?? 'No status', kind: c.kind, role: c.role, effort: c.effort, ...(c.blockedBy ? { blockedBy: c.blockedBy } : {}), provenance: { kind: 'event' } }],
       )
     },
-    async directions() {
-      return []
+    async directions(p) {
+      return (await readDirections(await trees(p))).flatMap((f) => (f.direction ? [f.direction] : []))
     },
     async andon(p) {
       return (await readWorkArtifacts(await trees(p))).andon

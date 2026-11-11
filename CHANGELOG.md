@@ -2,6 +2,20 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.12.0 (#129)
+
+Release: `2.12.0`, a **minor** release: standard work changed (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#129](https://github.com/WimSuenens/agent-plugins/issues/129), [contract 129](contracts/129-obeya-direction.md)). No migration; a project without the file sees "No direction yet" in the Obeya.
+
+**What changed for the person who runs the factory:**
+
+- **A direction document.** `docs/direction.md` holds the project's goal, its current heading and a dated history of what changed the direction. It is owned by the product-owner (new ownership-table row, also in the setup template).
+- **Intake keeps it current.** When triage gives an idea the outcome *direction*, the product-owner updates the document in the same item (`current`, and one History line naming the idea). The standard text in `/factory:run` and the product-owner role say so.
+- **The Obeya shows it.** Goal, heading, history, source path and provenance chip; a copy that differs in an in-flight worktree is shown as in flight; a malformed file is a parse-failure card; a missing one is an empty state, not an error. The Obeya never writes the file. The `direction` schema gained `history`.
+
+**Tests.** `apps/obeya/test/direction.test.mjs` (API seam and render smoke). The version pins move to 2.12.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `14cb8e842c591bfd3cea6c914b228ef4280389b4f0a8d31d787910e535152f1a`, tooling `2f9312d4b81b1562df2af15eb0b6e507d930865b75cf13defd6eef07642fada4`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.11.0 (#130)
 
 Release: `2.11.0`, a **minor** release: standard work changed (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#130](https://github.com/WimSuenens/agent-plugins/issues/130), contract [130-obeya-pending-and-andon](contracts/130-obeya-pending-and-andon.md)). A project that does not opt in to the Obeya is untouched.

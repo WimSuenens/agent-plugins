@@ -18,6 +18,7 @@ const props = defineProps<{ view: PageView }>()
     <section v-for="p in view.projects" :key="p.id" :data-project="p.id">
       <h2 v-if="p.state === 'ok'" data-test="project-name">{{ p.name }}</h2>
       <p v-else role="alert" data-test="project-error">{{ p.id }}: {{ p.error }}</p>
+      <DirectionPanel :directions="p.directions" :parse-failures="p.parseFailures" />
       <BoardView :board="p.board" />
       <DecisionList :decisions="p.decisions" />
       <IntakeQueue v-if="p.state === 'ok'" :entries="p.intake" />

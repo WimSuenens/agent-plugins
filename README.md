@@ -102,6 +102,8 @@ It needs Docker. The image `ghcr.io/wimsuenens/obeya:<version>` is pinned in `pl
 
 From 2.11.0 the Obeya also shows pending decisions (including cards in an in-flight worktree), open and resolved andon, and a "needs you" slot. To make that possible, a decision card file and an andon draft start with a small front matter block ([contract 130](contracts/130-obeya-pending-and-andon.md)); one that lacks it shows as a "could not parse" card.
 
+**Direction.** The Obeya shows the project's goal, current heading and history from `docs/direction.md` ([contract](contracts/129-obeya-direction.md)): front matter `goal:` and `current:`, then a `## History` list of `- YYYY-MM-DD: what changed` lines. The product-owner owns the file and updates it when intake triage decides an idea changes the direction (release 2.12.0). The Obeya only renders it; without the file it shows "No direction yet".
+
 ### The board, role tasks and parallel slices
 
 From 2.0.0 the board of the project's GitHub Project holds every status. Its fields are `Factory status` (six values: `Backlog`, `Ready`, `Running`, `Waiting on you`, `Blocked`, `Done`), `Kind` (`map`, `slice`, `role task`, `frontier ticket`), `Role` (on a role task only) and five text fields for the numbers (`Tokens`, `Minutes`, `Hours`, `Rework rounds`, `Person touches`). The project's built-in `Status` field is not used. Two views are set up for the person: **Needs you** (filter `factory-status:"Waiting on you"`) and **History** (filter `is:closed kind:slice,"role task"`, closed newest first). Set *Column by* to `Factory status` on the board view.

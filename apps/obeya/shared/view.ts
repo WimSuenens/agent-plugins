@@ -1,4 +1,4 @@
-import type { Andon, Decision, IntakeEntry, Item, ParseFailure, PendingDecision, ProjectSummary } from './types'
+import type { Andon, Decision, Direction, IntakeEntry, Item, ParseFailure, PendingDecision, ProjectSummary } from './types'
 
 /** One project as a theme sees it: the summary plus the read-model objects the base views need. */
 export type ProjectView = ProjectSummary & {
@@ -8,6 +8,7 @@ export type ProjectView = ProjectSummary & {
   intake: IntakeEntry[]
   andon: Andon[]
   pendingDecisions: PendingDecision[]
+  directions: Direction[]
 }
 
 /** An idea waiting on a human, input to the needs-you slot. */

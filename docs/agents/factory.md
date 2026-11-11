@@ -20,7 +20,7 @@ Overrides replace a role's default model in this repo, one row per role: `| <rol
 
 | Path | Owner |
 |---|---|
-| `docs/requirements/` | product-owner |
+| `docs/requirements/`, `docs/direction.md` | product-owner |
 | `contracts/`, `docs/adr/`, `CONTEXT.md` | architect |
 | `plugins/` | developer |
 | `apps/obeya/` (the app; its `Dockerfile` and CI files stay with devops) | developer |

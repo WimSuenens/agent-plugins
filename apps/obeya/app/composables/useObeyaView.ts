@@ -1,4 +1,4 @@
-import type { Andon, Decision, IntakeEntry, Item, ParseFailure, PendingDecision, ProjectSummary } from '../../shared/types'
+import type { Andon, Decision, Direction, IntakeEntry, Item, ParseFailure, PendingDecision, ProjectSummary } from '../../shared/types'
 import type { BoardColumn, IdeaNeed, PageView } from '../../shared/view'
 
 /** The factory statuses, in board order. A status the tracker has that is not here follows them, never dropped. */
@@ -36,15 +36,16 @@ export async function useObeyaView() {
       const projects = await Promise.all(
         summaries.map(async (s) => {
           const get = <T,>(kind: string): Promise<T[]> => (s.state === 'ok' ? $fetch<T[]>(`/api/projects/${s.id}/${kind}`) : Promise.resolve([]))
-          const [parseFailures, items, decisions, intake, andon, pendingDecisions] = await Promise.all([
+          const [parseFailures, items, decisions, intake, andon, pendingDecisions, directions] = await Promise.all([
             get<ParseFailure>('parse-failures'),
             get<Item>('items'),
             get<Decision>('decisions'),
             get<IntakeEntry>('intake'),
             get<Andon>('andon'),
             get<PendingDecision>('pending-decisions'),
+            get<Direction>('directions'),
           ])
-          return { ...s, parseFailures, items, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), intake, andon, pendingDecisions }
+          return { ...s, parseFailures, items, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), intake, andon, pendingDecisions, directions }
         }),
       )
       const ideas: IdeaNeed[] = projects.flatMap((p) => p.intake.filter((e) => e.waitingOnHuman).map((entry) => ({ kind: 'idea' as const, projectId: p.id, entry })))

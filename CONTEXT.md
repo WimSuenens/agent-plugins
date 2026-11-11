@@ -10,6 +10,9 @@ _Avoid_: orchestrator, coordinator
 **Item** — one slice of a run, built on its own branch and merged on its own PR.
 _Avoid_: task, story
 
+**Worktree folder** — `.claude/worktrees`, inside the project: every item, frontier-round and settle-round worktree is created there (`<id>`, `frontier-<map>`, `settle-<map>`). It is ignored in `.gitignore` and excluded from test, lint and search runs. The path rules, ownership text and clean-up guard name it.
+_Avoid_: `../wt`, sibling folder (the location before 2.4.0)
+
 **Frontier round** — the factory work of clearing the map's one-way doors outside any item; it ends in one PR to main carrying its ADRs and glossary changes.
 
 **Role model** — the Claude model a factory role runs on. Its default is the `model:` in the role's agent file; a repo overrides it per role in the `## Role models` table of `docs/agents/factory.md`.

@@ -496,12 +496,14 @@ Step 8 of `skills/run/SKILL.md` follows this order (the steps here are 8.1 to 8.
 4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*. The template's measure 1 carries its two derived sub-lines. A row of `## Abnormalities` with no comment URL reads `raised, no andon recorded` in the `abnormalities` line. Write `hansei: <comment URL> (measure 7 pending)` into the map's **Factory run** section, because `work/<id>/` is about to go and the map survives.
 4a. Set the board fields (section 7): every task's, then the slice's.
 5. Environment teardown, when the item had one.
-6. Remove `work/<id>/`, in the item worktree, in this order, which never meets a dirty file and never reaches outside the worktree. The guard and steps 6.1 and 6.2 run as **one shell call** (one Bash tool call, one script that stops at the first failure): the Lead's shell keeps no variables between calls, so `w` exists only inside that call, and every use is written `"${w:?}"`, which stops the command when `w` is empty. Every command names the worktree by its absolute path, so the shell's working directory does not matter (it starts in the main checkout, and a `cd` into `../wt/<id>` does not persist):
+6. Remove `work/<id>/`, in the item worktree, in this order, which never meets a dirty file and never reaches outside the worktree. The guard and steps 6.1 and 6.2 run as **one shell call** (one Bash tool call, one script that stops at the first failure): the Lead's shell keeps no variables between calls, so `w` exists only inside that call, and every use is written `"${w:?}"`, which stops the command when `w` is empty. Every command names the worktree by its absolute path, so the shell's working directory does not matter (it starts in the main checkout, and a `cd` into `.claude/worktrees/<id>` does not persist):
    0. Guard:
       ```
       case "<id>" in ''|*[!0-9]*) echo "close: id not numeric" >&2; exit 1 ;; esac
       w="$(git worktree list --porcelain | awk -v b="branch refs/heads/item/<id>" '/^worktree /{p=substr($0,10)} $0==b{print p}')"
       [ -n "$w" ] || { echo "close: no worktree for item/<id>" >&2; exit 1; }
+      m="$(git worktree list --porcelain | awk '/^worktree /{print substr($0,10); exit}')"
+      [ "$w" != "$m" ] || { echo "close: worktree is the main checkout" >&2; exit 1; }
       if [ -L "${w:?}/work" ] || [ -L "${w:?}/work/<id>" ]; then echo "close: work/ is a symlink" >&2; exit 1; fi
       ```
       When the guard stops, stop the close and put it to the person; nothing has been removed.

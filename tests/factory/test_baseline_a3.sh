@@ -206,13 +206,13 @@ has ac13-needs-plugin-change "$A3" 'A countermeasure whose only form is a plugin
 # AC-12/AC-14: an experiment written between items must be committed after the next item's worktree exists (step 5.2) and before the Start item
 # stamp (step 5.3), so that `overrides at start` lists it and the item reads `whole item`. Written after the stamp, the item is a during-item.
 S5="$T/step5.md"; sect "$SK" '## 5. Start the item' > "$S5"
-S52="$(grep -E '^2\. `git worktree add' "$S5")"; S53="$(grep -E '^3\. Stamp' "$S5")"
+S52="$(grep -E '^2\. `bash "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/worktree.sh" add item' "$S5")"; S53="$(grep -E '^3\. Stamp' "$S5")"
 ck ac12-step5-2-commits-the-decided-experiment 1 "$(printf '%s' "$S52" | grep -c 'when step 8.10 decided that the run'"'"'s experiment is written, commit it in this worktree, \*\*after 5.2 and before the ledger of 5.3\*\*')"
 ck ac12-step5-2-commit-form 1 "$(printf '%s' "$S52" | grep -c '`#<id> lead: override <name>`, `andon: none (experiment)`')"
 ck ac12-step5-2-stamp-lists-it-item-is-after-item 1 "$(printf '%s' "$S52" | grep -c "the label's \`overrides at start\` lists it and this item is an after-item")"
 ck ac12-step5-2-resume-applies-rule-again 1 "$(printf '%s' "$S52" | grep -c 'On a resumed run apply the rule of `references/a3.md`, section 5 again from the records; nothing was stored between 8.10 and here.')"
 ck ac12-step5-3-is-the-stamp 1 "$(printf '%s' "$S53" | grep -c 'Stamp `date -u +%FT%TZ` (`started`)')"
-before ac12-5-2-before-5-3 "$S5" '2. `git worktree add' '3. Stamp'
+before ac12-5-2-before-5-3 "$S5" '2. `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" add item' '3. Stamp'
 S810="$(grep -E '^10\. Update the baseline' "$SK")"
 ck ac12-8-10-only-decides 1 "$(printf '%s' "$S810" | grep -c '\*\*decide\*\* whether the run'"'"'s experiment is written (`references/a3.md`, section 5). Nothing is committed or stored here: no worktree exists, and the decision is committed at step 5 of the next item.')"
 has ac12-a3-md-8-10-only-decides "$A3" 'step 8.10 only **decides**, because no worktree exists then; the commit is made in the **next item'"'"'s worktree at step 5, after the worktree exists (5.2) and before the `Start item` stamp (5.3)**'

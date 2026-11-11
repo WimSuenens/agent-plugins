@@ -17,8 +17,8 @@ before() { # name file a b: a appears, b appears, a before b
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
 
 # --- AC-1
-ck ac1-plugin-version "2.3.1" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
-ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.3.1",$' "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-plugin-version "2.4.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac1-version-own-line 1 "$(grep -c '^  "version": "2.4.0",$' "$PLUGIN/.claude-plugin/plugin.json")"
 ck ac1-marketplace-factory-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$MK")"
 
 # --- contract 39-standard-changes section 3: plugin root and the pre-1.0.0 tracker fallback
@@ -335,7 +335,7 @@ ck close-step6-one-bullet 1 "$(grep -cF '6. The last commit on `item/<id>` remov
 ck close-ha-step6-present 1 "$([ -n "$H6" ] && echo 1)"
 guard_of() { awk -v h="$2" '$0 ~ h {f=1; next} f==1 && /^ *```/ {f=2; next} f==2 && /^ *```/ {exit} f==2 {sub(/^ +/, ""); print}' "$1"; }
 GS="$(guard_of "$SK" '^6\. The last commit on')"; GH="$(guard_of "$HA" '^ +0\. Guard:$')"
-ck close-guard-four-lines 4 "$(printf '%s\n' "$GH" | grep -c .)"
+ck close-guard-six-lines 6 "$(printf '%s\n' "$GH" | grep -c .)"
 ck close-guard-same-in-both "$GH" "$GS"
 W='"${w:?}"'
 for X in C6 H6; do
@@ -343,7 +343,7 @@ for X in C6 H6; do
   ck "close-$X-one-shell-call" 1 "$(printf '%s' "$Y" | grep -c 'as \*\*one shell call\*\* (one Bash tool call, one script that stops at the first failure)')"
   ck "close-$X-why-w-guarded" 1 "$(printf '%s' "$Y" | grep -cF 'so `w` exists only inside that call, and every use is written `"${w:?}"`')"
   # every use of w is "${w:?}": the only bare "$w" left is the guard's own emptiness test
-  ck "close-$X-only-guarded-w" '[ -n "$w"' "$(printf '%s' "$Y" | grep -oE '.{6}"\$w[/"]' | sed 's/^ *//' | paste -sd'|' -)"
+  ck "close-$X-only-guarded-w" '[ -n "$w"|[ "$w"' "$(printf '%s' "$Y" | grep -oE '.{6}"\$w[/"]' | sed 's/^ *//' | paste -sd'|' -)"
   ck "close-$X-no-rm-rf" 0 "$(printf '%s' "$Y" | grep -c 'rm -rf')"
   inline_before "close-$X-guard-id-before-worktree" "$Y" 'case "<id>" in' 'w="$(git worktree list --porcelain'
   inline_before "close-$X-symlink-guard-before-add" "$Y" 'if [ -L "${w:?}/work" ] || [ -L "${w:?}/work/<id>" ]' "git -C $W add -- ':(glob)work/<id>/[0-9][0-9]-*.md'"
@@ -488,7 +488,7 @@ ck in-run-cutoffs-close-scan "stalled|2026-11-05T00:08:06Z|2026-11-05T00:14:53Z|
 
 # --- contract 39-standard-changes section 9 / ADR 0013 (#48 option A): the path rule, the security checklist line, --merge kept
 PR_="$PLUGIN/references/protocol.md"; SR="$PLUGIN/agents/security-reviewer.md"
-has path-rule-three-forms "$PR_" 'Paths in a message file are worktree-relative (`plugins/factory/agents/developer.md`), relative to the repo'"'"'s parent for another worktree (`../wt/<id>`), or start with `~/` for anything under the home directory (`~/.claude/plugins/cache/...`).'
+has path-rule-three-forms "$PR_" 'Paths in a message file are worktree-relative (`plugins/factory/agents/developer.md`), relative to the main checkout for another worktree (`.claude/worktrees/<id>`), or start with `~/` for anything under the home directory (`~/.claude/plugins/cache/...`).'
 has path-rule-never-home "$PR_" 'Never write an absolute path under the home directory: `work/` is merged into the project'"'"'s history with every commit and stays there for good.'
 has path-rule-every-type-lead-state "$PR_" 'This covers every message type, the lead state included'
 has path-rule-commands "$PR_" 'commands in a message (`~/` or `"$HOME"/...`)'
@@ -501,7 +501,7 @@ before path-rule-in-messages "$PR_" '## Messages' 'Paths in a message file are w
 ck path-rule-no-home-path-in-plugin "" "$(grep -rlE '/(Users|home)/[A-Za-z0-9._-]+/' "$PLUGIN/references" "$PLUGIN/agents" "$PLUGIN/skills" 2>/dev/null)"
 # the run skill points the Lead's own files at the rule, where step 4 writes the lead state
 L4="$(grep -E '^4\. Write `work/<id>/00-lead-state.md`' "$SK")"
-ck skill-step4-path-rule 1 "$(printf '%s' "$L4" | grep -cF 'The lead state and every brief follow the protocol'"'"'s path rule (*Messages*): no absolute path under the home directory, only worktree-relative, `../wt/<id>` or `~/` paths.')"
+ck skill-step4-path-rule 1 "$(printf '%s' "$L4" | grep -cF 'The lead state and every brief follow the protocol'"'"'s path rule (*Messages*): no absolute path under the home directory, only worktree-relative, `.claude/worktrees/<id>` or `~/` paths.')"
 # security-reviewer.md Steps 1 carries the checklist line, inside step 1 (before step 2)
 has sec-checklist-expected "$SR" '`work/<id>/` in the merge history is expected: items merge with `--merge` and keep every role commit. Not a finding.'
 has sec-checklist-finding "$SR" 'The finding is an absolute home path, a secret, or a file not named `NN-<type>-<role>.md`, in any commit of the item that touches `work/`.'

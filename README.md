@@ -480,6 +480,8 @@ The `factory` plugin at 2.3.1 (#106), on macOS, on 2026-11-10, from `fix/106-awk
 
 **Not tested yet, for 2.3.1:** a live session; the install and update path. The 2.3.0 note that the same awk file-operand pattern sat in `post-text.sh` and `board.sh` is closed by this release, and the 2.3.0 low finding in `a3-check.sh` is covered by the 2.3.0 fix. The security review of the 2.3.1 branch found nothing. The earlier 2.3.0 notes above stay as they were at that release.
 
+The `factory` plugin at 2.4.0 (#109), on macOS, on 2026-11-11. Worktrees now live in `.claude/worktrees` inside the project (script `worktree.sh`: `add`, `ignore`, `legacy`; setup migrates old `../wt` worktrees). `bash tests/factory/test_worktree_folder.sh` passes (58 checks), `bash tests/run.sh` prints `ALL PASSED`, and `claude plugin validate ./plugins/factory` passes. **Not tested yet, for 2.4.0:** a live session; `git worktree move` on a real project with a running item.
+
 **Not tested yet:** a factory item on a project with real application code. The acceptance demo ran an item end to end in a scratch project; the first run on a real project closes the remaining open questions, or turns them into findings.
 
 ## Known costs

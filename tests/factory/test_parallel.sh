@@ -213,7 +213,7 @@ for bad in 0 -1 two ""; do fcfile gb "parallel-limit: $bad"; ck "ac29-gate-bad-[
 has ac29-run-limit-and-list-both "$RUN" 'You start the next `Ready` slice only when **both** hold'
 has ac29-run-in-flight-definition "$RUN" 'a slice card with an item branch whose `Factory status` is `Running`, `Waiting on you` or `Blocked`'
 has ac29-run-says-why "$RUN" '`limit (<k> of <N> in flight)` or `overlaps #<id> on <path>`'
-has ac29-run-reads-lists-from-worktrees "$RUN" '`../wt/<id>/contracts/<id>-*.md`'
+has ac29-run-reads-lists-from-worktrees "$RUN" '`.claude/worktrees/<id>/contracts/<id>-*.md`'
 has ac29-run-bad-value-stops "$RUN" 'on exit 5 stop and name the line to fix, as for a bad role model value, and start nothing'
 has ac29-run-after-usage-limit-n1 "$RUN" 'After a usage-limit hit the gate behaves as `N = 1` until the slices in flight have closed'
 # the template carries the setting with the default and the explanation

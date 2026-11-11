@@ -200,7 +200,7 @@ ck ac7-qa-done-list-keeps-its-gate-lines 4 "$(printf '%s\n' "$QD" | grep -cE '^-
 
 # =============================================================== AC-8 the fenced section is byte-identical; nothing else changes outside ## Tests
 fence() { awk '/^## Never overridable locally$/ {f=1} /^## Overrides$/ {f=0} f' "$1" | shasum -a 256 | cut -d' ' -f1; }
-bf="$(base references/protocol.md > "$T/proto-base.md"; fence "$T/proto-base.md")"
+bf="$(base references/protocol.md | sed 's|relative to the repo'"'"'s parent for another worktree (`../wt/<id>`)|relative to the main checkout for another worktree (`.claude/worktrees/<id>`)|' > "$T/proto-base.md"; fence "$T/proto-base.md")"  # the one change since the freeze: the worktree location (#109)
 ck ac8-baseline-fenced-section-found 1 "$([ -n "$(awk '/^## Never overridable locally$/ {f=1} f' "$T/proto-base.md")" ] && echo 1 || echo 0)"
 ck ac8-fenced-section-byte-identical "$bf" "$(fence "$PROTO")"
 ck ac8-question-E-present 1 "$(grep -c '^> \*\*E\. Data egress\.\*\*' "$PROTO")"
@@ -229,8 +229,8 @@ f="$SC/73-ac4-code-review-triggers.md"
 
 # =============================================================== release 2.1.0
 PJ="$PLUGIN/.claude-plugin/plugin.json"
-ck rel-plugin-json-version "2.3.1" "$(jq -r .version "$PJ")"
-ck rel-version-own-line 1 "$(grep -c '^  "version": "2.3.1",$' "$PJ")"
+ck rel-plugin-json-version "2.4.0" "$(jq -r .version "$PJ")"
+ck rel-version-own-line 1 "$(grep -c '^  "version": "2.4.0",$' "$PJ")"
 ck rel-marketplace-has-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$REPO/.claude-plugin/marketplace.json")"
 ck rel-factory-state-stays-2 1 "$(head -1 "$TPL" | grep -cx 'factory-state: 2')"
 skip rel-delta-against-main "retired by the 2.2.0 triage batch: these rows describe the 2.0.0 to 2.1.0 delta against origin/main, which no longer holds once main is 2.1.0"

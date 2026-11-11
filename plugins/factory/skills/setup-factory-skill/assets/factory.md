@@ -33,8 +33,10 @@ Tests. `tests/` is the acceptance suite: QA owns it and the developer never edit
 
 ## Worktrees
 
-Item worktrees live at `../wt/<id>`, on branch `item/<id>`.
-Frontier-round worktrees live at `../wt/frontier-<map>`, on branch `frontier/<map>`.
+Item worktrees live at `.claude/worktrees/<id>`, on branch `item/<id>`.
+Frontier-round worktrees live at `.claude/worktrees/frontier-<map>`, on branch `frontier/<map>`.
+
+The folder is inside the project, in the agent tool's own worktree folder, and is ignored in `.gitignore`. Every test, lint and search run excludes `.claude/worktrees`, so the main checkout never scans the worktrees (for example `grep -rn --exclude-dir=worktrees`, `git grep`, or the runner's ignore setting).
 
 ## Parallel slices
 

@@ -2,6 +2,26 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.4.0 (#109)
+
+Release: `2.4.0`, a **minor** release: factory worktrees move into the project's own agent folder, `.claude/worktrees`, instead of beside the repository at `../wt`. Standard text changes, so the baseline resets. No `factory-state` change, and a project with worktrees at the old location keeps working: setup offers to move them, or the item is finished where it is. Restart Claude Code sessions after updating: a session keeps the text it read when it started.
+
+Issue [#109](https://github.com/WimSuenens/agent-plugins/issues/109), map [#108](https://github.com/WimSuenens/agent-plugins/issues/108). Contract [109-worktree-folder](contracts/109-worktree-folder.md). [ADR 0002](docs/adr/0002-one-branch-and-worktree-per-item.md) is revised on location only.
+
+**What changed for the person who runs the factory:**
+
+- **Worktrees stay inside the project.** An item worktree is `.claude/worktrees/<id>` on `item/<id>`; a frontier round's is `.claude/worktrees/frontier-<map>`, a settle round's `.claude/worktrees/settle-<map>`. Nothing is created outside the project, so no extra permission is asked for.
+- **New script `scripts/worktree.sh`.** `add item|frontier|settle <n>` creates the worktree and prints its path; it refuses (exit 3) while the folder is not ignored. `ignore` adds `/.claude/worktrees/` to `.gitignore` and changes nothing the second time. `legacy` lists worktrees at the old `../wt/<name>` (exit 10 when there are any).
+- **Setup.** Step 8 of `setup-factory-skill` runs `ignore`, makes the repo's test, lint and search commands exclude the folder, writes the new `## Worktrees` text, and offers **move or finish** for each worktree `legacy` lists. A move is `git worktree move` and needs a yes.
+- **Clean-up guard.** Besides the empty path, the close now refuses when the item's worktree is the main checkout (`close: worktree is the main checkout`).
+- **Text.** The run skill, the protocol's path rule (`.claude/worktrees/<id>`), the `## Worktrees` section of `docs/agents/factory.md` and its template, the glossary (**Worktree folder**) and ADR 0002 name the new location. This repo ignores the folder in `.gitignore`.
+
+**Tests.** New `tests/factory/test_worktree_folder.sh` covers the script seam (every command, exit codes, `ignore` twice, `legacy`) and the standard-text seam (the location in each text, no `../wt/` left in the standard, the guard run at the new location and against the main checkout). The version pins move from 2.3.1 to 2.4.0 and the path-rule pin in `test_standard_text.sh` reads the new wording.
+
+**Unverified.** Nothing ran in a live factory session, including `git worktree move` on a real project with a running item, and whether Claude Code's own `.claude/worktrees` use collides with the factory's names. The install and update path was not run.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `207df0e9bb4e4788f91fd254ce7ed2b065a50bdb2eb4720ad2f7ae827d06430d`, tooling `cdbfb1d814cbac51c23312b791fc722596d674aeea4b439974aed256e9da2ed0`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.3.1 (#106)
 
 Release: `2.3.1`, a **patch** release: `scripts/post-text.sh` and `scripts/board.sh` read a relative file named like `name=value` as a file. No rule, text or output changes, and no project has to migrate. Restart Claude Code sessions after updating: a session keeps the script it read when it started.

@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Setup the factory
 
-`/factory:run` and the seven role agents read two repo files: `docs/agents/factory.md` (decision-maker, role model overrides, path ownership, worktree location, the parallel limit, tracker ids) and the `## Factory operations` section of `docs/agents/issue-tracker.md`. This skill writes both, once. `/factory:run` accepts a project only when line 1 of `docs/agents/factory.md` is `factory-state: 2`; a 1.x project gets that line from this skill's migration, written last. A re-run of the whole skill on a migrated project reports `already migrated` and changes nothing.
+`/factory:run` and the seven role agents read two repo files: `docs/agents/factory.md` (decision-maker, role model overrides, path ownership, worktree location (`.claude/worktrees`), the parallel limit, tracker ids) and the `## Factory operations` section of `docs/agents/issue-tracker.md`. This skill writes both, once. `/factory:run` accepts a project only when line 1 of `docs/agents/factory.md` is `factory-state: 2`; a 1.x project gets that line from this skill's migration, written last. A re-run of the whole skill on a migrated project reports `already migrated` and changes nothing.
 
 ## Process
 
@@ -92,7 +92,18 @@ The factory tracks status in a GitHub Project: a single-select `Factory status` 
 
 **Restoring the old distinction** (the board cannot give it back). The snapshot is the only place the difference between In progress and In review survives. To restore: (1) add the four old option names back to `Factory status` (they get new ids), keeping every present option's id; (2) for each item in the snapshot, set its recorded old option with `gh project item-edit`; (3) when every item is set, drop what the old workflow did not have. A real restore is not rehearsed.
 
-### 8. Keep item folders out of trunk
+### 8. Put worktrees in the project's agent folder
+
+Item and frontier-round worktrees live in `.claude/worktrees`, inside the project, so they need no permission outside it. Make that true for this repo:
+
+1. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" ignore`. It adds `/.claude/worktrees/` to `.gitignore` and says `added`, or says `already present` and changes nothing; running it twice is safe. Commit a changed `.gitignore` on main.
+2. Make the repo's own test, lint and search commands skip `.claude/worktrees` (a runner's ignore or exclude setting; `grep -rn --exclude-dir=worktrees`; `git grep` already skips ignored folders). If a command scans the whole tree, change it here, or tell the person which one and why.
+3. Set the `## Worktrees` section of `docs/agents/factory.md` to `.claude/worktrees/<id>` and `.claude/worktrees/frontier-<map>` (the template has them). A repo whose section still says `../wt/<id>` gets the new text.
+4. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" legacy`. Exit 0 and no output: nothing to migrate. Exit 10 lists each worktree at the old location (`../wt/<name>`) with its branch. Offer the person one choice per worktree: **move or finish**. *Move* is `git worktree move <old path> <main checkout>/.claude/worktrees/<name>` (git updates its links; do it only when the worktree has no running agent and no uncommitted work); *finish* leaves it where it is, and the lead completes that item there. Make no move without a yes.
+
+**Done when** `worktree.sh ignore` has run, the search, lint and test commands exclude `.claude/worktrees`, `docs/agents/factory.md` names the new location, and every worktree `legacy` listed was moved, or the person chose to finish it where it is.
+
+### 8a. Keep item folders out of trunk
 
 Item folders in `work/` are removed by the last commit on each item branch. Nothing to ignore; confirm no `work/` rule in `.gitignore` hides them, since roles commit their messages.
 

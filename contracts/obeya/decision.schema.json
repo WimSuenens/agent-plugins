@@ -35,6 +35,13 @@
       "description": "Where the artifact can be found, in the source's own terms (a path, a url).",
       "type": "string"
     },
+    "url": {
+      "description": "A link that opens the artifact, when the source can build one.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "provenance": {
       "$ref": "provenance.schema.json"
     }

@@ -42,6 +42,10 @@ export interface Decision {
    * Where the artifact can be found, in the source's own terms (a path, a url).
    */
   ref: string;
+  /**
+   * A link that opens the artifact, when the source can build one.
+   */
+  url?: string | null;
   provenance: Provenance;
 }
 export interface Direction {
@@ -75,6 +79,10 @@ export interface Item {
     number: number;
     title: string | null;
   };
+  /**
+   * Issue numbers that block this item. Absent when the source does not know.
+   */
+  blockedBy?: number[];
   provenance: Provenance;
 }
 export interface ParseFailure {

@@ -11,12 +11,15 @@ defineProps<{ view: PageView }>()
     <section class="needs-you" data-test="needs-you" aria-labelledby="needs-you-h">
       <h2 id="needs-you-h">Needs you</h2>
       <p v-if="!view.needsYou.length">Nothing needs you right now.</p>
+      <ItemCard v-for="i in view.needsYou" :key="i.id" :item="i" />
     </section>
 
     <p v-if="!view.projects.length" data-test="empty">No project is configured.</p>
     <section v-for="p in view.projects" :key="p.id" :data-project="p.id">
       <h2 v-if="p.state === 'ok'" data-test="project-name">{{ p.name }}</h2>
       <p v-else role="alert" data-test="project-error">{{ p.id }}: {{ p.error }}</p>
+      <BoardView :board="p.board" />
+      <DecisionList :decisions="p.decisions" />
       <ParseFailureCard v-for="f in p.parseFailures" :key="f.path" :failure="f" />
     </section>
   </div>

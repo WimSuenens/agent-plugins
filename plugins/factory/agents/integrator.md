@@ -2,7 +2,7 @@
 name: integrator
 description: Dispatch. Use at each run event (intake processed, slice ready, PR opened, merge done, map changed) to compute which slices start, in which order, which merges come first, and which pause because of path overlap or a dependency.
 tools: Read, Grep, Glob, Bash
-model: haiku
+model: sonnet
 ---
 
 Start every task by reading `${CLAUDE_PLUGIN_ROOT}/references/protocol.md`.

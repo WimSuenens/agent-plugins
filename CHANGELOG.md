@@ -2,6 +2,21 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.7.1 (#112)
+
+Release: `2.7.1`, a **patch** release: the integrator runs on `sonnet` instead of `haiku`. The standard text changes, so the fingerprints change; no `factory-state` change. Restart Claude Code sessions after updating.
+
+Issue [#112](https://github.com/WimSuenens/agent-plugins/issues/112). Contract [112-integrator](contracts/112-integrator.md).
+
+**What changed for the person who runs the factory:**
+
+- **The integrator's model is `sonnet`.** Its agent file says `model: sonnet`, and the default-model table in `setup-factory-skill` lists it with the developer and devops. The integrator makes the dispatch decisions the lead acts on, so it gets the stronger model. `docs-writer` stays on `haiku`.
+- **A project's `## Role models` table** can still override it, as for any role.
+
+**Tests.** `test_integrator.sh` checks the model line; the version pins move to 2.7.1, and the release-delta check in `test_fingerprint.sh` moves its test version to 2.7.2.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `a84cc041001c5d330a836a4466df346656e10dc96d77f172ceeb3329b158f7a5`, tooling `0b4b0e5b78d5d2fab527cc25c0dee0664bde0be2b4c5619a12887bf4b417b0bd`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.7.0 (#112)
 
 Release: `2.7.0`, a **minor** release: a new role, the integrator, computes the dispatch plan at each run event. Standard text changes, so the baseline resets. No `factory-state` change. Restart Claude Code sessions after updating: a session keeps the text it read when it started.

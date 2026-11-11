@@ -557,7 +557,7 @@ ck t12-skill-8-3a-has-no-rule-steps 0 "$(grep -E '^3a\. ' "$SK" | grep -cE 'mod 
 ck t12-no-second-numbered-walk-in-skill 1 "$(grep -cE '^3a\. ' "$SK")"
 
 # ---------- T13 (AC-10): release and hygiene ----------
-ck t13-plugin-json-2.7.0 2.7.0 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck t13-plugin-json-2.7.1 2.7.1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 skip t13-release-delta-vs-1.2.0 "retired by slice 64: the branch base is 1.3.0 and the release delta, the bump line, the fingerprints and the added-line hygiene are checked in test_release64.sh"
 # the tracked files of the standard and the new fixtures hold no absolute home path at all (git grep over the committed tree)
 H1='/Us''ers/[A-Za-z0-9_.-]+'; H2='/ho''me/[A-Za-z0-9_.-]+'

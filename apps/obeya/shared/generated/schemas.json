@@ -1,0 +1,326 @@
+{
+  "andon.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Andon",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "item": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "reason": {
+        "type": "string"
+      },
+      "resolved": {
+        "type": "boolean"
+      },
+      "ref": {
+        "type": "string"
+      },
+      "provenance": {
+        "$ref": "provenance.schema.json"
+      }
+    },
+    "required": [
+      "id",
+      "item",
+      "reason",
+      "resolved",
+      "ref",
+      "provenance"
+    ],
+    "additionalProperties": false
+  },
+  "decision.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Decision",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "kind": {
+        "enum": [
+          "adr",
+          "decision-card"
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "order": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "ref": {
+        "description": "Where the artifact can be found, in the source's own terms (a path, a url).",
+        "type": "string"
+      },
+      "provenance": {
+        "$ref": "provenance.schema.json"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "title",
+      "status",
+      "order",
+      "date",
+      "ref",
+      "provenance"
+    ],
+    "additionalProperties": false
+  },
+  "direction.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Direction",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "goal": {
+        "type": "string"
+      },
+      "current": {
+        "type": "string"
+      },
+      "ref": {
+        "type": "string"
+      },
+      "provenance": {
+        "$ref": "provenance.schema.json"
+      }
+    },
+    "required": [
+      "id",
+      "goal",
+      "current",
+      "ref",
+      "provenance"
+    ],
+    "additionalProperties": false
+  },
+  "intake-entry.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "IntakeEntry",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "title": {
+        "type": "string"
+      },
+      "outcome": {
+        "enum": [
+          "direction",
+          "slice-candidate",
+          "research-ticket",
+          "parked",
+          "rejected",
+          "untriaged"
+        ]
+      },
+      "reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "waitingOnHuman": {
+        "type": "boolean"
+      },
+      "ref": {
+        "type": "string"
+      },
+      "provenance": {
+        "$ref": "provenance.schema.json"
+      }
+    },
+    "required": [
+      "id",
+      "title",
+      "outcome",
+      "reason",
+      "waitingOnHuman",
+      "ref",
+      "provenance"
+    ],
+    "additionalProperties": false
+  },
+  "item.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Item",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "number": {
+        "type": "integer"
+      },
+      "title": {
+        "type": "string"
+      },
+      "url": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "factoryStatus": {
+        "type": "string"
+      },
+      "kind": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "role": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "effort": {
+        "description": "The effort this item belongs to: its parent map.",
+        "oneOf": [
+          {
+            "type": "null"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "integer"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "number",
+              "title"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "provenance": {
+        "$ref": "provenance.schema.json"
+      }
+    },
+    "required": [
+      "id",
+      "number",
+      "title",
+      "url",
+      "factoryStatus",
+      "kind",
+      "role",
+      "effort",
+      "provenance"
+    ],
+    "additionalProperties": false
+  },
+  "parse-failure.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ParseFailure",
+    "type": "object",
+    "properties": {
+      "path": {
+        "description": "The artifact that could not be read, in the source's own terms.",
+        "type": "string",
+        "minLength": 1
+      },
+      "reason": {
+        "type": "string",
+        "minLength": 1
+      },
+      "provenance": {
+        "$ref": "provenance.schema.json"
+      }
+    },
+    "required": [
+      "path",
+      "reason",
+      "provenance"
+    ],
+    "additionalProperties": false
+  },
+  "provenance.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Provenance",
+    "description": "Where an object came from: settled on the main line, in flight on a named item, or fed by an event or live system.",
+    "oneOf": [
+      {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "merged"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "in-flight"
+          },
+          "item": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "kind",
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "event"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      }
+    ]
+  }
+}

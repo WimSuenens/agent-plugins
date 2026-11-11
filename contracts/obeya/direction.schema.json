@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Direction",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal": {
+      "type": "string"
+    },
+    "current": {
+      "type": "string"
+    },
+    "ref": {
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "provenance.schema.json"
+    }
+  },
+  "required": [
+    "id",
+    "goal",
+    "current",
+    "ref",
+    "provenance"
+  ],
+  "additionalProperties": false
+}

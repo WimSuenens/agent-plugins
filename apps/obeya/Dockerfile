@@ -3,7 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+# The image context holds only apps/obeya, so the staleness check (which reads contracts/) runs in `npm run build` and tests, not here.
+RUN npx nuxt build
 
 FROM node:24-alpine
 RUN apk add --no-cache git

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IntakeEntry",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "direction",
+        "slice-candidate",
+        "research-ticket",
+        "parked",
+        "rejected",
+        "untriaged"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "waitingOnHuman": {
+      "type": "boolean"
+    },
+    "ref": {
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "provenance.schema.json"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "outcome",
+    "reason",
+    "waitingOnHuman",
+    "ref",
+    "provenance"
+  ],
+  "additionalProperties": false
+}

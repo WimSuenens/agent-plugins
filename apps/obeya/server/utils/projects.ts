@@ -1,9 +1,4 @@
-import { execFile } from 'node:child_process'
-import { basename } from 'node:path'
-import { promisify } from 'node:util'
-import type { ProjectConfig, ProjectSummary } from '../../shared/types'
-
-const run = promisify(execFile)
+import type { ProjectConfig } from '../../shared/types'
 
 export function configuredProjects(): ProjectConfig[] {
   const raw = process.env.OBEYA_PROJECTS
@@ -15,13 +10,8 @@ export function configuredProjects(): ProjectConfig[] {
   return []
 }
 
-export async function summarize(p: ProjectConfig): Promise<ProjectSummary> {
-  const fail = (error: string): ProjectSummary => ({ id: p.id, state: 'error', name: null, error })
-  try {
-    const { stdout } = await run('git', ['-C', p.path, 'rev-parse', '--show-toplevel'])
-    return { id: p.id, state: 'ok', name: basename(stdout.trim()) }
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return fail('git is not installed')
-    return fail(`project path ${p.path} does not exist or is not a git repository`)
-  }
+export function findProject(id: string | undefined): ProjectConfig {
+  const project = configuredProjects().find((p) => p.id === id)
+  if (!project) throw createError({ statusCode: 404, statusMessage: `no project with id ${id}` })
+  return project
 }

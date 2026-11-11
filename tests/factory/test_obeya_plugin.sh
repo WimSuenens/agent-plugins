@@ -117,6 +117,34 @@ V=$(jq -r .version "$REPO/apps/obeya/package.json")
 pin=$(sed -n 's/^[[:space:]]*image:[[:space:]]*//p' "$CF")
 ck compose-pin-is-app-version "ghcr.io/wimsuenens/obeya:$V" "$pin"
 
+# review fixes (#121): tracker config reaches the container, the image has gh, the compose project is per project
+reset; printf 'GH_TOKEN=x\n' >"$TOKEN_ENV"
+PT=$(mkproj tracked $'obeya: on\n\n| Key | Value |\n|---|---|\n| owner | SomeOwner |\n| project number | 42 |')
+run "$PT" start
+ck tracker-start-exit 0 "$(cat "$T/rc")"
+PTR="$(cd "$PT" && pwd -P)"
+has tracker-in-projects "$STUB_DOCKER_DIR/env" '"tracker":{"owner":"SomeOwner","projectNumber":42}'
+has tracker-path-in-projects "$STUB_DOCKER_DIR/env" "\"path\":\"$PTR\""
+has dockerfile-has-gh "$REPO/apps/obeya/Dockerfile" "apk add --no-cache git github-cli"
+# a project without a tracker table still starts, with no tracker key
+reset; printf 'GH_TOKEN=x\n' >"$TOKEN_ENV"
+run "$P" start
+hasnt no-tracker-no-key "$STUB_DOCKER_DIR/env" '"tracker"'
+has no-tracker-valid-json "$STUB_DOCKER_DIR/env" '"id":"project"'
+# the compose project name is per project: two projects get two names, and each only sees its own container
+reset; printf 'GH_TOKEN=x\n' >"$TOKEN_ENV"
+run "$P" start
+nameA="$(grep -o -- '-p [^ ]*' "$STUB_DOCKER_DIR/log" | tail -n1)"
+run "$PT" start
+nameB="$(grep -o -- '-p [^ ]*' "$STUB_DOCKER_DIR/log" | tail -n1)"
+differ compose-name-per-project "$nameA" "$nameB"
+has compose-name-prefixed "$STUB_DOCKER_DIR/log" "-p obeya-"
+run "$P" stop
+has stop-other-project-says-not-running "$T/out" "obeya: not running"
+ck stop-other-project-leaves-running "$(echo "$nameB" | sed 's/^-p //')" "$(cat "$STUB_DOCKER_DIR/running")"
+run "$PT" stop
+ck stop-own-project-stops "" "$(ls "$STUB_DOCKER_DIR/running" 2>/dev/null)"
+
 # release check: the pinned tag must exist in the registry
 reset
 ( PATH="$SD:$PATH" STUB_DOCKER_TAGS="9.9.9" bash "$OB" check-pin >"$T/out" 2>"$T/err"; echo $? >"$T/rc" )

@@ -18,8 +18,6 @@ envfile="${OBEYA_ENV_FILE:-$HOME/.config/obeya/env}"
 port="${OBEYA_PORT:-4777}"
 
 image="$(sed -n 's/^[[:space:]]*image:[[:space:]]*//p' "$compose" | head -n1)"
-dc() { docker compose -f "$compose" "$@"; }
-
 cmd=""; login=0
 for a in "$@"; do
   case "$a" in
@@ -47,12 +45,31 @@ project="$(cd "$project" && pwd -P)"
 grep -q '^obeya: on[[:space:]]*$' "$project/docs/agents/factory.md" 2>/dev/null ||
   die "not enabled: set 'obeya: on' in docs/agents/factory.md"
 
+# one compose project per project folder, so stop/status/"already running" only ever see this project's container
+sum="$(printf '%s' "$project" | cksum | cut -d' ' -f1)"
+cname="obeya-$sum"
+dc() { docker compose -p "$cname" -f "$compose" "$@"; }
+
+# the tracker (owner and project number) from the Tracker key table of docs/agents/factory.md, passed to the app
+table_get() {
+  awk -F'|' -v k="$1" '/^\|/ { a = $2; b = $3; gsub(/^ +| +$/, "", a); gsub(/^ +| +$/, "", b); if (a == k) { print b; exit } }' "$project/docs/agents/factory.md" 2>/dev/null
+}
+t_owner="$(table_get owner)"
+t_number="$(table_get "project number")"
+json_str() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+tracker=""
+case "$t_number" in
+  '' | *[!0-9]*) ;;
+  *) [ -n "$t_owner" ] && tracker=",\"tracker\":{\"owner\":\"$(json_str "$t_owner")\",\"projectNumber\":$t_number}" ;;
+esac
+
 export OBEYA_PROJECT_PATH="$project" OBEYA_PORT="$port"
+export OBEYA_PROJECTS="[{\"id\":\"project\",\"path\":\"$(json_str "$project")\"$tracker}]"
 
 running="$(dc ps -q 2>/dev/null)"
 if [ "$cmd" = stop ] || { [ -z "$cmd" ] && [ -n "$running" ]; }; then
   if [ -z "$running" ]; then echo "obeya: not running"; exit 0; fi
-  dc down >/dev/null 2>&1 || die "docker could not stop the Obeya: run 'docker compose -p obeya down'"
+  dc down >/dev/null 2>&1 || die "docker could not stop the Obeya: run 'docker compose -p $cname down'"
   echo "obeya: stopped"
   exit 0
 fi

@@ -15,18 +15,18 @@ Decision cards and andon files get a small front matter block, so the app reads 
 
 ## 1. Where the files are
 
-Both live under `work/<id>/` and are read from the main checkout and every worktree (a copy that equals the main one is not repeated; a changed or new one is `in-flight` on that worktree's branch).
+Both live under `work/<id>/` and are read from the main checkout and every worktree (a copy that equals the main one is not repeated; a copy is `in-flight` on that worktree's branch only when the branch changed the file since its merge-base with main, or main lacks the file. A worktree cut before main moved is stale, not in flight: main's copy is used).
 
 | Artifact | File | Object |
 |---|---|---|
-| Decision card | `work/<id>/NN-decision-card-<role>.md` | `pending-decision.schema.json`, `GET .../pending-decisions` |
+| Decision card | `work/<id>/NN-decision-<slug>.md` (the name the product-owner and `/factory:run` use); `NN-decision-card-<role>.md` is read too | `pending-decision.schema.json`, `GET .../pending-decisions` |
 | Andon (abnormality list entry) | `work/<id>/NN-andon-lead.md` | `andon.schema.json`, `GET .../andon` |
 
 A numeric `<id>` is the item number; `frontier-<n>` and `settle-<n>` give `item: null`.
 
 ## 2. Front matter
 
-The YAML subset the reader accepts: `key: value`, `key: [a, b]`, `key:` followed by `  - item` lines, and trailing ` # comment`.
+The YAML subset the reader accepts: `key: value`, `key: [a, b]`, `key:` followed by `  - item` lines, and a trailing ` # comment` (a `#` after whitespace and followed by a space or the end of the line; `#45` inside a value is part of the value).
 
 Decision card: `door` (`one-way` or `two-way`), `asked` (who is asked), `since` (date and time, UTC), `options` (at least two). The title is the `## Decision:` line.
 

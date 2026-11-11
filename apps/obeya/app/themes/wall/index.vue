@@ -170,7 +170,7 @@ const decisionLabel = (d: Decision) => `${d.title} (${d.status})`
         </ul>
       </section>
 
-      <ParseFailureCard v-for="f in p.parseFailures" :key="f.path" :failure="f" class="pf" />
+      <ParseFailureCard v-for="f in p.parseFailures" :key="failureKey(p.id, f)" :failure="f" class="pf" />
     </section>
   </div>
 </template>

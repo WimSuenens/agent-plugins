@@ -36,21 +36,28 @@ export async function useObeyaView() {
       const projects = await Promise.all(
         summaries.map(async (s) => {
           const get = <T,>(kind: string): Promise<T[]> => (s.state === 'ok' ? $fetch<T[]>(`/api/projects/${s.id}/${kind}`) : Promise.resolve([]))
-          const [parseFailures, items, decisions, intake, andon, pendingDecisions, directions] = await Promise.all([
-            get<ParseFailure>('parse-failures'),
-            get<Item>('items'),
-            get<Decision>('decisions'),
-            get<IntakeEntry>('intake'),
-            get<Andon>('andon'),
-            get<PendingDecision>('pending-decisions'),
-            get<Direction>('directions'),
-          ])
-          return { ...s, parseFailures, items, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), intake, andon, pendingDecisions, directions }
+          try {
+            const [parseFailures, items, decisions, intake, andon, pendingDecisions, directions] = await Promise.all([
+              get<ParseFailure>('parse-failures'),
+              get<Item>('items'),
+              get<Decision>('decisions'),
+              get<IntakeEntry>('intake'),
+              get<Andon>('andon'),
+              get<PendingDecision>('pending-decisions'),
+              get<Direction>('directions'),
+            ])
+            return { ...s, parseFailures, items, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), intake, andon, pendingDecisions, directions }
+          } catch (e) {
+            // One project failing must not blank the others: it becomes a visible error state of its own.
+            const err = e as { statusMessage?: string; message?: string }
+            const failed: ProjectSummary = { id: s.id, state: 'error', name: null, error: err.statusMessage || err.message || 'unknown error' }
+            return { ...failed, parseFailures: [] as ParseFailure[], items: [] as Item[], board: boardOf([]), decisions: [] as Decision[], intake: [] as IntakeEntry[], andon: [] as Andon[], pendingDecisions: [] as PendingDecision[], directions: [] as Direction[] }
+          }
         }),
       )
       const ideas: IdeaNeed[] = projects.flatMap((p) => p.intake.filter((e) => e.waitingOnHuman).map((entry) => ({ kind: 'idea' as const, projectId: p.id, entry })))
       const now = new Date()
-      const needsYou = buildNeedsYou(projects.flatMap((p) => p.pendingDecisions), projects.flatMap((p) => p.items), now, ideas)
+      const needsYou = buildNeedsYou(projects, now, ideas)
       state.value = { view: { ...state.value.view, projects: projects.map(({ items: _items, ...p }) => p), needsYou }, refreshedAt: now.toISOString(), error: null }
     } catch (e) {
       const err = e as { statusMessage?: string; message?: string }

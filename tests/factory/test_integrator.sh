@@ -157,5 +157,6 @@ ck devops-description-unchanged "description: Delivery. Use for pipelines, envir
 hasnt devops-no-dispatch "$PLUGIN/agents/devops.md" 'dispatch'
 has protocol-shell "$PLUGIN/references/protocol.md" '**integrator**'
 has guard-role "$PLUGIN/scripts/guard-memory.sh" ' integrator '
-ck version-2.7.0 "2.7.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck integrator-model-sonnet "model: sonnet" "$(grep -E "^model:" "$AG")"
+ck version-2.7.1 "2.7.1" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 done_

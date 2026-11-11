@@ -165,8 +165,8 @@ if grep -q '^## factory 2.3.0 (#94)' "$REPO/CHANGELOG.md"; then
   ck ac19-changelog-release-line 1 "$([ "$(printf '%s\n' "$CE" | grep -c 'Release: `2.3.0`')" -ge 1 ] && echo 1 || echo 0)"
   ck ac19-changelog-says-minor 1 "$([ "$(printf '%s\n' "$CE" | grep -ci 'minor')" -ge 1 ] && echo 1 || echo 0)"
   ck ac19-changelog-says-unverified 1 "$([ "$(printf '%s\n' "$CE" | grep -ci 'unverified')" -ge 1 ] && echo 1 || echo 0)"
-  # the fingerprints are the plugin's now, so they sit in the newest entry (2.7.0, #112); the 2.3.0 entry keeps the ones it had
-  CE="$(awk '/^## factory 2.7.0/{f=1;print;next} /^## /{f=0} f' "$REPO/CHANGELOG.md")"
+  # the fingerprints are the plugin's now, so they sit in the newest entry (2.7.1, #112); the 2.3.0 entry keeps the ones it had
+  CE="$(awk '/^## factory 2.7.1/{f=1;print;next} /^## /{f=0} f' "$REPO/CHANGELOG.md")"
   fpout="$(bash "$PLUGIN/scripts/fingerprint.sh" "$PLUGIN" 2>/dev/null)"
   ck ac19-changelog-has-the-standard-fingerprint 1 "$(printf '%s\n' "$CE" | grep -c "$(printf '%s\n' "$fpout" | sed -n 's/^standard: //p')")"
   ck ac19-changelog-has-the-tooling-fingerprint 1 "$(printf '%s\n' "$CE" | grep -c "$(printf '%s\n' "$fpout" | sed -n 's/^tooling: //p')")"

@@ -14,7 +14,9 @@ Release: `2.12.0`, a **minor** release: standard work changed (spec [#121](https
 
 **Tests.** `apps/obeya/test/direction.test.mjs` (API seam and render smoke). The version pins move to 2.12.0.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `14cb8e842c591bfd3cea6c914b228ef4280389b4f0a8d31d787910e535152f1a`, tooling `2f9312d4b81b1562df2af15eb0b6e507d930865b75cf13defd6eef07642fada4`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `14cb8e842c591bfd3cea6c914b228ef4280389b4f0a8d31d787910e535152f1a`, tooling `adefc78d4c7b1c2b83c864d9a23239e7ba24ec34a58cd3dc3446b511c7f2c39a`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
+**Code-review fixes on spec #121 (before release).** The Obeya image is `0.1.1` (package and compose pin together) and ships `gh`; `obeya.sh` passes the tracker owner and project number from `docs/agents/factory.md` to the container and names the compose project per project folder (`obeya-<hash>`), so stop and "already running" only see that project's container. The Obeya reads a decision card named `NN-decision-<slug>.md` (the producers' name) as well as `NN-decision-card-<role>.md`; a stale worktree copy no longer counts as in flight; an invalid `OBEYA_PROJECTS` or a duplicate id is a visible error. No standard text changed. The tooling fingerprint above is recomputed for the `obeya.sh` change.
 
 ## factory 2.11.0 (#130)
 

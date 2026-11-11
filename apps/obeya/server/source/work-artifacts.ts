@@ -2,6 +2,7 @@
 // Contract: contracts/130-obeya-pending-and-andon.md. A file that lacks or fails its front matter is a parse-failure, never dropped.
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { pickInFlight } from './in-flight'
 import type { Andon, ParseFailure, PendingDecision, Provenance } from '../../shared/types'
 
 interface Tree {
@@ -24,12 +25,12 @@ function frontMatter(text: string): Front | null {
   const out: Front = {}
   let list: string[] | null = null
   for (const line of m[1].split(/\r?\n/)) {
-    const li = line.replace(/\s+#.*$/, '').match(/^\s+-\s+(.*?)\s*$/)
+    const li = stripComment(line).match(/^\s+-\s+(.*?)\s*$/)
     if (li && list) {
       list.push(unquote(li[1]))
       continue
     }
-    const kv = line.replace(/\s+#.*$/, '').match(/^([A-Za-z][\w-]*):\s*(.*?)\s*$/)
+    const kv = stripComment(line).match(/^([A-Za-z][\w-]*):\s*(.*?)\s*$/)
     if (!kv) continue
     list = null
     if (kv[2] === '') {
@@ -44,6 +45,8 @@ function frontMatter(text: string): Front | null {
   return out
 }
 
+/** Only a trailing ` # comment` is a comment (the hash followed by a space or the end); `#45` inside a value is kept. */
+const stripComment = (line: string) => line.replace(/\s+#(\s.*)?$/, '')
 const unquote = (s: string) => s.replace(/^(["'])(.*)\1$/, '$2')
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
 const isTime = (s: string) => !Number.isNaN(Date.parse(s))
@@ -54,7 +57,11 @@ interface Candidate {
   tree: Tree
 }
 
-/** Files of the shape work/<id>/NN-<type>-<role>.md whose type is `kind`. A worktree copy equal to the main one is not repeated; a changed one replaces it. */
+/**
+ * Files of the shape work/<id>/NN-<type>-<rest>.md whose type is `kind`. A decision card is `NN-decision-<slug>.md`
+ * (the producers' name), which also covers `NN-decision-card-<role>.md`.
+ * A worktree copy is in flight only when its branch changed the file since its merge-base with main; a stale or equal copy yields to main's.
+ */
 async function candidates(trees: Tree[], kind: string): Promise<Candidate[]> {
   const re = new RegExp(`^\\d+-${kind}(-.*)?\\.md$`)
   const read = async (tree: Tree): Promise<Candidate[]> => {
@@ -74,10 +81,7 @@ async function candidates(trees: Tree[], kind: string): Promise<Candidate[]> {
   }
   const [main, ...others] = trees
   const base = await read(main)
-  const mainText = new Map(base.map((f) => [f.rel, f.text]))
-  const changed = (await Promise.all(others.map(read))).flat().filter((f) => mainText.get(f.rel) !== f.text)
-  const replaced = new Set(changed.map((f) => f.rel))
-  return [...base.filter((b) => !replaced.has(b.rel)), ...changed]
+  return pickInFlight(main.path, base, (await Promise.all(others.map(read))).flat())
 }
 
 const itemOf = (rel: string) => {
@@ -89,7 +93,7 @@ const suffix = (p: Provenance) => (p.kind === 'in-flight' ? `@${p.item}` : '')
 export async function readWorkArtifacts(trees: Tree[]): Promise<WorkArtifacts> {
   const out: WorkArtifacts = { pending: [], andon: [], failures: [] }
 
-  for (const f of await candidates(trees, 'decision-card')) {
+  for (const f of await candidates(trees, 'decision')) {
     const fail = (reason: string) => out.failures.push({ path: f.rel, reason, provenance: f.tree.provenance })
     const fm = frontMatter(f.text)
     if (!fm) { fail('decision card has no front matter block'); continue }

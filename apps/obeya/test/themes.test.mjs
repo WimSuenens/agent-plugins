@@ -99,8 +99,15 @@ test('the page declares its refresh interval (default 15s, tunable) and the last
   })
 })
 
-test('a failed read is shown as an error banner, not hidden', async () => {
+test('a failed read is shown as that project\'s error state, not hidden', async () => {
   await withServer({ sourceModule: join(here, 'failing-source.mjs') }, async (s) => {
+    const html = await page(s.base)
+    assert.match(html, /role="alert"[^>]*data-test="project-error"/)
+  })
+})
+
+test('a failure to list the projects is shown as an error banner, not hidden', async () => {
+  await withServer({ env: { OBEYA_PROJECTS: '{broken' } }, async (s) => {
     const html = await page(s.base)
     assert.match(html, /role="alert"[^>]*data-test="refresh-error"/)
     assert.match(html, /Refresh failed/)

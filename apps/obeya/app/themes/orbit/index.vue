@@ -132,7 +132,7 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
               </article>
             </section>
 
-            <section v-for="f in p.parseFailures" :key="f.path" class="panel glitch" data-test="parse-failure" role="group" :aria-label="`Corrupt signal: could not read ${f.path}`">
+            <section v-for="f in p.parseFailures" :key="failureKey(p.id, f)" class="panel glitch" data-test="parse-failure" role="group" :aria-label="`Corrupt signal: could not read ${f.path}`">
               <h3>Corrupt signal</h3>
               <p data-test="pf-path"><code>{{ f.path }}</code></p>
               <p data-test="pf-reason">{{ f.reason }}</p>

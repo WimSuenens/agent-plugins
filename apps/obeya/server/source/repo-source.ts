@@ -7,6 +7,7 @@ import type { Decision, Item, ParseFailure, Provenance, ProjectConfig, ProjectSu
 import { ideaEntries, inboxEntries } from './intake'
 import { readWorkArtifacts } from './work-artifacts'
 import { readDirections } from './direction'
+import { pickInFlight } from './in-flight'
 import { SourceError, type ReadModelSource, type TrackerAdapter } from './types'
 
 const run = promisify(execFile)
@@ -61,7 +62,7 @@ function parseAdr(rel: string, text: string, provenance: Provenance, web: string
   if (!num) return fail('file name does not start with a four digit number and a dash')
   const fm = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)
   if (!fm) return fail('missing front matter block with a status line')
-  const status = fm[1].match(/^status:\s*(\S.*?)\s*$/m)?.[1]
+  const status = fm[1].match(/^status:[ \t]*(\S.*?)[ \t]*$/m)?.[1]
   if (!status) return fail('front matter has no status')
   const title = text.slice(fm[0].length).match(/^#\s+(\S.*?)\s*$/m)?.[1]
   if (!title) return fail('missing a "# title" heading')
@@ -69,9 +70,8 @@ function parseAdr(rel: string, text: string, provenance: Provenance, web: string
   return { decision: { id: `adr-${num[1]}`, kind: 'adr', title, status, order, date: null, ref: rel, url: web && `${web}/blob/${provenance.kind === 'in-flight' ? provenance.item : 'HEAD'}/${rel}`, provenance } }
 }
 
-/** ADR artifacts of every tree. A worktree's copy that equals the main one is not repeated; a changed one replaces it. */
-async function adrs(p: ProjectConfig): Promise<Found[]> {
-  const [main, ...others] = await trees(p)
+/** ADR artifacts of every tree. A worktree's copy is in flight only when its branch changed it since its merge-base with main. */
+async function adrs([main, ...others]: Tree[]): Promise<Found[]> {
   const web = await webBase(main.path)
   const read = async (tree: Tree) => {
     const dir = join(tree.path, 'docs', 'adr')
@@ -82,12 +82,9 @@ async function adrs(p: ProjectConfig): Promise<Found[]> {
     return Promise.all(names.map(async (n) => ({ rel: `docs/adr/${n}`, text: await readFile(join(dir, n), 'utf8'), tree })))
   }
   const base = await read(main)
-  const mainText = new Map(base.map((f) => [f.rel, f.text]))
-  const changed = (await Promise.all(others.map(read))).flat().filter((f) => mainText.get(f.rel) !== f.text)
-  const replaced = new Set(changed.map((f) => f.rel))
   const found: Found[] = []
   const ids = new Set<string>()
-  for (const f of [...base.filter((b) => !replaced.has(b.rel)), ...changed]) {
+  for (const f of await pickInFlight(main.path, base, (await Promise.all(others.map(read))).flat())) {
     const r = parseAdr(f.rel, f.text, f.tree.provenance, web)
     if (r.decision) {
       if (ids.has(r.decision.id) && f.tree.provenance.kind === 'in-flight') r.decision.id += `@${f.tree.provenance.item}`
@@ -98,13 +95,34 @@ async function adrs(p: ProjectConfig): Promise<Found[]> {
   return found
 }
 
+const ttlMs = () => Math.max(0, Number(process.env.OBEYA_CACHE_SECONDS ?? 5)) * 1000
+const memo = new Map<string, { at: number; value: Promise<unknown> }>()
+
+/** Tracker reads (gh calls) are shared by the endpoints of one refresh: a short TTL cache; a failed read is never kept. */
+function cached<T>(key: string, read: () => Promise<T>): Promise<T> {
+  const ttl = ttlMs()
+  const hit = memo.get(key)
+  if (ttl > 0 && hit && Date.now() - hit.at < ttl) return hit.value as Promise<T>
+  const value = read()
+  if (ttl > 0) {
+    memo.set(key, { at: Date.now(), value })
+    value.catch(() => {
+      if (memo.get(key)?.value === value) memo.delete(key)
+    })
+  }
+  return value
+}
+
 export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
   const ideas = async (p: ProjectConfig) => {
     if (!p.tracker) return { entries: [], failures: [] }
-    const { login, issues } = await tracker.ideas(p.path)
+    const { login, issues } = await cached(`ideas:${p.path}`, () => tracker.ideas(p.path))
     return ideaEntries(login, issues)
   }
-  const cards = async (p: ProjectConfig) => (p.tracker ? tracker.cards(p.tracker) : [])
+  const cards = async (p: ProjectConfig) => {
+    const t = p.tracker
+    return t ? cached(`cards:${t.owner}/${t.projectNumber}`, () => tracker.cards(t)) : []
+  }
   return {
     async project(p): Promise<ProjectSummary> {
       try {
@@ -115,16 +133,18 @@ export function createRepoSource(tracker: TrackerAdapter): ReadModelSource {
       }
     },
     async decisions(p) {
-      return (await adrs(p))
+      return (await adrs(await trees(p)))
         .flatMap((f) => (f.decision ? [f.decision] : []))
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id))
     },
     async parseFailures(p) {
-      const artifact = [...(await adrs(p)), ...(await readDirections(await trees(p)))].flatMap((f) => (f.failure ? [f.failure] : [])).concat((await readWorkArtifacts(await trees(p))).failures)
-      const board = (await cards(p))
+      const ts = await trees(p)
+      const [adr, dirs, work, cardList, idea] = await Promise.all([adrs(ts), readDirections(ts), readWorkArtifacts(ts), cards(p), ideas(p)])
+      const artifact = [...adr, ...dirs].flatMap((f) => (f.failure ? [f.failure] : [])).concat(work.failures)
+      const board = cardList
         .filter((c) => c.number === null)
         .map((c): ParseFailure => ({ path: `tracker:${c.raw}`, reason: 'board card is not linked to an issue', provenance: { kind: 'event' } }))
-      return [...artifact, ...board, ...(await ideas(p)).failures]
+      return [...artifact, ...board, ...idea.failures]
     },
     async items(p) {
       return (await cards(p)).flatMap((c): Item[] =>

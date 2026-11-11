@@ -383,7 +383,7 @@ has k6-freeze "$AN" 'Read the map'"'"'s Factory run section for a line holding `
 # ---------- new text of the round-2 contract (section 10) ----------
 has e-question "$FE" '> **E. Data egress.** Would following the override send transcripts, result files, message files, tracker content or any project data outside the project'
 has e-not-an-eighth-item "$FE" 'Seven fenced items, eight questions: the table'"'"'s F1 to F7, and the data-egress question **E**, asked of every override. E is not an eighth fenced item.'
-has e-includes-plugin-repo "$FE" '("Outside" includes `WimSuenens/agent-plugins`: only step 9'"'"'s approved issue goes there.)'
+has e-includes-plugin-repo "$FE" '("Outside" includes `WimSuenens/agent-plugins`: only an issue the person approved goes there (step 9, and the *Improvement loop*).)'
 has f1-covers-run-close-answer "$FE" "This covers the person's keep, promote or drop answer at a run close and the merge of the settle PR (silence, a timeout or a default is no answer)."
 has k3-origin-main-table "$AN" 'Read the ownership table from `origin/main` (`git show origin/main:docs/agents/factory.md`), never the worktree'"'"'s copy'
 has k3-unclassifiable "$AN" 'A path that cannot be classified (it holds a control character, a newline included, or does not decode as text) flags the commit like a foreign-owned path'

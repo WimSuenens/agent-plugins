@@ -187,7 +187,7 @@ A project override (see *Overrides*) can never touch these seven. This section i
 
 Seven fenced items, eight questions: the table's F1 to F7, and the data-egress question **E**, asked of every override. E is not an eighth fenced item.
 
-> **E. Data egress.** Would following the override send transcripts, result files, message files, tracker content or any project data outside the project (to another repository, a third-party service, a paste site, a model call outside the session), or write them where the project's collaborators do not already read them? ("Outside" includes `WimSuenens/agent-plugins`: only step 9's approved issue goes there.)
+> **E. Data egress.** Would following the override send transcripts, result files, message files, tracker content or any project data outside the project (to another repository, a third-party service, a paste site, a model call outside the session), or write them where the project's collaborators do not already read them? ("Outside" includes `WimSuenens/agent-plugins`: only an issue the person approved goes there (step 9, and the *Improvement loop*).)
 
 ## Overrides
 

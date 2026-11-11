@@ -23,11 +23,17 @@ _Avoid_: `../wt`, sibling folder (the location before 2.4.0)
 
 **Role model** — the Claude model a factory role runs on. Its default is the `model:` in the role's agent file; a repo overrides it per role in the `## Role models` table of `docs/agents/factory.md`.
 
-**Local countermeasure** — a change to the factory's standard that the Lead tries in one project before anyone proposes it for the plugin; it is written down as an override.
+**Local countermeasure** — a change to the factory's standard that holds only in this project (the finding failed the test: would this hold in a project with a different stack, business and person?). The Lead applies it in the project through the role files and it is **kept permanently**: it does not end with the run. Each one leaves an **improvement trace**. Its try-out form, before it has proved itself, is an **override**. See [0011](docs/adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md).
 _Avoid_: local fix, workaround (a **countermeasure experiment** is how one is measured, not the change itself)
 
-**Override** — the written form of a local countermeasure in a project's `docs/agents/factory.md`, with its start date; it ends at the close of the run it started in unless the person keeps, promotes or drops it there.
+**Override** — a local countermeasure on trial: written in a project's `docs/agents/factory.md` with its start date. It ends at the close of the run it started in unless the person keeps, promotes or drops it there; one that proved itself becomes a role-file improvement and is kept permanently. It never touches the fence.
 _Avoid_: patch, exception
+
+**Factory-fundamental** — a finding that would hold in a project with a different stack, business and person. It is drafted as a sanitised proposal (the A3 is its format; no project names, code or business content), shown to the person, and only after their approval submitted as an issue in the marketplace repository, where the decision is taken in a separate session, never in the project.
+_Avoid_: global fix, upstream patch
+
+**Improvement trace** — one row in `docs/agents/improvements.md` per project-local improvement: date, name, role, the measure it moves, its reading before, what changed and why. A later cycle reports before and after for it, with `not captured` where the measure was not read.
+_Avoid_: changelog (of the project), log
 
 **Role file** — a role's project-specific rules, checks and knowledge, at `docs/agents/roles/<role>.md` with its skills folder `docs/agents/skills/<role>/`, under version control. It adds to the standard and never lifts the fence; only its own role reads it. There is still one agent per role.
 _Avoid_: role memory (the user-scope store it replaces), second agent

@@ -4,6 +4,10 @@
 
 **Integrator** — the factory role that reads the board afresh at each run event and returns a **dispatch plan**: which slices start, in which order, which merges come first, and which pause, each with a reason. It keeps no state and makes no tracker write; the Lead spawns the roles the plan names. See [0112](contracts/112-integrator.md).
 
+**Measurement profile** — the per-project setting `measurement: full | lite` in `docs/agents/factory.md`. Full (the default) is the whole measurement; lite gives a short hansei record and computes cut-offs and token spend only when asked. Baseline and A3 are the same under both.
+
+**Role skip** — the Lead leaving a role out of a trivial slice, with the reason written on the ticket. QA and the runtime proof are never skipped, and no role is skipped for a slice touching contracts, authentication, secrets, a data migration or a one-way door (`scripts/skip.sh check`). The integrator counts skipped roles and compares the rework of skipped and full slices.
+
 **Board snapshot** — the board as a JSON file the Lead gives the integrator at each event; the input of `scripts/integrator.sh plan`.
 
 **Flow measures** — waiting time (a Ready slice since it became ready), lead time (a Done slice from creation to close), batch size (slices started together) and in-flight count (slices Running, Waiting on you or Blocked). Each is a value or "not captured".
@@ -23,13 +27,26 @@ _Avoid_: `../wt`, sibling folder (the location before 2.4.0)
 
 **Role model** — the Claude model a factory role runs on. Its default is the `model:` in the role's agent file; a repo overrides it per role in the `## Role models` table of `docs/agents/factory.md`.
 
-**Local countermeasure** — a change to the factory's standard that the Lead tries in one project before anyone proposes it for the plugin; it is written down as an override.
+**Local countermeasure** — a change to the factory's standard that holds only in this project (the finding failed the test: would this hold in a project with a different stack, business and person?). The Lead applies it in the project through the role files and it is **kept permanently**: it does not end with the run. Each one leaves an **improvement trace**. Its try-out form, before it has proved itself, is an **override**. See [0011](docs/adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md).
 _Avoid_: local fix, workaround (a **countermeasure experiment** is how one is measured, not the change itself)
 
-**Override** — the written form of a local countermeasure in a project's `docs/agents/factory.md`, with its start date; it ends at the close of the run it started in unless the person keeps, promotes or drops it there.
+**Override** — a local countermeasure on trial: written in a project's `docs/agents/factory.md` with its start date. It ends at the close of the run it started in unless the person keeps, promotes or drops it there; one that proved itself becomes a role-file improvement and is kept permanently. It never touches the fence.
 _Avoid_: patch, exception
 
-**Fence** — the "Never overridable locally" list in the standard: what no override may touch (approvals, the decision-card route, QA and security gates, the andon, memory and shell-scope rules, the honesty rule for measures).
+**Factory-fundamental** — a finding that would hold in a project with a different stack, business and person. It is drafted as a sanitised proposal (the A3 is its format; no project names, code or business content), shown to the person, and only after their approval submitted as an issue in the marketplace repository, where the decision is taken in a separate session, never in the project.
+_Avoid_: global fix, upstream patch
+
+**Improvement trace** — one row in `docs/agents/improvements.md` per project-local improvement: date, name, role, the measure it moves, its reading before, what changed and why. A later cycle reports before and after for it, with `not captured` where the measure was not read.
+_Avoid_: changelog (of the project), log
+
+**Plugin domain** — the one sentence in a plugin's manifest (`domain` in `plugin.json`) saying what field of work it is a toolbox for. Plugins are organised by domain, not by role. The factory searches the domains for an existing plugin before it proposes a new one.
+
+**Skill graduation** — a project skill that proved itself in at least two items or two projects and passed the sanitising scan is drafted as a proposal naming the best-matching plugin by its domain (or saying none matches). It is proposed, never published, by the factory: it reaches the marketplace repository only after the person approves, and the decision is taken there in a separate session. A role file may refer to plugin skills optionally; the factory works with none installed. See [119](contracts/119-skill-graduation.md).
+
+**Role file** — a role's project-specific rules, checks and knowledge, at `docs/agents/roles/<role>.md` with its skills folder `docs/agents/skills/<role>/`, under version control. It adds to the standard and never lifts the fence; only its own role reads it. There is still one agent per role.
+_Avoid_: role memory (the user-scope store it replaces), second agent
+
+**Fence** — the "Never overridable locally" list in the standard: what no override may touch (approvals, the decision-card route, QA and security gates, the andon, memory and shell-scope rules, the honesty rule for measures); it binds role files as well, and permanently.
 _Avoid_: guardrail, allowlist
 
 **Yokoten** — spreading a proven local countermeasure into the plugin for every project; always the person's decision card.
@@ -87,6 +104,8 @@ _Avoid_: log, journal (the 1.x **Stage log** is the term it replaces)
 
 **Board** — the GitHub Project of the repo, where each map, slice, frontier ticket and role task is a card with a `Factory status`, a `Kind` and (for a role task) a `Role`. The only place a status lives.
 _Avoid_: dashboard, kanban (the board is the state, not a view of it)
+
+**Maintenance cycle** — the part of a run, decided by the factory on concrete signals (backlog nearly empty, red CI or repeated rework, many merges, aged inbox items, a vulnerable dependency) and announced in one line at run start, that triages, diagnoses, reviews and looks for architecture friction. It only files backlog candidates of the maintenance kind, within a per-cycle budget; a candidate that touches a one-way door is not executed.
 
 **Run budget** — the optional `run-budget: <N> tokens|hours` line of `docs/agents/factory.md` (default `none`): the only brake on a run. Reaching it starts nothing new and leaves work in flight resumable. There is no slice maximum: slices are in flight whenever they have an item branch and are Running, Waiting on you or Blocked, and run side by side when their path lists do not overlap. See [0017](docs/adr/0017-a-run-is-a-cycle-over-a-standing-backlog.md).
 _Avoid_: concurrency, worker count

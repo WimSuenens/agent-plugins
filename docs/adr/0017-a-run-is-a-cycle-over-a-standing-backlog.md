@@ -14,7 +14,8 @@ Issue [#111](https://github.com/WimSuenens/agent-plugins/issues/111), under [#10
 2. **A run is one cycle over the standing backlog.** It starts by processing intake, then maintenance, improvement and slice building (every mechanism restarts), and ends when the backlog is empty, the per-run budget is reached, or the person stops it. It closes with the existing improvement record (A3 and baseline).
 3. **No slice maximum.** `parallel-limit` is removed. Slices run side by side whenever their path lists do not overlap (the overlap rule of 0016 stands); overlapping ones wait as `Ready`. The "one thin slice" rule is removed with it.
 4. **The only brake is an optional per-run budget**, `run-budget: <N> tokens|hours` in `docs/agents/factory.md` (`none` by default). When it is reached no new slice or role starts; work in flight finishes the step in hand and stays resumable from its lead state, and the run closes cleanly.
-5. **An old `parallel-limit` line is ignored** with a note, and removed by setup.
+5. **Maintenance is decided per cycle.** A maintenance cycle runs only on a concrete signal, is announced in one line at run start, files only backlog candidates within `maintenance-budget`, and never executes a one-way-door candidate (issue #117).
+6. **An old `parallel-limit` line is ignored** with a note, and removed by setup.
 
 ## Considered options
 

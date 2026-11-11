@@ -1,6 +1,7 @@
 {
   "name": "toolkit",
   "description": "Toolkit for non-common tasks like converting files types.",
+  "domain": "General-purpose helpers for uncommon tasks, such as converting files between formats.",
   "author": {
     "name": "Wim Suenens",
     "url": "https://wim.suenens.me"

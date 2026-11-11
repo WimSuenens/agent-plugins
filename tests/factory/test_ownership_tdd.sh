@@ -207,7 +207,9 @@ ck ac8-question-E-present 1 "$(grep -c '^> \*\*E\. Data egress\.\*\*' "$PROTO")"
 # the protocol minus its ## Tests section is the baseline protocol, byte for byte
 awk '/^## Tests$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$PROTO" > "$T/proto-minus-tests.md"
 # slice 112 adds one shell line for the integrator; it is the only other change allowed here
-ck ac8-protocol-minus-tests-section-is-baseline "$(shasum -a 256 < "$T/proto-base.md" | cut -d' ' -f1)" "$(grep -v '^- \*\*integrator\*\*' "$T/proto-minus-tests.md" | shasum -a 256 | cut -d' ' -f1)"
+# slice 115 replaces the final ## Memory section with ## Role knowledge (tested in test_role_knowledge.sh); both are cut out here
+nomem() { awk '/^## (Memory|Role knowledge)$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$1"; }
+ck ac8-protocol-minus-tests-section-is-baseline "$(nomem "$T/proto-base.md" | shasum -a 256 | cut -d' ' -f1)" "$(nomem "$T/proto-minus-tests.md" | grep -v '^- \*\*integrator\*\*' | shasum -a 256 | cut -d' ' -f1)"
 
 # =============================================================== AC-9 the files agree on whose test to change (script part; the cards are human review)
 for f in $FILES; do
@@ -230,8 +232,8 @@ f="$SC/73-ac4-code-review-triggers.md"
 
 # =============================================================== release 2.1.0
 PJ="$PLUGIN/.claude-plugin/plugin.json"
-ck rel-plugin-json-version "2.8.0" "$(jq -r .version "$PJ")"
-ck rel-version-own-line 1 "$(grep -c '^  "version": "2.8.0",$' "$PJ")"
+ck rel-plugin-json-version "2.9.0" "$(jq -r .version "$PJ")"
+ck rel-version-own-line 1 "$(grep -c '^  "version": "2.9.0",$' "$PJ")"
 ck rel-marketplace-has-no-version "null" "$(jq -r '.plugins[] | select(.name=="factory") | .version' "$REPO/.claude-plugin/marketplace.json")"
 ck rel-factory-state-stays-2 1 "$(head -1 "$TPL" | grep -cx 'factory-state: 2')"
 skip rel-delta-against-main "retired by the 2.2.0 triage batch: these rows describe the 2.0.0 to 2.1.0 delta against origin/main, which no longer holds once main is 2.1.0"

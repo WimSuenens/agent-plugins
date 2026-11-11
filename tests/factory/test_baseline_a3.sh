@@ -124,7 +124,7 @@ ck ac3-no-instruction-for-a-mean 0 "$(grep -iE '\bmean of (all|the items|the sec
 repo_all="$(grep -rnF -- '--repo' "$PLUGIN" | grep -v 'None names `--repo`' | grep -v 'No command here names `--repo`' | grep -v 'only instruction that names `--repo' | grep -vF -- '--repo <owner>/<repo>')"
 ck ac9-only-step9-4-names-repo 1 "$(printf '%s\n' "$repo_all" | grep -c .)"
 ck ac9-it-is-in-step9 1 "$(printf '%s\n' "$repo_all" | grep -c 'skills/run/SKILL.md:.*gh issue create --repo WimSuenens/agent-plugins')"
-ck ac9-issue-create-lines "3" "$(grep -rn 'gh issue create' "$PLUGIN" --exclude=intake.sh | grep -c .)"   # #110: intake.sh files ideas in the project's own tracker, counted by test_idea_intake.sh; slice 64: the third is Create role task (a role-task sub-issue); only the step 9 line names --repo
+ck ac9-issue-create-lines "3" "$(grep -rn 'gh issue create' "$PLUGIN" --exclude=intake.sh --exclude=maintenance.sh --exclude=improvement.sh | grep -c .)"   # #110, #117: intake.sh and maintenance.sh file ideas in the project's own tracker, counted by test_idea_intake.sh; slice 64: the third is Create role task (a role-task sub-issue); only the step 9 line names --repo
 ck ac9-create-baseline-is-project-local 0 "$(grep -F -- '- **Create baseline**' "$TP" | grep -c 'agent-plugins')"
 ck ac9-baseline-and-a3-files-no-write-to-plugin-repo 0 "$(grep -nE 'agent-plugins' "$BA" "$A3" | grep -vE 'Never in `WimSuenens/agent-plugins`' | grep -c .)"
 ck ac9-no-plugin-path-write 0 "$(grep -nE '> *"?\$\{CLAUDE_PLUGIN_ROOT\}|tee .*CLAUDE_PLUGIN_ROOT' "$SK" "$BA" "$A3" "$TP" | grep -c .)"

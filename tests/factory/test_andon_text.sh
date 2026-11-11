@@ -16,7 +16,7 @@ before() { la="$(ln_of "$2" "$3")"; lb="$(ln_of "$2" "$4")"
   if [ "$la" -gt 0 ] && [ "$lb" -gt 0 ] && [ "$la" -lt "$lb" ]; then echo "ok   $1"; passed=$((passed + 1)); else echo "FAIL $1: '$3' ($la) not before '$4' ($lb)"; fail=1; fi; }
 
 # ---------- AC-1: the list, the line, the fence ----------
-ck ac1-section-order "## Doors|## Andon|## Never overridable locally|## Overrides|## Memory" "$(grep -E '^## (Doors|Andon|Never overridable locally|Overrides|Memory)$' "$PR" | paste -sd'|' -)"
+ck ac1-section-order "## Doors|## Andon|## Never overridable locally|## Overrides|## Role knowledge" "$(grep -E '^## (Doors|Andon|Never overridable locally|Overrides|Role knowledge)$' "$PR" | paste -sd'|' -)"
 before ac1-andon-after-doors "$PR" '## Doors' '## Andon'
 LIST="$(awk '/^### The list$/ {f=1; next} f && /^\| [1-7] \|/ {print} f && /^### /{exit}' "$PR")"
 ck ac1-seven-kinds-in-order "blocked-input|same-finding-twice|role-outside-role|slow-stage|fence-crossing|version-drift|other" \
@@ -418,7 +418,7 @@ else skip docs-changelog-1.1.0 "QA-49 O3: CHANGELOG.md has no 1.1.0 entry yet (d
 
 # ---------- AC-29: the release ----------
 ck ac29-version-at-least-1.1.0 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | awk -F. '{print ($1>1 || ($1==1 && $2>=1)) ? 1 : 0}')"
-ck ac29-version-is-minor-above-1.1.0 "2.8.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck ac29-version-is-minor-above-1.1.0 "2.9.0" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 # the changed files under plugins/ are standard work or other, never a script (tooling fingerprint does not move)
 skip ac29-no-script-changed "retired by slice 64 (2.0.0 changes agents, scripts and the version; the release delta is test_release64.sh)"
 : ck ac29-no-script-changed-retired 0 "$(git -C "$REPO" diff --name-only "$(git -C "$REPO" merge-base origin/main HEAD 2>/dev/null || echo HEAD)" HEAD -- plugins/factory/scripts plugins/factory/hooks 2>/dev/null | grep -c .)"

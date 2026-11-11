@@ -116,6 +116,14 @@ The inbox is a local, gitignored folder where the person drops a file (a note, a
 
 **Done when** the person has answered, and the folder and its ignore rule exist only if the answer was yes.
 
+### 8c. Create the role files and migrate role memory
+
+Each role keeps its project rules and knowledge in the project: `docs/agents/roles/<role>.md` and `docs/agents/skills/<role>/`, under version control (protocol, *Role knowledge*). Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/role-knowledge.sh" init`; it creates a role file and a skills folder for each of the eight roles, and prints `created <n> role files` or `already present`. Commit them on main.
+
+Older versions kept role memory in user scope (`~/.claude/agent-memory/`). Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/role-knowledge.sh" migrate`: it copies each role's notes into that role's file under `## Migrated memory`, once, and removes nothing. Show the person what was copied, and ask whether to remove the user-scope copies. Only a clear yes (the word `yes`) leads to `bash "${CLAUDE_PLUGIN_ROOT}/scripts/role-knowledge.sh" migrate --remove-source`; on anything else leave them. Nothing project-specific should stay in user scope, so tell the person to move any remaining personal preferences by hand and nothing else. Commit the role files.
+
+**Done when** the eight role files exist, the migrated notes are in them, and the person has answered the removal question.
+
 ### 9. Add the pointer
 
 In the `## Agent skills` block, add this subsection after the last existing `###` subsection, unless a `### Factory` subsection is already there:

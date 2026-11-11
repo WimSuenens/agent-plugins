@@ -39,4 +39,16 @@ The Lead may try a **local countermeasure** without asking the person: a change 
 
 Complements [0005](0005-one-way-doors-reach-the-person-as-decision-cards.md): yokoten and loosening the fence both reach the person as cards.
 
+## Revision (#116)
+
+Decided in spec #108 (the improvement loop). The wide fence, the write-time check and the run-start check stay as decided above. What changes is how long a local countermeasure lives and where the other kind goes:
+
+- **Every finding is classified** with one test: would this hold in a project with a different stack, business and person? No: project-local. Yes: factory-fundamental. The class and its reason are recorded in the project.
+- **A project-local improvement is kept permanently.** The Lead applies it through the role files, which the fence already binds, and writes a trace row (`docs/agents/improvements.md`) saying what changed and why. It no longer expires at the end of a run. A later cycle reports its before and after against the same measure, with `not captured` where it was not measured.
+- **Expiry now applies to an override only**, the try-out form of a countermeasure: point 5 (keep, promote, drop at the run close) is unchanged for it. An override that proved itself is written into a role file and traced.
+- **A factory-fundamental finding is drafted as a sanitised proposal** (the A3 is its format), shown to the person, and submitted to the marketplace repository only after their approval; the decision where the change belongs is taken in a separate session there. Yokoten of an override stays a decision card.
+- Data egress: the protocol's question E allows only an issue the person approved to leave the project.
+
+Consequences. Role files grow and are reviewed through version control instead of at a run close. A permanent improvement that turns out wrong is removed by editing the role file and its trace row; the cost is a commit. Undo cost of this revision: restoring expiry is a text change of about half a day.
+
 **Provisional** until a run has closed with at least one override that went through keep, promote or drop.

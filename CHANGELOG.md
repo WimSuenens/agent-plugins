@@ -2,6 +2,27 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.9.0 (#114 to #119)
+
+Release: `2.9.0`, a **minor** release: six slices of the continuous factory (map [#108](https://github.com/WimSuenens/agent-plugins/issues/108)). The standard text and the tooling change, so both fingerprints change. No `factory-state` change. Restart Claude Code sessions after updating.
+
+Issues [#114](https://github.com/WimSuenens/agent-plugins/issues/114) to [#119](https://github.com/WimSuenens/agent-plugins/issues/119). Contracts [116-improvement-loop](contracts/116-improvement-loop.md) and [119-skill-graduation](contracts/119-skill-graduation.md).
+
+**What changed for the person who runs the factory:**
+
+- **Auto-merge on runtime proof (#114).** The factory runs the application, attaches proof to the PR, and `scripts/merge-gate.sh` merges without you when QA and security pass, CI is green and the proof is there. Contracts, authentication, secrets, data migrations and one-way doors always pause for you, with a plain-language validation script. A security review the lead legitimately skipped counts as `skipped`; QA and the proof are never skipped.
+- **Role knowledge in the project (#115).** Each role keeps a role file and a skills folder under `docs/agents/`, under version control; an isolation hook keeps a role out of the others'. Setup migrates old user-scope memory, scanning it first and leaving flagged files behind.
+- **Autonomous maintenance cycle (#117).** A maintenance cycle runs only on a concrete signal, files backlog candidates within a per-cycle budget, and never executes a one-way door.
+- **Lite measurement and role skipping (#118).** The lead may skip a role for a trivial slice outside the protected areas (`scripts/skip.sh`); the integrator counts skips and compares rework.
+- **Improvement loop (#116).** Every finding is classified. A project-local improvement is kept permanently through the role files with a trace row; a factory-fundamental one is drafted as a sanitised proposal and filed only after your approval.
+- **Skill graduation (#119).** A project skill used in at least two items or projects can be proposed for a domain plugin, never published, and filed only after your approval.
+
+**Decisions.** ADR [0017](docs/adr/0017-a-run-is-a-cycle-over-a-standing-backlog.md) and [0018](docs/adr/0018-the-factory-merges-its-own-pr-on-runtime-proof.md) are amended; ADR [0004](docs/adr/0004-role-memory-uses-user-scope.md) (role knowledge lives in the project) and [0011](docs/adr/0011-local-countermeasures-stop-at-a-wide-fence-and-end-with-their-run.md) (local improvements are permanent, overrides still expire) are revised.
+
+**Tests.** New tests cover each script and its text; the version pins move to 2.9.0, and the fences of the run skill are checked as balanced.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `2dfb9cd715b771e99ef16e2e51d65822726cac077a59dcc23720977d032cc0ad`, tooling `5672ca590c7bf5f4134359fadeb2d94c011fa44fdb40701faf4b905e1e346c6c`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.8.0 (#113)
 
 Release: `2.8.0`, a **minor** release: the integrator now does the mechanical merge of approved slices (the merge train). The standard text changes, so the fingerprints change. No `factory-state` change. Restart Claude Code sessions after updating.

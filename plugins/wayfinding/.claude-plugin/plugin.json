@@ -1,6 +1,7 @@
 {
   "name": "wayfinding",
   "description": "A wayfinding layer over mattpocock/skills: triage the map by reversibility, resolve only the one-way doors, then clear fog by shipping thin slices. Includes deterministic per-repo setup and an ask-me router overlay.",
+  "domain": "Planning a large effort as a map of irreversible decisions and thin slices, and clearing it by shipping.",
   "author": {
     "name": "Wim Suenens",
     "url": "https://wim.suenens.me"

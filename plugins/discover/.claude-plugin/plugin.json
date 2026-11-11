@@ -1,6 +1,7 @@
 {
   "name": "discover",
   "description": "Skills for capturing and revisiting what you learned, starting with debrief, which turns a session into a short course: one lesson per topic, with its documents.",
+  "domain": "Capturing and revisiting what was learned in a session, such as debriefs and short courses.",
   "author": {
     "name": "Wim Suenens",
     "url": "https://wim.suenens.me"

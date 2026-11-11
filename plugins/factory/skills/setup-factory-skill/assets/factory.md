@@ -38,11 +38,23 @@ Frontier-round worktrees live at `.claude/worktrees/frontier-<map>`, on branch `
 
 The folder is inside the project, in the agent tool's own worktree folder, and is ignored in `.gitignore`. Every test, lint and search run excludes `.claude/worktrees`, so the main checkout never scans the worktrees (for example `grep -rn --exclude-dir=worktrees`, `git grep`, or the runner's ignore setting).
 
+## Measurement
+
+measurement: full
+
+`full` (the default, and the same as no line) is the whole measurement. `measurement: lite` gives a short hansei record and computes cut-offs and token spend only when asked. The baseline and the A3 are the same under both.
+
 ## Run budget
 
 run-budget: none
 
 An optional brake on one run, in tokens or hours: `run-budget: <N> tokens` or `run-budget: <N> hours`. `none` means no brake.
+
+## Maintenance budget
+
+maintenance-budget: 10 candidates
+
+The most candidates one maintenance cycle may file: `maintenance-budget: <N> candidates`. Default 10 when the line is absent.
 
 ## Tracker
 

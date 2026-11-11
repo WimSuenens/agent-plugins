@@ -27,7 +27,6 @@ Overrides replace a role's default model in this repo, one row per role: `| <rol
 | `reviews/security-*` | security-reviewer |
 | pipeline, infra, deploy scripts, runbooks | devops |
 | `docs/` (rest), `README.md`, `CHANGELOG.md` | docs-writer |
-| `work/integrator-*` | integrator |
 | `docs/agents/factory.md` section `## Overrides` | lead |
 
 ## Worktrees

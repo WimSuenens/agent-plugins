@@ -20,7 +20,7 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [ "${1:-}" = plan ] && [ $# -eq 2 ] || { echo "usage: integrator.sh plan <board.json>" >&2; exit 2; }
 command -v jq >/dev/null 2>&1 || { echo "integrator: jq missing" >&2; exit 2; }
 [ -r "$2" ] || { echo "integrator: $2: unreadable" >&2; exit 2; }
-jq -e '(.slices | type) == "array" and all(.slices[]; (.id | tostring | length) > 0 and (.status | type) == "string")' "$2" >/dev/null 2>&1 ||
+jq -e '(.slices | type) == "array" and all(.slices[]; (.id != null) and ((.id | tostring | length) > 0) and ((.status | type) == "string"))' "$2" >/dev/null 2>&1 ||
   { echo "integrator: $2: not a board snapshot" >&2; exit 2; }
 
 # one row per slice, fields separated by the unit separator (not tab: empty tab fields would collapse): id, status, pr, merge_ready, depends (space-joined), contracts (space-joined), created, ready_since, closed
@@ -78,48 +78,53 @@ while [ -n "$remaining" ] && [ $guard -lt 10000 ]; do
 done
 echo "order:$ordered"
 
-# advise: each slice that has a Ready dependency listed after it in priority order
+# advise: a Ready slice whose dependency comes after it in the priority order (the order the plan prints differs)
 for id in $ready; do
-  after="${ready#*" $id "}"
+  later=""; found=0
+  for r in $ready; do
+    [ $found = 1 ] && later="$later $r"
+    [ "$r" = "$id" ] && found=1
+  done
   for d in $(field "$id" 5); do
-    case " $after " in *" $d "*) echo "advise: $d before $id -- $id depends on $d" ;; esac
+    case " $later " in *" $d "*) echo "advise: $d before $id -- $id depends on $d" ;; esac
   done
 done
 
-# start or pause, in that order
+# start or pause, in that order. A pause gives every reason that holds: a dependency and an overlap can both.
 started=0
 for id in $ordered; do
-  reason=""
+  reasons=""
   for d in $(field "$id" 5); do
-    if ! exists "$d"; then reason="waits for $d (dependency not on the board)"; break
-    elif [ "$(field "$d" 2)" != Done ]; then reason="waits for $d (dependency not done)"; break; fi
+    if ! exists "$d"; then reasons="${reasons:+$reasons; }waits for $d (dependency not on the board)"; break
+    elif [ "$(field "$d" 2)" != Done ]; then reasons="${reasons:+$reasons; }waits for $d (dependency not done)"; break; fi
   done
-  if [ -z "$reason" ]; then
-    mine="$(field "$id" 6)"; ok=1
-    for f in $mine; do [ -r "$f" ] || ok=0; done
-    if [ -z "$mine" ] || [ $ok = 0 ]; then
-      reason="no path list yet (the architect stage is not done)"
-    else
-      while IFS=$'\037' read -r hid hctr; do
-        [ -n "$hid" ] && [ -n "$hctr" ] || continue
-        hok=1; for f in $hctr; do [ -r "$f" ] || hok=0; done
-        [ $hok = 1 ] || continue
-        # shellcheck disable=SC2086
-        o="$(bash "$here/paths.sh" overlap $mine -- $hctr 2>/dev/null)"
-        case "$o" in
-          "overlap: yes shared "*) reason="overlaps $hid on ${o#overlap: yes shared }"; break ;;
-          "overlap: yes "*) reason="overlaps $hid on ${o#overlap: yes }"; break ;;
-        esac
-      done <<EOF
+  mine="$(field "$id" 6)"; ok=1
+  for f in $mine; do [ -r "$f" ] || ok=0; done
+  if [ -z "$mine" ] || [ $ok = 0 ]; then
+    reasons="${reasons:+$reasons; }no path list yet (the architect stage is not done)"
+  else
+    while IFS=$'\037' read -r hid hctr; do
+      [ -n "$hid" ] && [ -n "$hctr" ] || continue
+      hok=1; for f in $hctr; do [ -r "$f" ] || hok=0; done
+      if [ $hok = 0 ]; then
+        # an unreadable path list cannot be compared: pause rather than risk an overlap
+        reasons="${reasons:+$reasons; }overlaps $hid (its path list is unreadable)"; continue
+      fi
+      # shellcheck disable=SC2086
+      o="$(bash "$here/paths.sh" overlap $mine -- $hctr 2>/dev/null)"
+      case "$o" in
+        "overlap: yes shared "*) reasons="${reasons:+$reasons; }overlaps $hid on ${o#overlap: yes shared }" ;;
+        "overlap: yes "*) reasons="${reasons:+$reasons; }overlaps $hid on ${o#overlap: yes }" ;;
+      esac
+    done <<HOLDERS
 $holders
-EOF
-    fi
+HOLDERS
   fi
-  if [ -n "$reason" ]; then
-    echo "pause $id -- $reason"
+  if [ -n "$reasons" ]; then
+    echo "pause $id -- $reasons"
   else
     echo "start $id -- no overlap with a slice in flight or an earlier start"
-    add_holder "$id" "$(field "$id" 6)"
+    add_holder "$id" "$mine"
     started=$((started + 1))
   fi
 done

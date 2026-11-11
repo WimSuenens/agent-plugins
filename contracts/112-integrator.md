@@ -48,8 +48,6 @@ The integrator reads the tracker and git, and runs `scripts/integrator.sh plan`.
 
 ## 6. Ownership
 
-`work/integrator-*` is owned by the integrator. The protocol's shell section gains one line for it; the rest of the section is unchanged.
-
 ## 7. Tests
 
 `tests/factory/test_integrator.sh`: the scripts seam (a plan from a fake board: starts, pauses with reasons, merge-first, dependencies, measures, determinism, usage) and the standard-text seam (events, authority split, no state, shell, ownership, run text).

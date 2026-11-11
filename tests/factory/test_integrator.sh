@@ -111,6 +111,23 @@ bash "$IN" >/dev/null 2>&1; ck usage-exit-2 2 "$?"
 bash "$IN" plan "$T/nonexistent.json" >/dev/null 2>&1; ck missing-file-exit-2 2 "$?"
 printf 'not json' >"$T/bad.json"; bash "$IN" plan "$T/bad.json" >/dev/null 2>&1; ck bad-json-exit-2 2 "$?"
 
+# regressions from review: a dependency already in order is not advised; a malformed id is refused; a dependency and an overlap both give their reason
+cat >"$T/r1.json" <<JSON
+{"now":"$NOW","slices":[
+ {"id":"A","status":"Ready","contracts":["$T/c-a.md"]},
+ {"id":"B","status":"Ready","depends_on":["A"],"contracts":["$T/c-c.md"]}]}
+JSON
+ck no-advise-when-dependency-already-first "0" "$(plan "$T/r1.json" | grep -c '^advise:')"
+printf '{"now":"%s","slices":[{"status":"Ready"}]}' "$NOW" >"$T/r2.json"
+bash "$IN" plan "$T/r2.json" >/dev/null 2>&1; ck slice-without-id-exit-2 2 "$?"
+cat >"$T/r3.json" <<JSON
+{"now":"$NOW","slices":[
+ {"id":"10","status":"Running","contracts":["$T/c-run.md"]},
+ {"id":"11","status":"Ready","depends_on":["12"],"contracts":["$T/c-run.md"]},
+ {"id":"12","status":"Ready","contracts":["$T/c-d.md"]}]}
+JSON
+ck pause-gives-both-reasons "pause 11 -- waits for 12 (dependency not done); overlaps 10 on r/ r/" "$(plan "$T/r3.json" | grep '^pause 11 ')"
+
 # ---------- standard-text seam ----------
 ck agent-exists yes "$([ -f "$AG" ] && echo yes || echo no)"
 ck agent-name "name: integrator" "$(sed -n '2p' "$AG")"
@@ -136,8 +153,6 @@ has run-priority-lead "$RUN" 'Priority stays with you and the person'
 has run-eight-roles "$RUN" 'Eight role agents'
 has run-integrator-agent "$RUN" '`factory:integrator`'
 FM="$REPO/docs/agents/factory.md"; TPL="$PLUGIN/skills/setup-factory-skill/assets/factory.md"
-has own-row-repo "$FM" '| `work/integrator-*` | integrator |'
-has own-row-template "$TPL" '| `work/integrator-*` | integrator |'
 ck devops-description-unchanged "description: Delivery. Use for pipelines, environments, deployment, rollback, monitoring, and secrets handling." "$(sed -n '3p' "$PLUGIN/agents/devops.md")"
 hasnt devops-no-dispatch "$PLUGIN/agents/devops.md" 'dispatch'
 has protocol-shell "$PLUGIN/references/protocol.md" '**integrator**'

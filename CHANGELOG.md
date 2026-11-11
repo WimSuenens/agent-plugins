@@ -20,7 +20,7 @@ Issue [#112](https://github.com/WimSuenens/agent-plugins/issues/112), map [#108]
 
 **Unverified.** Nothing ran in a live factory session; the events are written as text, and the lead's calls to the integrator have not been exercised on a real board.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `f49cc58095d948396a26cb5f6e0afa10cf98a0a160b161e78117d03bbe16a66e`, tooling `832d3e58befa0a72248e9b2afb745999565fd6ba61c4df1e164bf441e0a6fd57`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `e850a6fb09b5f8f1b5243fba24a7525b272706f215e5a6a41907cafc56119bb9`, tooling `0b4b0e5b78d5d2fab527cc25c0dee0664bde0be2b4c5619a12887bf4b417b0bd`. Any later change under `plugins/factory/` in this release is a forgotten bump.
 
 ## factory 2.6.0 (#111)
 

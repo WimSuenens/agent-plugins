@@ -23,6 +23,9 @@ export default {
   async andon() {
     return []
   },
+  async pendingDecisions() {
+    return []
+  },
   async intake() {
     return []
   },

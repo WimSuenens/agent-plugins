@@ -14,11 +14,32 @@
           "null"
         ]
       },
+      "owner": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The role or the lead that owns getting the line moving again."
+      },
       "reason": {
         "type": "string"
       },
       "resolved": {
         "type": "boolean"
+      },
+      "countermeasure": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "What was done about it; set on a resolved andon."
+      },
+      "since": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "When the line was stopped (ISO 8601)."
       },
       "ref": {
         "type": "string"
@@ -30,8 +51,11 @@
     "required": [
       "id",
       "item",
+      "owner",
       "reason",
       "resolved",
+      "countermeasure",
+      "since",
       "ref",
       "provenance"
     ],
@@ -296,6 +320,68 @@
     "required": [
       "path",
       "reason",
+      "provenance"
+    ],
+    "additionalProperties": false
+  },
+  "pending-decision.schema.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "PendingDecision",
+    "description": "A decision card that still waits for the person.",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "item": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1
+      },
+      "door": {
+        "enum": [
+          "one-way",
+          "two-way"
+        ]
+      },
+      "askedOf": {
+        "type": "string",
+        "minLength": 1
+      },
+      "since": {
+        "type": "string",
+        "minLength": 1
+      },
+      "options": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minItems": 2
+      },
+      "ref": {
+        "type": "string"
+      },
+      "provenance": {
+        "$ref": "provenance.schema.json"
+      }
+    },
+    "required": [
+      "id",
+      "item",
+      "title",
+      "door",
+      "askedOf",
+      "since",
+      "options",
+      "ref",
       "provenance"
     ],
     "additionalProperties": false

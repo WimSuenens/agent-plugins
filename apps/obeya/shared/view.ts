@@ -1,9 +1,16 @@
-import type { Decision, IntakeEntry, Item, ParseFailure, ProjectSummary } from './types'
+import type { Andon, Decision, IntakeEntry, Item, ParseFailure, PendingDecision, ProjectSummary } from './types'
 
 /** One project as a theme sees it: the summary plus the read-model objects the base views need. */
-export type ProjectView = ProjectSummary & { parseFailures: ParseFailure[]; board: BoardColumn[]; decisions: Decision[]; intake: IntakeEntry[] }
+export type ProjectView = ProjectSummary & {
+  parseFailures: ParseFailure[]
+  board: BoardColumn[]
+  decisions: Decision[]
+  intake: IntakeEntry[]
+  andon: Andon[]
+  pendingDecisions: PendingDecision[]
+}
 
-/** An idea waiting on a human, shown in the needs-you slot. */
+/** An idea waiting on a human, input to the needs-you slot. */
 export interface IdeaNeed {
   kind: 'idea'
   projectId: string
@@ -16,13 +23,27 @@ export interface BoardColumn {
   items: Item[]
 }
 
+/** One line of the "needs you" slot: a pending decision, a board item or an idea waiting on the person. */
+export interface NeedsYouEntry {
+  kind: 'decision' | 'waiting' | 'idea'
+  id: string
+  title: string
+  /** When the wait began; null when the source does not know (board items, ideas). */
+  since: string | null
+  /** Whole seconds waited at the last refresh; null when `since` is unknown. */
+  waitingSeconds: number | null
+  ref: string
+  /** Decisions only. */
+  decision: PendingDecision | null
+}
+
 /**
  * Everything a theme gets. Themes receive this and nothing else: they may not fetch, compute or reshape data.
- * `needsYou` is the "needs you" slot, filled by later views; it is always shown first.
+ * `needsYou` is the "needs you" slot; it is always shown first.
  */
 export interface PageView {
   projects: ProjectView[]
-  needsYou: Array<Item | IdeaNeed>
+  needsYou: NeedsYouEntry[]
   /** The read-only lens badge: the address the server is bound to. */
   bindAddress: string
 }

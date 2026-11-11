@@ -1,4 +1,4 @@
-import type { Decision, IntakeEntry, Item, ParseFailure, ProjectSummary } from '../../shared/types'
+import type { Andon, Decision, IntakeEntry, Item, ParseFailure, PendingDecision, ProjectSummary } from '../../shared/types'
 import type { BoardColumn, IdeaNeed, PageView } from '../../shared/view'
 
 /** The factory statuses, in board order. A status the tracker has that is not here follows them, never dropped. */
@@ -36,15 +36,21 @@ export async function useObeyaView() {
       const projects = await Promise.all(
         summaries.map(async (s) => {
           const get = <T,>(kind: string): Promise<T[]> => (s.state === 'ok' ? $fetch<T[]>(`/api/projects/${s.id}/${kind}`) : Promise.resolve([]))
-          const [parseFailures, items, decisions, intake] = await Promise.all([get<ParseFailure>('parse-failures'), get<Item>('items'), get<Decision>('decisions'), get<IntakeEntry>('intake')])
-          return { ...s, parseFailures, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), intake }
+          const [parseFailures, items, decisions, intake, andon, pendingDecisions] = await Promise.all([
+            get<ParseFailure>('parse-failures'),
+            get<Item>('items'),
+            get<Decision>('decisions'),
+            get<IntakeEntry>('intake'),
+            get<Andon>('andon'),
+            get<PendingDecision>('pending-decisions'),
+          ])
+          return { ...s, parseFailures, items, board: boardOf(items), decisions: [...decisions].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), intake, andon, pendingDecisions }
         }),
       )
-      // Needs-you slot: items waiting on you, then ideas waiting on a human.
-      const waiting: Array<Item | IdeaNeed> = projects.flatMap((p) => p.board.find((c) => c.status === 'Waiting on you')?.items ?? [])
       const ideas: IdeaNeed[] = projects.flatMap((p) => p.intake.filter((e) => e.waitingOnHuman).map((entry) => ({ kind: 'idea' as const, projectId: p.id, entry })))
-      const needsYou = [...waiting, ...ideas]
-      state.value = { view: { ...state.value.view, projects, needsYou }, refreshedAt: new Date().toISOString(), error: null }
+      const now = new Date()
+      const needsYou = buildNeedsYou(projects.flatMap((p) => p.pendingDecisions), projects.flatMap((p) => p.items), now, ideas)
+      state.value = { view: { ...state.value.view, projects: projects.map(({ items: _items, ...p }) => p), needsYou }, refreshedAt: now.toISOString(), error: null }
     } catch (e) {
       const err = e as { statusMessage?: string; message?: string }
       state.value = { ...state.value, error: err.statusMessage || err.message || 'unknown error' }

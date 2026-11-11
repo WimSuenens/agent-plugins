@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import type { Item } from '../../../shared/types'
 import type { PageView } from '../../../shared/view'
 const props = defineProps<{ view: PageView }>()
-const waitingItems = computed(() => props.view.needsYou.filter((n): n is Item => !('entry' in n)))
 </script>
 
 <template>
@@ -13,8 +11,7 @@ const waitingItems = computed(() => props.view.needsYou.filter((n): n is Item =>
     <section class="needs-you" data-test="needs-you" aria-labelledby="needs-you-h">
       <h2 id="needs-you-h">Needs you</h2>
       <p v-if="!view.needsYou.length">Nothing needs you right now.</p>
-      <ItemCard v-for="i in waitingItems" :key="i.id" :item="i" />
-      <IntakeNeedsYou :items="view.needsYou" />
+      <NeedsYouList v-else :entries="view.needsYou" />
     </section>
 
     <p v-if="!view.projects.length" data-test="empty">No project is configured.</p>
@@ -24,6 +21,7 @@ const waitingItems = computed(() => props.view.needsYou.filter((n): n is Item =>
       <BoardView :board="p.board" />
       <DecisionList :decisions="p.decisions" />
       <IntakeQueue v-if="p.state === 'ok'" :entries="p.intake" />
+      <AndonList :andon="p.andon" />
       <ParseFailureCard v-for="f in p.parseFailures" :key="f.path" :failure="f" />
     </section>
   </div>

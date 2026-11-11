@@ -29,7 +29,7 @@ const props = defineProps<{ view: PageView }>()
 </template>
 
 <style scoped>
-.base { max-width: 60rem; margin: 0 auto; padding: 1rem; line-height: 1.5; }
+.base { box-sizing: border-box; width: 100%; min-height: 100dvh; padding: 1rem max(1rem, calc((100% - 60rem) / 2)); line-height: 1.5; }
 .lens { display: inline-block; border: 1px solid currentColor; border-radius: 999px; padding: 0 0.8rem; font-size: 0.9rem; }
 .needs-you { border-left: 6px solid currentColor; padding-left: 0.8rem; margin: 1rem 0; }
 @media (max-width: 40rem) { .base { padding: 0.5rem; } }

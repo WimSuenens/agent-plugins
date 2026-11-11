@@ -66,12 +66,34 @@ test('a missing or unknown theme cookie renders the base theme', async () => {
   })
 })
 
-test('the switcher is keyboard accessible, lists themes and announces the active one', async () => {
+test('settings: a gear button opens a labelled dialog holding the theme options, refresh time and interval; no inline switcher bar', async () => {
   await withServer({}, async (s) => {
     const html = await page(s.base)
-    assert.match(html, /<button[^>]*data-theme-option="base"[^>]*aria-pressed="true"/)
-    assert.match(html, /role="status"[^>]*>[^<]*Theme: Base/)
+    assert.match(html, /<button[^>]*aria-label="Settings"[^>]*aria-haspopup="dialog"[^>]*aria-expanded="false"/)
+    assert.match(html, /<dialog[^>]*aria-labelledby="settings-h"[^>]*data-test="settings-dialog"/)
+    const dlg = html.slice(html.indexOf('<dialog'), html.indexOf('</dialog>'))
+    for (const id of ['base', 'orbit', 'transit', 'wall']) assert.match(dlg, new RegExp(`<input[^>]*type="radio"[^>]*data-theme-option="${id}"`))
+    assert.match(dlg, /<input[^>]*data-theme-option="base"[^>]*checked/)
+    assert.doesNotMatch(dlg, /<input[^>]*data-theme-option="orbit"[^>]*checked/)
+    assert.match(dlg, /role="status"[^>]*>[^<]*Theme: Base/)
+    assert.match(dlg, /data-test="last-refreshed"[^>]*>[^<]*\d\d:\d\d:\d\d/)
+    assert.match(dlg, /every 15s/)
+    assert.match(dlg, /data-test="settings-close"/)
+    // the theme options and the refresh strip exist nowhere outside the dialog
+    const outside = html.slice(0, html.indexOf('<dialog')) + html.slice(html.indexOf('</dialog>'))
+    assert.doesNotMatch(outside, /data-theme-option|data-test="last-refreshed"|Last refreshed/)
   })
+})
+
+test('the page fills the window: no body margin and every theme root is full width and height', () => {
+  const app = readFileSync(join(appDir, 'app', 'app.vue'), 'utf8')
+  assert.match(app, /html, body \{[^}]*margin: 0/)
+  assert.match(app, /min-height: 100dvh/)
+  for (const id of ['base', 'orbit', 'transit', 'wall']) {
+    const src = readFileSync(join(appDir, 'app', 'themes', id, 'index.vue'), 'utf8')
+    assert.match(src, /width: 100%/, id)
+    assert.match(src, /min-height: 100dvh/, id)
+  }
 })
 
 test('a theme folder dropped in is chosen by cookie, keeps the same data, and is rendered server-side (no flash)', async () => {
@@ -83,7 +105,7 @@ test('a theme folder dropped in is chosen by cookie, keeps the same data, and is
     assert.match(triv, /TRIVIAL my-project/)
     assert.doesNotMatch(triv, /data-test="project-name"/)
     for (const html of [base, triv]) assert.match(html, /docs\/adr\/0002-broken\.md/)
-    assert.match(triv, /<button[^>]*data-theme-option="trivial"[^>]*aria-pressed="true"/)
+    assert.match(triv, /<input[^>]*data-theme-option="trivial"[^>]*checked/)
     assert.match(triv, /data-theme-option="base"/)
   })
 })

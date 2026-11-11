@@ -46,7 +46,7 @@ async function orbit(trackerItems, fn) {
 test('orbit is selectable and renders the project, lens badge, needs-you first, and a parse-failure card', () =>
   orbit(small, async (html) => {
     assert.match(html, /data-theme="orbit"/)
-    assert.match(html, /<button[^>]*data-theme-option="orbit"[^>]*aria-pressed="true"/)
+    assert.match(html, /<input[^>]*data-theme-option="orbit"[^>]*checked/)
     assert.match(html, /data-test="project-name"[^>]*>[^<]*my-project/)
     assert.match(html, /data-test="lens-badge"[^>]*>[^<]*read-only/)
     assert.ok(html.indexOf('data-test="needs-you"') > -1 && html.indexOf('data-test="needs-you"') < html.indexOf('data-test="project-name"'))
@@ -88,3 +88,13 @@ test('the theme folder is offline, motion-safe and presentation only', () => {
   assert.match(src, /focus-visible/)
   assert.match(src, /max-width:\s*\d+(px|rem)/, 'phone fallback')
 })
+
+test('orbit has a HUD bar with lens, bind address and running / waiting / blocked counts, and the andon sits in the right column', () =>
+  orbit(small, async (html) => {
+    assert.match(html, /data-test="hud"/)
+    assert.match(html, /data-test="hud-running"[^>]*><b[^>]*>1<\/b>/)
+    assert.match(html, /data-test="hud-waiting"[^>]*><b[^>]*>1<\/b>/)
+    assert.match(html, /data-test="hud-blocked"[^>]*><b[^>]*>1<\/b>/)
+    assert.match(html, /Bind<\/span> 127\.0\.0\.1/)
+    assert.ok(html.indexOf('data-test="hud"') < html.indexOf('data-test="needs-you"'))
+  }))

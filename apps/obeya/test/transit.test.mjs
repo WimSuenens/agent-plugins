@@ -23,7 +23,7 @@ async function transit(env, fn) {
 test('transit is selectable and shows the project name, lens badge, needs-you and the parse-failure card', async () => {
   await transit({}, (html) => {
     assert.match(html, /data-theme="transit"/)
-    assert.match(html, /<button[^>]*data-theme-option="transit"[^>]*aria-pressed="true"/)
+    assert.match(html, /<input[^>]*data-theme-option="transit"[^>]*checked/)
     assert.match(html, /data-test="project-name"[^>]*>transit-project/)
     assert.match(html, /data-test="lens-badge"[^>]*>[^<]*read-only[^<]*127\.0\.0\.1/)
     assert.match(html, /data-test="needs-you"/)
@@ -93,4 +93,15 @@ test('the theme is offline and motion is guarded', () => {
     assert.doesNotMatch(outside, /animation\s*:|@keyframes/)
   }
   assert.match(files.join(''), /prefers-reduced-motion/)
+})
+
+test('the header carries the roundel, the goal as the headline and the status counts; the legend has graphical keys', async () => {
+  await transit({}, (html) => {
+    const hd = html.slice(html.indexOf('<header'), html.indexOf('</header>'))
+    assert.match(hd, /class="roundel"/)
+    assert.match(hd, /class="goal big"/)
+    assert.match(hd, /\d+ running[\s\S]*waiting on you[\s\S]*blocked/)
+    assert.match(html, /<ul[^>]*class="legend"[^>]*aria-label="Legend"[\s\S]*track closed/)
+    assert.ok(html.indexOf('data-test="needs-you"') > -1)
+  })
 })

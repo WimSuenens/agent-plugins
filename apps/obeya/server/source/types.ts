@@ -1,6 +1,6 @@
 // The source seam. Everything outside server/source/ sees the read model only through ReadModelSource;
 // nothing outside it reads the filesystem or runs gh.
-import type { Andon, Decision, Direction, IntakeEntry, Item, ParseFailure, ProjectConfig, ProjectSummary, TrackerConfig } from '../../shared/types'
+import type { Andon, Decision, Direction, IntakeEntry, Item, ParseFailure, PendingDecision, ProjectConfig, ProjectSummary, TrackerConfig } from '../../shared/types'
 
 export interface ReadModelSource {
   project(p: ProjectConfig): Promise<ProjectSummary>
@@ -8,6 +8,7 @@ export interface ReadModelSource {
   decisions(p: ProjectConfig): Promise<Decision[]>
   directions(p: ProjectConfig): Promise<Direction[]>
   andon(p: ProjectConfig): Promise<Andon[]>
+  pendingDecisions(p: ProjectConfig): Promise<PendingDecision[]>
   intake(p: ProjectConfig): Promise<IntakeEntry[]>
   parseFailures(p: ProjectConfig): Promise<ParseFailure[]>
 }

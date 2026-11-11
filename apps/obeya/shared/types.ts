@@ -1,4 +1,4 @@
-export type { Provenance, Item, Decision, Andon, IntakeEntry, ParseFailure, Direction } from './generated/read-model'
+export type { Provenance, Item, Decision, Andon, IntakeEntry, ParseFailure, Direction, PendingDecision } from './generated/read-model'
 
 /** Where a project's tracker board lives. Optional: a project without one has no tracker items. */
 export interface TrackerConfig {

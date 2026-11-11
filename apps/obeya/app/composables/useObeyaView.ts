@@ -1,4 +1,4 @@
-import type { ParseFailure, ProjectSummary } from '../../shared/types'
+import type { Andon, Item, ParseFailure, PendingDecision, ProjectSummary } from '../../shared/types'
 import type { PageView } from '../../shared/view'
 
 interface Loaded {
@@ -20,13 +20,21 @@ export async function useObeyaView() {
   async function load() {
     try {
       const summaries = await $fetch<ProjectSummary[]>('/api/projects')
+      const ok = (s: ProjectSummary) => s.state === 'ok'
       const projects = await Promise.all(
         summaries.map(async (s) => ({
           ...s,
-          parseFailures: s.state === 'ok' ? await $fetch<ParseFailure[]>(`/api/projects/${s.id}/parse-failures`) : [],
+          parseFailures: ok(s) ? await $fetch<ParseFailure[]>(`/api/projects/${s.id}/parse-failures`) : [],
+          andon: ok(s) ? await $fetch<Andon[]>(`/api/projects/${s.id}/andon`) : [],
+          pendingDecisions: ok(s) ? await $fetch<PendingDecision[]>(`/api/projects/${s.id}/pending-decisions`) : [],
         })),
       )
-      state.value = { view: { ...state.value.view, projects }, refreshedAt: new Date().toISOString(), error: null }
+      const items = (
+        await Promise.all(summaries.filter(ok).map((s) => $fetch<Item[]>(`/api/projects/${s.id}/items`)))
+      ).flat()
+      const now = new Date()
+      const needsYou = buildNeedsYou(projects.flatMap((p) => p.pendingDecisions), items, now)
+      state.value = { view: { ...state.value.view, projects, needsYou }, refreshedAt: now.toISOString(), error: null }
     } catch (e) {
       const err = e as { statusMessage?: string; message?: string }
       state.value = { ...state.value, error: err.statusMessage || err.message || 'unknown error' }

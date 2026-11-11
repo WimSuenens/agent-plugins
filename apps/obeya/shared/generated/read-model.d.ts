@@ -22,12 +22,25 @@ export interface ReadModel {
   "intake-entry"?: IntakeEntry;
   item?: Item;
   "parse-failure"?: ParseFailure;
+  "pending-decision"?: PendingDecision;
 }
 export interface Andon {
   id: string;
   item: number | null;
+  /**
+   * The role or the lead that owns getting the line moving again.
+   */
+  owner: string | null;
   reason: string;
   resolved: boolean;
+  /**
+   * What was done about it; set on a resolved andon.
+   */
+  countermeasure: string | null;
+  /**
+   * When the line was stopped (ISO 8601).
+   */
+  since: string | null;
   ref: string;
   provenance: Provenance;
 }
@@ -83,5 +96,22 @@ export interface ParseFailure {
    */
   path: string;
   reason: string;
+  provenance: Provenance;
+}
+/**
+ * A decision card that still waits for the person.
+ */
+export interface PendingDecision {
+  id: string;
+  item: number | null;
+  title: string;
+  door: "one-way" | "two-way";
+  askedOf: string;
+  since: string;
+  /**
+   * @minItems 2
+   */
+  options: [string, string, ...string[]];
+  ref: string;
   provenance: Provenance;
 }

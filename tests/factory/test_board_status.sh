@@ -23,7 +23,8 @@ Done" "$(tbl_rows "$TPL" '| Status | Option id |')"
 ck ac2-template-kind-rows "map
 slice
 role task
-frontier ticket" "$(tbl_rows "$TPL" '| Kind | Option id |')"
+frontier ticket
+idea" "$(tbl_rows "$TPL" '| Kind | Option id |')"
 ck ac2-template-role-rows "product-owner
 architect
 developer
@@ -35,9 +36,9 @@ ck ac2-template-role-table-has-seven-explicit-rows 7 "$(tbl_rows "$TPL" '| Role 
 for f in Kind Role Tokens Minutes Hours "Rework rounds" "Person touches"; do has "ac2-template-tracker-table-field-id-$f" "$TPL" "| field id (\`$f\`) |"; done
 has ac1-template-field-id-factory-status "$TPL" '| field id (`Factory status`) |'
 for k in owner "project number" "project id"; do has "ac1-template-key-$k" "$TPL" "| $k |"; done
-ck ac1-template-id-cells-empty "0" "$(awk '/^\| (Backlog|Ready|Running|Waiting on you|Blocked|Done|map|slice|role task|frontier ticket|product-owner) \| [^ |]/{n++} END{print n+0}' "$TPL")"
+ck ac1-template-id-cells-empty "0" "$(awk '/^\| (Backlog|Ready|Running|Waiting on you|Blocked|Done|map|slice|role task|frontier ticket|idea|product-owner) \| [^ |]/{n++} END{print n+0}' "$TPL")"
 ck ac1-run-board-table-options "\`Backlog\`, \`Ready\`, \`Running\`, \`Waiting on you\`, \`Blocked\`, \`Done\`" "$(grep -m1 '^| `Factory status` | single select |' "$RUN" | sed 's/^| `Factory status` | single select | //;s/ |$//')"
-ck ac2-run-board-table-kind "\`map\`, \`slice\`, \`role task\`, \`frontier ticket\`" "$(grep -m1 '^| `Kind` | single select |' "$RUN" | sed 's/^| `Kind` | single select | //;s/ |$//')"
+ck ac2-run-board-table-kind "\`map\`, \`slice\`, \`role task\`, \`frontier ticket\`, \`idea\`" "$(grep -m1 '^| `Kind` | single select |' "$RUN" | sed 's/^| `Kind` | single select | //;s/ |$//')"
 has ac2-role-only-on-role-task "$RUN" 'set only on a `role task` card'
 has ac2-kind-mapping-wayfinder-slice "$RUN" 'a child of the map labelled `wayfinder:slice` is `slice`; a child of any other `wayfinder:*` type is `frontier ticket`'
 has ac1-board-built-in-status-unused "$RUN" 'The project'"'"'s built-in `Status` field is not used.'

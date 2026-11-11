@@ -67,7 +67,7 @@ When an existing `docs/agents/factory.md` has a `## Role models` table, show its
 
 ### 7. Prepare the Project board
 
-The factory tracks status in a GitHub Project: a single-select `Factory status` field with six options, the `Kind` and `Role` fields, five text fields for the numbers, and two views. `${CLAUDE_PLUGIN_ROOT}/scripts/board.sh` makes every call; it asks no question, so every question below is yours, and the answer reaches the script as a flag. Run `gh auth status`; when the token lacks the `project` scope, ask the user to run `gh auth refresh -s project` and wait.
+The factory tracks status in a GitHub Project: a single-select `Factory status` field with six options, the `Kind` (map, slice, role task, frontier ticket, idea) and `Role` fields, five text fields for the numbers, and two views. `${CLAUDE_PLUGIN_ROOT}/scripts/board.sh` makes every call; it asks no question, so every question below is yours, and the answer reaches the script as a flag. Run `gh auth status`; when the token lacks the `project` scope, ask the user to run `gh auth refresh -s project` and wait.
 
 1. List the owner's projects: `gh project list --owner <owner> --format json` (it also gives each project's id). Ask the user to pick one or to create a new one (`gh project create --owner <owner> --title "<repo> factory"`), then link it to the repo: `gh project link <number> --owner <owner> --repo <owner>/<repo>`.
 2. **Plan.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/board.sh" plan --owner <owner> --project <number> --project-id <id>`. It reads the board and prints the status mapping, the item counts and the snapshot file it would write; it changes nothing. On `already migrated`, say so and stop: nothing else changes.
@@ -87,6 +87,7 @@ The factory tracks status in a GitHub Project: a single-select `Factory status` 
 5. **Views.** `apply` exits 10 when it requested a view (`Needs you`, `History`) or could not create one. Ask the person to open the views and confirm that each exists and filters as printed (`Needs you`: `factory-status:"Waiting on you"`; `History`: `is:closed kind:slice,"role task"`, closed newest first). Where the script says a view was NOT created, give the person its manual instructions. Neither case counts as done for a view the person has not confirmed; a view that cannot be confirmed leaves the step open and `factory-state: 2` unwritten.
 6. On the confirmation, run `board.sh apply ... --yes --views-confirmed` (it makes no call for a view that is there and exits 0), then `board.sh finish --owner <owner> --project <number> --project-id <id> --views-confirmed`. `finish` fills the Tracker tables of `docs/agents/factory.md`, adds `## Parallel slices` with `parallel-limit: 2` when no such line exists (an existing value is kept), replaces the `## Factory operations` section of the tracker doc, and as its last act writes `factory-state: 2` on line 1.
 7. Ask the user: "Open the project's board view, and set *Column by* to **Factory status**." Wait until they confirm.
+8. **The `idea` kind.** A new board gets the `Kind` options `map`, `slice`, `role task`, `frontier ticket` and `idea`. A board made before 2.5.0 has no `idea` option: ask the person to open the project's settings, add the option `idea` to the `Kind` field by hand, and then run `board.sh finish ... --views-confirmed` again so that the `Kind` table of `docs/agents/factory.md` gets its id. Until then ideas are triaged from the tracker and stay off the board; nothing else waits on it.
 
 **Done when** `board.sh finish` exited 0, every cell in the Tracker tables holds a value, both views are confirmed and the user has confirmed the board groups by `Factory status`.
 
@@ -108,6 +109,12 @@ Item and frontier-round worktrees live in `.claude/worktrees`, inside the projec
 Item folders in `work/` are removed by the last commit on each item branch. Nothing to ignore; confirm no `work/` rule in `.gitignore` hides them, since roles commit their messages.
 
 **Done when** `git check-ignore work/x` prints nothing.
+
+### 8b. Offer the idea inbox
+
+The inbox is a local, gitignored folder where the person drops a file (a note, a link, a pasted passage) to be filed as an idea at the next run start; the folder is a drop zone and the tracker holds the ideas (`skills/run/SKILL.md`, *Idea intake*). Ask the person whether to create the inbox folder and its ignore rule. Only a clear yes (the word `yes`) leads to `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" init`: it creates `.claude/factory-inbox/`, adds `/.claude/factory-inbox/` to `.gitignore` (commit a changed `.gitignore` on main) and prints `created`, or `already present` and changes nothing the second time. On anything but a clear yes, run nothing and create nothing; do not ask again unprompted. Ideas filed with `/factory:idea` or as a tracker issue with the label `idea` need neither the folder nor this step.
+
+**Done when** the person has answered, and the folder and its ignore rule exist only if the answer was yes.
 
 ### 9. Add the pointer
 

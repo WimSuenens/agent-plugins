@@ -107,7 +107,7 @@ ck ac38-priority-values-kept '["high","high","low"]' "$(jq -c '[.items[] | selec
 ck ac38-priority-of-item-108-kept "high" "$(jq -r '.items[] | select(.id == "PVTI_8") | .values.priority' "$T/board.json")"
 ck ac38-estimate-of-done-item-kept "3" "$(jq -r '.items[] | select(.id == "PVTI_11") | .values.estimate' "$T/board.json")"
 # AC-20 / AC-2: the fields exist with the fixed options, none twice
-ck ac2-kind-options '["map","slice","role task","frontier ticket"]' "$(jq -c '[.fields[] | select(.name == "Kind") | .options[].name]' "$T/board.json")"
+ck ac2-kind-options '["map","slice","role task","frontier ticket","idea"]' "$(jq -c '[.fields[] | select(.name == "Kind") | .options[].name]' "$T/board.json")"
 ck ac2-role-options '["product-owner","architect","developer","qa-engineer","security-reviewer","devops","docs-writer"]' "$(jq -c '[.fields[] | select(.name == "Role") | .options[].name]' "$T/board.json")"
 for f in Tokens Minutes Hours "Rework rounds" "Person touches"; do
   ck "ac20-field-$f-created-once-as-text" "ProjectV2Field 1" "$(jq -r --arg f "$f" '[.fields[] | select(.name == $f)] | "\(.[0].type) \(length)"' "$T/board.json")"
@@ -341,7 +341,7 @@ for k in Designed "In progress" "In review" "Ready to deploy"; do
   hasnt "ac1-no-row-for-old-value-$k" "$T/factory.md" "| $k |"
 done
 ck ac1-status-table-has-six-rows 6 "$(awk '/^\| Status \| Option id \|/{f=1;next} f&&/^\|-/{next} f&&/^\|/{n++} f&&!/^\|/{f=0} END{print n+0}' "$T/factory.md")"
-ck ac2-kind-table-four-rows 4 "$(awk '/^\| Kind \| Option id \|/{f=1;next} f&&/^\|-/{next} f&&/^\|/{n++} f&&!/^\|/{f=0} END{print n+0}' "$T/factory.md")"
+ck ac2-kind-table-five-rows 5 "$(awk '/^\| Kind \| Option id \|/{f=1;next} f&&/^\|-/{next} f&&/^\|/{n++} f&&!/^\|/{f=0} END{print n+0}' "$T/factory.md")"
 ck ac2-role-table-seven-rows 7 "$(awk '/^\| Role \| Option id \|/{f=1;next} f&&/^\|-/{next} f&&/^\|/{n++} f&&!/^\|/{f=0} END{print n+0}' "$T/factory.md")"
 for f in "Factory status" Kind Role Tokens Minutes Hours "Rework rounds" "Person touches"; do
   want="$(jq -r --arg f "$f" '.fields[] | select(.name == $f) | .id' "$T/board-final.json")"

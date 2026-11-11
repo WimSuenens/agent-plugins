@@ -35,6 +35,8 @@ A **run** takes one destination from idea to a dissolved map. An **item** is one
 
 Whichever entry applies, run the checks of `## Andon`, *Run start*, before step 1 or the next item starts. On a resumed run they include the FREEZE check. They also include the baseline check of `references/baseline.md`: *Find baseline* and act on its result (section 2), then the repair check (section 8.2).
 
+**Intake at every run start.** Before step 1 or the next item, and again whenever the person says an idea is waiting, run `## Idea intake` below: drop the inbox, then triage what is untriaged. Items not triaged are handled at the next run start.
+
 A slice ticket the factory did not cut is not an entry point; point the person at `/wayfinding:beachhead` for building outside the factory.
 
 ## 1. Clarify the destination
@@ -297,11 +299,11 @@ The board (the GitHub Project) is where every status lives. Its ids and option i
 | Field | Type | Options, in this order |
 |---|---|---|
 | `Factory status` | single select | `Backlog`, `Ready`, `Running`, `Waiting on you`, `Blocked`, `Done` |
-| `Kind` | single select | `map`, `slice`, `role task`, `frontier ticket` |
+| `Kind` | single select | `map`, `slice`, `role task`, `frontier ticket`, `idea` |
 | `Role` | single select | the seven role names; set only on a `role task` card |
 | `Tokens`, `Minutes`, `Hours`, `Rework rounds`, `Person touches` | text | `references/hansei.md`, section 7 |
 
-**Kind** of a card: the map issue is `map`; a child of the map labelled `wayfinder:slice` is `slice`; a child of any other `wayfinder:*` type is `frontier ticket`; a role-task sub-issue is `role task`.
+**Kind** of a card: the map issue is `map`; a child of the map labelled `wayfinder:slice` is `slice`; a child of any other `wayfinder:*` type is `frontier ticket`; a role-task sub-issue is `role task`; a tracker issue labelled `idea` is `idea`. When the board has no `idea` option yet (a board made before 2.5.0; setup step 7 adds it), an idea is triaged from the tracker and stays off the board.
 
 **Run start.** Add the map and every child ticket of the map to the board (*Add to board*, then *Set status* for `Factory status` and `Kind`); a child ticket cut later is added in the step that cuts it; a role task is added when it is created. On a resumed run read the board (*List board*) and add any card that is missing; *Add to board* never makes one twice. A child ticket that is neither cut nor worked is `Backlog`.
 
@@ -324,6 +326,7 @@ Every status below is tied to an event you can observe without `work/` or a bran
 | slice | you stop work on the slice for an andon | `Blocked` until it is resumed or you carry on, then back to what it was |
 | slice | its PR is merged | `Done` |
 | frontier ticket | it waits on the frontier | `Backlog`; `Running` while you or a role work it; `Waiting on you` on its decision card or task request; `Done` when its resolution comment is posted and the ticket closed |
+| idea | it is filed (a card is added only when the board has the `idea` option) | `Backlog`; `Running` while you triage it; `Waiting on you` on its decision card; `Done` when its outcome comment is posted |
 | map | you create or adopt it (step 2) | `Running` |
 | map | you ask the person something at run level (keep, promote or drop; an A3 draft; a freeze question; the frontier round's merge) | `Waiting on you`, with the needs-you comment; `Running` again on the answer |
 | map | the run is reported closed (step 9) | `Done` |
@@ -439,6 +442,23 @@ A role agent can stop mid-task on a usage or session limit (HTTP 429), often two
 3. Otherwise, after the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
 4. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
 5. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it. After a usage-limit hit the start gate behaves as `N = 1` until the slices in flight have closed (*Parallel slices*). A role cut off with `Status: working` leaves its role task open and its card `Running`; tell the resumed or fresh agent to read its `Progress` from the committed draft in `work/<id>/`, not from the issue, and post no result comment for a `working` draft.
+
+## Idea intake
+
+An **idea** is a tracker issue labelled `idea`: a thought, a reference (URL, document, screenshot) or any input the person or a collaborator wants the factory to weigh. It is filed with `/factory:idea`, directly in the tracker with the label (a collaborator needs no factory for that), or by dropping a file in the **inbox**, the local gitignored folder `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" dir` prints. The ideas are the tracker's; the inbox is only a drop zone.
+
+1. **Drop the inbox.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" drop`. Each file becomes one issue with the label `idea` and is then removed, so the folder never grows; a second run over the same folder creates nothing new. A line `kept <name>: <reason>` (exit 5) is a file the body cannot carry or the scan refused: the file stays. Tell the person the reason; delete nothing yourself.
+2. **List the untriaged.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" untriaged`. It prints each open `idea` without an outcome comment as `<n>`, title and `new` or `waiting`. `waiting` is an idea whose decision card is open and not marked `Answered:`: leave it until the person answers; once answered it lists as `new`, and you record its outcome citing the card.
+3. **Triage each `new` one.** Read the upstream triage skill and follow it (it cannot be invoked by a model: read `skills/engineering/triage/SKILL.md` of the installed `mattpocock-skills` plugin and apply it by hand), using the map, `CONTEXT.md` and the ADRs as the evidence. Every idea ends with one outcome and a reason, posted as a comment:
+   - **direction**: it changes or refines where the project is going; fold it into the map's Destination or Decisions so far (the map is edited at step 4 or by a frontier round).
+   - **slice candidate**: it is a buildable piece of work; it joins the backlog as a candidate for step 4.
+   - **research ticket**: the answer is unknown; it becomes a research ticket on the frontier.
+   - **parked**: sound, not now; the reason names what would bring it back.
+   - **rejected**: not wanted; the reason says why, and the issue is closed as not planned.
+4. **One-way doors.** An idea that touches a one-way door is put to the person as a decision card; you do not decide it. Brief it as step 7 does, post the card on the idea (*Decision card*, scanned with `--needs-you`), set its card `Waiting on you`, and post the outcome comment only after the answer, citing the card. Everything else you decide yourself: a two-way triage needs no question.
+5. **Record.** Write the reason to a scratch file, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" triage <n> <outcome> <file>`. It scans the text (exit 6 on a hit: rewrite and run again), posts the comment `<!-- factory:triage v1 -->` and, for `rejected`, closes the issue. Never post an outcome without a reason; never leave an idea with no outcome when you end a run's intake.
+
+Maintenance, budgets and a standing backlog are other slices of the map; this section only collects and triages.
 
 ## Andon
 

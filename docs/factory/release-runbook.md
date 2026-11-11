@@ -349,6 +349,20 @@ git push origin factory-v2.3.0
 
 **Rollback.** There is nothing to roll back in a project: the A3 v2 lines and the derived sub-lines are additions, and the 2.2.0 text skips the one and does not read the other. To put the plugin back on the 2.2.0 text, publish a new version above 2.3.0 whose content is the 2.2.0 text, as the *Release 2.0.0* section describes for its own rollback; installs follow the version string.
 
+## Obeya image (slice #124, [ADR 0020](../adr/0020-the-obeya-is-a-nuxt-4-container-image-on-ghcr.md))
+
+The Obeya app ships as `ghcr.io/wimsuenens/obeya:<semver>`, built for `linux/amd64` and `linux/arm64` by `.github/workflows/obeya-image.yml`. The app is versioned apart from the plugin: a plugin release does not rebuild the image.
+
+**Bump.** To publish a new image, raise `version` in `apps/obeya/package.json` and merge to `main`. The workflow runs on a push to `main` that touches `apps/obeya/**`, or by hand (Actions, `obeya-image`, Run workflow). It publishes only when the version has no tag yet; otherwise it ends green with a notice. It never pushes a moving tag, so a tag always names one build.
+
+**Check after the merge.**
+1. The `obeya-image` run is green. A failed build or publish fails the run; nothing partial is tagged.
+2. `docker buildx imagetools inspect ghcr.io/wimsuenens/obeya:<semver>` lists `linux/amd64` and `linux/arm64` under the one tag.
+3. First publish only: a package created by a workflow is private. In the repository's Packages, set `obeya` to public and link it to this repository, then check once from a machine that is not logged in to GHCR: `docker logout ghcr.io && docker pull ghcr.io/wimsuenens/obeya:<semver>`. If the person turns the ADR decision to private, document the pull token instead (ADR 0020, way back).
+4. A plugin that pins the tag (a later slice) is released only after step 2 passes for that tag.
+
+Rollback: a published tag is never overwritten or deleted; publish a fixed version and move the plugin's pin.
+
 ## Not verified
 
 - **2.3.0:** nothing ran in a live factory session. Not run: the install and update path and the rollback (the machine is frozen), a run that closes with a v2 A3, and a settle answer on an experiment with a `target:`. The three unverified items of [CHANGELOG.md](../../CHANGELOG.md) under *2.3.0* are the full list. The checks above are offline.

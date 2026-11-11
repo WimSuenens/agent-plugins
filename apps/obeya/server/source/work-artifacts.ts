@@ -24,12 +24,12 @@ function frontMatter(text: string): Front | null {
   const out: Front = {}
   let list: string[] | null = null
   for (const line of m[1].split(/\r?\n/)) {
-    const li = line.match(/^\s+-\s+(.*?)\s*$/)
+    const li = line.replace(/\s+#.*$/, '').match(/^\s+-\s+(.*?)\s*$/)
     if (li && list) {
       list.push(unquote(li[1]))
       continue
     }
-    const kv = line.match(/^([A-Za-z][\w-]*):\s*(.*?)\s*$/)
+    const kv = line.replace(/\s+#.*$/, '').match(/^([A-Za-z][\w-]*):\s*(.*?)\s*$/)
     if (!kv) continue
     list = null
     if (kv[2] === '') {

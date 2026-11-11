@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { makeFixtureProject, startServer } from './harness.mjs'
 
 const card = (fm, title = 'Which database?') => `---\n${fm}\n---\n\n## Decision: ${title}\n\nBody.\n`
-const goodCard = (since) => card(`door: one-way\nasked: decision-maker\nsince: ${since}\noptions:\n  - Hosted\n  - Self-run`)
+const goodCard = (since) => card(`door: one-way   # one-way | two-way\nasked: decision-maker\nsince: ${since}\noptions:\n  - Hosted\n  - Self-run`)
 const andonFile = (fm) => `---\n${fm}\n---\n\n## Andon A1: other (#7)\n`
 
 const put = (root, rel, text) => {

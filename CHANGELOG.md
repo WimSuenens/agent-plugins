@@ -2,6 +2,19 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.11.0 (#130)
+
+Release: `2.11.0`, a **minor** release: standard work changed (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#130](https://github.com/WimSuenens/agent-plugins/issues/130), contract [130-obeya-pending-and-andon](contracts/130-obeya-pending-and-andon.md)). A project that does not opt in to the Obeya is untouched.
+
+**What changed for the person who runs the factory:**
+
+- **Decision cards and andon files carry a front matter block.** The product-owner's card (`work/<id>/NN-decision-card-<role>.md`) starts with `door`, `asked`, `since` and `options`; the lead's andon draft (`NN-andon-lead.md`) starts with `andon`, `item`, `owner`, `status`, `reason`, `since` (and `countermeasure` once resolved). The block is not posted to the tracker. Text: `references/decision-card.md`, `skills/run/SKILL.md` (Andon, step 2).
+- **The Obeya shows what waits for you.** Pending decisions, including cards that exist only in an in-flight worktree, with door type, waiting time, options and provenance; open andon prominently with item and owner, resolved andon with the countermeasure; and a "needs you" slot that lists pending decisions and board items on `Waiting on you` together, newest wait last. A card or andon file that lacks or fails its front matter is a visible parse-failure card.
+
+**Tests.** `apps/obeya/test/pending.test.mjs` (API seam with a fixture project and a worktree, plus a render smoke test). The version pins move to 2.11.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `0917434d64d2699b6f05a4a861ea1ce988b2d470fe59de84151d20e861f561e0`, tooling `2f9312d4b81b1562df2af15eb0b6e507d930865b75cf13defd6eef07642fada4`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.10.0 (#125)
 
 Release: `2.10.0`, a **minor** release: the plugin shell of the Obeya (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#125](https://github.com/WimSuenens/agent-plugins/issues/125)). A project that does not opt in is untouched.

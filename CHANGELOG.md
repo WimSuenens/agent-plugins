@@ -2,6 +2,26 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.5.0 (#110)
+
+Release: `2.5.0`, a **minor** release: the factory takes ideas in at any time and triages each one to an outcome with a reason. Standard text changes, so the baseline resets. No `factory-state` change. Restart Claude Code sessions after updating: a session keeps the text it read when it started.
+
+Issue [#110](https://github.com/WimSuenens/agent-plugins/issues/110), map [#108](https://github.com/WimSuenens/agent-plugins/issues/108). Contract [110-idea-intake](contracts/110-idea-intake.md). [ADR 0015](docs/adr/0015-factory-status-has-six-values-plus-kind-and-role.md) is revised: `Kind` gains `idea`.
+
+**What changed for the person who runs the factory:**
+
+- **File an idea any time.** `/factory:idea <title> -- <details>` files a tracker issue with the label `idea`; so does a plain tracker issue with that label, with no factory installed.
+- **Inbox folder.** Files dropped in `.claude/factory-inbox/` (gitignored) become one `idea` issue each at the next run start, and are then removed. A second pass over the same folder creates nothing new. A file the issue body cannot carry (binary, over 60000 bytes, a symlink) or that the secret scan refuses stays in the folder and is reported; nothing is deleted that did not reach the tracker. Setup step 8b asks before it creates the folder and its ignore rule; anything but a clear yes creates nothing.
+- **Triage with an outcome and a reason.** At run start the lead reads the upstream triage skill by hand and gives each untriaged idea one of five outcomes, **direction**, **slice candidate**, **research ticket**, **parked** or **rejected**, as a comment with the reason. An idea that touches a one-way door comes to you as a decision card; the lead does not decide it. Ideas not triaged are picked up at the next run start.
+- **New script `scripts/intake.sh`**: `dir`, `init`, `file`, `drop`, `untriaged`, `triage`. New skill `idea`.
+- **Kind vocabulary.** `Kind` is now map, slice, role task, frontier ticket, idea. A new board is created with it; a board made earlier needs the `idea` option added by hand (setup step 7), and until then ideas are triaged from the tracker and stay off the board. The glossary has **Idea** and **Inbox**.
+
+**Tests.** New `tests/factory/test_idea_intake.sh` with a small stateful `tests/factory/stub-gh/gh`: the scripts seam (every command, removal, idempotence, retry after a failed create, kept files, forged markers, every outcome) and the standard-text seam (outcomes, one-way-door rule, run start, vocabulary, setup, glossary). The `Kind` pins in `test_board_status.sh` and `test_board_script.sh` and the version pins move to 2.5.0.
+
+**Unverified.** Nothing ran in a live factory session or against real GitHub: `intake.sh` was tested against a stub `gh`, so label creation, `--label idea` on `issue create` and the `comments` field of `issue list --json` are as the stub assumes. Adding the `idea` option to an existing board by hand was not tried. This repo's own board does not have the option yet.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `82649bf15f7f1319bf0e0bf1727ca5a8043ddca190e0640a430b335141f48ed9`, tooling `c55b62b6454659b3208f2a58747eff0e2e8f26bb397c5c702aea7b0c4685800a`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.4.0 (#109)
 
 Release: `2.4.0`, a **minor** release: factory worktrees move into the project's own agent folder, `.claude/worktrees`, instead of beside the repository at `../wt`. Standard text changes, so the baseline resets. No `factory-state` change, and a project with worktrees at the old location keeps working: setup offers to move them, or the item is finished where it is. Restart Claude Code sessions after updating: a session keeps the text it read when it started.

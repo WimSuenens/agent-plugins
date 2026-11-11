@@ -359,7 +359,7 @@ create_fields() {
   local names f opts
   names="$(jq -r '.fields[].name' "$tmp/fields.json")"
   has() { printf '%s\n' "$names" | grep -Fxq -- "$1"; }
-  has Kind || mut B-fcreate gh project field-create "$project" --owner "$owner" --name Kind --data-type SINGLE_SELECT --single-select-options "map,slice,role task,frontier ticket"
+  has Kind || mut B-fcreate gh project field-create "$project" --owner "$owner" --name Kind --data-type SINGLE_SELECT --single-select-options "map,slice,role task,frontier ticket,idea"
   has Role || mut B-fcreate gh project field-create "$project" --owner "$owner" --name Role --data-type SINGLE_SELECT --single-select-options "product-owner,architect,developer,qa-engineer,security-reviewer,devops,docs-writer"
   for f in Tokens Minutes Hours "Rework rounds" "Person touches"; do
     has "$f" || mut B-fcreate gh project field-create "$project" --owner "$owner" --name "$f" --data-type TEXT

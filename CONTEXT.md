@@ -87,3 +87,9 @@ _Avoid_: concurrency, worker count
 
 **History view** — the board view of closed slices and closed role tasks with their hansei fields (`Tokens`, `Minutes`, `Hours`, `Rework rounds`, `Person touches`), newest first. The fields are text so that `not captured (<reason>)` is a legal value and a blank never stands for it.
 _Avoid_: report, dashboard
+
+**Idea** — a tracker issue labelled `idea`: a thought, a reference or any input anyone wants the factory to weigh. Every idea ends triaged, with one outcome (direction, slice candidate, research ticket, parked or rejected) and a reason as a comment; an idea that touches a one-way door goes to the person as a decision card first. It is a `Kind` on the board. See [0015](docs/adr/0015-factory-status-has-six-values-plus-kind-and-role.md).
+_Avoid_: suggestion, request, feature request (an idea may be none of these)
+
+**Inbox** — the local, gitignored folder `.claude/factory-inbox/` where a file is dropped to become an idea. At intake each file becomes one tracker issue and is then removed, so the folder never grows; a file the tracker cannot carry stays and is reported. A drop zone, not a store: the tracker holds the ideas.
+_Avoid_: queue, backlog (the backlog is the tracker's)

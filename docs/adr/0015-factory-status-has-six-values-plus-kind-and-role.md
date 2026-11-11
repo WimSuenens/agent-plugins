@@ -4,6 +4,8 @@ status: proposed
 
 # `Factory status` has six values, plus `Kind` and `Role` fields
 
+Revised on 2026-11-11 (issue [#110](https://github.com/WimSuenens/agent-plugins/issues/110)): the `Kind` field gains a fifth value, `idea`, for tracker issues labelled `idea`. The six status values and the rest of this decision are unchanged. Adding an option is not a one-way door: a board without it keeps working, and the option can be dropped again with no item holding it.
+
 Amends [0002](0002-one-branch-and-worktree-per-item.md): its rule that status lives in the tracker stays, but the seven values are replaced by six and the item's stage no longer lives in the lead state.
 
 Issue [#54](https://github.com/WimSuenens/agent-plugins/issues/54) asked what the board shows as status. Existing projects hold cards in the old values, and moving back loses information, which makes this a one-way door. The person decided it on the same combined card as [0014](0014-each-role-task-is-a-sub-issue-with-its-brief-as-body-and-its-result-as-closing-comment.md): [decision on #54](https://github.com/WimSuenens/agent-plugins/issues/54#issuecomment-6706120825), option B1, from [the card](https://github.com/WimSuenens/agent-plugins/issues/53#issuecomment-6706052982) on 2026-11-07, with no reason beyond picking the recommended option. Research on what a board can do by script: [#52 findings](https://github.com/WimSuenens/agent-plugins/issues/52#issuecomment-6671511111) and [resolution](https://github.com/WimSuenens/agent-plugins/issues/52#issuecomment-6671514755).
@@ -17,7 +19,7 @@ Issue [#54](https://github.com/WimSuenens/agent-plugins/issues/54) asked what th
 ## Decision
 
 1. **`Factory status`: Backlog, Ready, Running, Waiting on you, Blocked, Done.**
-2. **`Kind`** (map, slice, role task, frontier ticket) and **`Role`** are two further single-select fields. The stage is "which role task is Running", not a status.
+2. **`Kind`** (map, slice, role task, frontier ticket, and since #110 `idea`) and **`Role`** are two further single-select fields. The stage is "which role task is Running", not a status.
 3. **The "Needs you" view** is the filter `factory-status:"Waiting on you"`; the token names the `Factory status` field because the built-in `Status` field is not used by the factory. #52 found no stable API for the view and the Insights chart; the migration step creates the view and the person checks it once by hand.
 4. **The lead state keeps only the lead's memory** (running agents, shared resources, the interrupted role's `Progress` pointer). Status, stage log, waits and the person's touches move to the board and the sub-issues of 0014.
 5. **Migration is a `setup-factory-skill` step in three phases**, so it never relies on the undocumented effect of dropping an in-use option (#52): (1) snapshot the items to a scratch file outside the repo, never committed, then add the new options while sending every old option with its id; (2) re-set each affected item per the table; (3) when no item holds a dropped value, drop the four old options. The step prints the table and item count and applies nothing until the person confirms. It runs first on a scratch Project.

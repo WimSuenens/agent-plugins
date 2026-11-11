@@ -79,6 +79,7 @@ Resolved ids for the GitHub Project:
 | slice | |
 | role task | |
 | frontier ticket | |
+| idea | |
 
 | Role | Option id |
 |---|---|

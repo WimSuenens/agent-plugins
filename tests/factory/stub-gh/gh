@@ -1,0 +1,23 @@
+#!/bin/bash
+# A small stateful gh for the idea-intake tests. State: $STUB_GH_DIR/issues.json (array), $STUB_GH_DIR/log (one line per call).
+# Knows: label create, issue list, issue create, issue comment, issue close, api user. Anything else exits 99.
+D="${STUB_GH_DIR:?}"
+[ -f "$D/issues.json" ] || echo '[]' >"$D/issues.json"
+echo "$*" >>"$D/log"
+upd() { jq "$@" "$D/issues.json" >"$D/issues.new" && mv "$D/issues.new" "$D/issues.json"; }
+arg() { local k="$1" p=""; shift; for a in "$@"; do [ "$p" = "$k" ] && { printf '%s' "$a"; return; }; p="$a"; done; }
+[ -n "${STUB_GH_FAIL:-}" ] && case " $* " in *" $STUB_GH_FAIL "*) echo "stub gh: failing $STUB_GH_FAIL" >&2; exit 1 ;; esac
+case "$1 $2" in
+  "label create") exit 0 ;;
+  "api user") echo "bot" ;;
+  "issue list")
+    if [ "$(arg --state "$@")" = open ]; then jq '[.[] | select(.state == "open")]' "$D/issues.json"; else cat "$D/issues.json"; fi ;;
+  "issue create")
+    n=$(( $(jq 'length' "$D/issues.json") + 1 ))
+    upd --argjson n "$n" --arg t "$(arg --title "$@")" --rawfile b "$(arg --body-file "$@")" '. + [{number: $n, title: $t, body: $b, state: "open", comments: []}]'
+    echo "https://example.invalid/o/r/issues/$n" ;;
+  "issue comment")
+    upd --argjson n "$3" --rawfile b "$(arg --body-file "$@")" 'map(if .number == $n then .comments += [{author: {login: "bot"}, body: $b}] else . end)' ;;
+  "issue close") upd --argjson n "$3" 'map(if .number == $n then .state = "closed" else . end)' ;;
+  *) echo "stub gh: unknown call: $*" >&2; exit 99 ;;
+esac

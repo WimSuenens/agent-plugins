@@ -41,7 +41,7 @@ function freePort() {
 }
 
 /** Runs bin/start.mjs against the built app. Resolves once the server answers, or with the exit if it stops first. */
-export async function startServer({ projects, host = '127.0.0.1', trackerItems, sourceModule }) {
+export async function startServer({ projects, host = '127.0.0.1', trackerItems, sourceModule, app = appDir, env: extraEnv = {} }) {
   const port = await freePort()
   const ghDir = mkdtempSync(join(tmpdir(), 'obeya-gh-'))
   // trackerItems is what the stub gh answers to `gh project item-list`; sourceModule swaps the whole source.
@@ -52,10 +52,11 @@ export async function startServer({ projects, host = '127.0.0.1', trackerItems, 
     STUB_GH_DIR: ghDir,
     ...(sourceModule ? { OBEYA_SOURCE_MODULE: sourceModule } : {}),
     OBEYA_PROJECTS: JSON.stringify(projects),
+    ...extraEnv,
     OBEYA_HOST: host,
     OBEYA_PORT: String(port),
   }
-  const child = spawn('node', [join(appDir, 'bin', 'start.mjs')], { env, stdio: ['ignore', 'pipe', 'pipe'] })
+  const child = spawn('node', [join(app, 'bin', 'start.mjs')], { env, stdio: ['ignore', 'pipe', 'pipe'] })
   let output = ''
   child.stdout.on('data', (d) => (output += d))
   child.stderr.on('data', (d) => (output += d))

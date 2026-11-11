@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obeya prototype</title>
+<!--
+  PROTOTYPE - throwaway. Spec #121 (Obeya room). Plain HTML, no framework.
+  Question: what should the Obeya room look like?
+  Three structurally different variants, switched with ?variant=A|B|C (or the bottom bar / arrow keys).
+    A  Orbit        - futuristic mission-control HUD, work as orbits around the direction
+    B  The Wall     - the physical Obeya: whiteboards, sticky notes, an andon light
+    C  Transit      - the project as a metro map, with a departures board
+  All data is SAMPLE DATA from data.js. Nothing is read from a repo or a tracker. Open this file directly.
+-->
+</head>
+<body>
+<script>
+  var V = (new URLSearchParams(location.search).get('variant') || 'A').toUpperCase();
+  if (!/^[ABC]$/.test(V)) V = 'A';
+  window.OBEYA_VARIANT = V;
+  function load(src, cb) { var s = document.createElement('script'); s.src = src; s.onload = cb; document.body.appendChild(s); }
+  load('data.js', function () { load('variant-' + V.toLowerCase() + '.js', function () { load('switcher.js'); }); });
+</script>
+</body>
+</html>

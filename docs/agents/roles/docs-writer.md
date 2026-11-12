@@ -8,6 +8,8 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 ## Knowledge
 
 - Factory release entries (`CHANGELOG.md`): the ac19 check in `tests/factory/test_lean_rules.sh` reads the newest `## factory ` entry and greps it for the standard and tooling fingerprints. Compute them with `bash plugins/factory/scripts/fingerprint.sh plugins/factory` after the version bump, and put them in that entry. The release date is `date -u +%F`.
+- The documentation site (`apps/site`, #156): `npx astro preview` daemonises, so the process started by the command exits at once and the server keeps running. Read the address it prints, then stop it with `npx astro preview stop`; check it with `npx astro preview status`. Do not kill the pid you see at start.
+- A Bash command that names another role's folder under `docs/agents/roles/` or `docs/agents/skills/` is refused by the memory guard as a whole, so list only your own folder in one call.
 
 ## Skills used
 

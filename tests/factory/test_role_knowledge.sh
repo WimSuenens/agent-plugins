@@ -48,16 +48,16 @@ M="$T/mem"; mkdir -p "$M/developer" "$M/factory-architect" "$M/other-agent"
 echo "dev craft note" >"$M/developer/MEMORY.md"
 echo "arch note" >"$M/factory-architect/MEMORY.md"
 echo "keep me" >"$M/other-agent/MEMORY.md"
-out="$(cd "$R" && bash "$RK" migrate --from "$M" 2>&1)"; rc=$?
+out="$(cd "$R" && bash "$RK" migrate --all --from "$M" 2>&1)"; rc=$?
 ck migrate-rc 0 "$rc"
 has migrate-dev-moved "$R/docs/agents/roles/developer.md" 'dev craft note'
 has migrate-arch-moved "$R/docs/agents/roles/architect.md" 'arch note'
 has migrate-heading "$R/docs/agents/roles/developer.md" '## Migrated memory'
 ck migrate-keeps-source-by-default yes "$([ -f "$M/developer/MEMORY.md" ] && echo yes || echo no)"
 c1="$(grep -c 'dev craft note' "$R/docs/agents/roles/developer.md")"
-( cd "$R" && bash "$RK" migrate --from "$M" >/dev/null 2>&1 )
+( cd "$R" && bash "$RK" migrate --all --from "$M" >/dev/null 2>&1 )
 ck migrate-twice-no-duplicate "$c1" "$(grep -c 'dev craft note' "$R/docs/agents/roles/developer.md")"
-( cd "$R" && bash "$RK" migrate --from "$M" --remove-source >/dev/null 2>&1 )
+( cd "$R" && bash "$RK" migrate --all --from "$M" --remove-source >/dev/null 2>&1 )
 ck migrate-remove-source-dev no "$([ -e "$M/developer" ] && echo yes || echo no)"
 ck migrate-remove-source-arch no "$([ -e "$M/factory-architect" ] && echo yes || echo no)"
 ck migrate-leaves-foreign yes "$([ -f "$M/other-agent/MEMORY.md" ] && echo yes || echo no)"
@@ -66,13 +66,30 @@ ck migrate-none-rc 0 "$(cd "$R" && bash "$RK" migrate --from "$T/nonexistent" >/
 M2="$T/mem2"; mkdir -p "$M2/devops"
 echo "devops clean note" >"$M2/devops/clean.md"
 printf 'devops path note /%s/someone/work\n' "Users" >"$M2/devops/dirty.md"
-out="$(cd "$R" && bash "$RK" migrate --from "$M2" --remove-source 2>&1)"; rc=$?
+out="$(cd "$R" && bash "$RK" migrate --all --from "$M2" --remove-source 2>&1)"; rc=$?
 ck migrate-flagged-rc 0 "$rc"
 has migrate-flagged-reported "$(printf '%s' "$out" >"$T/o3"; echo "$T/o3")" 'skipped devops/dirty.md: flagged by the scan (home-path)'
 has migrate-clean-file-moved "$R/docs/agents/roles/devops.md" 'devops clean note'
 ck migrate-flagged-not-copied 0 "$(grep -c 'devops path note' "$R/docs/agents/roles/devops.md")"
 ck migrate-flagged-source-kept yes "$([ -f "$M2/devops/dirty.md" ] && echo yes || echo no)"
 ck migrate-clean-source-removed no "$([ -f "$M2/devops/clean.md" ] && echo yes || echo no)"
+
+# issue 141: user scope is shared by every project, so migrate copies nothing until the person selects notes
+M3="$T/mem3"; mkdir -p "$M3/developer"; R3="$T/proj3"; mkdir -p "$R3"
+echo "this project note" >"$M3/developer/mine.md"
+echo "other project postgres gotcha" >"$M3/developer/foreign.md"
+out="$(cd "$R3" && bash "$RK" migrate --from "$M3" 2>&1)"; rc=$?
+ck migrate-default-rc 0 "$rc"
+ck migrate-default-copies-nothing 0 "$(cat "$R3"/docs/agents/roles/*.md 2>/dev/null | grep -c 'postgres gotcha\|this project note')"
+has migrate-default-lists-mine "$(printf '%s' "$out" >"$T/o4"; echo "$T/o4")" 'developer/mine.md'
+has migrate-default-lists-foreign "$(printf '%s' "$out" >"$T/o4"; echo "$T/o4")" 'developer/foreign.md'
+ck migrate-default-writes-no-role-files no "$([ -e "$R3/docs/agents/roles" ] && echo yes || echo no)"
+out="$(cd "$R3" && bash "$RK" migrate --from "$M3" --select developer/mine.md 2>&1)"
+has migrate-select-copies-chosen "$R3/docs/agents/roles/developer.md" 'this project note'
+ck migrate-select-skips-other 0 "$(grep -c 'postgres gotcha' "$R3/docs/agents/roles/developer.md")"
+( cd "$R3" && bash "$RK" migrate --from "$M3" --select developer/mine.md --remove-source >/dev/null 2>&1 )
+ck migrate-select-remove-keeps-unselected yes "$([ -f "$M3/developer/foreign.md" ] && echo yes || echo no)"
+ck migrate-select-remove-removes-chosen no "$([ -f "$M3/developer/mine.md" ] && echo yes || echo no)"
 
 # --- standard-text seam
 has std-section "$PR_" '## Role knowledge'

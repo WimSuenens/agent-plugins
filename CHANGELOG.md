@@ -2,6 +2,23 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.12.1 (#141)
+
+Release: `2.12.1`, a **patch** release: `role-knowledge.sh migrate` no longer copies other projects' notes into the repo. The standard fingerprint is unchanged; the tooling fingerprint moves. No migration.
+
+Issue [#141](https://github.com/WimSuenens/agent-plugins/issues/141). Cause: `migrate` copied every note in the user-scope role memory, which every project on the machine shares, and wrote them before the person saw them.
+
+**What changed for the person who runs the factory:**
+
+- **`migrate` lists first.** With no flags it prints `candidate <dir>/<file> (<first line>)` for each note and writes nothing.
+- **You pick the notes.** `migrate --select <dir>/<file>[,...]` copies only those; `--all` copies every note, for when all of them belong to this project.
+- **`--remove-source` removes only what was migrated**, never an unselected note.
+- **`setup-factory-skill` step 8c** shows the list and asks which notes belong to this project (default none).
+
+**Tests.** `tests/factory/test_role_knowledge.sh` (script seam: default copies nothing, `--select` copies only the chosen note, `--remove-source` keeps unselected notes). The version pins move to 2.12.1.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `14cb8e842c591bfd3cea6c914b228ef4280389b4f0a8d31d787910e535152f1a`, tooling `4a5ea7f2675d610a99d9a94597c828ce8b6e003408f1f9a8cff362854166e39b`.
+
 ## factory 2.12.0 (#129)
 
 Release: `2.12.0`, a **minor** release: standard work changed (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#129](https://github.com/WimSuenens/agent-plugins/issues/129), [contract 129](contracts/129-obeya-direction.md)). No migration; a project without the file sees "No direction yet" in the Obeya.

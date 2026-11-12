@@ -51,6 +51,12 @@ run-budget: none
 
 An optional brake on one run, in tokens or hours: `run-budget: <N> tokens` or `run-budget: <N> hours`. `none` means no brake.
 
+## Obeya
+
+obeya: on
+
+Set `obeya: on` to opt in to the Obeya, a read-only browser view of this project. `/factory:obeya` then starts and stops it in a container on loopback; without `on` the command refuses. A project that does not opt in keeps the existing workflow untouched.
+
 ## Tracker
 
 Factory operations are in `docs/agents/issue-tracker.md`, under `## Factory operations`. The board view groups by `Factory status`; the project's built-in `Status` field is not used by the factory.

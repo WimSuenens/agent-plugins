@@ -6,7 +6,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { BASE, SITE, ROUTES, realBuildResult, realBuild, htmlFiles, routeOf, launch, siteCopy, editIn, addPageEntry, buildCopy } from "./lib.mjs";
+import { BASE, SITE, ROUTES, realBuildResult, realBuild, htmlFiles, routeOf, serve, launch, siteCopy, editIn, addPageEntry, buildCopy } from "./lib.mjs";
 import { loadEntries, oracle, verifyBuild as verifyBuildIn } from "./oracle.mjs";
 
 let browser;
@@ -49,7 +49,9 @@ test("AC-1 the routing is two files and no component or page file keeps its own 
       const rel = path.relative(path.join(SITE, "src"), p).split(path.sep).join("/");
       if (allowed.has(rel) || !/\.(astro|mjs|ts|js)$/.test(rel)) continue;
       const t = fs.readFileSync(p, "utf8");
-      if (/["'`]\/?(getting-started|reference)\/?["'`]/.test(t) || /url\(\s*["'`](nl\/)?(getting-started|reference)/.test(t) || /\/agent-plugins\//.test(t)) offenders.push(rel);
+      // a URL written out for another page: a quoted string holding "<slug>/" (url("reference/")), "/<slug>/", or the base path itself.
+      // Slugs as data keys (a component key, a model call such as href("reference", "en")) are not URLs and are not flagged.
+      if (/["'`]\/?(nl\/)?(getting-started|reference)\//.test(t) || /\/agent-plugins\//.test(t)) offenders.push(rel);
     }
   })(path.join(SITE, "src"));
   assert.deepEqual(offenders, [], "page slugs or page URLs written outside data/pages.mjs and the registry");

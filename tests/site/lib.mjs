@@ -195,7 +195,7 @@ export async function readPage(ctx, origin, route) {
     }));
     const nav = (h) => document.querySelector(`nav[data-nav="${h}"]`);
     const items = (h) => [...(nav(h)?.querySelectorAll("li") ?? [])].map((li) => ({
-      own: t([...li.childNodes].filter((c) => c.nodeType === 3 || (c.nodeType === 1 && c.tagName !== "UL" && c.tagName !== "OL")).map((c) => c.textContent).join(" ")),
+      own: [...li.childNodes].filter((c) => c.nodeType === 3 || (c.nodeType === 1 && c.tagName !== "UL" && c.tagName !== "OL")).map((c) => c.textContent).join(" ").trim().replace(/\s+/g, " "),
       a: li.querySelector(":scope > a") ? link(li.querySelector(":scope > a")) : null,
       current: li.getAttribute("aria-current"),
       depth: (() => { let d = 0; for (let e = li.parentElement; e && e !== nav(h); e = e.parentElement) if (e.tagName === "UL" || e.tagName === "OL") d++; return d; })(),

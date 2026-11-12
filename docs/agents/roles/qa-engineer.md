@@ -5,7 +5,14 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 ## Rules and checks
 
+- Site acceptance suite (`tests/site/`): fixtures are builds of a copy of `apps/site` (`lib.siteCopy` + `buildCopy`, node_modules symlinked, a build is about 2 s); never edit the real pages. Expected pages, tree, breadcrumbs, see-also and counterparts come from `oracle.mjs` reading `src/data/pages.mjs`, never from a typed-in count.
+- Before the build exists, validate new site tests against a throwaway reference site in the scratchpad (copy of repo `tests/`, `apps/site`, `plugins/`, `.github/`), then kill-test it with 3 to 6 one-line mutants.
+
 ## Knowledge
+
+- Reference-build trap (188): a contract pair can contradict (a11y rule "nav must hold a link" vs a breadcrumb that is one plain item); the reference build is where it shows. Ask the lead before pinning either side.
+- A source-scan test for "no hard-coded URLs" must look for quoted URL strings (`"reference/"`, `/agent-plugins/`), not bare slugs: slugs are legitimate data keys (component keys, model calls). Keep a control that the scan can fail.
+- `paths.sh check` takes the contract glob as a quoted literal prefix argument; an unquoted `contracts/<id>-*.md` is expanded by the shell and every contract then reads as off-list.
 
 ## Skills used
 

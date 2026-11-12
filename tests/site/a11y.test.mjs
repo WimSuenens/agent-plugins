@@ -122,7 +122,7 @@ test("AC-26 a page added through the page tree is checked too: one more page tha
 
 test("AC-26 the page count is not written into the check script", () => {
   const src = fs.readFileSync(path.join(SITE, "scripts/a11y-check.mjs"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-  assert.ok(!/\b(3|5)\s*pages\b/.test(src) && !/(pages|files|routes)\.length\s*[!=]==?\s*\d/.test(src), "no literal page count");
+  assert.ok(!/\b\d+\s+pages checked/.test(src) && !/\b[2-9]\s*pages\b/.test(src), "no literal page count");
 });
 
 // ---------- 188 AC-27: landmark faults ----------

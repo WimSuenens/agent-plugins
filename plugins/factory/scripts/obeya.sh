@@ -43,7 +43,7 @@ esac
 project="$(cd "$project" && pwd -P)"
 
 grep -q '^obeya: on[[:space:]]*$' "$project/docs/agents/factory.md" 2>/dev/null ||
-  die "not enabled: set 'obeya: on' in docs/agents/factory.md"
+  die "not enabled: set 'obeya: on' in docs/agents/factory.md, or run /factory:setup to be asked"
 
 # one compose project per project folder, so stop/status/"already running" only ever see this project's container
 sum="$(printf '%s' "$project" | cksum | cut -d' ' -f1)"

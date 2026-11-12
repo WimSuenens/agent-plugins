@@ -1,11 +1,11 @@
 # Lead state: #188 Wiki shell: navigation tree, contents and the first hand-written page, in English and Dutch
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhITS68
-- next step: step 6, brief the product-owner for the requirement
-- open questions: none
+- next step: STOPPED by the owner after the Tests stage. Resume with /factory:run #188: (1) route work/188/04-question-qa-engineer.md (site-nav-empty fails the breadcrumb-only Home) to the architect, (2) then brief the developer for the Build with the targeted test `node --test tests/site/pages.test.mjs`, (3) devops check, docs, QA, security, demo, merge
+- open questions: the QA question 04 (a11y rule site-nav-empty vs the Home breadcrumb) for the architect; the owner's question 5 (Dutch Home draft notice) at the slice review
 - frozen on: factory 2.13.0 (installed copy in use: 2.12.2)
-- ADR number assigned: 0023
-- code review: not decided yet (after the architect's stage)
+- ADR number assigned: none (no one-way door found; 0023 released)
+- code review: no — trigger: no trigger
 
 ## Running agents
 

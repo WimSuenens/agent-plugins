@@ -23,8 +23,26 @@ export function scratch(prefix = "site-qa-") {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
+// Astro keeps temp files in the shared apps/site/.astro, so builds from parallel test files must not overlap.
+// A cross-process lock (an atomic mkdir) serialises every npm run; a lock older than 15 minutes is stale.
+const LOCK = path.join(os.tmpdir(), "site-qa-npm.lock");
+function withLock(fn) {
+  const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+  for (;;) {
+    try { fs.mkdirSync(LOCK); break; } catch (e) {
+      if (e.code !== "EEXIST") throw e;
+      try { if (Date.now() - fs.statSync(LOCK).mtimeMs > 900000) fs.rmSync(LOCK, { recursive: true, force: true }); } catch {}
+      sleep(200);
+    }
+  }
+  try { return fn(); } finally { fs.rmSync(LOCK, { recursive: true, force: true }); }
+}
+
 // Runs an npm script in apps/site with extra env. Returns {status, out}.
 export function npm(args, env = {}, timeout = 300000) {
+  return withLock(() => npmUnlocked(args, env, timeout));
+}
+function npmUnlocked(args, env, timeout) {
   const r = spawnSync("npm", args, {
     cwd: SITE,
     env: { ...process.env, ...env },

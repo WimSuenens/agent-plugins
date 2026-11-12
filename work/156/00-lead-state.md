@@ -1,7 +1,7 @@
 # Lead state: #156 Live skeleton: bilingual home and generated skills index on GitHub Pages
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhIRkA4
-- next step: step 6, brief QA for the Tests stage (code review: no, no trigger)
+- next step: merge train for PR 182, then resurvey, then watch the first deploy
 - open questions: none
 - frozen on: factory 2.12.2
 - ADR number assigned: none (architect found no one-way door; 0023 released)

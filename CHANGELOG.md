@@ -2,6 +2,23 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.12.2 (#143)
+
+Release: `2.12.2`, a **patch** release: `/factory:setup` now asks whether to enable the Obeya. The standard fingerprint is unchanged; the tooling fingerprint moves. No migration.
+
+Issue [#143](https://github.com/WimSuenens/agent-plugins/issues/143). Cause: `setup-factory-skill` never mentioned the Obeya, and a repo already at `factory-state: 2` was reported `already migrated`, so it never got the `## Obeya` section or learned that the opt-in exists.
+
+**What changed for the person who runs the factory:**
+
+- **Setup asks.** New step 8d asks "Enable the Obeya?" (yes or no, default no) and writes `obeya: on` or `obeya: off`. No answer, no write.
+- **Existing repos are asked too**, including `already migrated` ones. A repo that already has an `obeya:` line keeps it, and a re-run changes nothing.
+- **The `/factory:obeya` refusal** now also points to `/factory:setup`.
+- New script `scripts/obeya-optin.sh` (`status`, `set <on|off> [--replace]`) does the write.
+
+**Tests.** `tests/factory/test_obeya_optin.sh` (new repo, existing repo without the section, idempotent re-run, refusal text, skill text). The version pins move to 2.12.2.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `14cb8e842c591bfd3cea6c914b228ef4280389b4f0a8d31d787910e535152f1a`, tooling `bb3846aba3d5a84eb0993c5888e697b0e1ac16b241822902dba7b7426327eaaf`.
+
 ## factory 2.12.1 (#141)
 
 Release: `2.12.1`, a **patch** release: `role-knowledge.sh migrate` no longer copies other projects' notes into the repo. The standard fingerprint is unchanged; the tooling fingerprint moves. No migration.

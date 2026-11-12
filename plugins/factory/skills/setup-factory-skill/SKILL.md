@@ -70,7 +70,7 @@ When an existing `docs/agents/factory.md` has a `## Role models` table, show its
 The factory tracks status in a GitHub Project: a single-select `Factory status` field with six options, the `Kind` (map, slice, role task, frontier ticket, idea) and `Role` fields, five text fields for the numbers, and two views. `${CLAUDE_PLUGIN_ROOT}/scripts/board.sh` makes every call; it asks no question, so every question below is yours, and the answer reaches the script as a flag. Run `gh auth status`; when the token lacks the `project` scope, ask the user to run `gh auth refresh -s project` and wait.
 
 1. List the owner's projects: `gh project list --owner <owner> --format json` (it also gives each project's id). Ask the user to pick one or to create a new one (`gh project create --owner <owner> --title "<repo> factory"`), then link it to the repo: `gh project link <number> --owner <owner> --repo <owner>/<repo>`.
-2. **Plan.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/board.sh" plan --owner <owner> --project <number> --project-id <id>`. It reads the board and prints the status mapping, the item counts and the snapshot file it would write; it changes nothing. On `already migrated`, say so and stop: nothing else changes.
+2. **Plan.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/board.sh" plan --owner <owner> --project <number> --project-id <id>`. It reads the board and prints the status mapping, the item counts and the snapshot file it would write; it changes nothing. On `already migrated`, say so, skip the rest of this step (the board is done) and go on to step 8: nothing on the board changes.
 3. **Show the lines to the person and ask one question: apply this?** The mapping the script prints is:
 
    | Old value | Becomes |
@@ -123,6 +123,18 @@ Each role keeps its project rules and knowledge in the project: `docs/agents/rol
 Older versions kept role memory in user scope (`~/.claude/agent-memory/`). User scope is shared by every project the person runs the factory in, so its notes are not all about this project. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/role-knowledge.sh" migrate`: it only lists the candidate notes (`candidate <dir>/<file> (<first line>)`) and writes nothing. Show the person the list and ask which notes belong to this project; default to none. Copy only those with `migrate --select <dir>/<file>[,...]` (repeatable); it puts them in that role's file under `## Migrated memory`, once. Use `--all` only when the person says every note belongs to this project. Show what was copied, and ask whether to remove the user-scope copies of the migrated notes. Only a clear yes (the word `yes`) leads to the same command with `--remove-source` added; it removes only migrated notes, never an unselected one. On anything else leave them. Tell the person to move any remaining personal preferences by hand and nothing else. Commit the role files.
 
 **Done when** the eight role files exist, the notes the person selected are migrated, and the person has answered the removal question.
+
+### 8d. Ask about the Obeya
+
+The Obeya is an opt-in, read-only browser view of the project (`/factory:obeya`). It is on only when `docs/agents/factory.md` has the line `obeya: on`, so a repo set up before it existed has no way to learn that the choice is there. Run this step on every run, also on a repo reported `already migrated`.
+
+1. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/obeya-optin.sh" status`. It prints `on`, `off` or `unanswered`.
+2. **`on` or `off` and the repo already existed**: the person answered before. Say what the line is and change nothing; do not ask again.
+3. **`unanswered`**: ask one question: "Enable the Obeya? It is a read-only browser view of this project that runs in a container on loopback. yes or no, default no." Only the word `yes` or the word `no` is an answer; no answer, no write. On silence, a timeout or anything else, run nothing and do not ask again unprompted.
+4. **`off` in a `docs/agents/factory.md` that step 5 copied from the template in this run**: the template's line is not an answer. Ask the same question.
+5. Write the answer: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/obeya-optin.sh" set on` (yes) or `set off` (no). Add `--replace` only in case 4, to overwrite the template's `obeya: off`. The script adds the `## Obeya` section when it is missing and reports `already answered: <v>` and changes nothing when the line is there. Commit a changed `docs/agents/factory.md` on main.
+
+**Done when** the person has answered yes or no and `status` prints `on` or `off`, or the person gave no answer and the file is as it was.
 
 ### 9. Add the pointer
 

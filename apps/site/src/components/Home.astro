@@ -1,0 +1,16 @@
+---
+import Base from "../layouts/Base.astro";
+import { ui } from "../i18n/ui.mjs";
+import { url } from "../lib/url.mjs";
+const { lang } = Astro.props;
+const t = ui[lang];
+---
+<Base lang={lang} title={t.title} dutchHome={lang === "nl"} alternates>
+  <h1>{t.title}</h1>
+  <p class="lede">{t.lede}</p>
+  <h2>{t.whatH}</h2>
+  <p>{t.whatP}</p>
+  <h2>{t.referenceH}</h2>
+  <p>{t.referenceP}</p>
+  <p><a href={url("reference/")} hreflang={lang === "nl" ? "en" : undefined}>{t.referenceLink}</a></p>
+</Base>

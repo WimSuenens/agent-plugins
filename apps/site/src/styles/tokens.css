@@ -1,0 +1,37 @@
+:root {
+  color-scheme: light;
+
+  --color-bg: #fbf8f2;
+  --color-text: #2b2520;
+  --color-muted: #5a5148;
+  --color-link: #8a2f10;
+  --color-link-visited: #5e2f78;
+  --color-link-hover: #5c1d08;
+  --color-rule: #8c8276;
+  --color-rule-soft: #cfc6b8;
+  --color-code-bg: #efe9dd;
+  --color-focus: #0b4a9e;
+  --color-skip-bg: #2b2520;
+  --color-skip-text: #fbf8f2;
+  --color-current-bg: #2b2520;
+  --color-current-text: #fbf8f2;
+
+  --font-serif: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --size-base: 1.125rem;
+  --size-small: 0.9375rem;
+  --size-h1: 2.25rem;
+  --size-h2: 1.5rem;
+  --size-h3: 1.2rem;
+  --line-height: 1.6;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+
+  --measure: 70ch;
+}

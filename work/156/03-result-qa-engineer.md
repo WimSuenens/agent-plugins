@@ -20,3 +20,5 @@ Missing: none
 
 ## Note: serialised builds (lead request)
 tests/site/lib.mjs now wraps every `npm` run in a cross-process lock (atomic mkdir in the OS temp dir, stale after 15 minutes), so parallel test files no longer clobber the shared apps/site/.astro. No `--test-concurrency` flag is needed. Verified with `node --test tests/site/*.test.mjs`: no .astro clobber errors appear. The suite is not green yet for two other reasons: the real-plugins build fails on invalid YAML in plugins/factory/skills/obeya/SKILL.md (and a second source; owner's question), and .github/workflows/site.yml does not exist yet (devops). Result of that run: 82 tests, 12 pass, 69 fail, all traced to those two causes.
+
+Note: workflow.test.mjs pinned-actions test now derives its minimum from the contract's four named actions (checkout, setup-node, upload-pages-artifact, deploy-pages) instead of a bare count of 5.

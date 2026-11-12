@@ -86,7 +86,10 @@ test("AC-26 concurrency group is per ref and a deploy in flight on main is not c
 test("AC-26 every action is pinned by a 40-hex commit sha with a version comment", () => {
   const raw = fs.readFileSync(FILE, "utf8");
   const uses = [...raw.matchAll(/^\s*-?\s*uses:\s*(\S+)(.*)$/gm)];
-  assert.ok(uses.length >= 5);
+  // The contract names exactly these four actions (156-deploy-workflow s1).
+  const CONTRACT_ACTIONS = ["actions/checkout", "actions/setup-node", "actions/upload-pages-artifact", "actions/deploy-pages"];
+  for (const a of CONTRACT_ACTIONS) assert.ok(uses.some(([, ref]) => ref.startsWith(a + "@")), `${a} used`);
+  assert.ok(uses.length >= CONTRACT_ACTIONS.length);
   for (const [, ref, rest] of uses) {
     assert.match(ref, /@[0-9a-f]{40}$/, `${ref} not pinned by sha`);
     assert.match(rest, /#\s*v?\d/, `${ref} lacks a version comment`);

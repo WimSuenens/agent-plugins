@@ -214,6 +214,60 @@ The contract-by-contract reference and the steps for changing the factory are in
 
 ---
 
+## Documentation site
+
+The documentation site is in `apps/site/` (Astro, static output). It is published to GitHub Pages at https://wimsuenens.github.io/agent-plugins/.
+
+This is the skeleton. It has three pages: the English Home (`/agent-plugins/`), the Dutch Home (`/agent-plugins/nl/`, an agent draft awaiting the owner's review) and the Reference (`/agent-plugins/reference/`), which is generated at build time from every `plugins/*/skills/*/SKILL.md`. The wiki navigation and the content pages come next. The language switcher in the top bar remembers the chosen language in the browser; it is the only script on the site.
+
+### Build and run it locally
+
+Needs Node 22 or later (the deploy workflow uses 22).
+
+```bash
+cd apps/site
+npm ci
+npx playwright install chromium   # once; the accessibility check drives Chromium
+npm run build                     # Astro build, then the accessibility check
+```
+
+`npm run build` writes the site to `apps/site/dist/`. It ends with `a11y: 3 pages checked, 0 violations` when every page passes; a failed check exits non-zero and fails the build.
+
+To look at the result, serve the build (the pages sit under `/agent-plugins/`):
+
+```bash
+npx astro preview
+```
+
+Open the address it prints, followed by `/agent-plugins/`. Stop it with `npx astro preview stop`.
+
+Three environment variables change the build. The defaults fit the repo:
+
+- `SITE_BASE`: the base path, default `/agent-plugins`. It must start with `/` and must not end with `/`; any other value fails the build and the error names the variable.
+- `SITE_OUT_DIR`: the output folder, default `dist` inside `apps/site/`. An absolute path works too.
+- `PLUGINS_DIR`: the folder the Reference reads skills from, default the repo's `plugins/`.
+
+A skill source with no `name` or no `description`, or with invalid frontmatter, fails the build and the error names its file.
+
+### Tests
+
+```bash
+cd apps/site && npm test                       # the site's unit tests
+cd ../.. && node --test tests/site/*.test.mjs  # the acceptance suite, from the repo root
+```
+
+The acceptance suite needs the steps above first (`npm ci` and the Chromium install). Its actionlint check is skipped unless the `actionlint` binary is installed.
+
+### Deploy
+
+The workflow `site` (`.github/workflows/site.yml`) runs when a push or a pull request touches `apps/site/`, `plugins/` or the workflow file, and on a manual run from the Actions tab (`workflow_dispatch`). Every run installs, runs the unit tests and builds with the accessibility check. Only a run on `main` deploys: a push to `main` publishes the build to the `github-pages` environment. Pull requests build and check but never deploy. A failed check fails the build, so nothing deploys.
+
+Pages must use GitHub Actions as its source (repository Settings, then Pages), and the `github-pages` environment must accept `main`. A change to a SKILL.md under `plugins/` reaches the Reference on the next push to `main`.
+
+The first deploy from `main` has not run yet. Until that run is green and the three URLs answer with 200, this section describes the workflow, not a verified deployment.
+
+---
+
 ## Deploy
 
 ### 1. Push this directory to a public GitHub repo

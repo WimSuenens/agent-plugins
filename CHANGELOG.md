@@ -2,6 +2,21 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.13.0 (#168)
+
+Release: `2.13.0`, a **minor** release: standard work changed (slice [#168](https://github.com/WimSuenens/agent-plugins/issues/168), [contract 168](contracts/168-skill-frontmatter.md)). The standard fingerprint changes; the tooling fingerprint does not. No migration.
+
+Issue [#168](https://github.com/WimSuenens/agent-plugins/issues/168). Cause: the `description` of the `obeya` and `run` skills held an unquoted `: `, which a strict YAML parser reads as a second key and rejects. The build of [#156](https://github.com/WimSuenens/agent-plugins/issues/156) found it.
+
+**What changed for the person who runs the factory:**
+
+- **Nothing you see changes.** Both skill descriptions read the same as before; only their YAML syntax changed, each value is now wrapped in double quotes. No description text changed.
+- **Every skill parses strictly.** All 18 `SKILL.md` files now read with a strict YAML parser, so the reference generator ([#149](https://github.com/WimSuenens/agent-plugins/issues/149)) can read every skill.
+
+**Tests.** `tests/factory/test_skill_frontmatter.sh` (new: parses every skill's frontmatter with a strict YAML parser and compares the two fixed descriptions with their text before the change). The version pins move to 2.13.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `c5c1c349e18545a0f4c3b9443759c0e14da71db96fe654be689ca6e7eb60954e`, tooling `bb3846aba3d5a84eb0993c5888e697b0e1ac16b241822902dba7b7426327eaaf`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.12.2 (#143)
 
 Release: `2.12.2`, a **patch** release: `/factory:setup` now asks whether to enable the Obeya. The standard fingerprint is unchanged; the tooling fingerprint moves. No migration.

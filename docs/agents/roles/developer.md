@@ -7,6 +7,8 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 ## Knowledge
 
+- apps/site (Astro 7): when `outDir` lies outside the cwd, Astro writes its prerender temp files to `apps/site/.astro/`, so two builds at once clobber each other; run the site tests with `--test-concurrency=1`. Inline scripts need `is:inline`; `build.inlineStylesheets: "never"` keeps a real `.css` reference. Real `SKILL.md` frontmatter can be invalid YAML (unquoted `: ` in a description); the generator fails on it by contract.
+
 ## Skills used
 
 ## Migrated memory

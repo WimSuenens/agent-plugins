@@ -1,0 +1,16 @@
+---
+import { url } from "../lib/url.mjs";
+import { ui } from "../i18n/ui.mjs";
+import LangSwitcher from "./LangSwitcher.astro";
+const { lang, dutchHome = false } = Astro.props;
+const t = ui[lang];
+---
+<header data-test="topbar">
+  <div class="page">
+    <a class="site-name" href={dutchHome ? url("nl/") : url("")}>{t.siteName}</a>
+    <nav aria-label={t.mainNav}>
+      <a href={url("reference/")} hreflang={dutchHome ? "en" : undefined}>{t.referenceNav}</a>
+    </nav>
+    <div class="lang"><LangSwitcher lang={lang} /></div>
+  </div>
+</header>

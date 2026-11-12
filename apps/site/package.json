@@ -1,0 +1,23 @@
+{
+  "name": "agent-plugins-site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:site": "astro build",
+    "build": "astro build && node scripts/a11y-check.mjs --dist ${SITE_OUT_DIR:-dist}",
+    "check:a11y": "node scripts/a11y-check.mjs --dist ${SITE_OUT_DIR:-dist}",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.4.11",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "playwright": "^1.65.0"
+  }
+}

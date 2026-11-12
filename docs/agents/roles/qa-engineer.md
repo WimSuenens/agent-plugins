@@ -19,7 +19,7 @@ metadata:
   type: feedback
 ---
 
-When another role (developer) may have uncommitted changes in the same item worktree, verify on the committed build: `git worktree add --detach <scratchpad>/wt-qa HEAD`, copy only QA's changed test files in, run `dotnet test` there (set env vars like `Harness__WelpenRoot` explicitly, since sibling-path discovery breaks outside the usual layout), then `git worktree remove --force` + `prune`.
+When another role (developer) may have uncommitted changes in the same item worktree, verify on the committed build: `git worktree add --detach <scratchpad>/wt-qa HEAD`, copy only QA's changed test files in, run the test suite there (set any env vars the suite needs explicitly, since sibling-path discovery breaks outside the usual layout), then `git worktree remove --force` + `prune`.
 
 **Why:** the lead warned mid-task that the developer was building the next iteration in the same worktree; a run there tests a moving target and the verdict would not match any commit.
 
@@ -52,11 +52,11 @@ metadata:
   type: feedback
 ---
 
-When a brief requires "the test suite passes" but QA finds defects, write the reproducing test, run it once to confirm it fails, then mark it `Skip = "QA-<id> finding Fn: <actual vs expected>; <owner> fix"`. The verdict (block) lives in the review, not in a red suite. Re-verifying a fix = removing the Skip.
+When a brief requires "the test suite passes" but QA finds defects, write the reproducing test, run it once to confirm it fails, then mark it skipped with the runner's skip mechanism and a reason such as `QA-<id> finding Fn: <actual vs expected>; <owner> fix`. The verdict (block) lives in the review, not in a red suite. Re-verifying a fix = removing the Skip.
 
 **Why:** factory briefs list both "suite passes" and "verdict given"; the developer used the same convention for a known failure, and it keeps the defect reproducible without breaking other roles' runs.
 
-**How to apply:** any factory QA item. Also: probe the criterion's *own literal fixture* (e.g. "panel filled edge to edge with one colour") — it found a real normaliser defect a friendlier fixture hid. And check unknown-field handling on JSON APIs: System.Text.Json ignores extra fields, so "a request carrying X is refused" usually fails. Use word boundaries when grepping code for banned names ("separatorchar" contains "torch").
+**How to apply:** any factory QA item. Also: probe the criterion's *own literal fixture* (e.g. "panel filled edge to edge with one colour") — it found a real normaliser defect a friendlier fixture hid. Use word boundaries when grepping code for banned names ("separatorchar" contains "torch").
 
 When the fix lands, turn the `if … else skip` into a plain check and mutation-check it: copy the plugin to a scratch dir, put the pre-fix file back (`git show <fix>^:<path>`), and run the suite against it (for example with a `FACTORY_ROOT`-style override). Tests that pass on both versions prove nothing. Example: macOS `mktemp` with no template ignores `$TMPDIR`, so a "no temp file left behind" test that sets TMPDIR passes even with the trap removed.
 
@@ -72,7 +72,7 @@ metadata:
 
 Never kill a process found by `lsof -ti:<port>` without first checking its command line is one I started. Harnesses that spawn servers (API, web dev server) must take OS-assigned free ports (`net.createServer().listen(0, '127.0.0.1')`) and bind and fetch 127.0.0.1, not `localhost`.
 
-**Why:** in a factory QA round I hard-coded port 5190 for a Vite web server. An unrelated user app (dotnet) already held 127.0.0.1:5190. Vite bound ::1 and my fetches to `localhost` hit the other app, which gave false screen failures. Then I "cleaned up" the port and killed the user's app.
+**Why:** in a factory QA round I hard-coded port 5190 for a Vite web server. An unrelated user app already held 127.0.0.1:5190. Vite bound ::1 and my fetches to `localhost` hit the other app, which gave false screen failures. Then I "cleaned up" the port and killed the user's app.
 
 **How to apply:** any suite that starts services. Make after-hooks robust (each cleanup step in its own try, stop servers before anything that can throw), or orphans keep ports busy. Related: [[verify-in-clean-checkout]].
 

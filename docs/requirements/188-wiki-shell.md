@@ -155,7 +155,7 @@ then 156 AC-19 to AC-23 hold for the new components: tokens only (no colour lite
 **AC-25 The tree, contents and see-also read well in a single reading column.**
 Given a laptop-width viewport (1280px) and a phone-width viewport (320px),
 when a page is shown,
-then the main text stays one column of about 70 characters (156 AC-19); from 48rem viewport width the tree is a column beside the reading column, and below 48rem it does not push the text beyond what a collapsed tree needs; the order in the source is: skip link, top bar, navigation tree, `main` (breadcrumb, `h1`, text, see-also), with the contents list reachable in a logical order; the skip link is first and, when activated, moves focus past the tree into `main`.
+then the main text stays one column of about 70 characters (156 AC-19); from 48rem viewport width the tree is a column beside the reading column, and below 48rem the tree is always open and in the flow, above `main`, with no `details` element and no script; the order in the source is: skip link, top bar, navigation tree, `main` (breadcrumb, `h1`, text, see-also), with the contents list reachable in a logical order; the skip link is first and, when activated, moves focus past the tree into `main`.
 
 **AC-26 The accessibility check covers the new pages and landmarks.**
 Given the built site,
@@ -216,7 +216,7 @@ Beyond the frame, left to later slices: a Dutch Reference, credits for the upstr
 ## Open questions
 
 1. Reference in Dutch: the page stays English in this slice and the Dutch tree links to it (AC-5, Decisions). Whether a later slice gives Dutch visitors a Dutch shell is the architect's to propose; AC-5, AC-15 and AC-16 are the ones that would change. Owner: architect.
-2. Tree presentation on a phone (always open, collapsible with `details`/`summary`, or a menu button without script): AC-8 holds for any of them. Owner: architect.
+2. Tree presentation on a phone: answered by the architect, always open and in the flow above `main` below 48rem, with no `details` and no script (contracts/188-wiki-components.md, the phone presentation bullet). AC-25 is worded to match; AC-8 holds for any presentation.
 3. Where the page tree lives (one data file, or content front matter collected at build): AC-1, AC-2 and AC-4 hold for either, as long as adding a page is one edit. Owner: architect.
 4. Which accessibility rules the check adds for landmark names (AC-27); the check tool is already decided in 156. Owner: architect.
 5. Whether Home also shows the draft notice until the owner marks it reviewed (AC-21 says so when its status is `draft`). Owner: the owner, via the slice review; the default is `draft` for both Dutch pages.

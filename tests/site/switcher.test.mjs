@@ -1,9 +1,9 @@
-// AC-6 to AC-11: remembered language switcher in a real browser. Storage key `site-lang` (contract 156-site-skeleton s5).
+// AC-6 to AC-11 (156) and AC-14, AC-15, AC-17 (188): remembered language switcher in a real browser. Storage key `site-lang` (contract 156-site-skeleton s5).
 import { test, before, after, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { BASE, realBuild, serve, launch, htmlFiles } from "./lib.mjs";
+import { BASE, ROUTES, realBuild, serve, launch, htmlFiles } from "./lib.mjs";
 
 const KEY = "site-lang";
 let dist, srv, browser, ctx, page, navs;
@@ -208,7 +208,7 @@ test("AC-10 proxy: with no stored choice the root is visible at once", async () 
   assert.deepEqual(v, [false, "visible"]);
 });
 
-for (const route of [`${BASE}/`, `${BASE}/nl/`, `${BASE}/reference/`]) {
+for (const route of ROUTES) {
   test(`AC-11 320px wide, ${route}: no horizontal scroll, top bar items visible, inside the viewport, not overlapping`, async () => {
     await page.setViewportSize({ width: 320, height: 640 });
     await go(route);
@@ -226,6 +226,7 @@ for (const route of [`${BASE}/`, `${BASE}/nl/`, `${BASE}/reference/`]) {
     });
     assert.ok(m.docW <= m.vw && m.bodyW <= m.vw, `document ${m.docW}/${m.bodyW} wider than viewport ${m.vw}`);
     assert.ok(m.items.length >= 4, "site name, Reference and two switcher options");
+    if (route.startsWith(`${BASE}/nl/`)) assert.ok(m.items.some((i) => i.text === "Reference"), "Dutch pages show the English label Reference (188)");
     for (const i of m.items) {
       assert.ok(i.visible && i.w > 0 && i.h > 0, `${i.text} visible`);
       assert.ok(i.x >= -0.5 && i.r <= m.vw + 0.5, `${i.text} inside the viewport (${i.x}..${i.r})`);
@@ -238,3 +239,67 @@ for (const route of [`${BASE}/`, `${BASE}/nl/`, `${BASE}/reference/`]) {
     }
   });
 }
+
+// ---------- 188: counterpart, Home fallback, direct links ----------
+test("AC-14 Getting started: choosing the other language lands on the counterpart, stores the choice, and the marking follows", async () => {
+  await go(`${BASE}/getting-started/`);
+  await page.click("nav[data-lang-switcher] a[data-lang=nl]");
+  await page.waitForURL(`**${BASE}/nl/getting-started/`);
+  await settle();
+  assert.equal(pathname(), `${BASE}/nl/getting-started/`);
+  assert.equal(await stored(), "nl");
+  assert.equal(await page.evaluate(() => document.documentElement.lang), "nl");
+  assert.equal(await page.evaluate(() => document.querySelector("nav[data-lang-switcher] a[aria-current=true]").dataset.lang), "nl");
+  await page.click("nav[data-lang-switcher] a[data-lang=en]");
+  await page.waitForURL((u) => u.pathname === `${BASE}/getting-started/`);
+  await settle();
+  assert.equal(pathname(), `${BASE}/getting-started/`, "an explicit English choice stays English (no redirect back)");
+  assert.equal(await stored(), "en");
+  assert.equal(await page.evaluate(() => document.querySelector("nav[data-lang-switcher] a[aria-current=true]").dataset.lang), "en");
+});
+
+test("AC-14 Home and Getting started each lead to the counterpart with the keyboard too", async () => {
+  await go(`${BASE}/nl/getting-started/`);
+  await page.focus("nav[data-lang-switcher] a[data-lang=en]");
+  await page.keyboard.press("Enter");
+  await page.waitForURL((u) => u.pathname === `${BASE}/getting-started/`);
+  assert.equal(await stored(), "en");
+});
+
+test("AC-15 a page with no Dutch counterpart (the English Reference) sends Dutch to the Dutch Home, never a 404; the Dutch Reference link is the English page", async () => {
+  await go(`${BASE}/reference/`);
+  await page.click("nav[data-lang-switcher] a[data-lang=nl]");
+  await page.waitForURL(`**${BASE}/nl/`);
+  assert.equal(pathname(), `${BASE}/nl/`);
+  assert.equal((await fetch(srv.origin + `${BASE}/nl/reference/`)).status, 404, "there is no Dutch Reference page for the switcher to find");
+  for (const nlRoute of [`${BASE}/nl/`, `${BASE}/nl/getting-started/`]) {
+    await go(nlRoute);
+    const links = await page.evaluate(() => [...document.querySelectorAll("header[data-test=topbar] a[href$='/reference/'], nav[data-nav=pages] a[href$='/reference/']")].map((a) => [a.textContent.trim(), a.getAttribute("lang"), a.getAttribute("hreflang")]));
+    assert.ok(links.length >= 2, `${nlRoute}: Reference in the top bar and in the tree`);
+    for (const l of links) assert.deepEqual(l, ["Reference", "en", "en"], `${nlRoute}: the Dutch Reference link is labelled Reference with lang and hreflang en`);
+  }
+});
+
+test("AC-17 stored nl: Getting started opened directly is shown as requested, with no redirect; the redirect stays at the English Home", async () => {
+  await go(`${BASE}/nl/`);
+  await setStored("nl");
+  navs.length = 0;
+  await go(`${BASE}/getting-started/`);
+  await settle();
+  assert.equal(pathname(), `${BASE}/getting-started/`);
+  assert.equal(navs.length, 1, `navigations: ${navs}`);
+  assert.equal(await page.evaluate(() => document.documentElement.lang), "en");
+  navs.length = 0;
+  await go(`${BASE}/`);
+  await page.waitForURL(`**${BASE}/nl/`);
+});
+
+test("AC-17 a first visit to Getting started stores nothing and the page is English", async () => {
+  await go(`${BASE}/getting-started/`);
+  await settle();
+  assert.equal(await page.evaluate(() => localStorage.length), 0);
+  await go(`${BASE}/nl/getting-started/`);
+  await settle();
+  assert.equal(await page.evaluate(() => localStorage.length), 0);
+  assert.equal(pathname(), `${BASE}/nl/getting-started/`);
+});

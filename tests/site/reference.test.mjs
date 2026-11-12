@@ -226,8 +226,12 @@ test("AC-18 breadcrumb back to Home and an on-page contents list that jumps to e
     assert.equal(crumb.items[1].text, "Reference");
     assert.equal(crumb.items[1].cur, "page");
     const plugins = [...new Set(skillSources().map((s) => s.plugin))].sort(cmp);
-    const toc = await page.evaluate(() => [...document.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute("href")));
-    assert.deepEqual(toc, plugins.map((p) => `#${p}`), "one contents link per plugin, alphabetical");
+    const toc = await page.evaluate(() => [...document.querySelectorAll('nav[aria-label="On this page"] > ol > li > a, nav[aria-label="On this page"] > ul > li > a')].map((a) => a.getAttribute("href")));
+    assert.deepEqual(toc, plugins.map((p) => `#${p}`), "one top-level contents link per plugin, alphabetical (the skills are nested h3 entries since 188)");
+    const nested = await page.evaluate(() => [...document.querySelectorAll('nav[aria-label="On this page"] li li > a')].map((a) => a.getAttribute("href")));
+    const wantNested = skillSources().map((s) => `#${s.plugin}-${parseFrontmatter(s.file).name}`).sort(cmp);
+    assert.deepEqual([...nested].sort(cmp), wantNested, "one nested contents link per skill, from the generator's output (188 AC-12)");
+    for (const id of [...plugins, ...wantNested.map((h) => h.slice(1))]) assert.ok(await page.evaluate((i) => !!document.getElementById(i), id), `${id} exists on the page`);
     for (const p of plugins) {
       await page.click(`nav[aria-label="On this page"] a[href="#${p}"]`);
       assert.equal(new URL(page.url()).hash, `#${p}`);
@@ -238,4 +242,40 @@ test("AC-18 breadcrumb back to Home and an on-page contents list that jumps to e
       assert.equal(h.n, skillSources().filter((s) => s.plugin === p).length, `${p} group holds its skills`);
     }
   } finally { await ctx.close(); await srv.close(); }
+});
+
+// ---------- 188 AC-12: the generated Reference needs no hand-kept list anywhere ----------
+test("AC-12 a skill under a plugin with no skills yet adds its group to the Reference contents list on rebuild, touching only that plugin folder; the tree and the breadcrumb do not change", async () => {
+  const plugins = path.join(scratch("plugins-newgroup-"), "plugins");
+  fs.cpSync(path.join(REPO, "plugins"), plugins, { recursive: true });
+  fs.mkdirSync(path.join(plugins, "zz-newgroup", "skills", "hello"), { recursive: true });
+  fs.writeFileSync(path.join(plugins, "zz-newgroup", "skills", "hello", "SKILL.md"), "---\nname: hello\ndescription: A skill of a new plugin group.\n---\n\nBody.\n");
+  const real = realBuild();
+  const b = buildSite({ plugins });
+  assert.equal(b.status, 0, b.out.slice(-1500));
+  const read = async (dist) => {
+    const srv = await serve(dist);
+    const ctx = await browser.newContext();
+    try {
+      const page = await ctx.newPage();
+      await page.goto(srv.origin + `${BASE}/reference/`);
+      return await page.evaluate(() => {
+        const t = (e) => e.textContent.trim().replace(/\s+/g, " ");
+        return {
+          contents: [...document.querySelectorAll('nav[aria-label="On this page"] a')].map((a) => a.getAttribute("href")),
+          tree: [...document.querySelectorAll("nav[data-nav=pages] a")].map((a) => [t(a), a.getAttribute("href"), a.getAttribute("aria-current")]),
+          crumb: [...document.querySelectorAll("nav[data-nav=breadcrumb] li")].map(t),
+          h2: document.getElementById("zz-newgroup")?.tagName ?? null,
+          h3: document.getElementById("zz-newgroup-hello")?.tagName ?? null,
+        };
+      });
+    } finally { await ctx.close(); await srv.close(); }
+  };
+  const [before, after] = [await read(real), await read(b.dist)];
+  assert.ok(!before.contents.includes("#zz-newgroup"));
+  assert.ok(after.contents.includes("#zz-newgroup") && after.contents.includes("#zz-newgroup-hello"), "the new group and its skill are in the contents list");
+  assert.deepEqual([after.h2, after.h3], ["H2", "H3"], "the heading ids work");
+  assert.deepEqual(after.tree, before.tree, "the navigation tree lists the page, not its skills");
+  assert.deepEqual(after.crumb, before.crumb);
+  assert.equal(after.contents.length, before.contents.length + 2);
 });

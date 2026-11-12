@@ -2,7 +2,7 @@
 export const ui = {
   en: {
     siteName: "Agent plugins",
-    title: "Agent plugins",
+    title: "Agent plugins - Home",
     lede: "Agents do the work; you decide only what can't be undone.",
     skip: "Skip to content",
     mainNav: "Main",
@@ -18,7 +18,7 @@ export const ui = {
   },
   nl: {
     siteName: "Agent plugins",
-    title: "Agent plugins",
+    title: "Agent plugins - Thuis",
     lede: "Agenten doen het werk; jij beslist alleen over wat niet terug te draaien is.",
     skip: "Naar de inhoud",
     mainNav: "Hoofdmenu",

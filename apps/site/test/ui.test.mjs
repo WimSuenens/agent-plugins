@@ -10,3 +10,10 @@ test("en and nl have the same keys, all non-empty", () => {
 test("page titles differ per language", () => {
   assert.notEqual(ui.en.title, ui.nl.title);
 });
+
+test("the visible heading is separate from the document title", () => {
+  for (const lang of ["en", "nl"]) {
+    assert.equal(ui[lang].heading, "Agent plugins");
+    assert.notEqual(ui[lang].heading, ui[lang].title);
+  }
+});

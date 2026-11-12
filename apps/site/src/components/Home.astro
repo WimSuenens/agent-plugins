@@ -6,7 +6,7 @@ const { lang } = Astro.props;
 const t = ui[lang];
 ---
 <Base lang={lang} title={t.title} dutchHome={lang === "nl"} alternates>
-  <h1>{t.title}</h1>
+  <h1>{t.heading}</h1>
   <p class="lede">{t.lede}</p>
   <h2>{t.whatH}</h2>
   <p>{t.whatP}</p>

@@ -1,0 +1,4 @@
+# Question: developer — 156
+Question: tests/site/*.test.mjs run in parallel under `node --test tests/site/*.test.mjs`, and each file builds the site into its own scratch SITE_OUT_DIR. Astro writes its prerender temp files to apps/site/.astro/ whenever the output folder is outside apps/site, so concurrent builds clobber each other and many tests fail with "Cannot find module .../.astro/.prerender/chunks/...". With `--test-concurrency=1` the same suite passes. Can QA make the suite serial (a note in the documented command, or a package-level setting), or serialise realBuild/buildSite?
+Options: A QA documents and uses `node --test --test-concurrency=1 tests/site/*.test.mjs` / B QA serialises the builds inside tests/site/lib.mjs (file lock) / C the architect amends the contract so build:site takes a lock (a wrapper script around astro build; conflicts with the a11y test's regex on the build script).
+Leaning: A, the cheapest, nothing in the product changes.

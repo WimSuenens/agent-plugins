@@ -118,3 +118,21 @@ _Avoid_: suggestion, request, feature request (an idea may be none of these)
 
 **Inbox** — the local, gitignored folder `.claude/factory-inbox/` where a file is dropped to become an idea. At intake each file becomes one tracker issue and is then removed, so the folder never grows; a file the tracker cannot carry stays and is reported. A drop zone, not a store: the tracker holds the ideas.
 _Avoid_: queue, backlog (the backlog is the tracker's)
+
+**Obeya room** — the opt-in, read-only web application a project owner starts with one command to see the project's direction, decisions, board, andon and intake queue in one place. A lens over the project, not a store. See [0019](docs/adr/0019-the-obeya-is-a-lens-and-holds-no-truth.md), [0020](docs/adr/0020-the-obeya-is-a-nuxt-4-container-image-on-ghcr.md), [0021](docs/adr/0021-the-obeya-stays-read-only-until-write-back-and-its-auth-are-decided.md).
+_Avoid_: dashboard (it shows no number of its own and writes nothing)
+
+**Lens** — a view that reads the repo and the tracker and holds no truth of its own: edit the source and the view follows. The Obeya room is one.
+_Avoid_: report, store
+
+**Source (seam)** — the one internal interface through which the Obeya gets its read-model objects. v1's source reads the main checkout, the live worktrees and the tracker; an event-fed database can replace it without changing the UI.
+_Avoid_: backend, provider
+
+**Read model** — the language-neutral schemas of the objects the Obeya shows (item, decision, direction, andon, intake entry, parse-failure), each with a provenance. Types are generated from the schemas, which also validate at runtime.
+_Avoid_: database, API
+
+**Provenance** — the field on every read-model object that says where it came from: merged, in flight on a named item, or event. It tells the person how settled the artifact is.
+_Avoid_: origin, status (status is the board's field)
+
+**Theme** — a selectable presentation of the read model in the Obeya (Orbit, The Wall, Transit), remembered per browser. A theme only draws data and never computes it.
+_Avoid_: skin, dashboard

@@ -1,0 +1,22 @@
+{
+  "name": "obeya",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run check:types && nuxt build",
+    "gen:types": "node scripts/gen-types.mjs",
+    "check:types": "node scripts/gen-types.mjs --check",
+    "start": "node bin/start.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "commander": "^15.0.0",
+    "nuxt": "4.1.2",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "^15.0.4"
+  }
+}

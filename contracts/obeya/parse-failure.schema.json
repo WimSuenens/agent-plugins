@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ParseFailure",
+  "type": "object",
+  "properties": {
+    "path": {
+      "description": "The artifact that could not be read, in the source's own terms.",
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance": {
+      "$ref": "provenance.schema.json"
+    }
+  },
+  "required": [
+    "path",
+    "reason",
+    "provenance"
+  ],
+  "additionalProperties": false
+}

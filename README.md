@@ -68,6 +68,7 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 /wayfinding:setup-wayfinding-skill   once per repo (setup-factory-skill runs it if needed)
 /factory:setup-factory-skill         once per repo — GitHub trackers only for now
 /factory:run [idea | #map]           per destination; #map resumes
+/factory:obeya [start | stop]        the Obeya view, once opted in (below)
 ```
 
 `/factory:run` is set to `disable-model-invocation: true`: you type it yourself, and a model cannot load it through the Skill tool. A session that has to start the lead without a typed command (a headless or scripted session) reads `plugins/factory/skills/run/SKILL.md` from the plugin root and follows it; everything in it that uses `${CLAUDE_PLUGIN_ROOT}` works from there. This is the working invocation when the skill "cannot be loaded by that name" (#85).
@@ -87,6 +88,21 @@ Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` e
 **Status of 1.0.0: the acceptance demo ran in a scratch project.** Every human-only criterion passed except AC-17, which failed there: lead time counted stalls and machine sleep as agent work. AC-17 was fixed in schema v2 (cut-off detection, measured from the transcripts). QA checked the fix by replaying the demo's own transcripts through the scripts and accepted AC-17 on that replay, without a demo re-run. The close step's live-session check is still open; see [CHANGELOG.md](CHANGELOG.md) under *1.0.0*, *Known limitations at release*. The design, what has been verified, and the extension points are in [docs/research/software-factory.md](docs/research/software-factory.md); the decisions are ADRs 0001–0016 in [docs/adr/](docs/adr/), each with the status line it carries there: 0006 is superseded by 0007, 0007 is amended by 0016, 0001 is partly replaced by 0014, and 0002 is amended by 0015.
 
 **Feedback goes to this repo's issues** with the `plugin:factory` label — use the *Factory feedback* template, or let `/factory:run` draft the issue at the end of an item. It posts only what you approve, and leaves your project's code and names out.
+
+### The Obeya (opt-in)
+
+The Obeya is a read-only browser view of a project's factory (ADR [0019](docs/adr/0019-the-obeya-is-a-lens-and-holds-no-truth.md)). A project that does not opt in is untouched. To opt in, add one line to `docs/agents/factory.md`: `obeya: on` (the template has `obeya: off` in a `## Obeya` section). Then:
+
+```
+/factory:obeya            starts it and prints http://127.0.0.1:4777; a second call stops it
+/factory:obeya --login-token
+```
+
+It needs Docker. The image `ghcr.io/wimsuenens/obeya:<version>` is pinned in `plugins/factory/obeya/compose.yml`; the project is mounted read-only at its own absolute path and the port is published on loopback only (`OBEYA_PORT` changes it). The documented token is a read-only GitHub token as `GH_TOKEN=<token>` in `~/.config/obeya/env` (or the file named by `OBEYA_ENV_FILE`); `--login-token` uses your own `gh auth token` and prints a warning that it is broader than needed. The token goes to the container through the environment and is never written to disk. Failures print one line naming what to fix: opt-in missing, Docker missing, no token, port in use, image not pullable. The release check `bash plugins/factory/scripts/obeya.sh check-pin` fails when the pinned tag is not in the registry.
+
+From 2.11.0 the Obeya also shows pending decisions (including cards in an in-flight worktree), open and resolved andon, and a "needs you" slot. To make that possible, a decision card file and an andon draft start with a small front matter block ([contract 130](contracts/130-obeya-pending-and-andon.md)); one that lacks it shows as a "could not parse" card.
+
+**Direction.** The Obeya shows the project's goal, current heading and history from `docs/direction.md` ([contract](contracts/129-obeya-direction.md)): front matter `goal:` and `current:`, then a `## History` list of `- YYYY-MM-DD: what changed` lines. The product-owner owns the file and updates it when intake triage decides an idea changes the direction (release 2.12.0). The Obeya only renders it; without the file it shows "No direction yet".
 
 ### The board, role tasks and parallel slices
 

@@ -2,6 +2,50 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.12.0 (#129)
+
+Release: `2.12.0`, a **minor** release: standard work changed (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#129](https://github.com/WimSuenens/agent-plugins/issues/129), [contract 129](contracts/129-obeya-direction.md)). No migration; a project without the file sees "No direction yet" in the Obeya.
+
+**What changed for the person who runs the factory:**
+
+- **A direction document.** `docs/direction.md` holds the project's goal, its current heading and a dated history of what changed the direction. It is owned by the product-owner (new ownership-table row, also in the setup template).
+- **Intake keeps it current.** When triage gives an idea the outcome *direction*, the product-owner updates the document in the same item (`current`, and one History line naming the idea). The standard text in `/factory:run` and the product-owner role say so.
+- **The Obeya shows it.** Goal, heading, history, source path and provenance chip; a copy that differs in an in-flight worktree is shown as in flight; a malformed file is a parse-failure card; a missing one is an empty state, not an error. The Obeya never writes the file. The `direction` schema gained `history`.
+
+**Tests.** `apps/obeya/test/direction.test.mjs` (API seam and render smoke). The version pins move to 2.12.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `14cb8e842c591bfd3cea6c914b228ef4280389b4f0a8d31d787910e535152f1a`, tooling `adefc78d4c7b1c2b83c864d9a23239e7ba24ec34a58cd3dc3446b511c7f2c39a`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
+**Code-review fixes on spec #121 (before release).** The Obeya image is `0.1.1` (package and compose pin together) and ships `gh`; `obeya.sh` passes the tracker owner and project number from `docs/agents/factory.md` to the container and names the compose project per project folder (`obeya-<hash>`), so stop and "already running" only see that project's container. The Obeya reads a decision card named `NN-decision-<slug>.md` (the producers' name) as well as `NN-decision-card-<role>.md`; a stale worktree copy no longer counts as in flight; an invalid `OBEYA_PROJECTS` or a duplicate id is a visible error. No standard text changed. The tooling fingerprint above is recomputed for the `obeya.sh` change.
+
+## factory 2.11.0 (#130)
+
+Release: `2.11.0`, a **minor** release: standard work changed (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#130](https://github.com/WimSuenens/agent-plugins/issues/130), contract [130-obeya-pending-and-andon](contracts/130-obeya-pending-and-andon.md)). A project that does not opt in to the Obeya is untouched.
+
+**What changed for the person who runs the factory:**
+
+- **Decision cards and andon files carry a front matter block.** The product-owner's card (`work/<id>/NN-decision-card-<role>.md`) starts with `door`, `asked`, `since` and `options`; the lead's andon draft (`NN-andon-lead.md`) starts with `andon`, `item`, `owner`, `status`, `reason`, `since` (and `countermeasure` once resolved). The block is not posted to the tracker. Text: `references/decision-card.md`, `skills/run/SKILL.md` (Andon, step 2).
+- **The Obeya shows what waits for you.** Pending decisions, including cards that exist only in an in-flight worktree, with door type, waiting time, options and provenance; open andon prominently with item and owner, resolved andon with the countermeasure; and a "needs you" slot that lists pending decisions and board items on `Waiting on you` together, newest wait last. A card or andon file that lacks or fails its front matter is a visible parse-failure card.
+
+**Tests.** `apps/obeya/test/pending.test.mjs` (API seam with a fixture project and a worktree, plus a render smoke test). The version pins move to 2.11.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-12: standard `0917434d64d2699b6f05a4a861ea1ce988b2d470fe59de84151d20e861f561e0`, tooling `2f9312d4b81b1562df2af15eb0b6e507d930865b75cf13defd6eef07642fada4`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
+## factory 2.10.0 (#125)
+
+Release: `2.10.0`, a **minor** release: the plugin shell of the Obeya (spec [#121](https://github.com/WimSuenens/agent-plugins/issues/121), slice [#125](https://github.com/WimSuenens/agent-plugins/issues/125)). A project that does not opt in is untouched.
+
+**What changed for the person who runs the factory:**
+
+- **`/factory:obeya`.** With `obeya: on` in `docs/agents/factory.md` (the setup template carries `obeya: off` in a `## Obeya` section), the command starts the Obeya in a container and prints `http://127.0.0.1:4777`; a second call stops it. Without the key it refuses in one line. Script: `scripts/obeya.sh`; compose file: `obeya/compose.yml`, pinned to the published app version.
+- **Read-only, loopback, no secret on disk.** The project is mounted read-only at its own absolute path, the port is published on `127.0.0.1` only, and the token travels through the environment: a read-only token from the untracked `~/.config/obeya/env` (documented path), or `--login-token` for your own `gh auth token` with a printed warning.
+- **One-line failures** for opt-in missing, Docker missing, no token, port in use and image not pullable.
+- **Release check.** `bash plugins/factory/scripts/obeya.sh check-pin` fails when the pinned image tag is not in the registry; it is step 5 of the runbook's release checks.
+
+**Tests.** `tests/factory/test_obeya_plugin.sh` covers all of the above with a stub `docker` (`tests/factory/stub-docker`) and a stub `gh`. The version pins move to 2.10.0.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-11: standard `2dfb9cd715b771e99ef16e2e51d65822726cac077a59dcc23720977d032cc0ad`, tooling `2f9312d4b81b1562df2af15eb0b6e507d930865b75cf13defd6eef07642fada4`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.9.0 (#114 to #119)
 
 Release: `2.9.0`, a **minor** release: six slices of the continuous factory (map [#108](https://github.com/WimSuenens/agent-plugins/issues/108)). The standard text and the tooling change, so both fingerprints change. No `factory-state` change. Restart Claude Code sessions after updating.

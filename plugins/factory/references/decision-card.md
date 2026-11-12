@@ -6,7 +6,17 @@ The reader is the **decision-maker** named in `docs/agents/factory.md`. At `non-
 
 ## Template
 
+The card file in `work/<id>/` is named `NN-decision-card-<role>.md` and starts with a front matter block, so the Obeya (a read-only browser view) does not have to guess. The block is not part of the posted card: strip it before posting.
+
 ```
+---
+door: one-way                  # one-way | two-way
+asked: decision-maker          # who is asked
+since: 2026-01-31T09:00:00Z    # when the card was written (UTC)
+options:                       # the option names, two or three, in the card's order
+  - <Option A name>
+  - <Option B name>
+---
 ## Decision: <one sentence in everyday words: what are we choosing?>
 
 **Why now:** <what stays stuck while this is open>
@@ -37,6 +47,8 @@ The reader is the **decision-maker** named in `docs/agents/factory.md`. At `non-
 - **Two or three options.** More than three goes back to the architect to narrow down.
 - **The recommendation is the product-owner's own pick**, with the architect's leaning noted when the two differ.
 - **"Undoing it later" is concrete.** It is what makes this a one-way door, so it carries the most weight: "about three weeks of rework across every screen", never "hard to reverse".
+
+- **The front matter is complete.** `door`, `asked`, `since` and at least two `options`. A card without it shows in the Obeya as a card that could not be read.
 
 ## After the choice
 

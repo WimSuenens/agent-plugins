@@ -1,0 +1,22 @@
+#!/bin/bash
+# A stub docker for the Obeya start/stop tests. State folder: $STUB_DOCKER_DIR (log = one line per call, running = marker).
+#   STUB_DOCKER_TAGS    space-separated image tags that exist in the registry (buildx imagetools inspect)
+#   STUB_DOCKER_NOIMAGE non-empty: compose pull fails
+# On `up` it records the GH_TOKEN it was given in $STUB_DOCKER_DIR/env.
+D="${STUB_DOCKER_DIR:-}"
+[ -n "$D" ] && echo "$*" >>"$D/log"
+all=" $* "
+# the compose project name (-p <name>), when given: running state is per project name
+name=""
+case "$all" in *" -p "*) name="${all#* -p }"; name="${name%% *}" ;; esac
+case "$all" in
+  *" imagetools inspect "*)
+    ref="${*: -1}"; tag="${ref##*:}"
+    case " ${STUB_DOCKER_TAGS:-} " in *" $tag "*) echo "Name: $ref"; exit 0 ;; esac
+    echo "ERROR: $ref: not found" >&2; exit 1 ;;
+  *" pull "*) [ -n "${STUB_DOCKER_NOIMAGE:-}" ] && { echo "pull access denied" >&2; exit 1; }; exit 0 ;;
+  *" up "*) echo "$name" >"$D/running"; { echo "GH_TOKEN=${GH_TOKEN-}"; echo "OBEYA_PROJECT_PATH=${OBEYA_PROJECT_PATH-}"; echo "OBEYA_PORT=${OBEYA_PORT-}"; echo "OBEYA_PROJECTS=${OBEYA_PROJECTS-}"; } >"$D/env"; exit 0 ;;
+  *" ps "*) [ -f "$D/running" ] && [ "$(cat "$D/running")" = "$name" ] && echo "stubcontainer"; exit 0 ;;
+  *" down "*) [ -f "$D/running" ] && [ "$(cat "$D/running")" = "$name" ] && rm -f "$D/running"; exit 0 ;;
+esac
+echo "stub docker: unknown call: $*" >&2; exit 99

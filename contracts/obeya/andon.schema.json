@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Andon",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "item": { "type": ["integer", "null"] },
+    "owner": { "type": ["string", "null"], "description": "The role or the lead that owns getting the line moving again." },
+    "reason": { "type": "string" },
+    "resolved": { "type": "boolean" },
+    "countermeasure": { "type": ["string", "null"], "description": "What was done about it; set on a resolved andon." },
+    "since": { "type": ["string", "null"], "description": "When the line was stopped (ISO 8601)." },
+    "ref": { "type": "string" },
+    "provenance": { "$ref": "provenance.schema.json" }
+  },
+  "required": ["id", "item", "owner", "reason", "resolved", "countermeasure", "since", "ref", "provenance"],
+  "additionalProperties": false
+}

@@ -20,7 +20,7 @@ Overrides replace a role's default model in this repo, one row per role: `| <rol
 
 | Path | Owner |
 |---|---|
-| `docs/requirements/` | product-owner |
+| `docs/requirements/`, `docs/direction.md` | product-owner |
 | `contracts/`, `docs/adr/` | architect |
 | `src/` | developer |
 | `tests/`, `reviews/qa-*` | qa-engineer |
@@ -55,6 +55,12 @@ An optional brake on one run, in tokens or hours: `run-budget: <N> tokens` or `r
 maintenance-budget: 10 candidates
 
 The most candidates one maintenance cycle may file: `maintenance-budget: <N> candidates`. Default 10 when the line is absent.
+
+## Obeya
+
+obeya: off
+
+Set `obeya: on` to opt in to the Obeya, a read-only browser view of this project. `/factory:obeya` then starts and stops it in a container on loopback; without `on` the command refuses. A project that does not opt in keeps the existing workflow untouched.
 
 ## Tracker
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # A small stateful gh for the idea-intake tests. State: $STUB_GH_DIR/issues.json (array), $STUB_GH_DIR/log (one line per call).
-# Knows: label create, issue list, issue create, issue comment, issue close, api user. Anything else exits 99.
+# Knows: label create, project item-list (answers $STUB_GH_DIR/project-items.json), issue list, issue create, issue comment, issue close, api user. Anything else exits 99.
 D="${STUB_GH_DIR:?}"
 [ -f "$D/issues.json" ] || echo '[]' >"$D/issues.json"
 echo "$*" >>"$D/log"
@@ -10,6 +10,7 @@ arg() { local k="$1" p=""; shift; for a in "$@"; do [ "$p" = "$k" ] && { printf 
 case "$1 $2" in
   "label create") exit 0 ;;
   "api user") echo "bot" ;;
+  "project item-list") if [ -f "$D/project-items.json" ]; then cat "$D/project-items.json"; else echo '{"items":[]}'; fi ;;
   "issue list")
     if [ "$(arg --state "$@")" = open ]; then jq '[.[] | select(.state == "open")]' "$D/issues.json"; else cat "$D/issues.json"; fi ;;
   "issue create")

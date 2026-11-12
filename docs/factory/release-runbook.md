@@ -21,7 +21,8 @@ Read-only; none of these touch the installed plugin.
 2. `claude plugin validate ./plugins/factory` and `./plugins/factory/skills` pass with no warning.
 3. `bash plugins/factory/scripts/check-bump.sh` in the branch's worktree, after `git fetch origin main`: `pass: minor bump needed, 0.0.0 -> 1.0.0`, exit 0.
 4. `bash tests/run.sh` prints `ALL PASSED`. A tag waits while the suite reports any named skip; the Lead tags only when none is left, or the person accepts them by name.
-5. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 1.0.0` and both fingerprints. Note them; any later change to either under the same release is a forgotten bump.
+5. `bash plugins/factory/scripts/obeya.sh check-pin` prints `pinned image ... exists` (needs Docker; #125). It fails when the image tag pinned in `plugins/factory/obeya/compose.yml` is not in the registry: publish the app first (see *Obeya image* below) or move the pin.
+6. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 1.0.0` and both fingerprints. Note them; any later change to either under the same release is a forgotten bump.
 
 ## Tag (the Lead, after the person approved the merge)
 
@@ -348,6 +349,20 @@ git push origin factory-v2.3.0
 **Frozen install.** `claude plugin list --json`, read on 2026-11-10, reports `factory@wimsuenens` at version 2.2.0 with user scope: the frozen install of this run. Merging and tagging 2.3.0 changes nothing on this machine until the freeze ends. Then `claude plugin marketplace update wimsuenens` brings the release in, and the person restarts running sessions: an open session keeps the skill text it read at start.
 
 **Rollback.** There is nothing to roll back in a project: the A3 v2 lines and the derived sub-lines are additions, and the 2.2.0 text skips the one and does not read the other. To put the plugin back on the 2.2.0 text, publish a new version above 2.3.0 whose content is the 2.2.0 text, as the *Release 2.0.0* section describes for its own rollback; installs follow the version string.
+
+## Obeya image (slice #124, [ADR 0020](../adr/0020-the-obeya-is-a-nuxt-4-container-image-on-ghcr.md))
+
+The Obeya app ships as `ghcr.io/wimsuenens/obeya:<semver>`, built for `linux/amd64` and `linux/arm64` by `.github/workflows/obeya-image.yml`. The app is versioned apart from the plugin: a plugin release does not rebuild the image.
+
+**Bump.** To publish a new image, raise `version` in `apps/obeya/package.json` and merge to `main`. The workflow runs on a push to `main` that touches `apps/obeya/**`, or by hand (Actions, `obeya-image`, Run workflow). It publishes only when the version has no tag yet; otherwise it ends green with a notice. It never pushes a moving tag, so a tag always names one build.
+
+**Check after the merge.**
+1. The `obeya-image` run is green. A failed build or publish fails the run; nothing partial is tagged.
+2. `docker buildx imagetools inspect ghcr.io/wimsuenens/obeya:<semver>` lists `linux/amd64` and `linux/arm64` under the one tag.
+3. First publish only: a package created by a workflow is private. In the repository's Packages, set `obeya` to public and link it to this repository, then check once from a machine that is not logged in to GHCR: `docker logout ghcr.io && docker pull ghcr.io/wimsuenens/obeya:<semver>`. If the person turns the ADR decision to private, document the pull token instead (ADR 0020, way back).
+4. The plugin pins the tag in `plugins/factory/obeya/compose.yml` (#125). It is released only after step 2 passes for that tag; release check 5 (`obeya.sh check-pin`) enforces it.
+
+Rollback: a published tag is never overwritten or deleted; publish a fixed version and move the plugin's pin.
 
 ## Not verified
 

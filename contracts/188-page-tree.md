@@ -13,7 +13,7 @@ Paths:
 - apps/site/astro.config.mjs
 - apps/site/test/pages.test.mjs
 - tests/site/
-shared: none
+shared: CONTEXT.md
 
 `apps/site/src/pages/` holds, after this slice, exactly two files: `[...slug].astro` and `nl/[...slug].astro` (the three route files of 156, `index.astro`, `nl/index.astro` and `reference/index.astro`, are removed). The slice touches no `plugins/` and no `.github/` path: the deploy workflow runs `npm run build`, which already builds and checks everything below, and no new infrastructure is needed (Chromium is already installed in CI for the 156 check).
 

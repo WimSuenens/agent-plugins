@@ -48,7 +48,7 @@ then the build fails and its output names the entry and the fault.
 **AC-5 The navigation tree lists every page of the current language, on every page.**
 Given each built page in each language,
 when the page is read,
-then it holds one navigation tree listing every page of the page tree in that language: Home, Getting started and Reference in English; Home, Getting started and Reference in Dutch (the Dutch Reference entry links to the English Reference page and is marked as English with `lang="en"` on the link, because Reference is not translated in this slice). Entries are real links to existing pages, nested by the page tree's parents, and the labels are in the page's language.
+then it holds one navigation tree listing every page of the page tree in that language: Home, Getting started and Reference in English; Home, Getting started and Reference in Dutch (the Dutch Reference entry links to the English Reference page, keeps the English label "Reference", and carries `lang="en"` and `hreflang="en"` on the link, because Reference is not translated in this slice). Entries are real links to existing pages, nested by the page tree's parents, and the labels are in the page's language, except that Dutch Reference entry.
 
 **AC-6 The current page is marked.**
 Given each built page,
@@ -75,7 +75,7 @@ then the top bar, the page navigation tree, the breadcrumb trail and the content
 **AC-10 Every page has a breadcrumb trail built from the page tree.**
 Given each built page,
 when its breadcrumb is read,
-then it lists Home, then each ancestor in the page tree, then the page itself, in the page's language; ancestors are links, the last item is plain text marked `aria-current="page"`; Home itself shows no trail or only itself. The breadcrumb on a Dutch page links to Dutch pages.
+then it lists Home, then each ancestor in the page tree, then the page itself, in the page's language; ancestors are links, the last item is plain text marked `aria-current="page"`; Home carries a breadcrumb that shows only itself: one item, the Home label, plain text marked `aria-current="page"`, no links. The breadcrumb on a Dutch page links to Dutch pages.
 
 **AC-11 The contents list is built from the page's headings.**
 Given a page with `h2` and `h3` headings,
@@ -102,12 +102,12 @@ then they arrive at the counterpart URL (`/agent-plugins/getting-started/` and `
 **AC-15 With no counterpart, the switcher goes to the other language's Home.**
 Given a page that exists in one language only (the English Reference; any fixture page without Dutch),
 when the visitor chooses the other language,
-then they arrive at that language's Home, not a 404 and not a different page. (This keeps 156 AC-4 for pages without a twin; the Dutch option on English Reference still goes to Dutch Home.)
+then they arrive at that language's Home, not a 404 and not a different page. This holds on the Dutch side too: wherever a Dutch page shows the Reference link, its label is the English "Reference" (AC-5). (This keeps 156 AC-4 for pages without a twin; the Dutch option on English Reference still goes to Dutch Home.)
 
 **AC-16 A page without a Dutch version does not break the build or leave a dead link.**
 Given a fixture page with an English entry only,
 when the site is built,
-then the build succeeds, the Dutch navigation tree and Dutch see-also lists do not link to a nonexistent `/nl/` page, and the English page's Dutch switcher option goes to Dutch Home. The one deliberate cross-language link is the Dutch tree's Reference entry (AC-5), which goes to an existing English page.
+then the build succeeds, the Dutch navigation tree and Dutch see-also lists do not link to a nonexistent `/nl/` page, and the English page's Dutch switcher option goes to Dutch Home. The one deliberate cross-language link is the Dutch tree's Reference entry (AC-5), labelled "Reference" with `lang="en"` and `hreflang="en"`, which goes to an existing English page.
 
 **AC-17 The return-visit redirect and the entry point are unchanged.**
 Given the stored choice is Dutch,
@@ -155,7 +155,7 @@ then 156 AC-19 to AC-23 hold for the new components: tokens only (no colour lite
 **AC-25 The tree, contents and see-also read well in a single reading column.**
 Given a laptop-width viewport (1280px) and a phone-width viewport (320px),
 when a page is shown,
-then the main text stays one column of about 70 characters (156 AC-19); the tree sits beside or above it without pushing the text below the first screen's worth of content on a phone beyond what a collapsed tree needs; the order in the source is: skip link, top bar, main content (breadcrumb, `h1`, text, see-also), with the tree and contents reachable in a logical order for keyboard and screen reader.
+then the main text stays one column of about 70 characters (156 AC-19); from 48rem viewport width the tree is a column beside the reading column, and below 48rem it does not push the text beyond what a collapsed tree needs; the order in the source is: skip link, top bar, navigation tree, `main` (breadcrumb, `h1`, text, see-also), with the contents list reachable in a logical order; the skip link is first and, when activated, moves focus past the tree into `main`.
 
 **AC-26 The accessibility check covers the new pages and landmarks.**
 Given the built site,
@@ -199,6 +199,7 @@ QA cannot decide these; the person (or a reviewer with a real browser) judges th
 - **Draft Dutch pages carry a visible notice and a status field in the page tree**, and a list of drafts can be produced from the page tree (AC-21). Rejected: tracking only on the slice (the frame's Under test line is then unanswerable). Cost to undo: delete the field and notice; an hour. This fires the map's deferred translation line only as far as "see which pages are unreviewed"; the full workflow stays deferred.
 - **A see-also slug with no page in the language is dropped, not an error** (AC-13), while a slug that is not in the page tree at all fails the build (AC-4). Cost to undo: a minute.
 - **The tree and contents add no client script** (AC-7), so 156 AC-12 stays true. Rejected: a script-driven collapsible tree. Cost to undo: a script line; an hour.
+- **The architect's contracts (contracts/188-*.md) govern three points where they refine this requirement: the navigation tree comes before `main` in source order (a column beside the reading column from 48rem, the skip link jumping past it), the Dutch Reference link label stays the English "Reference" (`lang="en"`, `hreflang="en"`), and Home's breadcrumb shows only itself. The lead accepted them; AC-5, AC-10, AC-15, AC-16 and AC-25 are worded to match.**
 - **Getting started's commands are checked against the repository** (AC-19), so the page cannot drift from real skill names; deeper drift detection of narrative pages stays deferred.
 
 ## Out of scope

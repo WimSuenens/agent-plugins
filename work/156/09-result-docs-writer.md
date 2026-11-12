@@ -1,11 +1,21 @@
 # Result: docs-writer — 156
-Status: working
+Status: done
 Abnormality: none
 Progress:
-  Done: brief read (author and marker checked); role file and protocol read.
-  Next: read developer results 04 and 08, the site sources, scripts and workflow; then write the README section and run each documented command.
-Summary: working.
-Artifacts: work/156/09-result-docs-writer.md
-Decisions: none
-Open questions: none
+  Done: README.md section "Documentation site" added before "## Deploy" (commit 42d37b3); role notes on astro preview and the memory guard in docs/agents/roles/docs-writer.md (commit 046cf3f); start result file (557fe0b). Every command in the section was run from the worktree before it was written (see Summary).
+  Next: none for this task. Post-merge: the first run on main (AC-27) proves the deploy; the README says so.
+Summary:
+  README.md, new section "Documentation site" (three subsections: build and run locally, tests, deploy). It says what the skeleton has (English Home, Dutch Home as a draft awaiting the owner's review, generated Reference; wiki navigation and content pages next), the live URL, the three env seams (SITE_BASE, SITE_OUT_DIR, PLUGINS_DIR), the test commands and how the workflow `site` builds on pull requests and deploys only from main.
+  Checked by running, from the worktree (exit codes captured directly): `cd apps/site && npm ci` rc 0; `npx playwright install chromium` rc 0; `npm test` rc 0 (18 pass); `npm run build` rc 0 on the real plugins/, last line `a11y: 3 pages checked, 0 violations`; `npm run check:a11y` rc 0 (same line); `SITE_BASE=agent-plugins npm run build:site` rc 1 with the message naming SITE_BASE; `SITE_OUT_DIR=<absolute scratch path> npm run build` rc 0; `PLUGINS_DIR=<scratch fixture>` build rc 0 with one entry; fixtures with a SKILL.md lacking `description`, and one with bad YAML, each rc 1 naming the file; `npx astro preview` on a port the OS picked: `/agent-plugins/`, `/agent-plugins/nl/`, `/agent-plugins/reference/` return 200, `/` and `/nl/` return 404; stopped with `npx astro preview stop` and the port confirmed free; `node --test tests/site/*.test.mjs` from the repo root rc 0: 82 tests, 81 pass, 1 skipped (actionlint not installed). Built output: `lang` en, nl, en on the three pages; 18 `data-skill-entry` entries for 18 SKILL.md sources; one inline script per page. `git status` clean after the builds (dist/, .astro/, node_modules/ are ignored).
+  Not run: the deploy (it needs a run on main); actionlint (not installed here); Node 22 (ran on Node 24.14.0; the Node 22 floor comes from apps/site/package.json engines and the workflow).
+  One Bash call that listed other roles' folders under docs/agents/ was refused by the memory guard; nothing from them was read. The call was re-issued without them.
+  No CHANGELOG entry (per brief: the site is not a factory release). No docs/ reference entries for the 156 contracts (the brief scoped this task to the README; the contracts stay the reference).
+Artifacts: README.md (section "Documentation site", commit 42d37b3), docs/agents/roles/docs-writer.md (commit 046cf3f), work/156/09-result-docs-writer.md
+Decisions:
+  Section placed as a new top-level section before "## Deploy" / chosen: before Deploy, because it is the only site section and Deploy is the marketplace's / rejected: a section at the end, after "What was tested" / cost to undo: move one block.
+  `npx astro preview` documented as the local viewer, with `npx astro preview stop` / not named in contract 156-site-skeleton section 1 (the contract lists build and test seams only); chosen because it is the Astro preview already in the install / rejected: a new script in package.json (a change under apps/site, not mine) / cost to undo: delete one paragraph.
+  No docs/ reference entries and no CHANGELOG entry for slice 156 / rejected: a reference page per contract / cost to undo: one page under docs/ later.
+Open questions:
+  1. The deploy is not proven. Lead: the README states that the first run on main is pending. Confirm this is an acceptable caveat for the merge, or have devops watch the first run (AC-27).
+  2. No QA verdict file exists yet (reviews/qa-156.md not present). Known limitations are taken from QA result 03 and devops result 07, not from a verdict: H-1 look against prototype A, H-2 Dutch wording (draft, owner review), H-3 no flash on a return visit, H-4 VoiceOver pass, visited-link contrast not readable in a browser (left to the axe pass and a human glance), actionlint not run locally. The README carries only the Dutch-draft caveat and the pending-deploy caveat; if the verdict adds limitations, the lead should send a rework brief.
 Missing: none

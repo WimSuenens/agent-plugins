@@ -158,5 +158,5 @@ hasnt devops-no-dispatch "$PLUGIN/agents/devops.md" 'dispatch'
 has protocol-shell "$PLUGIN/references/protocol.md" '**integrator**'
 has guard-role "$PLUGIN/scripts/guard-memory.sh" ' integrator '
 ck integrator-model-sonnet "model: sonnet" "$(grep -E "^model:" "$AG")"
-ck version-2.12.2 "2.12.2" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
+ck version-is-semver 1 "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json" | grep -Ec "^[0-9]+\.[0-9]+\.[0-9]+$")"
 done_

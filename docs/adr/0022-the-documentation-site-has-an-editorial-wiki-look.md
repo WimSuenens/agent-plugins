@@ -13,8 +13,13 @@ Every page, component and style sheet of the documentation site is built on its 
 ## Options considered
 
 - **A. Editorial doors.** Warm serif type, a single narrow reading column, rules instead of boxes.
-- **B. Board.** Dense sans type, panels, a sticky navigation tree on the left and the contents on the right. Efficient for browsing reference; busier for a newcomer, the most custom components, and the highest undo cost (about two weeks) because lanes and cards get baked into templates. Rejected: the factory's own metaphor is not the tone the owner asked for, and the cost is highest.
-- **C. Plain.** A classic wiki look with system fonts that follows the system light or dark setting. Fastest and cheapest, lowest undo cost (days). Rejected: least warm, so it misses "neutral but warm", and speed of delivery was not the deciding concern.
+- **B. Board.** Dense sans type, panels, a sticky navigation tree on the left and the contents on the right.
+- **C. Plain.** A classic wiki look with system fonts that follows the system light or dark setting.
+
+The owner chose A and gave no reasons for not choosing B or C. The comparison below is the architect's assessment at the time of the decision, not the owner's rationale:
+
+- B is efficient for browsing reference and busier for a newcomer. It needs the most custom components and has the highest estimated undo cost (about two weeks), because lanes and cards get baked into templates. It also carries the factory's own metaphor, which the architect judged a poor match for the neutral-but-warm tone the owner asked for.
+- C is the fastest and cheapest to build, with the lowest estimated undo cost (days). The architect judged it the least warm of the three.
 
 ## Decision
 

@@ -1,7 +1,7 @@
 # Lead state: #168 Quote two factory skill descriptions so frontmatter parses as strict YAML
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhISJbo
-- next step: step 6, architect writes a one-file contract; product-owner skipped (trivial, reason on the ticket)
+- next step: merge train for PR 176, then resurvey (step 8.8)
 - open questions: none
 - frozen on: factory 2.12.2
 - ADR number assigned: none

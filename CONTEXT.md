@@ -136,3 +136,5 @@ _Avoid_: origin, status (status is the board's field)
 
 **Theme** — a selectable presentation of the read model in the Obeya (Orbit, The Wall, Transit), remembered per browser. A theme only draws data and never computes it.
 _Avoid_: skin, dashboard
+
+**Documentation site** — the public wiki that explains the plugins to newcomers: a navigation tree, breadcrumbs, an on-page contents list and see-also links, with a language switcher in the top bar of every page. Its look is editorial (warm serif, a single reading column, rules instead of boxes); Lean and the Obeya room are content pages, not styling. See [0022](docs/adr/0022-the-documentation-site-has-an-editorial-wiki-look.md).

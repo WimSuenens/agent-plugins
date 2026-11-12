@@ -1,6 +1,6 @@
 ---
 name: run
-description: Run the software factory as its lead — one cycle over a standing backlog: process intake, clarify and chart the map, then build every ready slice whose path list does not overlap another's, through requirements, contracts, a tracer-bullet build, QA and security, delivery, and docs, to merged PRs, until the backlog is empty, the optional budget is reached or you stop it.
+description: "Run the software factory as its lead — one cycle over a standing backlog: process intake, clarify and chart the map, then build every ready slice whose path list does not overlap another's, through requirements, contracts, a tracer-bullet build, QA and security, delivery, and docs, to merged PRs, until the backlog is empty, the optional budget is reached or you stop it."
 argument-hint: "[idea | #map | #slice]"
 disable-model-invocation: true
 ---

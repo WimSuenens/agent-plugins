@@ -1,0 +1,1 @@
+Start or stop the Obeya, the read-only browser view of this project's factory, in a container on loopback. Needs `obeya: on` in docs/agents/factory.md.

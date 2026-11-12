@@ -1,6 +1,6 @@
 ---
 name: obeya
-description: Start or stop the Obeya, the read-only browser view of this project's factory, in a container on loopback. Needs `obeya: on` in docs/agents/factory.md.
+description: "Start or stop the Obeya, the read-only browser view of this project's factory, in a container on loopback. Needs `obeya: on` in docs/agents/factory.md."
 argument-hint: "[start | stop] [--login-token]"
 disable-model-invocation: true
 ---

@@ -1,6 +1,6 @@
 {
   "name": "factory",
-  "version": "2.12.2",
+  "version": "2.13.0",
   "description": "A role-based software factory over wayfinding: a lead plus seven role agents that build one wayfinder slice end to end, talking through per-item message files, each with private craft memory, on one branch and worktree per item. One-way doors reach the person as plain-language decision cards.",
   "domain": "Building software end to end through role agents: requirements, architecture, implementation, verification, security review, delivery and documentation.",
   "author": {

@@ -16,7 +16,7 @@ Two factory skill files carry an unquoted `description` that contains `: ` (colo
 
 Rejected:
 
-- **Block scalar (`description: >-`)**: moves the text to a new line and changes the shape the other 18 files have (one line, key and value together), so a line-based reader (`sed -n 3p`) would break.
+- **Block scalar (`description: >-`)**: moves the text to a new line and changes the shape the other 16 files have (one line, key and value together), so a line-based reader (`sed -n 3p`) would break.
 - **Rewording to drop the `: `**: changes the description text, which the slice must not do.
 - **Fix the generator to tolerate invalid YAML**: the generator should trust a standard parser; a tolerant reader hides the next such fault.
 
@@ -32,7 +32,7 @@ The frontmatter is the text between the first line `---` and the next line `---`
 4. for the two fixed files, the parsed `description` is byte-equal to the text that stood after `description: ` on line 3 before this slice (quotes are syntax, not text);
 5. line 3 of each of the two files still starts with `description: ` (key and value on one line), and every other line of both files, including `argument-hint`, `disable-model-invocation` and the body, is unchanged.
 
-Today 18 of 20 files pass; the two failing ones are `plugins/factory/skills/obeya/SKILL.md` (column 133) and `plugins/factory/skills/run/SKILL.md` (column 86).
+Today 16 of 18 files pass; the two failing ones are `plugins/factory/skills/obeya/SKILL.md` (column 133) and `plugins/factory/skills/run/SKILL.md` (column 86).
 
 ## 3. Seam QA tests: a script that parses every frontmatter
 
@@ -56,15 +56,15 @@ fails with `mapping values are not allowed in this context at line 2 column 133`
 description: "Start or stop the Obeya, the read-only browser view of this project's factory, in a container on loopback. Needs `obeya: on` in docs/agents/factory.md."
 ```
 
-parses, and the parsed value equals the text between the quotes. Expected run before the fix: two lines `frontmatter: FAIL plugins/factory/skills/obeya/SKILL.md ...` and `... run/SKILL.md ...`, exit 1. After: `frontmatter: ok 20 files`, exit 0.
+parses, and the parsed value equals the text between the quotes. Expected run before the fix: two lines `frontmatter: FAIL plugins/factory/skills/obeya/SKILL.md ...` and `... run/SKILL.md ...`, exit 1. After: `frontmatter: ok 18 files`, exit 0.
 
 ## 4. Release
 
-The fix is a factory patch release: `plugins/factory/.claude-plugin/plugin.json` `version` from `2.12.2` to `2.12.3`, and a `CHANGELOG.md` entry `## factory 2.12.3` (the lead applies both at merge; the developer does not). The SKILL.md edits are standard work, so the fingerprint moves with a patch as the existing rule allows. No other plugin changes, so no other version moves.
+The fix is a factory minor release, `2.13.0`: `scripts/check-bump.sh` refuses a lower level because the two SKILL.md files are standard work ("needs at least a minor bump"). The developer bumps `version` in `plugins/factory/.claude-plugin/plugin.json` from `2.12.2` to `2.13.0` in this slice (not at merge). The docs-writer writes the `CHANGELOG.md` entry `## factory 2.13.0`, with the fingerprints. The lead only does the mechanical merge. No other plugin changes, so no other version moves.
 
 ## 5. Other texts that state the version (searched with `grep -rn "2\.12\.2" tests plugins docs CHANGELOG.md`)
 
-The bump makes these pins fail. They are QA's, under `tests/`; QA updates them in the same slice, and the lead applies the bump only with them green:
+The bump makes these pins fail. They are QA's, under `tests/`; QA updates them in the same slice, and the developer bumps the version only with them green:
 
 - `tests/factory/test_gemba.sh:560`, `tests/factory/test_integrator.sh:161`, `tests/factory/test_andon_text.sh:421`, `tests/factory/test_standard_text.sh:20-21`, `tests/factory/test_ownership_tdd.sh:235-236`: hard-coded `2.12.2` against `plugin.json`.
 - `tests/factory/test_fingerprint.sh:29-36`: copies the plugin into a directory named `2.12.2` and expects `release: 2.12.2`; the expected release must follow `plugin.json` (the directory name is a fixture and may stay).
@@ -78,4 +78,4 @@ No text under `plugins/` or `docs/` states `2.12.2` other than `plugin.json`. No
 |---|---|
 | every frontmatter parses with a strict YAML parser | section 2 points 1-3, section 3 |
 | descriptions read the same as before | section 2 points 4-5, section 3 |
-| shipped as a factory patch release | section 4, section 5 |
+| shipped as a factory minor release | section 4, section 5 |

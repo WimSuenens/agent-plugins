@@ -1,11 +1,11 @@
 # Lead state: #156 Live skeleton: bilingual home and generated skills index on GitHub Pages
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhIRkA4
-- next step: step 6, brief the product-owner for the requirement
+- next step: step 6, brief QA for the Tests stage (code review: no, no trigger)
 - open questions: none
 - frozen on: factory 2.12.2
-- ADR number assigned: 0023
-- code review: not decided yet (after the architect's stage)
+- ADR number assigned: none (architect found no one-way door; 0023 released)
+- code review: no — trigger: no trigger
 
 ## Running agents
 

@@ -8,7 +8,6 @@ Paths:
 - apps/site/
 - .github/workflows/site.yml
 - tests/site/
-
 shared: none
 
 The slice touches no `plugins/` path. `apps/site/` is the developer's (the workflow file is devops'; `tests/site/` is QA's). `docs/agents/factory.md` has no ownership row for `apps/site/`; the lead should add one next to `apps/obeya/` (proposal, not mine to write).

@@ -9,7 +9,6 @@ Paths:
 - apps/site/src/pages/reference/index.astro
 - apps/site/test/skills.test.mjs
 - tests/site/
-
 shared: none
 
 Read-only over `plugins/`; the slice changes no file there.

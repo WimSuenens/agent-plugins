@@ -7,7 +7,6 @@ Issue [#156](https://github.com/WimSuenens/agent-plugins/issues/156) · Requirem
 Paths:
 - .github/workflows/site.yml
 - tests/site/
-
 shared: none
 
 Owner: devops (pipeline). The site's own commands are in the [site skeleton](156-site-skeleton.md) section 1.

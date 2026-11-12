@@ -10,7 +10,6 @@ Paths:
 - apps/site/package-lock.json
 - apps/site/test/a11y-args.test.mjs
 - tests/site/
-
 shared: none
 
 ## 1. Decision: axe-core in a real browser, run by Playwright

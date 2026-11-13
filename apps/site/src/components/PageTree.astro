@@ -1,0 +1,21 @@
+---
+// The navigation tree: every page of the language, nested by the page tree. No script, no state.
+import { ui } from "../i18n/ui.mjs";
+import { getModel } from "../lib/pages.mjs";
+const { lang, slug, nodes = null } = Astro.props;
+const list = nodes ?? getModel().tree(lang);
+---
+{nodes === null ? (
+  <nav data-nav="pages" aria-label={ui[lang].pagesNav}>
+    <Astro.self lang={lang} slug={slug} nodes={list} />
+  </nav>
+) : (
+  <ul>
+    {list.map((n) => (
+      <li>
+        <a href={n.href} lang={n.lang} hreflang={n.hreflang} aria-current={!n.lang && n.slug === slug ? "page" : undefined}>{n.label}</a>
+        {n.children.length > 0 && <Astro.self lang={lang} slug={slug} nodes={n.children} />}
+      </li>
+    ))}
+  </ul>
+)}

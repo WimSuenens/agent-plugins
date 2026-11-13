@@ -1,0 +1,19 @@
+---
+import { ui } from "../i18n/ui.mjs";
+const { lang, groups } = Astro.props;
+const t = ui[lang];
+---
+<p>{t.referenceIntro}</p>
+{groups.map((g) => (
+  <section>
+    <h2 id={g.id}>{g.plugin}</h2>
+    {g.skills.map((s) => (
+      <article data-skill-entry data-plugin={s.plugin} data-name={s.name}>
+        <h3 id={s.id}>{s.name}</h3>
+        <p><code data-field="command">{s.command}</code>{s.manual && <span data-field="manual">{t.manual}</span>}</p>
+        <p data-field="description">{s.description.trim()}</p>
+        {s.argumentHint && <p data-field="argument-hint">{t.argumentHint} <code>{s.argumentHint}</code></p>}
+      </article>
+    ))}
+  </section>
+))}

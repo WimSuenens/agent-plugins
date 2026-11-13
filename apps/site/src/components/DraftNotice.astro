@@ -1,0 +1,5 @@
+---
+import { ui } from "../i18n/ui.mjs";
+const { lang } = Astro.props;
+---
+<p data-draft-notice>{ui[lang].draftNotice}</p>

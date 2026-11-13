@@ -1,0 +1,13 @@
+---
+import { ui } from "../i18n/ui.mjs";
+import { getModel } from "../lib/pages.mjs";
+const { slug, lang } = Astro.props;
+const items = getModel().seeAlso(slug, lang);
+---
+{items.length > 0 && (
+  <nav data-nav="see-also" aria-label={ui[lang].seeAlsoNav}>
+    <ul>
+      {items.map((i) => <li><a href={i.href}>{i.label}</a></li>)}
+    </ul>
+  </nav>
+)}

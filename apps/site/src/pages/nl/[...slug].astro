@@ -1,0 +1,12 @@
+---
+import Page from "../../layouts/Page.astro";
+import { registry } from "../../components/registry.mjs";
+import { getModel } from "../../lib/pages.mjs";
+
+export function getStaticPaths() {
+  const model = getModel({ componentKeys: Object.keys(registry) });
+  return model.routes("nl").map((slug) => ({ params: { slug: slug === "" ? undefined : slug }, props: { slug } }));
+}
+const { slug } = Astro.props;
+---
+<Page slug={slug} lang="nl" />

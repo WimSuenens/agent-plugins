@@ -1,0 +1,54 @@
+---
+// Every page, both languages: skip link, top bar, navigation tree, main (breadcrumb, notice, h1, contents, body, see-also), footer.
+import Base from "./Base.astro";
+import TopBar from "../components/TopBar.astro";
+import PageTree from "../components/PageTree.astro";
+import Breadcrumb from "../components/Breadcrumb.astro";
+import DraftNotice from "../components/DraftNotice.astro";
+import Contents from "../components/Contents.astro";
+import SeeAlso from "../components/SeeAlso.astro";
+import { registry } from "../components/registry.mjs";
+import { ui } from "../i18n/ui.mjs";
+import { getModel, headingIdFaults } from "../lib/pages.mjs";
+
+const { slug, lang } = Astro.props;
+const model = getModel({ componentKeys: Object.keys(registry) });
+const entry = model.entry(slug);
+const documents = import.meta.glob("../content/pages/**/*.md", { eager: true });
+
+let Body;
+let bodyProps = {};
+let headings;
+if (entry.source === "markdown") {
+  const doc = documents[`../content/pages/${lang}/${slug}.md`];
+  Body = doc.Content;
+  headings = doc.getHeadings().filter((h) => h.depth === 2 || h.depth === 3).map((h) => ({ depth: h.depth, id: h.slug, text: h.text }));
+} else {
+  const component = registry[entry.component];
+  Body = component.body;
+  bodyProps = component.props(lang);
+  headings = component.headings(lang);
+}
+for (const id of headingIdFaults(headings.map((h) => h.id))) {
+  throw new Error(`pages: ${slug === "" ? "(home)" : slug}: duplicate heading id "${id}"`);
+}
+
+const heading = model.heading(slug, lang);
+const title = slug === "" ? ui[lang].title : `${heading} - ${ui[lang].siteName}`;
+const both = model.exists(slug, "en") && model.exists(slug, "nl");
+const alternates = both ? ["en", "nl"].map((l) => ({ hreflang: l, href: model.href(slug, l) })) : [];
+---
+<Base lang={lang} title={title} alternates={alternates}>
+  <TopBar lang={lang} slug={slug} />
+  <div class="shell page">
+    <PageTree lang={lang} slug={slug} />
+    <main id="main" tabindex="-1">
+      <Breadcrumb slug={slug} lang={lang} />
+      {lang === "nl" && model.isDraft(slug) && <DraftNotice lang={lang} />}
+      <h1>{heading}</h1>
+      <Contents headings={headings} lang={lang} />
+      <Body lang={lang} {...bodyProps} />
+      <SeeAlso slug={slug} lang={lang} />
+    </main>
+  </div>
+</Base>

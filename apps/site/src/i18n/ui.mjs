@@ -1,4 +1,5 @@
 // UI strings. Dutch is a draft until the owner reviews it (requirement H-2).
+// Page titles, labels and URLs of pages live in the page tree (src/data/pages.mjs), not here.
 export const ui = {
   en: {
     siteName: "Agent plugins",
@@ -7,14 +8,21 @@ export const ui = {
     lede: "Agents do the work; you decide only what can't be undone.",
     skip: "Skip to content",
     mainNav: "Main",
-    referenceNav: "Reference",
     langNav: "Language",
+    pagesNav: "Pages",
+    breadcrumbNav: "Breadcrumb",
+    contentsNav: "On this page",
+    seeAlsoNav: "See also",
+    draftNotice: "This translation is a draft and has not yet been reviewed by the owner.",
     whatH: "What this site is",
     whatP:
       "A home for the plugins in this marketplace: the software factory, wayfinding, design and toolkit plugins, each a set of skills you run as commands.",
     referenceH: "Reference",
     referenceP: "Every skill of every plugin, with its command and what it does, generated from the plugins themselves.",
     referenceLink: "Open the reference",
+    referenceIntro: "Every skill of every plugin in this marketplace, generated from the plugins' own SKILL.md files.",
+    manual: "manual command",
+    argumentHint: "Argument hint:",
     footer: "Generated from the plugin files in the repository.",
   },
   nl: {
@@ -24,14 +32,21 @@ export const ui = {
     lede: "Agenten doen het werk; jij beslist alleen over wat niet terug te draaien is.",
     skip: "Naar de inhoud",
     mainNav: "Hoofdmenu",
-    referenceNav: "Naslag",
     langNav: "Taal",
+    pagesNav: "Pagina's",
+    breadcrumbNav: "Kruimelpad",
+    contentsNav: "Op deze pagina",
+    seeAlsoNav: "Zie ook",
+    draftNotice: "Deze vertaling is een concept en is nog niet door de eigenaar gecontroleerd.",
     whatH: "Wat deze site is",
     whatP:
       "Een thuis voor de plugins in deze marketplace: de softwarefabriek, wayfinding, design en toolkit, elk een set vaardigheden die je als commando uitvoert.",
     referenceH: "Naslag",
-    referenceP: "Elke vaardigheid van elke plugin, met het commando en wat het doet, gegenereerd uit de plugins zelf.",
-    referenceLink: "Open de naslag",
+    referenceP: "Elke vaardigheid van elke plugin, met het commando en wat het doet, gegenereerd uit de plugins zelf (de naslag is nog Engels).",
+    referenceLink: "Reference",
+    referenceIntro: "Every skill of every plugin in this marketplace, generated from the plugins' own SKILL.md files.",
+    manual: "manual command",
+    argumentHint: "Argument hint:",
     footer: "Gegenereerd uit de pluginbestanden in de repository.",
   },
 };

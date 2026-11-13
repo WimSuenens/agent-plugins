@@ -1,7 +1,7 @@
 # Lead state: #188 Wiki shell: navigation tree, contents and the first hand-written page, in English and Dutch
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhITS68
-- next step: Acceptance demo put to the owner at 2026-11-13T22:47Z (preview on port 4781; PR #202). Build, QA pass, security pass, docs done. After the answer: rework or the merge question (8.1), then close
+- next step: closed: approved, hansei posted, merge by the integrator; resurvey and run close follow
 - open questions: the owner's question 5 (Dutch Home draft notice) at the slice review
 - frozen on: factory 2.13.0 (installed copy in use: 2.12.2)
 - ADR number assigned: none (no one-way door found; 0023 released)

@@ -33,7 +33,7 @@ a11y: FAIL <route> <rule-id> (serious) <help text> :: <selector or "page">
 | `site-nav-required` | any of `nav[data-nav="site"]`, `nav[data-nav="language"]`, `nav[data-nav="pages"]`, `nav[data-nav="breadcrumb"]` is missing or occurs more than once | `Required navigation landmark missing or repeated: <name>` (`<name>` is the `data-nav` value) |
 | `site-nav-name` | a `nav` has an empty or absent accessible name (its `aria-label` or the text of its `aria-labelledby` target, trimmed) | `Navigation landmark must have an accessible name` |
 | `site-nav-unique` | two `nav` elements of the page share one accessible name (case-insensitive, trimmed) | `Navigation landmarks must have distinct names` |
-| `site-nav-empty` | a `nav[data-nav]` holds no `a[href]` | `Navigation landmark must not be empty` |
+| `site-nav-empty` | a `nav[data-nav]` other than `nav[data-nav="breadcrumb"]` holds no `a[href]` (the breadcrumb is exempt: Home's breadcrumb is one plain-text item with no link, AC-10; its content is checked by `site-current-page`, which wants exactly one current item) | `Navigation landmark must not be empty` |
 | `site-current-page` | `nav[data-nav="pages"]` holds a number of `[aria-current="page"]` other than 1, or `nav[data-nav="breadcrumb"]` holds a number other than 1 | `Navigation must mark exactly one current page` |
 
 `nav[data-nav="contents"]` and `nav[data-nav="see-also"]` are optional (absent when empty), but when present are covered by `site-nav-name`, `site-nav-unique` and `site-nav-empty`. The language switcher's own `aria-current="true"` is not counted by `site-current-page` (it is a different value on a different nav).

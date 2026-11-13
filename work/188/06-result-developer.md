@@ -1,11 +1,14 @@
 # Result: developer — 188
-Status: working
+Status: done
 Abnormality: none
 Progress:
-  Done: page tree, lib model, routes, components, content (EN and NL Getting started), a11y landmark checks, styles; real build exits 0 including the a11y check (5 pages, 0 violations).
-  Next: run the targeted test, then the full suite and npm test; fix failures; unit tests in apps/site/test; CONTEXT.md terms are the architect's (shared).
-Summary: in progress
-Artifacts: apps/site/
-Decisions: none yet
-Open questions: none yet
+  Done: page tree (apps/site/src/data/pages.mjs) and model (src/lib/pages.mjs); two route files; Page layout, PageTree, Breadcrumb, Contents, SeeAlso, DraftNotice, TopBar, LangSwitcher, registry with Home and Reference bodies; Getting started in English and Dutch (draft); landmark checks in scripts/a11y-check.mjs; styles and tokens; own unit tests in apps/site/test/pages.test.mjs.
+  Next: nothing. QA verifies after the lead answers question 07.
+Summary:
+  Targeted test `node --test tests/site/pages.test.mjs`: 35 of 35 pass. Full suite `node --test --test-concurrency=1 tests/site/*.test.mjs`: 178 tests, 176 pass, 1 skipped (QA's own skip), 1 fails: AC-19 "the commands are the prototype's ..." in tests/site/getting-started.test.mjs, because its helper requires `plugins/mattpocock-skills` to exist and that plugin is upstream. Question 07 names the test; the prototype's install lines are kept. `npm test` in apps/site: 24 of 24 pass. `npm run build` exits 0, last line `a11y: 5 pages checked, 0 violations`; the build log prints `pages: dutch drafts: /agent-plugins/nl/ /agent-plugins/nl/getting-started/` once.
+  The Dutch draft notice follows `review.nl` in the page tree: setting `reviewed` on Home (one field) removes it, so either answer to the owner's open question is one edit.
+  Diff stays on the contracts' Paths lists, with three notes below.
+Artifacts: apps/site/src/data/pages.mjs, apps/site/src/lib/pages.mjs, apps/site/src/lib/rehypePage.mjs, apps/site/src/pages/[...slug].astro, apps/site/src/pages/nl/[...slug].astro, apps/site/src/layouts/{Base,Page}.astro, apps/site/src/components/{PageTree,Breadcrumb,Contents,SeeAlso,DraftNotice,TopBar,LangSwitcher,Home,ReferenceBody}.astro, apps/site/src/components/registry.mjs, apps/site/src/content/pages/{en,nl}/getting-started.md, apps/site/src/i18n/ui.mjs, apps/site/src/styles/{tokens,base}.css, apps/site/astro.config.mjs, apps/site/scripts/a11y-check.mjs, apps/site/test/pages.test.mjs, docs/agents/roles/developer.md; removed: Toc.astro, Breadcrumb(old), three 156 route files.
+Decisions: (1) Markdown plugin through Sätteri, not `markdown.rehypePlugins`: Astro 7 refuses the legacy option without `@astrojs/markdown-remark`; chosen the `satteri({ hastPlugins })` processor imported from `@astrojs/markdown-satteri`, which astro already depends on / rejected adding `@astrojs/markdown-remark` (new dependency, package.json is not on the Paths lists) / cost to undo: one config line plus the plugin file. (2) `registry` entries have a third key `props(lang)` beside `body` and `headings`, so the Reference body and its contents list read the same data in one place / rejected a circular import / cost: one function. (3) Page-tree validation and the drafts line run in an Astro integration hook in astro.config.mjs (once per build) and again in the routes with the component keys / rejected printing from a route module (would print per route file) / cost: a hook. (4) Dutch Home's Reference link reads "Reference" with lang="en" (the tree and top bar rule) / cost: one string.
+Open questions: 07 (the AC-19 helper vs the upstream plugin, for QA via the lead). Note for the architect: contract 188-wiki-components section 8 and 188-page-tree section 3 name `rehypePlugins`; the working form is the Sätteri hast plugin above (file name kept, `rehypePage.mjs`). `apps/site/package.json` does not list `@astrojs/markdown-satteri` although config imports it (hoisted from astro): declaring it is a one-line change outside the Paths lists, the lead's call. `src/lib/url.mjs` is now unused (the model builds hrefs from the base); left in place, deleting it is outside the Paths lists. CONTEXT.md terms (page tree, draft page) are the architect's (shared path), not added by me. Contracts 156-* still state the old route files (the architect's planned note).
 Missing: none

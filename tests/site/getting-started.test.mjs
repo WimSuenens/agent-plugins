@@ -45,14 +45,16 @@ export function commandsIn(codeBlocks) {
     text,
   };
 }
-export function unknownCommands(codeBlocks, sources = skillSources(PLUGINS), pluginsDir = PLUGINS) {
+// Plugin names the marketplace lists (upstream plugins are fetched, so they have no folder here).
+export const marketplaceNames = (file = path.join(REPO, ".claude-plugin", "marketplace.json")) => new Set((JSON.parse(fs.readFileSync(file, "utf8")).plugins ?? []).map((p) => p.name));
+export function unknownCommands(codeBlocks, sources = skillSources(PLUGINS), pluginsDir = PLUGINS, listed = marketplaceNames()) {
   const c = commandsIn(codeBlocks);
   const bad = [];
   const names = new Set(sources.map((s) => `${s.plugin}:${s.folder}`));
   for (const s of sources) { try { names.add(`${s.plugin}:${parseFrontmatter(s.file).name}`); } catch {} }
   for (const { plugin, skill } of c.slash) if (!names.has(`${plugin}:${skill}`)) bad.push(`/${plugin}:${skill}`);
   for (const { plugin, marketplace } of c.installs) {
-    if (!fs.existsSync(path.join(pluginsDir, plugin, ".claude-plugin", "plugin.json")) && !fs.existsSync(path.join(pluginsDir, plugin))) bad.push(`install ${plugin}`);
+    if (!listed.has(plugin) && !fs.existsSync(path.join(pluginsDir, plugin))) bad.push(`install ${plugin}`);
     if (marketplace !== "wimsuenens") bad.push(`marketplace ${marketplace}`);
   }
   return bad;
@@ -85,6 +87,8 @@ test("AC-19 control: the command check flags a command that does not exist, a pl
   const bad = unknownCommands(["/factory:no-such-skill\n/nosuch:idea\nclaude plugin install nosuch@wimsuenens\nclaude plugin install factory@other"]);
   assert.deepEqual(bad.sort(), ["/factory:no-such-skill", "/nosuch:idea", "install nosuch", "marketplace other"].sort());
   assert.deepEqual(unknownCommands(["/factory:idea"]), []);
+  assert.deepEqual(unknownCommands(["claude plugin install mattpocock-skills@wimsuenens"]), [], "an upstream plugin listed in marketplace.json passes");
+  assert.deepEqual(unknownCommands(["claude plugin install mattpocock-skills@wimsuenens"], undefined, undefined, new Set()), ["install mattpocock-skills"], "unlisted and without a folder it fails");
 });
 
 test("AC-20 Dutch mirrors English: html lang nl, one h1, same h2 count and order, identical code blocks, same links, Dutch prose", () => {

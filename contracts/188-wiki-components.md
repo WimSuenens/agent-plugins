@@ -18,15 +18,18 @@ Paths:
 - apps/site/src/components/ReferenceBody.astro
 - apps/site/src/components/Toc.astro
 - apps/site/src/lib/rehypePage.mjs
+- apps/site/src/lib/url.mjs
 - apps/site/src/i18n/ui.mjs
 - apps/site/src/styles/tokens.css
 - apps/site/src/styles/base.css
 - apps/site/astro.config.mjs
+- apps/site/package.json
+- apps/site/package-lock.json
 - apps/site/test/ui.test.mjs
 - tests/site/
 shared: none
 
-`Toc.astro` is deleted (replaced by `Contents.astro`); it stays in `Paths:` so the deletion is the developer's to make. `astro.config.mjs` is listed in both this and the page-tree contract (markdown options and the rehype step).
+`Toc.astro` is deleted (replaced by `Contents.astro`); it stays in `Paths:` so the deletion is the developer's to make. `src/lib/url.mjs` is unused after the build (the page model builds hrefs from the base), so it is listed for deletion too. `package.json` and `package-lock.json` are listed so the developer declares `@astrojs/markdown-satteri` (the config imports it; astro pins it, so declare the same version). `astro.config.mjs` is listed in both this and the page-tree contract (markdown options and the rehype step).
 
 ## 1. Page shape (every page, both languages)
 
@@ -120,7 +123,7 @@ Items come from `model.seeAlso(slug, lang)`; labels in the page language, links 
 ## 8. Code blocks and content styling (AC-22 to AC-24)
 
 - Markdown renders with `markdown.syntaxHighlight: false` in `astro.config.mjs`: the highlighter writes inline `style` attributes with colour literals onto the `pre`, which would break AC-22 and AC-24 ("tokens only"). Code is plain `pre > code`, styled by `base.css` from tokens.
-- `src/lib/rehypePage.mjs` is one small rehype step, registered in `astro.config.mjs`: it (a) sets `tabindex="0"` on every `pre` (a scrollable region must be keyboard-focusable; axe `scrollable-region-focusable`), and (b) prefixes the base path to the site-root links of content (page tree contract section 3). It adds no class, no `style`, no script.
+- Astro 7's default Markdown processor is Sätteri, which throws on `markdown.rehypePlugins` unless `@astrojs/markdown-remark` is installed. The step is therefore a Sätteri hast plugin in `src/lib/rehypePage.mjs` (file name kept), registered as `markdown.processor: satteri({ hastPlugins: [rehypePage({ base })] })` in `astro.config.mjs` with `satteri` imported from `@astrojs/markdown-satteri`, declared in `apps/site/package.json`. It (a) sets `tabindex="0"` on every `pre` (a scrollable region must be keyboard-focusable; axe `scrollable-region-focusable`), and (b) prefixes the base path to the site-root links of content (page tree contract section 3). It adds no class, no `style`, no script. Rejected: adding `@astrojs/markdown-remark` (a second Markdown pipeline and one more dependency for the same effect). Cost to undo: one config line and the plugin file.
 - `pre`: `overflow-x: auto`, `max-width: 100%`, never widens the page; text at least 4.5:1 on its background; a visible focus outline (3:1) like every focusable element. The page's `overflow-wrap: anywhere` of 156 must not break a command mid-token in a `pre` (use `white-space: pre`); at 320px the document width still equals the viewport width.
 - Lists, `blockquote` and a note in prose use plain Markdown; there is no component syntax in content.
 - No colour literal anywhere under `apps/site/src/` outside `tokens.css` (156 section 8); new tokens for the tree, rule and notice are added there. `prefers-reduced-motion: reduce` and no-preference both see no `transition`/`animation`/smooth scrolling (the tree has none). One reading column of about 70 characters (`--measure`); the tree column at 48rem and wider is outside that measure and does not narrow it.

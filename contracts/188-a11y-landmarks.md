@@ -11,7 +11,7 @@ Paths:
 - tests/site/
 shared: none
 
-`package.json` is unchanged: `npm run build` still ends with the check. No `.github/` path changes.
+The scripts in `package.json` are unchanged (the dependency line is added under the wiki-components contract): `npm run build` still ends with the check. No `.github/` path changes.
 
 ## 1. Decision (open question 4): axe's landmark rules stay on, plus five own checks
 

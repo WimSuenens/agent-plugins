@@ -218,7 +218,36 @@ The contract-by-contract reference and the steps for changing the factory are in
 
 The documentation site is in `apps/site/` (Astro, static output). It is published to GitHub Pages at https://wimsuenens.github.io/agent-plugins/.
 
-This is the skeleton. It has three pages: the English Home (`/agent-plugins/`), the Dutch Home (`/agent-plugins/nl/`, an agent draft awaiting the owner's review) and the Reference (`/agent-plugins/reference/`), which is generated at build time from every `plugins/*/skills/*/SKILL.md`. The wiki navigation and the content pages come next. The language switcher in the top bar remembers the chosen language in the browser; it is the only script on the site.
+The site has five pages, English at the root and Dutch under `/nl/`:
+
+- **Home** (`/agent-plugins/`, Dutch `/agent-plugins/nl/`): the front page. Its Dutch version is an agent draft awaiting the owner's review.
+- **Getting started** (`/agent-plugins/getting-started/`, Dutch `/agent-plugins/nl/getting-started/`): the four steps from nothing to a first command. Its Dutch version is a draft too.
+- **Reference** (`/agent-plugins/reference/`): every skill of every plugin, generated at build time from `plugins/*/skills/*/SKILL.md`. It is English only. The Dutch navigation lists it and links to the English page, labelled "Reference".
+
+Every page has the same wiki shell:
+
+- **Navigation tree**: every page of the current language, nested by parent, with the current page marked. Below 48rem it is always open above the text; from 48rem it sits beside the reading column.
+- **Breadcrumb**: Home, then the ancestors, then the page.
+- **Contents**: links to the page's own `h2` and `h3` headings. A page without `h2` headings shows none.
+- **See also**: links to related pages in the same language, at the end of the page.
+- **Language switcher** (top bar): goes to the same page in the other language when it exists, otherwise to that language's Home. It remembers the chosen language in the browser; it is the only script on the site.
+
+Not built yet: narrative pages beyond Getting started, a Dutch Reference, and site search.
+
+### Adding a page
+
+The page tree in `apps/site/src/data/pages.mjs` is the one list of pages. Navigation, breadcrumbs, URLs, see-also links and language switches all come from it. To add a hand-written page:
+
+1. Add one entry to the `pages` array: `slug` (lower-case letters and digits, with single hyphens between them), `parent` (the slug of its parent; `""` for a top-level page), `title` (`en` required, `nl` optional), `source: "markdown"`, and `seeAlso` if you want it.
+2. Write `apps/site/src/content/pages/en/<slug>.md`, and `apps/site/src/content/pages/nl/<slug>.md` when the page has a Dutch title.
+
+A content file is plain Markdown with no front matter; the title comes from the page tree. Start headings at `##`, because the page's `h1` comes from the tree. Use prose, lists, code and links only: no `style` or `class` attribute, no `div` or `span`, no colour codes. Links to other pages are written from the site root with a trailing slash, for example `[Reference](/reference/)`, and in Dutch `[Aan de slag](/nl/getting-started/)`; the build adds the base path. A page without a Dutch title gets no Dutch version, and the Dutch navigation does not list it.
+
+A broken page tree or content file fails the build, and the message names the entry or the file. The rules are in the [page tree contract](contracts/188-page-tree.md) and the [wiki components contract](contracts/188-wiki-components.md).
+
+### Draft Dutch pages
+
+A Dutch page is a draft until its entry says otherwise, and a draft shows a short Dutch notice above the heading. To mark a page reviewed, set `review: { nl: "reviewed" }` on its entry in `pages.mjs`; the notice then disappears. Any other value fails the build. Each build prints the drafts once in its log, as `pages: dutch drafts: ...` (`none` when there are none).
 
 ### Build and run it locally
 
@@ -231,7 +260,7 @@ npx playwright install chromium   # once; the accessibility check drives Chromiu
 npm run build                     # Astro build, then the accessibility check
 ```
 
-`npm run build` writes the site to `apps/site/dist/`. It ends with `a11y: 3 pages checked, 0 violations` when every page passes; a failed check exits non-zero and fails the build.
+`npm run build` writes the site to `apps/site/dist/`. It ends with `a11y: 5 pages checked, 0 violations` on today's five pages when every page passes. The count is the number of pages built, so it moves when a page is added. A failed check exits non-zero and fails the build.
 
 To look at the result, serve the build (the pages sit under `/agent-plugins/`):
 
@@ -239,21 +268,21 @@ To look at the result, serve the build (the pages sit under `/agent-plugins/`):
 npx astro preview
 ```
 
-Open the address it prints, followed by `/agent-plugins/`. Stop it with `npx astro preview stop`.
+The command starts the server in the background and returns at once. Open the address it prints, followed by `/agent-plugins/`. `npx astro preview status` shows whether it is running, and `npx astro preview stop` stops it.
 
 Three environment variables change the build. The defaults fit the repo:
 
 - `SITE_BASE`: the base path, default `/agent-plugins`. It must start with `/` and must not end with `/`; any other value fails the build and the error names the variable.
 - `SITE_OUT_DIR`: the output folder, default `dist` inside `apps/site/`. An absolute path works too.
-- `PLUGINS_DIR`: the folder the Reference reads skills from, default the repo's `plugins/`.
+- `PLUGINS_DIR`: the folder the Reference reads skills from, default the repo's `plugins/` (found from `apps/site/`, where the npm scripts run).
 
 A skill source with no `name` or no `description`, or with invalid frontmatter, fails the build and the error names its file.
 
 ### Tests
 
 ```bash
-cd apps/site && npm test                       # the site's unit tests
-cd ../.. && node --test tests/site/*.test.mjs  # the acceptance suite, from the repo root
+cd apps/site && npm test                                            # the site's unit tests
+cd ../.. && node --test --test-concurrency=1 tests/site/*.test.mjs  # the acceptance suite, from the repo root
 ```
 
 The acceptance suite needs the steps above first (`npm ci` and the Chromium install). Its actionlint check is skipped unless the `actionlint` binary is installed.
@@ -264,7 +293,7 @@ The workflow `site` (`.github/workflows/site.yml`) runs when a push or a pull re
 
 Pages must use GitHub Actions as its source (repository Settings, then Pages), and the `github-pages` environment must accept `main`. A change to a SKILL.md under `plugins/` reaches the Reference on the next push to `main`.
 
-The first deploy from `main` has not run yet. Until that run is green and the three URLs answer with 200, this section describes the workflow, not a verified deployment.
+The first deploy from `main` has not run yet. Until that run is green and the five pages answer with 200 (`/agent-plugins/`, `/agent-plugins/nl/`, `/agent-plugins/getting-started/`, `/agent-plugins/nl/getting-started/` and `/agent-plugins/reference/`), this section describes the workflow, not a verified deployment.
 
 ---
 

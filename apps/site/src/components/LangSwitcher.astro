@@ -1,9 +1,9 @@
 ---
-import { url } from "../lib/url.mjs";
 import { ui } from "../i18n/ui.mjs";
-const { lang } = Astro.props;
+// `hrefs` holds the option for each language: the counterpart page, else that language's Home (page tree contract 2.5).
+const { lang, hrefs } = Astro.props;
 ---
-<nav data-lang-switcher aria-label={ui[lang].langNav}>
-  <a href={url("")} data-lang="en" hreflang="en" lang="en" aria-current={lang === "en" ? "true" : undefined}>English</a>
-  <a href={url("nl/")} data-lang="nl" hreflang="nl" lang="nl" aria-current={lang === "nl" ? "true" : undefined}>Nederlands</a>
+<nav data-nav="language" data-lang-switcher aria-label={ui[lang].langNav}>
+  <a href={hrefs.en} data-lang="en" hreflang="en" lang="en" aria-current={lang === "en" ? "true" : undefined}>English</a>
+  <a href={hrefs.nl} data-lang="nl" hreflang="nl" lang="nl" aria-current={lang === "nl" ? "true" : undefined}>Nederlands</a>
 </nav>

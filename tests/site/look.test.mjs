@@ -1,4 +1,6 @@
-// AC-19 (machine part), AC-20, AC-21, AC-22, AC-23: look, contrast, keyboard, motion, semantics.
+// AC-19 (machine part), AC-20, AC-21, AC-22, AC-23: look, contrast, keyboard, motion, semantics (156).
+// Slice 188: every test walks the five pages (ROUTES), so the tree, breadcrumb, contents, see-also, draft notice and code blocks are inside
+// 188 AC-24 (tokens only, 4.5:1 text, 3:1 interface parts, focus indicator, no motion). Visited-link colours are not scriptable here (human H-1).
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -133,7 +135,7 @@ test("AC-20 every rendered text/background pair is at least 4.5:1 (normal, hover
       }
     };
     await check("normal");
-    for (const sel of ["header[data-test=topbar] a", "nav[data-lang-switcher] a", "main a"]) {
+    for (const sel of ["header[data-test=topbar] a", "nav[data-lang-switcher] a", "nav[data-nav=pages] a", "nav[data-nav=breadcrumb] a", "nav[data-nav=contents] a", "nav[data-nav=see-also] a", "main a"]) {
       for (const h of await page.locator(sel).all()) {
         if (!(await h.isVisible())) continue;
         await h.hover();
@@ -153,7 +155,7 @@ test("AC-20 interface parts: focus ring and a visible switcher border are at lea
   const fails = [];
   for (const route of ROUTES) {
     const { ctx, page } = await open(route);
-    const focusables = await page.locator("a[href], button").count();
+    const focusables = await page.locator("a[href], button, [tabindex=\"0\"]").count();
     for (let i = 0; i < focusables; i++) {
       await page.keyboard.press("Tab");
       const f = await page.evaluate(() => {
@@ -280,7 +282,7 @@ test("AC-23 every page: lang, unique title, one h1, one main, labelled nav, no s
       click: document.querySelectorAll("[onclick]").length,
       fakeButtons: [...document.querySelectorAll("[role=button],[role=link]")].filter((e) => !["A", "BUTTON"].includes(e.tagName)).length,
       imgNoAlt: [...document.querySelectorAll("img")].filter((i) => !i.hasAttribute("alt")).length,
-      order: [...document.body.children].map((c) => c.tagName.toLowerCase()),
+      landmarkOrder: [...document.querySelectorAll("a.skip-link, body header, nav[data-nav=pages], main, body footer")].map((e) => (e.matches("a.skip-link") ? "skip" : e.matches("nav") ? "nav-pages" : e.tagName.toLowerCase())),
       skipFirst: document.querySelector("a.skip-link") === document.body.querySelector("a, button, input"),
       mainTabindex: document.querySelector("main")?.getAttribute("tabindex"), mainId: document.querySelector("main")?.id,
       sw: [...document.querySelectorAll("nav[data-lang-switcher] a")].map((a) => [a.textContent.trim(), a.getAttribute("hreflang"), a.getAttribute("lang")]),
@@ -292,14 +294,14 @@ test("AC-23 every page: lang, unique title, one h1, one main, labelled nav, no s
     assert.equal(d.mains, 1, route);
     assert.equal(d.levels[0], 1);
     for (let i = 1; i < d.levels.length; i++) assert.ok(d.levels[i] - d.levels[i - 1] <= 1, `${route}: heading jumps ${d.levels.join(",")}`);
-    assert.ok(d.navs.length >= 2 && d.navs.every(Boolean), `${route}: every nav labelled ${JSON.stringify(d.navs)}`);
+    assert.ok(d.navs.length >= 4 && d.navs.every(Boolean) && new Set(d.navs.map((n) => n.toLowerCase())).size === d.navs.length, `${route}: every nav labelled, names distinct ${JSON.stringify(d.navs)}`);
     assert.ok(d.topNav, `${route}: top bar nav labelled`);
     assert.equal(d.click, 0);
     assert.equal(d.fakeButtons, 0);
     assert.equal(d.imgNoAlt, 0);
     assert.ok(d.skipFirst, "skip link is the first focusable");
     assert.equal(d.mainTabindex, "-1"); assert.equal(d.mainId, "main");
-    assert.deepEqual(d.order.filter((t) => ["a", "header", "main", "footer"].includes(t)), ["a", "header", "main", "footer"], `${route}: body order skip link, header, main, footer`);
+    assert.deepEqual(d.landmarkOrder, ["skip", "header", "nav-pages", "main", "footer"], `${route}: document order skip link, header, page tree, main, footer`);
     assert.deepEqual(d.sw, [["English", "en", "en"], ["Nederlands", "nl", "nl"]]);
   }
   assert.equal(new Set(titles).size, titles.length, "titles are unique");

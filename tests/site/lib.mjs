@@ -81,6 +81,12 @@ export function realBuild() {
   return realBuildCache.dist;
 }
 
+// The cached result of the real build: {dist, status, out}.
+export function realBuildResult() {
+  realBuild();
+  return realBuildCache;
+}
+
 export function htmlFiles(dist) {
   const out = [];
   (function walk(d) {
@@ -133,7 +139,98 @@ export async function launch() {
   return chromium.launch();
 }
 
-export const ROUTES = [`${BASE}/`, `${BASE}/nl/`, `${BASE}/reference/`];
+// The five pages of the real site (188 AC-3: the URL scheme names them). Counts that depend on the page tree are computed
+// from the build output (htmlFiles), never from this list; a test cross-checks the two.
+export const EN_ROUTES = [`${BASE}/`, `${BASE}/getting-started/`, `${BASE}/reference/`];
+export const NL_ROUTES = [`${BASE}/nl/`, `${BASE}/nl/getting-started/`];
+export const ROUTES = [...EN_ROUTES, ...NL_ROUTES];
+export const routeOf = (file, base = BASE) => `${base}/${file.replace(/index\.html$/, "")}`;
+export const langOf = (route, base = BASE) => (route === `${base}/nl/` || route.startsWith(`${base}/nl/`) ? "nl" : "en");
+
+// ---- fixtures: a copy of the site source (the real pages are never touched) ----
+// The copy shares apps/site/node_modules by symlink; the build runs through the same cross-process lock as every npm run.
+export function siteCopy() {
+  const dir = path.join(scratch("site-copy-"), "site");
+  fs.cpSync(SITE, dir, {
+    recursive: true,
+    filter: (src) => !["node_modules", "dist", ".astro"].includes(path.basename(src)) || path.dirname(src) !== SITE,
+  });
+  fs.symlinkSync(path.join(SITE, "node_modules"), path.join(dir, "node_modules"));
+  return dir;
+}
+// Edits a file of the copy; `fn` gets the old text (or "" for a new file) and returns the new text.
+export function editIn(copy, rel, fn) {
+  const f = path.join(copy, rel);
+  fs.mkdirSync(path.dirname(f), { recursive: true });
+  fs.writeFileSync(f, fn(fs.existsSync(f) ? fs.readFileSync(f, "utf8") : ""));
+}
+// Adds entries (JS object literal text) to the page tree data file: one edit to the array.
+export function addPageEntry(copy, entryJs) {
+  editIn(copy, "src/data/pages.mjs", (t) => {
+    const i = t.lastIndexOf("];");
+    if (i < 0) throw new Error("src/data/pages.mjs has no closing ];");
+    return `${t.slice(0, i)}  ${entryJs},\n${t.slice(i)}`;
+  });
+}
+// astro build of a copy. Returns {dist, status, out}.
+export function buildCopy(copy, { base = BASE, plugins = PLUGINS, script = "build:site" } = {}) {
+  const dist = path.join(scratch("dist-fx-"), "dist");
+  const r = withLock(() => spawnSync("npm", ["run", script], {
+    cwd: copy, env: { ...process.env, SITE_BASE: base, SITE_OUT_DIR: dist, PLUGINS_DIR: plugins }, encoding: "utf8", timeout: 300000,
+  }));
+  return { dist, status: r.status, out: `${r.stdout ?? ""}${r.stderr ?? ""}`, stdout: r.stdout ?? "" };
+}
+
+// Reads one built page in a browser context (scripts as the caller's context allows) and returns the facts the wiki tests need.
+export async function readPage(ctx, origin, route) {
+  const page = await ctx.newPage();
+  const resp = await page.goto(origin + route);
+  const status = resp.status();
+  const d = await page.evaluate(() => {
+    const t = (e) => e.textContent.trim().replace(/\s+/g, " ");
+    const link = (a) => ({ text: t(a), href: a.getAttribute("href"), lang: a.getAttribute("lang"), hreflang: a.getAttribute("hreflang"), current: a.getAttribute("aria-current") });
+    const navs = [...document.querySelectorAll("nav")].map((n) => ({
+      hook: n.dataset.nav ?? null, name: n.getAttribute("aria-label"), labelledby: n.getAttribute("aria-labelledby"),
+      links: [...n.querySelectorAll("a[href]")].map(link),
+    }));
+    const nav = (h) => document.querySelector(`nav[data-nav="${h}"]`);
+    const items = (h) => [...(nav(h)?.querySelectorAll("li") ?? [])].map((li) => ({
+      own: [...li.childNodes].filter((c) => c.nodeType === 3 || (c.nodeType === 1 && c.tagName !== "UL" && c.tagName !== "OL")).map((c) => c.textContent).join(" ").trim().replace(/\s+/g, " "),
+      a: li.querySelector(":scope > a") ? link(li.querySelector(":scope > a")) : null,
+      current: li.getAttribute("aria-current"),
+      depth: (() => { let d = 0; for (let e = li.parentElement; e && e !== nav(h); e = e.parentElement) if (e.tagName === "UL" || e.tagName === "OL") d++; return d; })(),
+    }));
+    const main = document.querySelector("main");
+    return {
+      lang: document.documentElement.lang, title: document.title,
+      h1: [...document.querySelectorAll("h1")].map(t),
+      headings: [...(main?.querySelectorAll("h2, h3") ?? [])].map((h) => ({ level: Number(h.tagName[1]), id: h.id, text: t(h) })),
+      navs, treeItems: items("pages"), crumbItems: items("breadcrumb"), contentsItems: items("contents"), seeAlsoItems: items("see-also"),
+      hasNav: Object.fromEntries(["site", "language", "pages", "breadcrumb", "contents", "see-also"].map((h) => [h, document.querySelectorAll(`nav[data-nav="${h}"]`).length])),
+      treeCurrent: [...(nav("pages")?.querySelectorAll('[aria-current="page"]') ?? [])].map(t),
+      mains: document.querySelectorAll("main").length,
+      draftNotices: [...document.querySelectorAll("[data-draft-notice]")].map(t),
+      switcher: [...document.querySelectorAll("nav[data-lang-switcher] a")].map((a) => ({ ...link(a), dataLang: a.dataset.lang })),
+      topLinks: [...document.querySelectorAll("header[data-test=topbar] a")].map(link),
+      mainParas: [...(main?.querySelectorAll("p") ?? [])].map(t),
+      mainLinks: [...(main?.querySelectorAll("a[href]") ?? [])].map((a) => a.getAttribute("href")),
+      codeBlocks: [...(main?.querySelectorAll("pre") ?? [])].map((p) => p.textContent.replace(/\s+$/, "")),
+      preTabindex: [...(main?.querySelectorAll("pre") ?? [])].map((p) => p.getAttribute("tabindex")),
+      alternates: [...document.querySelectorAll('link[rel="alternate"][hreflang]')].map((l) => [l.getAttribute("hreflang"), l.getAttribute("href")]),
+      scripts: document.querySelectorAll("script").length,
+      details: document.querySelectorAll("details").length,
+      // source order: indexes of the landmarks in document order
+      order: (() => {
+        const all = [...document.querySelectorAll("a.skip-link, header[data-test=topbar], nav[data-nav=pages], main, footer")];
+        return all.map((e) => (e.matches("a.skip-link") ? "skip" : e.matches("header") ? "topbar" : e.matches("nav") ? "tree" : e.tagName.toLowerCase()));
+      })(),
+      mainContains: { crumb: !!main?.querySelector("nav[data-nav=breadcrumb]"), contents: !!main?.querySelector("nav[data-nav=contents]"), seeAlso: !!main?.querySelector("nav[data-nav=see-also]"), tree: !!main?.querySelector("nav[data-nav=pages]") },
+      html: document.documentElement.outerHTML,
+    };
+  });
+  await page.close();
+  return { status, ...d };
+}
 
 // Skill sources the way the requirement defines them: plugins/*/skills/*/SKILL.md, nothing under .claude/worktrees.
 export function skillSources(pluginsDir = PLUGINS) {

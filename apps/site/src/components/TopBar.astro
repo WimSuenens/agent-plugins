@@ -1,16 +1,19 @@
 ---
-import { url } from "../lib/url.mjs";
 import { ui } from "../i18n/ui.mjs";
+import { getModel } from "../lib/pages.mjs";
 import LangSwitcher from "./LangSwitcher.astro";
-const { lang, dutchHome = false } = Astro.props;
+const { lang, slug } = Astro.props;
 const t = ui[lang];
+const model = getModel();
+const reference = model.link("reference", lang);
+const hrefs = { en: model.switchHref(slug, lang, "en"), nl: model.switchHref(slug, lang, "nl") };
 ---
 <header data-test="topbar">
   <div class="page">
-    <a class="site-name" href={dutchHome ? url("nl/") : url("")}>{t.siteName}</a>
-    <nav aria-label={t.mainNav}>
-      <a href={url("reference/")} hreflang={dutchHome ? "en" : undefined}>{t.referenceNav}</a>
+    <a class="site-name" href={model.href("", lang)}>{t.siteName}</a>
+    <nav data-nav="site" aria-label={t.mainNav}>
+      <a href={reference.href} lang={reference.lang} hreflang={reference.hreflang}>{reference.label}</a>
     </nav>
-    <div class="lang"><LangSwitcher lang={lang} /></div>
+    <div class="lang"><LangSwitcher lang={lang} hrefs={hrefs} /></div>
   </div>
 </header>

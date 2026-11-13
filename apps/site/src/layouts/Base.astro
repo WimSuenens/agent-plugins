@@ -1,11 +1,9 @@
 ---
 import "../styles/tokens.css";
 import "../styles/base.css";
-import { url } from "../lib/url.mjs";
 import { ui } from "../i18n/ui.mjs";
 import { langScript } from "../lib/langScript.mjs";
-import TopBar from "../components/TopBar.astro";
-const { lang, title, dutchHome = false, alternates = false } = Astro.props;
+const { lang, title, alternates = [] } = Astro.props;
 const t = ui[lang];
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
@@ -15,16 +13,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    {alternates && <link rel="alternate" hreflang="en" href={url("")} />}
-    {alternates && <link rel="alternate" hreflang="nl" href={url("nl/")} />}
+    {alternates.map((a) => <link rel="alternate" hreflang={a.hreflang} href={a.href} />)}
     <script is:inline set:html={langScript(base)}></script>
   </head>
   <body>
     <a class="skip-link" href="#main">{t.skip}</a>
-    <TopBar lang={lang} dutchHome={dutchHome} />
-    <main id="main" tabindex="-1" class="page">
-      <slot />
-    </main>
+    <slot />
     <footer><div class="page">{t.footer}</div></footer>
   </body>
 </html>

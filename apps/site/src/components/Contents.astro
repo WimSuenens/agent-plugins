@@ -1,0 +1,25 @@
+---
+// The contents list: one link per h2 and h3 of the page, h3 nested under the h2 before it. Nothing hand-listed.
+import { ui } from "../i18n/ui.mjs";
+const { headings, lang } = Astro.props;
+const items = [];
+for (const h of headings) {
+  if (h.depth === 3 && items.length > 0) items[items.length - 1].children.push(h);
+  else items.push({ ...h, children: [] });
+}
+const show = headings.some((h) => h.depth === 2);
+---
+{show && (
+  <nav data-nav="contents" aria-label={ui[lang].contentsNav}>
+    <ol>
+      {items.map((h) => (
+        <li>
+          <a href={`#${h.id}`}>{h.text}</a>
+          {h.children.length > 0 && (
+            <ol>{h.children.map((c) => <li><a href={`#${c.id}`}>{c.text}</a></li>)}</ol>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}

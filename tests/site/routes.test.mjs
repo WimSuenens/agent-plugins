@@ -1,9 +1,11 @@
-// AC-1, AC-2, AC-3, AC-4, AC-5, AC-12 (static facts) and the site layout. Slice 156.
+// AC-1, AC-2, AC-3, AC-4, AC-5, AC-12 (static facts) and the site layout. Slice 156; updated for slice 188 (five pages, page-tree routes,
+// counterpart switcher): the pages are computed from the page tree, never counted by hand.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { BASE, ROUTES, SITE, realBuild, buildSite, htmlFiles, allFiles, serve, launch, scratch } from "./lib.mjs";
+import { BASE, ROUTES, SITE, realBuild, buildSite, htmlFiles, routeOf, allFiles, serve, launch, scratch } from "./lib.mjs";
+import { loadEntries, oracle } from "./oracle.mjs";
 
 let dist, srv, browser, ctx;
 before(async () => {
@@ -24,8 +26,9 @@ async function read(route) {
     h1: [...document.querySelectorAll("h1")].map((e) => e.textContent.trim()),
     h2: [...document.querySelectorAll("h2")].map((e) => e.textContent.trim()),
     lede: document.querySelector("p.lede")?.textContent.trim() ?? null,
-    mainParas: [...document.querySelectorAll("main p")].map((e) => e.textContent.trim()),
-    mainLinks: [...document.querySelectorAll("main a[href]")].map((e) => e.getAttribute("href")),
+    // body text and body links only: the breadcrumb, contents, see-also (navs) and the draft notice are checked in wiki.test.mjs
+    mainParas: [...document.querySelectorAll("main p")].filter((e) => !e.closest("nav") && !e.hasAttribute("data-draft-notice")).map((e) => e.textContent.trim()),
+    mainLinks: [...document.querySelectorAll("main a[href]")].filter((e) => !e.closest("nav")).map((e) => e.getAttribute("href")),
     mainText: document.querySelector("main")?.innerText ?? "",
     switcher: [...document.querySelectorAll("nav[data-lang-switcher] a")].map((a) => ({
       href: a.getAttribute("href"), text: a.textContent.trim(), hreflang: a.getAttribute("hreflang"),
@@ -49,8 +52,10 @@ test("site lives in apps/site as a private npm project with a lockfile and ignor
   for (const s of ["build:site", "build", "check:a11y", "test"]) assert.ok(pkg.scripts?.[s], `script ${s}`);
 });
 
-test("only the three routes are built (AC-4: no /nl/reference/, no 404 page)", () => {
-  assert.deepEqual(htmlFiles(dist), ["index.html", "nl/index.html", "reference/index.html"]);
+test("only the pages of the page tree are built (188 AC-3; 156 AC-4: no /nl/reference/, no 404 page)", async () => {
+  const o = oracle(await loadEntries());
+  assert.deepEqual(htmlFiles(dist).map((f) => routeOf(f)).sort(), o.pages.map((p) => p.route).sort());
+  assert.deepEqual(htmlFiles(dist).filter((f) => /reference|404/.test(f) && f.startsWith("nl/")), []);
 });
 
 test("AC-1 English Home at the base path", async () => {
@@ -104,7 +109,7 @@ test("AC-3 every internal reference starts with the base and resolves; an un-bas
     const res = await fetch(srv.origin + r.split("#")[0]);
     assert.equal(res.status, 200, `${r} must resolve under the base`);
   }
-  for (const bad of ["/", "/nl/", "/reference/"]) {
+  for (const bad of ["/", "/nl/", "/reference/", "/getting-started/", "/nl/getting-started/"]) {
     assert.equal((await fetch(srv.origin + bad)).status, 404, `${bad} (no base) must not be served`);
   }
   // Served at the root instead: the based references no longer resolve, so the check above cannot pass by accident.
@@ -121,7 +126,7 @@ test("AC-3 the base is configurable: a build with SITE_BASE=/zz-qa prefixes ever
   assert.equal(b.status, 0, b.out.slice(-1500));
   for (const f of htmlFiles(b.dist)) {
     const html = fs.readFileSync(path.join(b.dist, f), "utf8");
-    assert.ok(!html.includes("/agent-plugins/"), `${f} hard-codes /agent-plugins/`);
+    assert.ok(!/(?<!WimSuenens)\/agent-plugins\//.test(html), `${f} hard-codes /agent-plugins/`);
     const refs = [...html.matchAll(/\s(?:href|src)="([^"]+)"/g)].map((m) => m[1]).filter((v) => !/^(https?:|#|mailto:)/.test(v));
     assert.ok(refs.length > 0);
     for (const v of refs) assert.ok(v.startsWith("/zz-qa/"), `${f}: ${v}`);
@@ -145,20 +150,24 @@ test("AC-4 Reference is English, single-URL; Dutch option on an English-only pag
   assert.equal(nlLink.href, `${BASE}/nl/`);
 });
 
-test("AC-5 every page: switcher in the top bar, two real links, own-language labels, current marked, works without script", async () => {
+test("AC-5 every page: switcher in the top bar, two real links, own-language labels, current marked, works without script; hrefs follow the counterpart rule (188 AC-14, AC-15)", async () => {
+  const o = oracle(await loadEntries());
   for (const route of ROUTES) {
     const d = await read(route);
+    const here = o.pages.find((p) => p.route === route);
     assert.ok(d.switcherInTopbar, `${route}: switcher inside header[data-test=topbar]`);
     assert.equal(d.switcher.length, 2, route);
     const [en, nl] = d.switcher;
-    assert.deepEqual([en.text, en.href, en.hreflang, en.lang, en.dataLang], ["English", `${BASE}/`, "en", "en", "en"], route);
-    assert.deepEqual([nl.text, nl.href, nl.hreflang, nl.lang, nl.dataLang], ["Nederlands", `${BASE}/nl/`, "nl", "nl", "nl"], route);
-    const wantCurrent = route === `${BASE}/nl/` ? "nl" : "en";
+    const wantEn = here.lang === "en" ? route : o.exists(here.slug, "en") ? o.href(here.slug, "en") : o.home("en");
+    const wantNl = here.lang === "nl" ? route : o.exists(here.slug, "nl") ? o.href(here.slug, "nl") : o.home("nl");
+    assert.deepEqual([en.text, en.href, en.hreflang, en.lang, en.dataLang], ["English", wantEn, "en", "en", "en"], route);
+    assert.deepEqual([nl.text, nl.href, nl.hreflang, nl.lang, nl.dataLang], ["Nederlands", wantNl, "nl", "nl", "nl"], route);
+    const wantCurrent = here.lang;
     for (const s of d.switcher) {
       if (s.dataLang === wantCurrent) assert.equal(s.current, "true", `${route}: ${s.text} current`);
       else assert.equal(s.current, null, `${route}: ${s.text} must not be current`);
     }
-    assert.equal(d.switcherNav, route === `${BASE}/nl/` ? "Taal" : "Language");
+    assert.equal(d.switcherNav, here.lang === "nl" ? "Taal" : "Language");
   }
 });
 

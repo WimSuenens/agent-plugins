@@ -138,3 +138,9 @@ _Avoid_: origin, status (status is the board's field)
 _Avoid_: skin, dashboard
 
 **Documentation site** — the public wiki that explains the plugins to newcomers: a navigation tree, breadcrumbs, an on-page contents list and see-also links, with a language switcher in the top bar of every page. Its look is editorial (warm serif, a single reading column, rules instead of boxes); Lean and the Obeya room are content pages, not styling. See [0022](docs/adr/0022-the-documentation-site-has-an-editorial-wiki-look.md).
+
+**Page tree** — the one data file (`apps/site/src/data/pages.mjs`) that lists every page of the documentation site: slug, parent, title per language, see-also and Dutch review status. Routes, the navigation tree, breadcrumbs, see-also lists and language counterparts are all derived from it. See [the contract](contracts/188-page-tree.md).
+_Avoid_: sitemap, nav config
+
+**Draft page** — a Dutch page of the documentation site whose review status in the page tree is not `reviewed` (absent counts as draft); it shows a notice that the translation is not yet reviewed by the owner. See [the page tree contract](contracts/188-page-tree.md) and [the components contract](contracts/188-wiki-components.md).
+_Avoid_: unreviewed page, WIP page

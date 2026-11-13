@@ -9,6 +9,8 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 - apps/site (Astro 7): when `outDir` lies outside the cwd, Astro writes its prerender temp files to `apps/site/.astro/`, so two builds at once clobber each other; run the site tests with `--test-concurrency=1`. Inline scripts need `is:inline`; `build.inlineStylesheets: "never"` keeps a real `.css` reference. Real `SKILL.md` frontmatter can be invalid YAML (unquoted `: ` in a description); the generator fails on it by contract.
 
+- apps/site (Astro 7): the default Markdown processor is Sätteri; `markdown.rehypePlugins` throws unless `@astrojs/markdown-remark` is installed. Register content plugins as hast plugins instead: `markdown.processor: satteri({ hastPlugins: [{ name, element: { filter: [...], visit(node, ctx) { ctx.setProperty(node, "href", ...) } } }] })` from `@astrojs/markdown-satteri` (it ships with astro, hoisted). `import.meta.glob("../content/pages/**/*.md", { eager: true })` gives `Content` and `getHeadings()` (`{depth, slug, text}`). Validate the page tree in an integration hook (`astro:build:start`) so a fault fails the build early and a line prints once; keep `lib/pages.mjs` free of Astro imports so config and unit tests can load it. The acceptance tests scan `src/` for quoted `"reference/"` style strings, so comments must not hold one either.
+
 ## Skills used
 
 ## Migrated memory

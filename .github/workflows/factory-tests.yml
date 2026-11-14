@@ -1,5 +1,5 @@
-# Runs the factory test suite (bash tests/run.sh) on every pull request and on main, on Linux and on macOS.
-# The macOS job is there because the scripts are written for bash 3.2 and the awk of a Mac.
+# Runs the factory test suite (bash tests/run.sh) on every pull request and on main, on macOS.
+# macOS because the scripts are written for bash 3.2 and the awk and sed of a Mac. The runner is macos-26: the sed of macos-15 does not end the text of `c\` and `i\` with a newline, which two tests rely on.
 name: factory-tests
 
 on:
@@ -23,31 +23,15 @@ env:
   GIT_COMMITTER_EMAIL: ci@example.invalid
 
 jobs:
-  tests-linux:
-    name: factory tests (ubuntu)
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - name: Show the tool versions the suite runs against
-        run: |
-          bash --version | head -1
-          (awk --version 2>&1 || awk -W version 2>&1) | head -1
-          sed --version 2>&1 | head -1 || true
-          git --version
-          jq --version
-          locale | head -3
-      - name: Run the factory test suite
-        run: bash tests/run.sh
-
+  # No ubuntu job for now: 16 checks assume BSD tools (see #221).
   tests-macos:
     name: factory tests (macos)
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          fetch-tags: true
       - name: Show the tool versions the suite runs against
         run: |
           bash --version | head -1

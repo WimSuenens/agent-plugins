@@ -32,7 +32,7 @@ A **run** is one cycle over the map's standing backlog (*The run cycle*). A **ma
 **First**, before the choice below, before any call to the board and before any mutation, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" state`. On a non-zero exit stop and print its stderr line (it says `run setup-factory-skill`): nothing else in this skill runs on a project that has not migrated; exit 6 means no flow table. A leftover `parallel-limit` line is ignored: `state` prints a note on stderr and exits 0, and setup removes the line. Then run `... factory-config.sh budget`; on exit 5 stop and name the line to fix, as for a bad role model value, and start nothing. Its output is the run's budget (`none`, `<N> tokens` or `<N> hours`).
 
 - **An idea, or nothing** → start a new run at step 1.
-- **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
+- **`#<map>`**, or the destination ticket of a direct run (the run ticket) → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
 - **`#<slice>`** of a map this factory runs → read `work/<id>/00-lead-state.md` in its worktree and continue that item at the step it names. Find the role tasks (*Find role task*) and the ledger (*Find ledger*) before creating or posting anything.
 
 Whichever entry applies, run the checks of `## Andon`, *Run start*, before step 1 or the next item starts. On a resumed run they include the FREEZE check. They also include the baseline check of `references/baseline.md`: *Find baseline* and act on its result (section 2), then the repair check (section 8.2).
@@ -79,13 +79,21 @@ Grill the person with `/grilling`, together with `/domain-modeling` for the term
 **Not:** <what is deliberately outside the destination>
 ```
 
-**Done when** the person has confirmed the four fields.
+**Done when** the person has confirmed the four fields and the plan is on the ticket.
 
-Once the four fields are confirmed the product owner creates `docs/direction.md` if it is missing (`agents/product-owner.md`, *Direction document*). That is a two-way step: no question to the person, reported at the next stage boundary. The file is a minimal `goal` and `current` plus one History line naming the map, written by a role task of the product owner that lands with the first PR that follows. It is the repository's own direction document, not the design plugin's direction brief.
+Once the four fields are confirmed the product owner creates `docs/direction.md` if it is missing (`agents/product-owner.md`, *Direction document*). That is a two-way step: no question to the person, reported at the next stage boundary. The file is a minimal `goal` and `current` plus one History line naming the run ticket (the map, or the destination ticket in the direct route), written by a role task of the product owner that lands with the first PR that follows. It is the repository's own direction document, not the design plugin's direction brief.
+
+**Size the destination.** Once the four fields are confirmed, size the destination with the project's own flow table, write the plan on the destination ticket (the issue the idea came from, or one you file from the four fields) and run it without waiting; the person is asked only on an open one-way door (step 7) or in the Heavy band.
+
+After the four fields are confirmed, when a slice is cut, and when the work reveals what the sizing missed: read `references/run-route.md` (*Sizing*, *The plan*, *Escalation*, *Heavy band*: the table, `flow-size.sh`, the plan fields, who is asked, what the first slice leaves out).
 
 ## 2. Chart the route
 
-Invoke `/wayfinding:wayfinder` to chart the map, passing the destination from step 1 in, so it skips its own naming step. Its frontier grilling and triage still talk to the person here, in the main session. Stop it before it names a beachhead; cutting slices is step 4.
+With the plan's route `direct` there is no map and no frontier round: steps 2 and 3 are skipped.
+
+When the plan's route is `direct`: read `references/run-route.md` (*The direct route*: the run ticket, the decision cards, the ADRs in one PR, the slices cut from Done when).
+
+When the plan's route is `map`, invoke `/wayfinding:wayfinder` to chart the map, passing the destination from step 1 in, so it skips its own naming step. Its frontier grilling and triage still talk to the person here, in the main session. Stop it before it names a beachhead; cutting slices is step 4.
 
 The map's number identifies the run: the current run is `#<map>`, as `## Andon`, *Run identity*, says.
 
@@ -111,7 +119,7 @@ Add the map and every child ticket of the map to the board now (*The board*, run
 
 ## 3. Clear the frontier's one-way doors
 
-This step runs as a **frontier round**:
+This step runs only when the plan's route is `map` (in the direct route the decision cards go to the person one by one and the ADRs land in one PR). It runs as a **frontier round**:
 
 1. From `origin/main` (the script fetches it and branches from it; exit 5 means the fetch failed: tell the person, do not build on a stale base), `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" add frontier <map>` (it creates `.claude/worktrees/frontier-<map>` on `frontier/<map>` and prints the path; the location is in `docs/agents/factory.md`). When this is the run's first worktree, bind `kept … for next run` overrides (`## Andon`, *Run identity*).
 2. For each ticket you work, create `work/frontier-<ticket>/` in that worktree. Each role task is a sub-issue of the **frontier ticket** (never the map; *Role tasks*), its brief the issue body. Results, questions, options and cards are files there that use the protocol's templates, and every commit starts with `#<ticket> <role>: <what>`.
@@ -142,7 +150,9 @@ A card decided after its round merged, or one-way doors reopened by a resurvey, 
 
 ## 4. Cut the next slice
 
-Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unblocked. Its number is `<id>`.
+In the map route, invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unblocked; in the direct route cut the slice from the destination's **Done when** (no beachhead skill, no map). Its number is `<id>`.
+
+**The plan decides the beachhead.** The beachhead skill's "put the candidates to the user, wait for the choice" does not apply: choose among the candidates yourself, ask the person only when a candidate would put a one-way door under test or the candidates differ on something only the person can weigh, write the candidates, the choice and the reason on the slice ticket, and tell the person at the next stage boundary. Overturning the choice is feedback and never stops the work (`references/run-route.md`, *The beachhead is the plan's*).
 
 **No one-way doors.** When charting found none, the map has no `lock now` ticket and `/wayfinding:beachhead` finds an empty exposure list. Do not follow its route back to the wayfinder's Advance step, and do not dissolve the map: the factory never dissolves a map. Cut one slice that reaches the Destination's **Done when**. Take its **Under test** lines from the standing constraints recorded in the map's Notes, or from the Done-when outcomes themselves when Notes holds none.
 
@@ -152,7 +162,7 @@ Add the new ticket to the board now: `Kind` slice, `Factory status` `Ready`. A s
 
 ## 5. Start the item
 
-0. **The start gate, budget part** (*The run cycle*, *Parallel slices*). When `factory-config.sh reached <spent>` exits 1, the slice stays `Ready` and you say `budget reached`. Otherwise go on. There is no count of slices in flight to check.
+0. **The start gate, budget part** (*The run cycle*, *Parallel slices*). When `factory-config.sh reached <spent>` exits 1, the slice stays `Ready` and you say `budget reached`. Otherwise go on. There is no count of slices in flight to check. The gate also asks the integrator: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/start-gate.sh" --board <snapshot> --slice <id> --event slice-ready|pr-opened --spent <n>` prints its order and its start or pause line, and you take them (*Parallel slices*).
 1. The ticket is on the board with `Kind` slice (added when it was cut). Add it if it is not (*Add to board*, *Set status*): `Factory status` `Ready`.
 2. `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" add item <id>` (it creates `.claude/worktrees/<id>` on `item/<id>` and prints the path; the location is in `docs/agents/factory.md`; exit 3 means the folder is not ignored yet: run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" ignore` and commit `.gitignore` on main, or send the person to `/factory:setup-factory-skill`), then create `work/<id>/` in it. When this is the run's first worktree, bind `kept … for next run` overrides (`## Andon`, *Run identity*). Then, when step 8.10 decided that the run's experiment is written, commit it in this worktree, **after 5.2 and before the ledger of 5.3** (`#<id> lead: override <name>`, `andon: none (experiment)`; `references/a3.md`, section 5): the label's `overrides at start` lists it and this item is an after-item. On a resumed run apply the rule of `references/a3.md`, section 5 again from the records; nothing was stored between 8.10 and here.
 3. Stamp `date -u +%FT%TZ` (`started`). Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/fingerprint.sh" "${CLAUDE_PLUGIN_ROOT}"` and write the label (release, standard and tooling fingerprints, dependency versions, your session id) as `## Label` in the lead state; start `## Findings` and `## Abnormalities`, as `references/hansei.md` defines them. Write the label's `overrides at start` line after the binding of step 5.2 and the run-start sort of `## Andon`. Then run the item-start checks of `## Andon` (kind 6 (a) and (b), kind 5 on the item worktree's `docs/agents/factory.md`) and the baseline check of step 0 again (*Find baseline*, then the repair check, `references/baseline.md` sections 2 and 8.2). **Post the ledger** (*Find ledger*, then *Post ledger* when none exists): `started`, and the results of the checks on its `start checks` line.

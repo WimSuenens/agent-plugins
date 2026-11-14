@@ -6,7 +6,7 @@
 #        bash intake.sh drop
 #        bash intake.sh untriaged
 #        bash intake.sh triage <issue> <outcome> <reason-file>
-#        bash intake.sh filed-since <start> [<end>] [--state open|all] [--line]
+#        bash intake.sh filed-since <start>|--run-body <run ticket body> [<end>] [--state open|all] [--line]
 # dir: prints the inbox folder, relative to the main checkout (.claude/factory-inbox).
 # init: creates the inbox folder and adds /.claude/factory-inbox/ to the main checkout's .gitignore; prints "created" or
 #      "already present" and changes nothing the second time. Setup runs it only after the person said yes.
@@ -46,7 +46,7 @@ main_checkout() {
 }
 
 usage() {
-  echo "usage: intake.sh dir | init | file <title> [<body-file>] | drop | untriaged | triage <issue> <outcome> <reason-file> | filed-since <start> [<end>] [--state open|all] [--line]" >&2
+  echo "usage: intake.sh dir | init | file <title> [<body-file>] | drop | untriaged | triage <issue> <outcome> <reason-file> | filed-since <start>|--run-body <run ticket body> [<end>] [--state open|all] [--line]" >&2
   exit 2
 }
 
@@ -165,16 +165,22 @@ case "$cmd" in
     ;;
 
   filed-since)
-    shift; start=""; end=""; state=open; line=0
+    shift; start=""; end=""; state=open; line=0; runbody=""
     while [ $# -gt 0 ]; do
       case "$1" in
+        --run-body) runbody="${2:-}"; shift 2 || usage ;;
         --state) state="${2:-}"; shift 2 || usage ;;
         --line) line=1; shift ;;
         -*) usage ;;
-        *) if [ -z "$start" ]; then start="$1"; elif [ -z "$end" ]; then end="$1"; else usage; fi; shift ;;
+        *) if [ -z "$start" ] && [ -z "$runbody" ]; then start="$1"; elif [ -z "$end" ]; then end="$1"; else usage; fi; shift ;;
       esac
     done
     case "$state" in open | all) ;; *) usage ;; esac
+    if [ -n "$runbody" ]; then
+      # the run ticket's own body (the map's, or the destination ticket's in the direct route) gives the start: no explicit start next to it
+      [ -z "$start" ] || usage
+      start="$(bash "$(dirname "${BASH_SOURCE[0]}")/run-state.sh" started "$runbody")" || exit 2
+    fi
     ts='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
     printf '%s' "$start" | grep -Eq "$ts" || usage
     [ -n "$end" ] || end="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

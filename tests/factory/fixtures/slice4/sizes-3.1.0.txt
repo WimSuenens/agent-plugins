@@ -1,0 +1,10 @@
+# bytes at factory 3.1.0 (origin/main fdf70d5), before slice 4; the Light-item walkthrough compares against them
+run/SKILL.md 62272
+references/run-andon-detect.md 10283
+references/run-improve.md 5751
+references/run-intake.md 6007
+references/run-overrides.md 11463
+references/run-close-item.md 6573
+references/run-parallel.md 5531
+wayfinder/SKILL.md 16215
+beachhead/SKILL.md 5492

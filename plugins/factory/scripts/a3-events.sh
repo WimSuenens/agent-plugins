@@ -2,11 +2,13 @@
 # a3-events.sh: the events lines of an A3 (v3), built from the run's records, so the A3 is not written from memory.
 # The lead runs it at step 9 and pastes its output into the A3; the lead adds the cause of each event and nothing else.
 # Usage:
-#   a3-events.sh [--item <n> [--ledger <file>] [--hansei <file>] [--comments <file>]]... [--filed <file>]
+#   a3-events.sh [--item <n> [--ledger <file>] [--hansei <file>] [--comments <file>]]... [--filed <file>] [--run-body <file>]
 #   One `--item` group per item of the run (the map's number may be a group of its own, with only `--comments`).
 #   --ledger   the ledger comment of the item (its Tasks, Waits and Person's touches tables).
 #   --hansei   the hansei record of the item (its `3. rework:` line).
 #   --comments the item's other comments (stage summaries, resolution, needs-you cards), as one file.
+#   --run-body the body of the run ticket (the map's, or the destination ticket's in the direct route): its Factory run section gives the run list,
+#              printed as `- items closed in this run: #<n> ...` (or `none`) before the last line. Exit 2 when the body has no such section.
 #   --filed    the output of `intake.sh filed-since <run start> <run end> --state all` (one `<n><TAB><title><TAB><source>` per issue).
 # Prints, in A3 order:
 #   - events: <n>                              (or `none (no event in the records read)`)
@@ -33,7 +35,7 @@ usage() { sed -n '2,/^# Exit/p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 NOT_DETECTABLE="a brief refused by the scan; why a rework round happened; a contradiction between two contract rules (only the rework round it caused shows); the cause of a defect in an input; any event no role or the lead wrote down"
 
 US="$(printf '\037')"
-items=""; filed=""
+items=""; filed=""; runbody=""
 cur=""; ledger=""; hansei=""; comments=""
 flush() {
   [ -n "$cur" ] || return 0
@@ -50,11 +52,18 @@ while [ $# -gt 0 ]; do
     --hansei) [ -n "$cur" ] || usage; hansei="${2:?}"; shift 2 ;;
     --comments) [ -n "$cur" ] || usage; comments="${2:?}"; shift 2 ;;
     --filed) filed="${2:?}"; shift 2 ;;
+    --run-body) runbody="${2:?}"; shift 2 ;;
     *) usage ;;
   esac
 done
 flush
 [ -z "$filed" ] || { [ -f "$filed" ] && [ -r "$filed" ]; } || { echo "a3-events: cannot read $filed" >&2; exit 2; }
+
+runlist=""
+if [ -n "$runbody" ]; then
+  runlist="$(bash "$(dirname "$0")/run-state.sh" items "$runbody")" || exit 2
+  [ -n "$runlist" ] || runlist=none
+fi
 
 detect() {
   printf '%s' "$items" | while IFS="$US" read -r n led han com; do
@@ -122,4 +131,5 @@ if [ -n "$filed" ] && [ -s "$filed" ]; then
 else
   echo "- issues filed during the run: none (no issue carried the triage label or the marker)"
 fi
+[ -z "$runlist" ] || echo "- items closed in this run: $runlist"
 echo "- not detectable from records: $NOT_DETECTABLE"

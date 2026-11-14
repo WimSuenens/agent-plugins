@@ -1,0 +1,23 @@
+---
+import { ui } from "../i18n/ui.mjs";
+const { lang, groups, counts } = Astro.props;
+const t = ui[lang];
+const en = lang === "nl" ? "en" : undefined;
+const sentence = t.skillsCountSentence.split(/(\{skills\}|\{plugins\})/);
+---
+<p>{t.skillsIntro}</p>
+<p data-field="count-sentence">{sentence.map((part) => part === "{skills}" ? <span data-count="skills">{counts.skills}</span> : part === "{plugins}" ? <span data-count="skill-plugins">{counts.skillPlugins}</span> : part)}</p>
+{lang === "nl" && <p data-field="english-note">{t.englishNote}</p>}
+{groups.map((g) => (
+  <section>
+    <h2 id={g.id} lang={en}>{g.plugin}</h2>
+    {g.skills.map((s) => (
+      <article data-skill-entry data-plugin={s.plugin} data-name={s.name}>
+        <h3 id={s.id} lang={en}>{s.name}</h3>
+        <p><code data-field="command" lang={en}>{s.command}</code>{s.manual && <span data-field="manual">{t.manual}</span>}</p>
+        <p data-field="description" lang={en}>{s.description.trim()}</p>
+        {s.argumentHint && <p data-field="argument-hint">{t.argumentHint} <code lang={en}>{s.argumentHint}</code></p>}
+      </article>
+    ))}
+  </section>
+))}

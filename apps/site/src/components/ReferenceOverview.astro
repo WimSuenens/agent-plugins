@@ -1,0 +1,24 @@
+---
+import { ui } from "../i18n/ui.mjs";
+import { getModel } from "../lib/pages.mjs";
+const { lang, counts } = Astro.props;
+const t = ui[lang];
+const model = getModel();
+const skills = model.link("skills", lang);
+const agents = model.link("agents", lang);
+const skillsSentence = t.skillsCountSentence.split(/(\{skills\}|\{plugins\})/);
+const agentsSentence = t.agentsCountSentence.split(/(\{agents\}|\{plugins\})/);
+---
+<p>{t.referenceOverviewIntro}</p>
+<section>
+  <h2 id="skills">{model.title("skills", lang)}</h2>
+  <p>{t.skillsDesc}</p>
+  <p data-field="count-sentence">{skillsSentence.map((part) => part === "{skills}" ? <span data-count="skills">{counts.skills}</span> : part === "{plugins}" ? <span data-count="skill-plugins">{counts.skillPlugins}</span> : part)}</p>
+  <p><a href={skills.href}>{skills.label}</a></p>
+</section>
+<section>
+  <h2 id="agents">{model.title("agents", lang)}</h2>
+  <p>{t.agentsDesc}</p>
+  <p data-field="count-sentence">{agentsSentence.map((part) => part === "{agents}" ? <span data-count="agents">{counts.agents}</span> : part === "{plugins}" ? <span data-count="agent-plugins">{counts.agentPlugins}</span> : part)}</p>
+  <p><a href={agents.href}>{agents.label}</a></p>
+</section>

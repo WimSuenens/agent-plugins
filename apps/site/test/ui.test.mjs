@@ -17,3 +17,11 @@ test("the visible heading is separate from the document title", () => {
     assert.notEqual(ui[lang].heading, ui[lang].title);
   }
 });
+
+test("count sentences are templates with a slot and no digit", () => {
+  for (const lang of ["en", "nl"]) {
+    assert.match(ui[lang].skillsCountSentence, /\{skills\}.*\{plugins\}/);
+    assert.match(ui[lang].agentsCountSentence, /\{agents\}.*\{plugins\}/);
+    for (const [k, v] of Object.entries(ui[lang])) assert.doesNotMatch(v, /\d/, `${lang}.${k}`);
+  }
+});

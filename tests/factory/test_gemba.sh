@@ -360,12 +360,12 @@ echo T > "$R/tests/t.sh"; git -C "$R" add -A; cm '2026-01-01T10:20:00Z' '#60 qa-
 echo O > "$R/plugins/x/other.md"; git -C "$R" add -A; cm '2026-01-01T10:12:00Z' '#61 developer: another item'
 echo B > "$R/plugins/x/b.md"; git -C "$R" add -A; cm '2026-01-01T10:30:00Z' '#60 developer: second'
 cp "$T/result.md" "$R/work/60/06-result-developer.md"
-ck t7-a-text-names-the-git-log-command 1 "$([ -n "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log --no-merges --format='%H %cI %s' item/<id>")" ] && echo 1 || echo 0)"
+ck t7-a-text-names-the-git-log-command 1 "$([ -n "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log --no-merges --format='%H %aI %s' item/<id>")" ] && echo 1 || echo 0)"
 ck t7-a-text-names-the-git-show-command 1 "$([ -n "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> show --unified=0 --format='commit %h %s' <sha>")" ] && echo 1 || echo 0)"
 # the window (row Start 10:05 to the next developer row's Start 10:25) applied to the printed times: only the first developer commit
-in_window() {  # in_window <log lines> <role> <start> <end>: shas of '#60 <role>: ' commits with start <= committer time < end
+in_window() {  # in_window <log lines> <role> <start> <end>: shas of '#60 <role>: ' commits with start <= author time < end
   printf '%s\n' "$1" | awk -v r="#60 $2: " -v s="$3" -v e="$4" '{ t=$2; sub(/\+00:00$/,"Z",t); if (index($0, " " r) > 0 && t >= s && (e == "" || t < e)) print $1 }'; }
-LOG="$(git -C "$R" log --no-merges --format='%H %cI %s' item/60)"
+LOG="$(git -C "$R" log --no-merges --format='%H %aI %s' item/60)"
 shas="$(in_window "$LOG" developer 2026-01-01T10:05:00Z 2026-01-01T10:25:00Z)"
 ck t7-a-window-row-1-one-commit 1 "$(printf '%s\n' "$shas" | grep -c .)"
 ck t7-a-window-row-2-open-ended-one-commit 1 "$(in_window "$LOG" developer 2026-01-01T10:25:00Z '' | grep -c .)"
@@ -381,7 +381,7 @@ ck t7-a-fallback-excludes-another-item 0 "$(grep -c '#61\|other\.md' "$T/commits
 ck t7-a-fallback-excludes-the-summary 0 "$(grep -ci 'Everything in the brief\|summary' "$T/commits.view")"
 nfb="$(wc -c < "$T/commits.view" | tr -d ' ')"
 ck t7-a-fallback-line-in-grammar OK "$(python3 -I "$GL" "- gemba: row 2 Build (developer); read commits and result file $nfb chars; found nothing (3 Done items and 2 constraints checked); changes nothing" | cut -d: -f1)"
-ck t7-a-window-time-in-the-log-format 1 "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log" | grep -cE '%cI')"
+ck t7-a-window-time-in-the-log-format 1 "$(printf '%s\n' "$CMDS" | grep -F -- "git -C <worktree> log" | grep -cE '%aI')"
 
 # ---------- T7 continued: an unreadable transcript is a failed read, never an empty view ----------
 printf 'not json at all\n' > "$T/bad.jsonl"
@@ -573,7 +573,7 @@ if [ -f "$CL" ] && grep -qE '^## .*1\.3\.0' "$CL"; then
 else skip t13-changelog-1.3.0-entry "the docs-writer's 1.3.0 entry is not in this checkout yet; reviews/qa-60.md lists what it must say as unverified"; fi
 
 # ---------- G9 / QA F6: the brief of a row is found by the first-commit time window (hansei.md section 6, "Which brief") ----------
-has f6-text-window-rule "$T/sec6.md" '**Which commits:** the sampled role'"'"'s, on `item/<id>`, with committer time not before the `created_at` of the row'"'"'s `Task` sub-issue'
+has f6-text-window-rule "$T/sec6.md" '**Which commits:** the sampled role'"'"'s, on `item/<id>`, with author time not before the `created_at` of the row'"'"'s `Task` sub-issue'
 has f6-text-brief-is-the-task-issue "$T/sec6.md" '**Which brief:** the row'"'"'s `Task` sub-issue: `gh issue view <task> --json body,createdAt,closedAt`'
 has f6-text-brief-not-found "$T/sec6.md" 'When the task issue cannot be read, the line reads `not captured (brief not found)`.'
 has f6-text-result-file-named-on-output-line "$T/sec6.md" '**Which result file:** the file named on the brief'"'"'s `Output` line.'

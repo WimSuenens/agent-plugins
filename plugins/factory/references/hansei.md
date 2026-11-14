@@ -553,7 +553,7 @@ In this order of preference:
 
 **A transcript shared by several rows.** A resumed agent has one transcript for all its rows. Build the view only from the entries whose `timestamp` lies between the sampled row's `Start (UTC)` and `End (UTC)` (the two `select` filters in the view command below), and count `m` over that window, so the part read is the sampled row's own work and not an earlier row's. If no entry of a transcript carries a readable `timestamp`, treat that transcript as unreadable and use the commits and result file for the whole row, as for any unreadable transcript. The row boundaries are your own clock, so the window can cut an entry in two; that is accepted.
 
-**Which commits:** the sampled role's, on `item/<id>`, with committer time not before the `created_at` of the row's `Task` sub-issue and before the `created_at` of the role's next task, if any (omit the test when a time cannot be read). **Which brief:** the row's `Task` sub-issue: `gh issue view <task> --json body,createdAt,closedAt` (one extra read, inside the cap below, ending in `head -c`); its body, after the marker line, is the brief or the rework feedback. **Which result file:** the file named on the brief's `Output` line. When the task issue cannot be read, the line reads `not captured (brief not found)`.
+**Which commits:** the sampled role's, on `item/<id>`, with author time not before the `created_at` of the row's `Task` sub-issue and before the `created_at` of the role's next task, if any (omit the test when a time cannot be read). **Which brief:** the row's `Task` sub-issue: `gh issue view <task> --json body,createdAt,closedAt` (one extra read, inside the cap below, ending in `head -c`); its body, after the marker line, is the brief or the rework feedback. **Which result file:** the file named on the brief's `Output` line. When the task issue cannot be read, the line reads `not captured (brief not found)`.
 
 ### The commands and the cap
 
@@ -589,7 +589,7 @@ head -c <budget> "$v" > "$p"; wc -c < "$p"; cat "$p"; echo
 
 The view keeps each tool call (name and the first 300 characters of its input), each result (its first line, 200 characters) and the final reply (1,500 characters, as a claim).
 
-The commits fallback has the same shape: `git -C <worktree> log --no-merges --format='%H %cI %s' item/<id>`, filtered to the role's subject prefix and to the committer times of the window; then, for each sha, `git -C <worktree> show --unified=0 --format='commit %h %s' <sha>` kept to the lines that start `commit `, `diff --git `, `+` or `-`; then the result file through
+The commits fallback has the same shape: `git -C <worktree> log --no-merges --format='%H %aI %s' item/<id>`, filtered to the role's subject prefix and to the author times of the window. Read the author time, not the committer time: a rebase rewrites the committer time of every commit it replays, and the author time stays. Then, for each sha, `git -C <worktree> show --unified=0 --format='commit %h %s' <sha>` kept to the lines that start `commit `, `diff --git `, `+` or `-`; then the result file through
 
 ```
 awk '/^Summary:/{skip=1; next} /^(Status|Progress|Artifacts|Decisions|Open questions|Missing|Decision card):/{skip=0} !skip' "<worktree>/work/<id>/<result file>"

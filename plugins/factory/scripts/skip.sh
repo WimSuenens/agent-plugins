@@ -5,7 +5,7 @@
 # <role>: product-owner, architect, developer, devops, docs-writer, security-reviewer (skippable); qa-engineer or runtime-proof (never).
 # <area> (declared by the lead): contracts, authentication, secrets, data-migration, one-way-door.
 # The path list tested is the gate's (merge-gate.sh): the Paths: blocks of the contract files, plus each contract file that sits under a
-#   contracts/ directory (the slice's own contract is in its diff, though not on its own Paths: list), plus --paths, the pull request's
+#   contracts/ directory (the slice's own contract is in its diff, though not on its own Paths: list), plus --paths (one path per line, so a path with a space stays whole), the pull request's
 #   changed paths, which are the very list the gate gets. Pass --paths once the PR exists; without it the contract files stand in for the diff.
 # protected: prints "protected: no" (exit 0) or "protected: <why>" (exit 1). A slice is protected when its path list holds a path under
 #   contracts/ or a path the shared definition (protected-areas.sh) marks: contracts, auth/oauth/login, secret or migration, or when the lead declares an area with --touches.
@@ -45,10 +45,10 @@ if [ -z "$prot" ]; then
   # the slice's own contract files are in its diff; --paths is the diff itself (no glob expansion of either)
   own=""
   for f in "${files[@]}"; do
-    case "$f" in contracts/* | */contracts/*) own="$own contracts/$(basename "$f")" ;; esac
+    case "$f" in contracts/* | */contracts/*) own="$own"$'\n'"contracts/$(basename "$f")" ;; esac
   done
   set -f
-  extra="$own $pr_paths"
+  extra="$(protected_list_paths "$own"$'\n'"$pr_paths")"
   while read -r kind p; do
     [ "$kind" = path ] || continue
     protected_path_area "$p" >/dev/null && { prot="$p"; break; }
@@ -56,9 +56,11 @@ if [ -z "$prot" ]; then
 $list
 LIST
   if [ -z "$prot" ]; then
-    for p in $extra; do
+    while IFS= read -r p; do
       protected_path_area "$p" >/dev/null && { prot="$p"; break; }
-    done
+    done <<EXTRA
+$extra
+EXTRA
   fi
   set +f
 fi

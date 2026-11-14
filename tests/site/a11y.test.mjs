@@ -36,7 +36,7 @@ test("AC-24/25 the real build command exits 0 and checks every built page", () =
   const r = npm(["run", "build"], { SITE_OUT_DIR: dist, SITE_BASE: BASE }, 600000);
   assert.equal(r.status, 0, r.out.slice(-2000));
   const n = htmlFiles(dist).length;
-  assert.equal(n, ROUTES.length, "English Home, Getting started, Reference; Dutch Home, Getting started");
+  assert.equal(n, ROUTES.length, "English and Dutch: Home, Getting started, Reference, Skills, Agents (225 AC-16)");
   assert.equal(lastLine(r.stdout), `a11y: ${n} pages checked, 0 violations`);
 });
 

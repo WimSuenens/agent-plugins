@@ -24,8 +24,9 @@ test("AC-3 the built pages are exactly the pages of the page tree, at the URLs o
   const o = oracle(await loadEntries());
   assert.deepEqual(htmlFiles(dist).map((f) => routeOf(f)).sort(), o.pages.map((p) => p.route).sort());
   // the requirement names the five URLs; the data file must agree with them
-  assert.deepEqual([...ROUTES].sort(), o.pages.map((p) => p.route).sort(), "the real page tree is Home, Getting started, Reference in English; Home and Getting started in Dutch");
-  for (const bad of ["nl/reference", "nl/reference/index.html", "404.html"]) assert.ok(!fs.existsSync(path.join(dist, bad)), `${bad} must not be built`);
+  assert.deepEqual([...ROUTES].sort(), o.pages.map((p) => p.route).sort(), "225: the real page tree is Home, Getting started, Reference, Skills, Agents, each in English and in Dutch");
+  for (const bad of ["404.html"]) assert.ok(!fs.existsSync(path.join(dist, bad)), `${bad} must not be built`);
+  for (const good of ["reference", "skills", "agents"]) for (const pre of ["", "nl/"]) assert.ok(fs.existsSync(path.join(dist, pre + good, "index.html")), `${pre}${good} is built`);
   for (const r of ROUTES) assert.ok(r.startsWith(`${BASE}/`) && r.endsWith("/"));
 });
 
@@ -51,7 +52,7 @@ test("AC-1 the routing is two files and no component or page file keeps its own 
       const t = fs.readFileSync(p, "utf8");
       // a URL written out for another page: a quoted string holding "<slug>/" (url("reference/")), "/<slug>/", or the base path itself.
       // Slugs as data keys (a component key, a model call such as href("reference", "en")) are not URLs and are not flagged.
-      if (/["'`]\/?(nl\/)?(getting-started|reference)\//.test(t) || /\/agent-plugins\//.test(t)) offenders.push(rel);
+      if (/["'`]\/?(nl\/)?(getting-started|reference|skills|agents)\//.test(t) || /\/agent-plugins\//.test(t)) offenders.push(rel);
     }
   })(path.join(SITE, "src"));
   assert.deepEqual(offenders, [], "page slugs or page URLs written outside data/pages.mjs and the registry");
@@ -191,7 +192,7 @@ const FAULTS = [
   ["missing content file", X(), {}, /pages: x: missing content file src\/content\/pages\/en\/x\.md/],
   ["content file with no page tree entry", null, { orphan: XMD }, /content file src\/content\/pages\/en\/orphan\.md has no page tree entry/],
   ["unknown component", `{ slug: "x", parent: "", title: { en: "X" }, source: "component", component: "nope" }`, {}, /pages: x: unknown component "nope"/],
-  ["a Dutch page whose parent has no Dutch page", `{ slug: "x", parent: "reference", title: { en: "X", nl: "X" }, source: "markdown" }`, { x: XMD, nlx: XMD }, /pages: x: parent "reference" has no nl page/],
+  ["a Dutch page whose parent has no Dutch page (225: Reference now has one, so the parent is an English-only fixture page)", `{ slug: "engonly", parent: "", title: { en: "Eng" }, source: "markdown" }, { slug: "x", parent: "engonly", title: { en: "X", nl: "X" }, source: "markdown" }`, { engonly: XMD, x: XMD, nlx: XMD }, /pages: x: parent "engonly" has no nl page/],
   ["alsoListedIn names a language the page exists in", `{ slug: "x", parent: "", title: { en: "X", nl: "X" }, source: "markdown", alsoListedIn: ["nl"] }`, { x: XMD, nlx: XMD }, /pages: x: alsoListedIn conflicts with title\.nl/],
   ["a review status other than draft or reviewed", `{ slug: "x", parent: "", title: { en: "X", nl: "X" }, source: "markdown", review: { nl: "maybe" } }`, { x: XMD, nlx: XMD }, /pages: x: /],
   ["a review status on a page with no Dutch title", X(`, review: { nl: "reviewed" }`), { x: XMD }, /pages: x: /],

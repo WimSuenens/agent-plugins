@@ -81,9 +81,9 @@ test("AC-18 control: a cross-language link to a missing Dutch page is found", as
   const copy = copyDist();
   const f = path.join(copy, "nl/index.html");
   const html = fs.readFileSync(f, "utf8");
-  const bent = html.replace(/href=("?)\/agent-plugins\/nl\/getting-started\/\1/, `href=$1/agent-plugins/nl/reference/$1`);
+  const bent = html.replace(/href=("?)\/agent-plugins\/nl\/getting-started\/\1/, `href=$1/agent-plugins/nl/zz-missing/$1`);
   assert.notEqual(bent, html);
   fs.writeFileSync(f, bent);
   const r = await crawl(copy);
-  assert.ok(r.problems.some((p) => p.includes("/nl/reference/")), JSON.stringify(r.problems));
+  assert.ok(r.problems.some((p) => p.includes("/nl/zz-missing/")), JSON.stringify(r.problems));
 });

@@ -61,11 +61,14 @@ test("AC-7 the choice made with the keyboard (Enter) is stored too", async () =>
   assert.equal(await stored(), "nl");
 });
 
-test("AC-4 Dutch chosen on the English-only Reference page lands on Dutch Home and is stored", async () => {
-  await go(`${BASE}/reference/`);
-  await page.click("nav[data-lang-switcher] a[data-lang=nl]");
-  await page.waitForURL(`**${BASE}/nl/`);
-  assert.equal(await stored(), "nl");
+test("AC-4 (225) Dutch chosen on a Reference section page lands on its Dutch counterpart and is stored; no page in the section is English-only", async () => {
+  for (const slug of ["reference", "skills", "agents"]) {
+    await go(`${BASE}/${slug}/`);
+    await page.click("nav[data-lang-switcher] a[data-lang=nl]");
+    await page.waitForURL(`**${BASE}/nl/${slug}/`);
+    assert.equal(await stored(), "nl", slug);
+    await page.evaluate(() => localStorage.clear());
+  }
 });
 
 test("AC-8 returning visitor with nl: ends on /nl/, at most 2 navigations, history entry replaced", async () => {
@@ -226,7 +229,7 @@ for (const route of ROUTES) {
     });
     assert.ok(m.docW <= m.vw && m.bodyW <= m.vw, `document ${m.docW}/${m.bodyW} wider than viewport ${m.vw}`);
     assert.ok(m.items.length >= 4, "site name, Reference and two switcher options");
-    if (route.startsWith(`${BASE}/nl/`)) assert.ok(m.items.some((i) => i.text === "Reference"), "Dutch pages show the English label Reference (188)");
+    if (route.startsWith(`${BASE}/nl/`)) assert.ok(m.items.some((i) => i.text === "Naslag"), "Dutch pages show the Dutch label Naslag (225: Reference is translated)");
     for (const i of m.items) {
       assert.ok(i.visible && i.w > 0 && i.h > 0, `${i.text} visible`);
       assert.ok(i.x >= -0.5 && i.r <= m.vw + 0.5, `${i.text} inside the viewport (${i.x}..${i.r})`);
@@ -266,17 +269,18 @@ test("AC-14 Home and Getting started each lead to the counterpart with the keybo
   assert.equal(await stored(), "en");
 });
 
-test("AC-15 a page with no Dutch counterpart (the English Reference) sends Dutch to the Dutch Home, never a 404; the Dutch Reference link is the English page", async () => {
-  await go(`${BASE}/reference/`);
-  await page.click("nav[data-lang-switcher] a[data-lang=nl]");
-  await page.waitForURL(`**${BASE}/nl/`);
-  assert.equal(pathname(), `${BASE}/nl/`);
-  assert.equal((await fetch(srv.origin + `${BASE}/nl/reference/`)).status, 404, "there is no Dutch Reference page for the switcher to find");
+test("AC-15 / 225 AC-13 the Dutch Reference link is a real Dutch link, in the top bar and the tree; the switcher of every section page finds its counterpart, never a 404", async () => {
+  for (const slug of ["reference", "skills", "agents"]) {
+    await go(`${BASE}/${slug}/`);
+    await page.click("nav[data-lang-switcher] a[data-lang=nl]");
+    await page.waitForURL(`**${BASE}/nl/${slug}/`);
+    assert.equal((await fetch(srv.origin + `${BASE}/nl/${slug}/`)).status, 200, `${slug}: the Dutch page exists`);
+  }
   for (const nlRoute of [`${BASE}/nl/`, `${BASE}/nl/getting-started/`]) {
     await go(nlRoute);
-    const links = await page.evaluate(() => [...document.querySelectorAll("header[data-test=topbar] a[href$='/reference/'], nav[data-nav=pages] a[href$='/reference/']")].map((a) => [a.textContent.trim(), a.getAttribute("lang"), a.getAttribute("hreflang")]));
+    const links = await page.evaluate(() => [...document.querySelectorAll("header[data-test=topbar] a[href$='/reference/'], nav[data-nav=pages] a[href$='/reference/']")].map((a) => [a.textContent.trim(), a.getAttribute("href"), a.getAttribute("hreflang")]));
     assert.ok(links.length >= 2, `${nlRoute}: Reference in the top bar and in the tree`);
-    for (const l of links) assert.deepEqual(l, ["Reference", "en", "en"], `${nlRoute}: the Dutch Reference link is labelled Reference with lang and hreflang en`);
+    for (const l of links) assert.deepEqual(l, ["Naslag", `${BASE}/nl/reference/`, null], `${nlRoute}: the Dutch Reference link is the Dutch page: no hreflang=en`);
   }
 });
 

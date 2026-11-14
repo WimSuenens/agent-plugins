@@ -130,12 +130,14 @@ export function checkPage(d, route, o) {
     assert.ok(alt.get("en")?.endsWith(o.href(slug, "en")) && alt.get("nl")?.endsWith(o.href(slug, "nl")), at("alternates on a page in both languages"));
   } else assert.equal(d.alternates.length, 0, at("no alternates on a one-language page"));
 
-  // Top bar: Reference link from the same data; Dutch pages get the English one
-  const refTop = d.topLinks.find((l) => l.href === o.href("reference", "en"));
+  // Top bar: Reference link from the same data. 225: a language that has its own Reference page gets that page; else the English one with lang/hreflang en (188).
   if (o.by.has("reference")) {
+    const refLang = o.exists("reference", lang) ? lang : "en";
+    const refTop = d.topLinks.find((l) => l.href === o.href("reference", refLang));
     assert.ok(refTop, at("top bar Reference link"));
-    assert.equal(refTop.text, o.label("reference", "en"), at("top bar Reference label is the English one"));
-    if (lang === "nl") { assert.equal(refTop.lang, "en"); assert.equal(refTop.hreflang, "en"); }
+    assert.equal(refTop.text, o.label("reference", refLang), at("top bar Reference label"));
+    if (refLang !== lang) { assert.equal(refTop.lang, "en"); assert.equal(refTop.hreflang, "en"); }
+    else { assert.ok(refTop.lang === null || refTop.lang === lang, at("no misdeclared lang on the top bar Reference link")); assert.notEqual(refTop.hreflang, "en", at("no hreflang=en")); }
   }
   assert.ok(d.topLinks.some((l) => l.href === o.home(lang)), at("site name goes to the Home of the page's language"));
 

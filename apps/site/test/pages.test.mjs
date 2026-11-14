@@ -70,3 +70,16 @@ test("the hast step prefixes site-root links and focuses pre blocks", () => {
   element.visit({ tagName: "a", properties: { href: "#h" } }, ctx);
   assert.deepEqual(calls, [["pre", "tabIndex", 0], ["a", "href", "/b/x/"]]);
 });
+
+test("the real page tree: Reference has Dutch Skills and Agents children, in that order, all Dutch drafts", async () => {
+  const { pages } = await import("../src/data/pages.mjs");
+  const m = loadPages(pages, { base: "/b", componentKeys: ["home", "reference", "skills", "agents"] });
+  const ref = m.tree("nl")[0].children.find((c) => c.slug === "reference");
+  assert.equal(ref.label, "Naslag");
+  assert.equal(ref.lang, undefined, "a real Dutch link, not an English one");
+  assert.deepEqual(ref.children.map((c) => [c.slug, c.label, c.lang]), [["skills", "Vaardigheden", undefined], ["agents", "Agenten", undefined]]);
+  assert.deepEqual(m.tree("en")[0].children.find((c) => c.slug === "reference").children.map((c) => c.slug), ["skills", "agents"]);
+  assert.deepEqual(m.breadcrumb("skills", "nl").map((c) => c.label), ["Thuis", "Naslag", "Vaardigheden"]);
+  assert.equal(m.switchHref("agents", "en", "nl"), "/b/nl/agents/");
+  for (const slug of ["reference", "skills", "agents"]) assert.ok(m.drafts().includes(`/b/nl/${slug}/`), slug);
+});

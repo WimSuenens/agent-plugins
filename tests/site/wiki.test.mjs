@@ -20,7 +20,7 @@ async function open(route, opts = {}) {
   return { ctx, page };
 }
 
-test("the routes the browser tests walk are the pages of the build (computed), and include the five pages of the requirement", () => {
+test("the routes the browser tests walk are the pages of the build (computed), and include the ten pages of the requirement (225)", () => {
   assert.deepEqual(routes().sort(), [...ROUTES].sort());
 });
 
@@ -63,7 +63,7 @@ test("AC-6 / AC-24 the current tree entry differs from the others by more than c
 });
 
 // ---------- AC-7: keyboard, no script ----------
-for (const route of ["/getting-started/", "/nl/getting-started/", "/reference/"].map((r) => BASE + r)) {
+for (const route of ["/getting-started/", "/nl/getting-started/", "/reference/", "/nl/reference/", "/skills/", "/agents/", "/nl/skills/", "/nl/agents/"].map((r) => BASE + r)) {
   test(`AC-7 ${route}: with scripts off every tree entry is reachable by Tab in reading order, shows a focus indicator, Enter follows it, no trap`, async () => {
     const { ctx, page } = await open(route, { javaScriptEnabled: false });
     const want = await page.evaluate(() => [...document.querySelectorAll("nav[data-nav=pages] a")].map((a) => a.getAttribute("href")));
@@ -225,8 +225,8 @@ for (const route of [`${BASE}/getting-started/`, `${BASE}/nl/getting-started/`])
   });
 }
 
-test("AC-22 / AC-24 no inline style attribute, no highlighter class and no layout element in the built content of Getting started and Reference", async () => {
-  for (const route of [`${BASE}/getting-started/`, `${BASE}/nl/getting-started/`, `${BASE}/reference/`]) {
+test("AC-22 / AC-24 no inline style attribute, no highlighter class and no layout element in the built content of Getting started (225: the Reference section pages are generated, not content files)", async () => {
+  for (const route of [`${BASE}/getting-started/`, `${BASE}/nl/getting-started/`]) {
     const { ctx, page } = await open(route);
     const m = await page.evaluate(() => {
       const els = [...document.querySelectorAll("main *")].filter((e) => !e.closest("nav") && !e.closest("[data-draft-notice]"));

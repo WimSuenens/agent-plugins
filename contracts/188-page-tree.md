@@ -19,6 +19,8 @@ shared: CONTEXT.md
 
 `apps/site/src/pages/` holds, after this slice, exactly two files: `[...slug].astro` and `nl/[...slug].astro` (the three route files of 156, `index.astro`, `nl/index.astro` and `reference/index.astro`, are removed). The slice touches no `plugins/` and no `.github/` path: the deploy workflow runs `npm run build`, which already builds and checks everything below, and no new infrastructure is needed (Chromium is already installed in CI for the 156 check).
 
+> Superseded in part by [225 reference section](225-reference-section.md): section 1 (the initial array: Reference is no longer English only and no longer carries `alsoListedIn`; Skills and Agents entries are added), section 2.2 (the Dutch Reference link example) and section 4 (the registry keys).
+
 ## 1. The seam: one data file
 
 `apps/site/src/data/pages.mjs` exports `pages`, an array. It is data only: no import, no function. Adding a page is one edit to this array plus the page's content file (section 3). Entry shape:

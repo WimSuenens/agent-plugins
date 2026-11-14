@@ -1,0 +1,27 @@
+---
+import { ui } from "../i18n/ui.mjs";
+const { lang, groups, counts } = Astro.props;
+const t = ui[lang];
+const en = lang === "nl" ? "en" : undefined;
+const sentence = t.agentsCountSentence.split(/(\{agents\}|\{plugins\})/);
+---
+<p>{t.agentsIntro}</p>
+<p data-field="count-sentence">{sentence.map((part) => part === "{agents}" ? <span data-count="agents">{counts.agents}</span> : part === "{plugins}" ? <span data-count="agent-plugins">{counts.agentPlugins}</span> : part)}</p>
+{lang === "nl" && <p data-field="english-note">{t.englishNote}</p>}
+{groups.map((g) => (
+  <section>
+    <h2 id={g.id} lang={en}>{g.plugin}</h2>
+    {g.entries.map((a) => (
+      <article data-agent-entry data-plugin={a.plugin} data-name={a.name}>
+        <h3 id={a.id} lang={en}>{a.name}</h3>
+        <p data-field="description" lang={en}>{a.description.trim()}</p>
+        {a.model && <p data-field="model"><span>{t.modelLabel}</span> <code data-value lang={en}>{a.model}</code></p>}
+        {a.tools.length > 0 && (
+          <div data-field="tools"><span>{t.toolsLabel}</span>
+            <ul>{a.tools.map((tool) => <li><code data-value lang={en}>{tool}</code></li>)}</ul>
+          </div>
+        )}
+      </article>
+    ))}
+  </section>
+))}

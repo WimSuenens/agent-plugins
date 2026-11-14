@@ -139,10 +139,10 @@ export async function launch() {
   return chromium.launch();
 }
 
-// The five pages of the real site (188 AC-3: the URL scheme names them). Counts that depend on the page tree are computed
+// The pages of the real site (188 AC-3, 225 AC-13: the URL scheme names them). Counts that depend on the page tree are computed
 // from the build output (htmlFiles), never from this list; a test cross-checks the two.
-export const EN_ROUTES = [`${BASE}/`, `${BASE}/getting-started/`, `${BASE}/reference/`];
-export const NL_ROUTES = [`${BASE}/nl/`, `${BASE}/nl/getting-started/`];
+export const EN_ROUTES = [`${BASE}/`, `${BASE}/getting-started/`, `${BASE}/reference/`, `${BASE}/skills/`, `${BASE}/agents/`];
+export const NL_ROUTES = [`${BASE}/nl/`, `${BASE}/nl/getting-started/`, `${BASE}/nl/reference/`, `${BASE}/nl/skills/`, `${BASE}/nl/agents/`];
 export const ROUTES = [...EN_ROUTES, ...NL_ROUTES];
 export const routeOf = (file, base = BASE) => `${base}/${file.replace(/index\.html$/, "")}`;
 export const langOf = (route, base = BASE) => (route === `${base}/nl/` || route.startsWith(`${base}/nl/`) ? "nl" : "en");

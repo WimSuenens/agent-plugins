@@ -218,11 +218,15 @@ The contract-by-contract reference and the steps for changing the factory are in
 
 The documentation site is in `apps/site/` (Astro, static output). It is published to GitHub Pages at https://wimsuenens.github.io/agent-plugins/.
 
-The site has five pages, English at the root and Dutch under `/nl/`:
+The site has ten pages, five in English at the root and five in Dutch under `/nl/`:
 
 - **Home** (`/agent-plugins/`, Dutch `/agent-plugins/nl/`): the front page. Its Dutch version is an agent draft awaiting the owner's review.
 - **Getting started** (`/agent-plugins/getting-started/`, Dutch `/agent-plugins/nl/getting-started/`): the four steps from nothing to a first command. Its Dutch version is a draft too.
-- **Reference** (`/agent-plugins/reference/`): every skill of every plugin, generated at build time from `plugins/*/skills/*/SKILL.md`. It is English only. The Dutch navigation lists it and links to the English page, labelled "Reference".
+- **Reference** (`/agent-plugins/reference/`, Dutch `/agent-plugins/nl/reference/`): an overview with one section for each of its two child pages, Skills and Agents. Each section has a line with the counts, computed at build time, and a link to its page. The Dutch Reference is a draft.
+- **Skills** (`/agent-plugins/skills/`, Dutch `/agent-plugins/nl/skills/`): every skill of every plugin, generated at build time from `plugins/*/skills/*/SKILL.md`.
+- **Agents** (`/agent-plugins/agents/`, Dutch `/agent-plugins/nl/agents/`): every agent of every plugin, generated at build time from `plugins/*/agents/*.md`: its name, its description, its model when it sets one, and its tools.
+
+The Dutch Skills and Agents pages are drafts too. The plugin text on them (names, descriptions, commands, models and tools) stays English on the Dutch pages, marked `lang="en"`; a note above the entries says so.
 
 Every page has the same wiki shell:
 
@@ -232,7 +236,7 @@ Every page has the same wiki shell:
 - **See also**: links to related pages in the same language, at the end of the page.
 - **Language switcher** (top bar): goes to the same page in the other language when it exists, otherwise to that language's Home. It remembers the chosen language in the browser; it is the only script on the site.
 
-Not built yet: narrative pages beyond Getting started, a Dutch Reference, and site search.
+Not built yet: narrative pages beyond Getting started, and site search.
 
 ### Adding a page
 
@@ -260,7 +264,7 @@ npx playwright install chromium   # once; the accessibility check drives Chromiu
 npm run build                     # Astro build, then the accessibility check
 ```
 
-`npm run build` writes the site to `apps/site/dist/`. It ends with `a11y: 5 pages checked, 0 violations` on today's five pages when every page passes. The count is the number of pages built, so it moves when a page is added. A failed check exits non-zero and fails the build.
+`npm run build` writes the site to `apps/site/dist/`. It ends with `a11y: 10 pages checked, 0 violations` on today's ten pages when every page passes. The count is the number of pages built, so it moves when a page is added. A failed check exits non-zero and fails the build.
 
 To look at the result, serve the build (the pages sit under `/agent-plugins/`):
 
@@ -274,9 +278,9 @@ Three environment variables change the build. The defaults fit the repo:
 
 - `SITE_BASE`: the base path, default `/agent-plugins`. It must start with `/` and must not end with `/`; any other value fails the build and the error names the variable.
 - `SITE_OUT_DIR`: the output folder, default `dist` inside `apps/site/`. An absolute path works too.
-- `PLUGINS_DIR`: the folder the Reference reads skills from, default the repo's `plugins/` (found from `apps/site/`, where the npm scripts run).
+- `PLUGINS_DIR`: the folder the Skills and Agents pages read from, each plugin's `skills/` and `agents/` folders; default the repo's `plugins/` (found from `apps/site/`, where the npm scripts run).
 
-A skill source with no `name` or no `description`, or with invalid frontmatter, fails the build and the error names its file.
+A skill or agent source with no `name` or no `description`, or with invalid frontmatter, fails the build and the error names its file.
 
 ### Tests
 
@@ -291,9 +295,9 @@ The acceptance suite needs the steps above first (`npm ci` and the Chromium inst
 
 The workflow `site` (`.github/workflows/site.yml`) runs when a push or a pull request touches `apps/site/`, `plugins/` or the workflow file, and on a manual run from the Actions tab (`workflow_dispatch`). Every run installs, runs the unit tests and builds with the accessibility check. Only a run on `main` deploys: a push to `main` publishes the build to the `github-pages` environment. Pull requests build and check but never deploy. A failed check fails the build, so nothing deploys.
 
-Pages must use GitHub Actions as its source (repository Settings, then Pages), and the `github-pages` environment must accept `main`. A change to a SKILL.md under `plugins/` reaches the Reference on the next push to `main`.
+Pages must use GitHub Actions as its source (repository Settings, then Pages), and the `github-pages` environment must accept `main`. A change to a SKILL.md or an agent file under `plugins/` reaches the Skills and Agents pages on the next push to `main`.
 
-The first deploy from `main` has not run yet. Until that run is green and the five pages answer with 200 (`/agent-plugins/`, `/agent-plugins/nl/`, `/agent-plugins/getting-started/`, `/agent-plugins/nl/getting-started/` and `/agent-plugins/reference/`), this section describes the workflow, not a verified deployment.
+The workflow has deployed from `main`: the `deploy` job of its last run on `main` is green. Five pages then answer with 200 at their addresses: `/agent-plugins/`, `/agent-plugins/nl/`, `/agent-plugins/getting-started/`, `/agent-plugins/nl/getting-started/` and `/agent-plugins/reference/`. The other five (`/agent-plugins/nl/reference/`, `/agent-plugins/skills/`, `/agent-plugins/nl/skills/`, `/agent-plugins/agents/` and `/agent-plugins/nl/agents/`) answer 404 on the published site until a push to `main` that carries the Reference section has deployed. To check, request each address and expect 200.
 
 ---
 

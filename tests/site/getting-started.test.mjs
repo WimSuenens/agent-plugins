@@ -3,7 +3,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { BASE, REPO, SITE, PLUGINS, realBuild, serve, launch, skillSources, parseFrontmatter } from "./lib.mjs";
+import { BASE, REPO, SITE, PLUGINS, realBuild, htmlFiles, serve, launch, skillSources, parseFrontmatter } from "./lib.mjs";
 
 let srv, browser, ctx, en, nl;
 const READ = () => {
@@ -105,7 +105,9 @@ test("AC-20 Dutch mirrors English: html lang nl, one h1, same h2 count and order
 
 test("AC-20 the Dutch body links point at Dutch pages where a Dutch page exists, and never at a missing one", () => {
   for (const h of nl.bodyLinks) assert.ok(h.startsWith(`${BASE}/`) && h.endsWith("/") || h.startsWith("#") || /^https?:/.test(h), h);
-  assert.ok(!nl.bodyLinks.includes(`${BASE}/nl/reference/`));
+  // 225: /nl/reference/ now exists; the rule that remains is that no body link is dead.
+  const built = new Set(htmlFiles(realBuild()).map((f) => `${BASE}/${f.replace(/index\.html$/, "")}`));
+  for (const h of nl.bodyLinks.filter((x) => x.startsWith(`${BASE}/`))) assert.ok(built.has(h), `${h} is a built page`);
 });
 
 // AC-22: the content files hold no layout markup.

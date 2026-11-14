@@ -52,10 +52,11 @@ test("site lives in apps/site as a private npm project with a lockfile and ignor
   for (const s of ["build:site", "build", "check:a11y", "test"]) assert.ok(pkg.scripts?.[s], `script ${s}`);
 });
 
-test("only the pages of the page tree are built (188 AC-3; 156 AC-4: no /nl/reference/, no 404 page)", async () => {
+test("only the pages of the page tree are built (188 AC-3, 225 AC-13: Skills and Agents and the Dutch Reference section exist; no 404 page)", async () => {
   const o = oracle(await loadEntries());
   assert.deepEqual(htmlFiles(dist).map((f) => routeOf(f)).sort(), o.pages.map((p) => p.route).sort());
-  assert.deepEqual(htmlFiles(dist).filter((f) => /reference|404/.test(f) && f.startsWith("nl/")), []);
+  for (const f of ["reference", "skills", "agents"].flatMap((s) => [`${s}/index.html`, `nl/${s}/index.html`])) assert.ok(htmlFiles(dist).includes(f), `${f} is built`);
+  assert.deepEqual(htmlFiles(dist).filter((f) => /404/.test(f)), []);
 });
 
 test("AC-1 English Home at the base path", async () => {
@@ -74,7 +75,8 @@ test("AC-2 Dutch Home mirrors English and is Dutch throughout", async () => {
   assert.equal(nl.h1.length, 1);
   assert.equal(nl.h2.length, en.h2.length);
   assert.ok(nl.h2.length >= 2);
-  assert.deepEqual(nl.mainLinks, en.mainLinks, "same links in the same order");
+  assert.deepEqual(nl.mainLinks.map((h) => h.replace(`${BASE}/nl/`, `${BASE}/`)), en.mainLinks.map((h) => h.replace(`${BASE}/nl/`, `${BASE}/`)), "same links in the same order (225: each Dutch link may point at the Dutch page)");
+  assert.ok(nl.mainLinks.includes(`${BASE}/nl/reference/`), "225 AC-13: the Dutch Home Reference link goes to the Dutch Reference page");
   assert.notEqual(nl.lede, en.lede);
   for (let i = 0; i < en.h2.length; i++) assert.notEqual(nl.h2[i], en.h2[i], `h2 #${i} still English`);
   assert.equal(nl.mainParas.length, en.mainParas.length, "same sections, same paragraph count");
@@ -109,7 +111,7 @@ test("AC-3 every internal reference starts with the base and resolves; an un-bas
     const res = await fetch(srv.origin + r.split("#")[0]);
     assert.equal(res.status, 200, `${r} must resolve under the base`);
   }
-  for (const bad of ["/", "/nl/", "/reference/", "/getting-started/", "/nl/getting-started/"]) {
+  for (const bad of ["/", "/nl/", "/reference/", "/skills/", "/agents/", "/nl/agents/", "/getting-started/", "/nl/getting-started/"]) {
     assert.equal((await fetch(srv.origin + bad)).status, 404, `${bad} (no base) must not be served`);
   }
   // Served at the root instead: the based references no longer resolve, so the check above cannot pass by accident.
@@ -141,13 +143,17 @@ test("SITE_BASE without a leading slash or with a trailing slash is a build erro
   }
 });
 
-test("AC-4 Reference is English, single-URL; Dutch option on an English-only page goes to Dutch Home", async () => {
-  const ref = await read(`${BASE}/reference/`);
-  assert.equal(ref.lang, "en");
-  assert.ok(!fs.existsSync(path.join(dist, "nl/reference")));
-  assert.equal((await fetch(`${srv.origin}${BASE}/nl/reference/`)).status, 404);
-  const nlLink = ref.switcher.find((s) => s.dataLang === "nl");
-  assert.equal(nlLink.href, `${BASE}/nl/`);
+test("AC-4 (225) Home, Reference, Skills and Agents are translated: each has a Dutch twin and its switcher goes there; an English-only page (fixture, pages.test) still sends Dutch to Dutch Home", async () => {
+  for (const slug of ["reference", "skills", "agents"]) {
+    const en = await read(`${BASE}/${slug}/`);
+    assert.equal(en.lang, "en");
+    assert.ok(fs.existsSync(path.join(dist, "nl", slug, "index.html")), `nl/${slug} is built`);
+    assert.equal((await fetch(`${srv.origin}${BASE}/nl/${slug}/`)).status, 200);
+    assert.equal(en.switcher.find((s) => s.dataLang === "nl").href, `${BASE}/nl/${slug}/`);
+    const nl = await read(`${BASE}/nl/${slug}/`);
+    assert.equal(nl.lang, "nl");
+    assert.equal(nl.switcher.find((s) => s.dataLang === "en").href, `${BASE}/${slug}/`);
+  }
 });
 
 test("AC-5 every page: switcher in the top bar, two real links, own-language labels, current marked, works without script; hrefs follow the counterpart rule (188 AC-14, AC-15)", async () => {

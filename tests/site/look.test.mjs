@@ -214,7 +214,7 @@ for (const route of ROUTES) {
     assert.deepEqual(seen.filter((s) => expected.includes(s)), expected.filter((s) => seen.includes(s)), "logical (DOM) order");
     assert.deepEqual(new Set(seen), new Set(expected), "every link and both switcher options are reachable (no trap before the last)");
     const sw = ["English", "Nederlands"].map((t) => seen.findIndex((s) => s.endsWith("|" + t)));
-    const navLink = seen.findIndex((s) => s.includes(`${BASE}/reference/|`));
+    const navLink = seen.findIndex((s) => s.includes("/reference/|"));
     assert.ok(sw.every((i) => i >= 0) && navLink >= 0 && sw[0] > navLink && sw[1] > sw[0], "switcher after the main nav");
     await ctx.close();
   });

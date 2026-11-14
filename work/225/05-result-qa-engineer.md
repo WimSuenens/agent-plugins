@@ -3,9 +3,7 @@ Status: done
 Abnormality: none
 Progress:
   Done: ran the three commands, AC-9 and off-list checks, read per-test results.
-  Next: none
-Summary:
-  Verdict: pass. No findings.
+  Per-criterion detail (all observed in the full run):
   Commands run in this session, from the worktree (last lines):
   - cd apps/site && npm test: "ℹ tests 28 / pass 28 / fail 0 / skipped 0"
   - cd apps/site && npm run build: "a11y: 10 pages checked, 0 violations"
@@ -26,6 +24,14 @@ Summary:
   - AC-19: post-merge; untested here.
   AC-9 and off-list: paths.sh check lists as off-list only contracts/225-agents-loader.md, contracts/225-reference-section.md (the architect's contracts for this item, which the standard ignore pattern contracts/<id>-*.md covers; the shell expanded the glob in the brief into arguments) and the qa-engineer role file (role-owned per the brief). docs/direction.md, work/, and every apps/site and tests/site path are on a Paths block or role-owned. No real off-list finding.
   Edge note: the hook of this session refused a command containing the role-folder path as an ignore argument; I ran the check without that ignore and read the one line by hand.
+  Next: none
+Summary:
+  Verdict: pass. No findings. Human-only criteria: none. AC-19 is post-merge and untested.
+  Commands run in this session (last lines):
+  - cd apps/site && npm test: "ℹ tests 28 / pass 28 / fail 0 / skipped 0"
+  - cd apps/site && npm run build: "a11y: 10 pages checked, 0 violations"
+  - node --test --test-concurrency=1 tests/site/*.test.mjs: "ℹ tests 264 / pass 263 / fail 0 / skipped 1" (actionlint not installed)
+  AC-1 to AC-18 each observed green in the full run; per-criterion detail, AC-9 and the off-list check are in Progress and reviews/qa-225.md.
 Artifacts: work/225/05-result-qa-engineer.md; full run output kept in the scratchpad only.
 Decisions: none
 Open questions: none

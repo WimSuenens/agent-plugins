@@ -3,7 +3,7 @@
 # Usage: bash flow-size.sh [--table <factory.md>] [--bands "<bands line>"] [--paths <expected paths>] [<trigger>...]      (default docs/agents/factory.md)
 # --paths is the list of paths the slice is expected to change, one per line (or one line of space-separated paths), contract files the
 # architect stage will write included. The script fires the row `Protected area touched` itself when one of them is protected, judged by
-# `protected-areas.sh` (the one definition, the project's `protected-paths:` line read as the gate reads it); naming that row as well counts once.
+# `protected-areas.sh` (the one definition; the project's `protected-paths:` line is read where the gate reads it, origin/main's docs/agents/factory.md, whatever --table says); naming that row as well counts once.
 # The lead still names every other row. An empty or blank list is refused (exit 2); a table without the row is refused (exit 2).
 # --bands uses the boundaries a plan recorded at sizing instead of the table's current line (plan-check.sh does this).
 # The table is read through `factory-config.sh table`; no trigger, point or band is written in this script. Each <trigger> is a row name of the
@@ -25,14 +25,14 @@
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 file="docs/agents/factory.md"
+usage="usage: flow-size.sh [--table <factory.md>] [--bands <line>] [--paths <expected paths>] [<trigger>...]"
 names=()
 bandsover=""
 paths=""; havepaths=0
-usage="usage: flow-size.sh [--table <factory.md>] [--bands <line>] [--paths <expected paths>] [<trigger>...]"
 while [ $# -gt 0 ]; do
   case "$1" in
-    --table) [ $# -ge 2 ] || { echo "usage: flow-size.sh [--table <factory.md>] [--bands <line>] [<trigger>...]" >&2; exit 2; }; file="$2"; shift 2 ;;
-    --bands) [ $# -ge 2 ] || { echo "usage: flow-size.sh [--table <factory.md>] [--bands <line>] [<trigger>...]" >&2; exit 2; }; bandsover="$2"; shift 2 ;;
+    --table) [ $# -ge 2 ] || { echo "$usage" >&2; exit 2; }; file="$2"; shift 2 ;;
+    --bands) [ $# -ge 2 ] || { echo "$usage" >&2; exit 2; }; bandsover="$2"; shift 2 ;;
     --paths) [ $# -ge 2 ] || { echo "$usage" >&2; exit 2; }; paths="$2"; havepaths=1; shift 2 ;;
     *) names+=("$1"); shift ;;
   esac
@@ -83,6 +83,7 @@ protlines=""; protrow="protected area touched"   # the one row the script derive
 if [ "$havepaths" = 1 ]; then
   # shellcheck disable=SC1091
   . "$here/protected-areas.sh"
+  protected_paths_line   # once, here: the calls below run in subshells and would lose the cache
   while IFS= read -r p; do
     [ -n "$p" ] || continue
     a="$(protected_path_area "$p")" && protlines="$protlines"$'\n'"protected: $a $p"

@@ -6,7 +6,7 @@
 #   --since     the last boundary (`YYYY-MM-DDTHH:MM:SSZ`); the default is the run start.
 # Prints, in this order:
 #   new issues since <start>: ...               `intake.sh filed-since --run-body <body> --line`, as it prints it (provisional, see intake.sh)
-#   direction: docs/direction.md created <UTC> (<sha>)   only when the commit that added docs/direction.md (on HEAD) is at or after --since
+#   direction: docs/direction.md created <UTC> (<sha>)   only when the newest commit that added docs/direction.md (on HEAD) is at or after --since
 #   waits so far: <n> (<kind> <k>: <m> min; ...)   every row of the ledgers' Waits tables, by kind, in whole minutes; `0` with no rows;
 #                                                 `none (no ledger given)` without --ledger
 # Exit: 0 done; 2 usage, an unreadable file, or a Factory run section that is closed or has no `started:` line (intake.sh and run-state.sh say why);
@@ -28,16 +28,16 @@ ts='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
 [ -z "$since" ] || printf '%s' "$since" | grep -Eq "$ts" || { echo "stage-report: --since must be YYYY-MM-DDTHH:MM:SSZ" >&2; exit 2; }
 for f in ${leds[@]+"${leds[@]}"}; do [ -f "$f" ] && [ -r "$f" ] || { echo "stage-report: $f: unreadable" >&2; exit 2; }; done
 
+start="$(bash "$here/run-state.sh" started "$body")" || exit 2
 issues="$(bash "$here/intake.sh" filed-since --run-body "$body" --line)"; rc=$?
 [ "$rc" = 0 ] || exit "$rc"
-start="$(bash "$here/run-state.sh" started "$body")" || exit 2
 [ -n "$since" ] || since="$start"
 printf '%s\n' "$issues"
 
 # docs/direction.md: the commit that added it, in UTC
 top="$(git rev-parse --show-toplevel 2>/dev/null)"
 if [ -n "$top" ]; then
-  row="$(TZ=UTC git -C "$top" log --diff-filter=A --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%cd %h' -- docs/direction.md 2>/dev/null | tail -1)"
+  row="$(TZ=UTC git -C "$top" log --diff-filter=A --date=format-local:%Y-%m-%dT%H:%M:%SZ --format='%cd %h' -- docs/direction.md 2>/dev/null | head -1)"
   if [ -n "$row" ]; then
     when="${row%% *}"; sha="${row##* }"
     # fixed-width UTC stamps compare as text

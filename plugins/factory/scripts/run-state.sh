@@ -11,7 +11,8 @@
 #   `items` prints the item numbers of the `closed in this run` line (`#30 #29`), empty when it says none.
 # moved: prints `#<n>` from a `Factory run: moved to #<n>` line (what an escalation leaves on the destination ticket), exit 3 when there is none.
 # ticket: prints `#<n>` of the run ticket: the destination ticket in the direct route (no map exists), the map in the map route.
-# status: prints `closed` when the section belongs to a run whose A3 is posted (it has an `- A3: <url>` line, or its step reads `9 (run closed`), else `open`.
+# status: prints `closed` when the section belongs to a run whose A3 is posted (it has an `- A3: https://...` line, or its step reads `9 (run closed`), else `open`.
+#   An `A3:` value that is not a link (the template's placeholder, `pending`, `none`) does not close a run; --a3 must be a link (exit 2 otherwise).
 # start: step 0 of a new run (#230). Prints the body with its Factory run section replaced by a new one: `started:` now (UTC, or --now), `step: 0` (or --step),
 #   `in flight: none`, `FREEZE: none yet`, `closed in this run: none`, `previous run:` (the A3 link, or `A3 posted (link not recorded)`), `baseline: not yet`;
 #   nothing else of the old section survives, the rest of the body is kept. It writes nothing to the tracker: the lead posts the body (`gh issue edit --body-file`).
@@ -46,7 +47,7 @@ if [ "$1" = status ] || [ "$1" = start ]; then
   cmd="$1"; body="${2:-}"; [ $# -ge 2 ] && shift 2 || shift; a3=""; now=""; step=0
   while [ $# -gt 0 ]; do
     case "$1" in
-      --a3) a3="${2:-}"; shift 2 || usage ;;
+      --a3) [ -n "${2:-}" ] || usage; a3="$2"; shift 2 ;;
       --now) now="${2:-}"; shift 2 || usage ;;
       --step) step="${2:-}"; shift 2 || usage ;;
       *) usage ;;
@@ -62,6 +63,8 @@ if [ "$1" = status ] || [ "$1" = start ]; then
   oldstep="$(printf '%s\n' "$sec" | sed -n 's/^- step:[[:space:]]*//p' | head -1)"
   olda3="$(printf '%s\n' "$sec" | sed -n 's/^- A3:[[:space:]]*//p' | head -1 | sed 's/[[:space:]]*$//')"
   closed=0
+  case "$a3" in '' | http://* | https://*) ;; *) echo "run-state: --a3 must be the link of the posted A3" >&2; exit 2 ;; esac
+  case "$olda3" in http://* | https://*) ;; *) olda3="" ;; esac
   { [ -n "$olda3" ] || [ -n "$a3" ]; } && closed=1
   case "$oldstep" in "9 (run closed"*) closed=1 ;; esac
   if [ "$cmd" = status ]; then [ "$closed" = 1 ] && echo closed || echo open; exit 0; fi

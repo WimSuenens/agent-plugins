@@ -17,7 +17,7 @@ Closes [#230](https://github.com/WimSuenens/agent-plugins/issues/230). Refs [#20
 
 **Tests.** `test_lead_gaps_230.sh` (new, written before the scripts); `test_run_split.sh` and `test_slice2_loop.sh` pins follow the moved text.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `2c8f7198ddd30754d1c1cf352cd1f57eb7876acda945b21bb54b794cdb379109`, tooling `bae2990b25f97dd604b1effd291701fd149ea655654efbe466556d0544ec0a6a`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `afd9ef0fbcfd9fbcfc99c7d4f0667a14e02ffb16bcb0167f259b9b60e5da6668`, tooling `2dc2f1c9a739abfbbb13804093ff7f8c8483a2354ed991e98a822e33f72fb58c`.
 
 ## factory 3.2.0 (#207, slice 4)
 

@@ -101,6 +101,14 @@ done
 { cat "$OPEN" | sed 's/^- closed in this run: none/- closed in this run: none\n- A3: https:\/\/example.invalid\/issues\/9#issuecomment-9/'; } >"$T/withA3.md"
 ck status-a3-line-closed "closed" "$(bash "$RS" status "$T/withA3.md")"
 bash "$RS" start "$T/withA3.md" --now "$NOW" >"$T/new3.md"; ck start-a3-line-carried "- previous run: https://example.invalid/issues/9#issuecomment-9" "$(sec "$T/new3.md" | grep '^- previous run:' | sed 's/A3 //')"
+# review: an `A3:` value that is not a link (the template's placeholder, pending) does not close a live run; --a3 must be a link
+sed 's/^- closed in this run: none/- closed in this run: none\n- A3: <comment URL of the posted A3>/' "$OPEN" >"$T/ph.md"; ck status-placeholder-a3-stays-open "open" "$(bash "$RS" status "$T/ph.md")"
+sed 's/^- closed in this run: none/- closed in this run: none\n- A3: pending/' "$OPEN" >"$T/pend.md"; ck status-pending-a3-stays-open "open" "$(bash "$RS" status "$T/pend.md")"
+bash "$RS" start "$OPEN" --a3 pending --now "$NOW" >"$T/o" 2>/dev/null; ck start-a3-not-a-link-exit-2 2 $?; ck start-a3-not-a-link-stdout-empty "" "$(cat "$T/o")"
+bash "$RS" start "$OPEN" --a3 "" --now "$NOW" >"$T/o" 2>/dev/null; ck start-a3-empty-exit-2 2 $?
+# review: the A3 of the same run can be repaired after its A3: line is written
+bash "$AE" --run-body "$T/withA3.md" >/dev/null 2>&1; ck a3-events-closed-run-with-a3-line-refused 2 $?
+ck a3-events-allow-closed-reads-the-closed-run "- items closed in this run: none" "$(bash "$AE" --run-body "$T/withA3.md" --allow-closed | grep '^- items closed')"
 # usage: no section, a missing file, a moved run, a bad time
 printf '# t\n\nno section\n' >"$T/nosec.md"; bash "$RS" start "$T/nosec.md" >/dev/null 2>&1; ck start-no-section-exit-1 1 $?
 bash "$RS" start "$T/missing.md" >/dev/null 2>&1; ck start-missing-file-exit-2 2 $?

@@ -26,6 +26,7 @@ jobs:
   # No ubuntu job for now: 16 checks assume BSD tools (see #221).
   tests-macos:
     name: factory tests (macos)
+    # macos-26 on purpose: macos-15 fails on sed behaviour, see #221. Reconsider when GitHub retires the image or the platform decision of #221 changes.
     runs-on: macos-26
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

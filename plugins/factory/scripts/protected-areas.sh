@@ -1,26 +1,31 @@
 # Sourced, not run. The one definition of the protected areas, shared by skip.sh and merge-gate.sh:
 # contracts, authentication (auth, oauth, login), secrets, migrations, and the one-way door (declared, never a path).
 # protected_path_area <path>: prints the area (contract, authentication, secrets, migration, project) and returns 0 for a protected path;
-#   the built-in patterns read whole path components (auth, auth-*, authn, authz, authentication*, authorization*, oauth*, login*, signin*,
-#   secret(s), credential(s), .env*, *.pem, *.key, migrat*, *.sql), so a word that only contains one (author, secretary) is not a hit;
+#   the built-in patterns read one path component at a time (*auth*, *login*, *signin*, *secret*, *credential*, .env*, *.pem, *.key, *migrat*, *.sql)
+#   after the words that only look like them (author, secretar, immigrat, emigrat, blogin) are taken out, so author and secretary are no hit;
 #   `project` is a path matching a glob of the project's line `protected-paths: <glob>, <glob>` at column 0 of docs/agents/factory.md (the working directory's);
 #   prints nothing and returns 1 otherwise. ASCII case is folded.
 # protected_touch_area <name>: prints the area for a declared name (contract|contracts, authentication, secrets,
 #   migration|data-migration, door|one-way-door) and returns 0; returns 1 for an unknown name.
 protected_path_area() {
-  local lp rest c a="" noglob=0 line g
+  local lp rest c w b a="" noglob=0 line g
   lp="$(printf '%s' "$1" | LC_ALL=C tr 'A-Z' 'a-z')"
-  # one path component at a time: a word that only contains auth, login, secret or migrat (author, secretary, immigration) is not a hit
+  # one path component at a time. The word may sit inside a name (authService, userauth, my-secret); the words that only look like it
+  # (author, secretary, immigration, blogin) are taken out first, and authoriz* is kept as authz.
   rest="$lp"
   while [ -n "$rest" ]; do
     c="${rest%%/*}"
     case "$rest" in */*) rest="${rest#*/}" ;; *) rest="" ;; esac
-    case "$c" in
-      contracts) a=contract ;;
-      auth | auth[-_.]* | authn | authn[-_.]* | authz | authz[-_.]* | authent* | authoriz* | oauth* | login | login[-_.]* | signin | signin[-_.]*) a=authentication ;;
-      .env* | secret | secrets | secret[-_.]* | secrets[-_.]* | credential | credentials | credential[-_.]* | credentials[-_.]* | *.pem | *.key) a=secrets ;;
-      migrat* | *.sql) a=migration ;;
-    esac
+    w="${c//authoriz/authz}"
+    for b in author secretar immigrat emigrat blogin; do w="${w//$b/_}"; done
+    case "$c" in contracts) a=contract ;; esac
+    if [ -z "$a" ]; then
+      case "$w" in
+        *auth* | *login* | *signin*) a=authentication ;;
+        .env* | *secret* | *credential* | *.pem | *.key) a=secrets ;;
+        *migrat* | *.sql) a=migration ;;
+      esac
+    fi
     [ -n "$a" ] && { echo "$a"; return 0; }
   done
   # the project's own extension: one line at column 0 in docs/agents/factory.md, `protected-paths: <glob>, <glob>` (shell globs, case folded)

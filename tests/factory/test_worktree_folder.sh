@@ -83,6 +83,7 @@ ck add-ahead-rc 0 "$rc"
 ck add-ahead-one-line "worktree: local main differs from origin/main (ahead 1, behind 0); the branch starts from origin/main" "$err"
 ck add-ahead-branch-at-origin "$base" "$(git -C "$O/.claude/worktrees/2" rev-parse HEAD)"
 ck add-ahead-no-local-commit "no" "$([ -e "$O/.claude/worktrees/2/local.txt" ] && echo yes || echo no)"
+ck add-branch-has-no-upstream "" "$(git -C "$O" config --get branch.item/2.merge)"
 ck add-ahead-local-main-untouched "$localsha" "$(git -C "$O" rev-parse main)"
 # the fetch brings in a commit pushed elsewhere: the branch starts from it, local main stays behind
 C="$T/o1c"; git clone -q "$O.origin.git" "$C" 2>/dev/null; ( cd "$C" && echo more > more.txt && git add more.txt && git commit -qm "pushed elsewhere" && git push -q origin main ) >/dev/null 2>&1

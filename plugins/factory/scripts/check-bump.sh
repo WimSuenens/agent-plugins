@@ -44,6 +44,7 @@ while IFS= read -r -d '' p; do
     plugins/factory/skills/run/SKILL.md) level=minor ;;
     plugins/factory/references/*/* | plugins/factory/agents/*/*) ;;
     plugins/factory/references/*.md | plugins/factory/agents/*.md) level=minor ;;
+    plugins/factory/references | plugins/factory/references/ | plugins/factory/agents | plugins/factory/agents/) level=minor ;;   # a directory named by --intended
   esac
 done <"$tmp"
 [ "$level" = minor ] && what="standard work"

@@ -60,7 +60,7 @@ case "$cmd" in
       fi
     fi
     mkdir -p "$main/$folder" || exit 4
-    if ! git -C "$main" worktree add -q "$main/$folder/$name" -b "$branch" origin/main >&2; then exit 4; fi
+    if ! git -C "$main" worktree add -q "$main/$folder/$name" -b "$branch" --no-track origin/main >&2; then exit 4; fi
     echo "$main/$folder/$name"
     ;;
   ignore)

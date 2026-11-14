@@ -186,6 +186,10 @@ ck intended-run-skill-minor "needs: minor bump (standard work), 1.3.0 -> 1.4.0" 
 # a change that leaves the meaning of standard text unchanged is still standard work (same answer as for a rewording)
 run --intended origin/main $F/skills/setup-factory-skill/SKILL.md $F/references/protocol.md
 ck intended-meaning-neutral-text-still-minor "needs: minor bump (standard work), 1.3.0 -> 1.4.0" "$out"
+run --intended origin/main $F/references/
+ck intended-directory-of-standard-text-minor "needs: minor bump (standard work), 1.3.0 -> 1.4.0" "$out"
+run --intended origin/main $F/agents/
+ck intended-agents-directory-minor "needs: minor bump (standard work), 1.3.0 -> 1.4.0" "$out"
 run --intended origin/main $F/scripts/s.sh
 ck intended-script-only-patch "needs: patch bump (factory files), 1.3.0 -> 1.3.1" "$out"
 run --intended origin/main docs/d.md README.md

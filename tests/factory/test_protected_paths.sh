@@ -31,6 +31,13 @@ ck sql-file "migration" "$(area schema.sql)"
 ck contract-file "contract" "$(area contracts/168-x.md)"
 ck case-folded "authentication" "$(area SRC/Auth/Session.ts)"
 
+# code review: names that hold the word inside (camel case, prefixes) stay protected
+for p in src/authService.ts src/userauth.ts web/loginPage.tsx web/signinForm.ts config/my-secret.txt db_credentials.json src/apiSecrets.ts src/AuthorizationGuard.ts; do
+  ck "word-inside-still-protected-$(printf '%s' "$p" | tr '/.' '__')" "yes" "$([ -n "$(area "$p")" ] && echo yes || echo no)"
+done
+ck author-service-not-protected "" "$(area src/authorService.ts)"
+ck authorization-still-auth "authentication" "$(area src/authorization.ts)"
+
 # --- a project extends the table with one line in docs/agents/factory.md: `protected-paths: <glob>, <glob>`
 mkdir -p "$T/p1/docs/agents" "$T/p2/docs/agents"
 printf 'factory-state: 2\nprotected-paths: infra/*, apps/billing/*\n' >"$T/p1/docs/agents/factory.md"

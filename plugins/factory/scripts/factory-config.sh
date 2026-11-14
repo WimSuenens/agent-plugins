@@ -2,22 +2,26 @@
 # The lines of docs/agents/factory.md the lead reads: factory-state and run-budget.
 # Usage: bash factory-config.sh state [<factory.md>]     (default docs/agents/factory.md)
 #        bash factory-config.sh budget [<factory.md>]
+#        bash factory-config.sh table [<factory.md>]
 #        bash factory-config.sh reached <spent> [<factory.md>]
 #        bash factory-config.sh measurement [<factory.md>]
 #        bash factory-config.sh analysis [--asked] [<factory.md>]
-# state:   prints nothing on success. A leftover parallel-limit line is ignored: one note line on stderr, exit 0.
+# table:   prints the flow table section of factory.md (the lines under `## Flow table` up to the next `## `): the project's points table,
+#          its bands, test depth and floor. Exit 6 when the file has none (or an incomplete one).
+# state:   also requires the flow table (setup-factory-skill writes it); prints nothing on success. A leftover parallel-limit line is ignored: one note line on stderr, exit 0.
 # budget:  prints the per-run budget as "<N> tokens" or "<N> hours", or "none" when the line is absent or says none.
 # reached: <spent> is a whole number in the budget's unit. Exit 0 when the budget is not reached (or there is none), 1 when spent >= budget.
 # measurement: prints the measurement profile, "full" or "lite"; "full" when the line is absent. The line is "measurement: full" or "measurement: lite".
 # analysis: exit 0 when cut-offs and token spend are to be computed (full, or lite with --asked), 1 when not (lite, not asked).
 # Exit: 0 ok; 2 usage or the file is missing or unreadable; 3 state: no factory-state line (a 1.x project);
-#       4 state: a factory-state line that is not line 1 or whose value is not 2; 5 budget: a bad or doubled run-budget line.
+#       4 state: a factory-state line that is not line 1 or whose value is not 2; 5 budget: a bad or doubled run-budget line;
+#       6 state or table: no flow table, or an incomplete one (a `## Flow table` heading, a `floor:` line and at least eight trigger rows).
 # The lines are matched at column 0 and nowhere else. The setting is read from the file and from nowhere else.
 # No slice maximum exists (ADR 0017): slices run side by side whenever their path lists do not overlap.
 
 cmd="${1:-}"
 case "$cmd" in
-  state | budget) file="${2:-docs/agents/factory.md}" ;;
+  state | budget | table) file="${2:-docs/agents/factory.md}" ;;
   reached)
     spent="${2:-}"
     case "$spent" in '' | *[!0-9]*) echo "usage: factory-config.sh reached <whole number> [<factory.md>]" >&2; exit 2 ;; esac
@@ -30,11 +34,29 @@ case "$cmd" in
     case "${2:-}" in -*) echo "usage: factory-config.sh analysis [--asked] [<factory.md>]" >&2; exit 2 ;; esac
     file="${2:-docs/agents/factory.md}"
     ;;
-  *) echo "usage: factory-config.sh state|budget|reached|measurement|analysis [<factory.md>]" >&2; exit 2 ;;
+  *) echo "usage: factory-config.sh state|budget|table|reached|measurement|analysis [<factory.md>]" >&2; exit 2 ;;
 esac
 if [ ! -f "$file" ] || [ ! -r "$file" ]; then
   echo "factory.md missing: run setup-factory-skill" >&2
   exit 2
+fi
+
+# flow_table: prints the flow table section; returns 0 when it is complete, 6 when there is none, 7 when it is incomplete
+flow_table() {
+  sec="$(awk '/^## /{p = ($0 ~ /^## Flow table[ \t\r]*$/); if (p) next} p' "$file" | tr -d '\r')"
+  grep -q '^## Flow table[[:space:]]*$' "$file" || return 6
+  rows="$(printf '%s\n' "$sec" | grep -cE '^\| [^|]+\|[^|]*\|' )"
+  data=$((rows - 1))   # the header row is not a trigger (the separator row starts with `|-`)
+  if [ "$data" -lt 8 ] || ! printf '%s\n' "$sec" | grep -q '^floor:'; then return 7; fi
+  return 0
+}
+
+if [ "$cmd" = table ]; then
+  flow_table >/dev/null; rc=$?
+  [ "$rc" = 6 ] && { echo "factory.md has no flow table: run setup-factory-skill" >&2; exit 6; }
+  [ "$rc" = 7 ] && { echo "factory.md has an incomplete flow table: run setup-factory-skill" >&2; exit 6; }
+  printf '%s\n' "$sec" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' | sed '1{/^$/d;}'
+  exit 0
 fi
 
 if [ "$cmd" = state ]; then
@@ -43,6 +65,9 @@ if [ "$cmd" = state ]; then
   fi
   first="$(head -n 1 "$file" | tr -d '\r')"
   if [ "$first" = "factory-state: 2" ]; then
+    flow_table >/dev/null; rc=$?
+    [ "$rc" = 6 ] && { echo "factory.md has no flow table: run setup-factory-skill" >&2; exit 6; }
+    [ "$rc" = 7 ] && { echo "factory.md has an incomplete flow table: run setup-factory-skill" >&2; exit 6; }
     exit 0
   fi
   found="$(grep -m 1 '^factory-state:' "$file" | tr -d '\r')"

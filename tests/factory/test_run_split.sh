@@ -58,6 +58,22 @@ done
 ck b5-router-names-only-existing-run-files "$(printf '%s\n' "$named" | grep -c .)" "$(printf '%s\n' "$named" | while read -r n; do [ -s "$PLUGIN/$n" ] && echo y; done | grep -c .)"
 ck b6-no-reference-names-the-router-as-a-pointer 0 "$(for r in $refs; do grep -l 'read `skills/run/SKILL.md`' "$r"; done | grep -c .)"
 
+# ---- the references are read, not substituted: a reference that writes ${CLAUDE_PLUGIN_ROOT} in a command says so in its header (code review of #223)
+for r in $refs; do
+  if tail -n +4 "$r" | grep -qF '${CLAUDE_PLUGIN_ROOT}'; then
+    ck "g1-$(basename "$r")-says-plugin-root-is-not-substituted" yes "$(sed -n 3p "$r" | grep -qF 'is not substituted' && sed -n 3p "$r" | grep -qF 'Plugin root:' && echo yes || echo no)"
+  fi
+done
+ck g2-router-says-only-it-is-substituted 1 "$(grep -c 'Only this file has `${CLAUDE_PLUGIN_ROOT}` substituted' "$ROUTER")"
+
+# ---- the router holds exactly the sections every item needs: a rule cannot move out of it (or into it) without this list changing (code review of #223)
+heads="$(awk '/^```/{f=!f; next} !f && /^#+ /' "$ROUTER" | tr '\n' '|')"
+want='# Factory lead|## 0. Resume or start|## The run cycle|## Maintenance cycle|## The integrator|## 1. Clarify the destination|## 2. Chart the route|## 3. Clear the frontier'"'"'s one-way doors|## 4. Cut the next slice|## 5. Start the item|## 6. Run the stages|### Optional code review|### Environment and shared resources|### Acceptance demo|### Two-way decisions|### Report at each stage boundary|## 7. Take a one-way door to the person|## 8. Close the item and resurvey|## 9. Close the run|## The board|### Needs you|## Role tasks|## Scan before posting|## Parallel slices|## Interruptions|## Idea intake|## Improvement loop|## Skill graduation|## Role knowledge|## Andon|### Detection|### Procedure|### The 5 Whys|### Overrides|### Run identity|### Run start|### Settle round|### The comment|## Context|'
+ck h1-router-headings-are-the-pinned-list "$want" "$heads"
+# a moved rule is in the references only: no long line of the router is also a line of a reference
+dup="$(for r in $refs; do tail -n +4 "$r"; done | awk 'length($0) > 40' | sort -u | comm -12 - <(awk 'length($0) > 40' "$ROUTER" | sort -u) | wc -l | tr -d ' ')"
+ck h2-no-rule-text-in-both-router-and-references 0 "$dup"
+
 # ---- the fence and steps 0 to 7 stay in the router, word for word (F1 step 8.1, F2 step 7, F3 step 6)
 sec() { awk -v n="$2" '/^```/ {fence=!fence; if (on) print; next} !fence && /^## / {if (on) exit; if (substr($0, 4) == n) on=1} on {print}' "$1"; }
 for h in "0. Resume or start" "The run cycle" "The integrator" "1. Clarify the destination" "2. Chart the route" "3. Clear the frontier's one-way doors" "4. Cut the next slice" "5. Start the item" "6. Run the stages" "7. Take a one-way door to the person" "The board" "Role tasks" "Scan before posting" "Role knowledge" "Context"; do

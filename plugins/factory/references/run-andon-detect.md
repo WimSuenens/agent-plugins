@@ -1,6 +1,6 @@
 # Run skill: Andon and Detection
 
-Read this when an abnormality may be present: at each result, at the end of each role stage, when you add a Tasks row, and at run start and item start. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+Read this when an abnormality may be present: at each result, at the end of each role stage, when you add a Tasks row, and at run start and item start. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it. Here `${CLAUDE_PLUGIN_ROOT}` is not substituted (only the router is): read it as the path on the `Plugin root:` line of `skills/run/SKILL.md`, and write that path in every shell command.
 
 ## Andon
 

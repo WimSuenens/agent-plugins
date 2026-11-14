@@ -1,6 +1,6 @@
 # Run skill: parallel slices
 
-Read this when the architect's result is read, another slice could start, you brief QA or security, or a merge has happened. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+Read this when the architect's result is read, another slice could start, you brief QA or security, or a merge has happened. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it. Here `${CLAUDE_PLUGIN_ROOT}` is not substituted (only the router is): read it as the path on the `Plugin root:` line of `skills/run/SKILL.md`, and write that path in every shell command.
 
 ## Parallel slices
 

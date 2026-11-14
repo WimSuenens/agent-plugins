@@ -1,6 +1,6 @@
 # Run skill: the improvement loop and skill graduation
 
-Read this when a finding is classified, an applied improvement is reported, an A3 draft would leave the project, or a role's own skill is used again. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+Read this when a finding is classified, an applied improvement is reported, an A3 draft would leave the project, or a role's own skill is used again. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it. Here `${CLAUDE_PLUGIN_ROOT}` is not substituted (only the router is): read it as the path on the `Plugin root:` line of `skills/run/SKILL.md`, and write that path in every shell command.
 
 ## Improvement loop
 

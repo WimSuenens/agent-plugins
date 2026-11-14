@@ -1,6 +1,6 @@
 # Run skill: closing the run (step 9)
 
-Read this when the backlog is empty, the budget is reached or the person stops the run. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+Read this when the backlog is empty, the budget is reached or the person stops the run. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it. Here `${CLAUDE_PLUGIN_ROOT}` is not substituted (only the router is): read it as the path on the `Plugin root:` line of `skills/run/SKILL.md`, and write that path in every shell command.
 
 ## 9. Close the run
 

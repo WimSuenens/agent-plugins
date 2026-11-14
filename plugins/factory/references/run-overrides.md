@@ -1,6 +1,6 @@
 # Run skill: overrides and the settle round
 
-Read this when a countermeasure is an override, at run start and item start when overrides exist, when the run's first worktree is created, and at the settle round of step 9.3. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+Read this when a countermeasure is an override, at run start and item start when overrides exist, when the run's first worktree is created, and at the settle round of step 9.3. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it. Here `${CLAUDE_PLUGIN_ROOT}` is not substituted (only the router is): read it as the path on the `Plugin root:` line of `skills/run/SKILL.md`, and write that path in every shell command.
 
 ### Overrides
 

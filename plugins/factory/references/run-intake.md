@@ -1,6 +1,6 @@
 # Run skill: maintenance and idea intake
 
-Read this when a run starts (the maintenance announce line and the intake of ideas) or the person says an idea is waiting. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+Read this when a run starts (the maintenance announce line and the intake of ideas) or the person says an idea is waiting. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it. Here `${CLAUDE_PLUGIN_ROOT}` is not substituted (only the router is): read it as the path on the `Plugin root:` line of `skills/run/SKILL.md`, and write that path in every shell command.
 
 ## Maintenance cycle
 

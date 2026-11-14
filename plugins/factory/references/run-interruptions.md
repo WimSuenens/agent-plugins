@@ -1,6 +1,6 @@
 # Run skill: interruptions
 
-Read this when a role agent stops mid-task on a usage or session limit, a stall or a connection error, or a resumed run finds one cut off. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+Read this when a role agent stops mid-task on a usage or session limit, a stall or a connection error, or a resumed run finds one cut off. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it. Here `${CLAUDE_PLUGIN_ROOT}` is not substituted (only the router is): read it as the path on the `Plugin root:` line of `skills/run/SKILL.md`, and write that path in every shell command.
 
 ## Interruptions
 

@@ -217,8 +217,8 @@ has setup-state-needs-table "$SETUP" 'and the flow table'
 hasnt setup-no-state-2-only "$SETUP" 'accepts a project only when line 1 of `docs/agents/factory.md` is `factory-state: 2`;'
 has run-exit-6 "$RUN" 'exit 6 means no flow table'
 ck run-one-line-only "1" "$(grep -c 'exit 6 means no flow table' "$RUN")"
-# slice 3 added one line and capped the skill at 115,900 bytes; the split adds 18 pointer lines and 9 reference headers (about 8 KB), so the cap on router plus references is 124,000 (the router alone is capped at 70,000 in test_run_split.sh)
-ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 124000 ] && echo yes || echo no)"
+# slice 3 added one line and capped the skill at 115,900 bytes; the split adds 18 pointer lines and 9 reference headers (about 9.6 KB), so the cap on router plus references is 126,000 (the router alone is capped at 70,000 in test_run_split.sh)
+ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 126000 ] && echo yes || echo no)"
 has baseline-major-new-series "$BASE" 'A new major starts a new series exactly as a new minor does'
 ck baseline-no-repo-names "0" "$(grep -c 'check-bump\|release-class' "$BASE")"
 

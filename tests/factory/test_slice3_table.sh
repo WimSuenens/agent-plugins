@@ -249,6 +249,15 @@ ck own-ci-none "yes" "$(grep -q '^ci: none (no workflow runs `bash tests/run.sh`
 ck own-confirmed-by-merge "yes" "$(grep '^confirmed:' "$OWN" | grep -q 'merging' && echo yes || echo no)"
 ck own-line-1-kept "factory-state: 2" "$(head -n 1 "$OWN")"
 ck own-release-hook-kept "1" "$(grep -c '^release-hook: scripts/release.sh$' "$OWN")"
+# the person's edits before the merge: the logic row covers apps/, the protected row names no ADR
+ck own-logic-row-covers-apps "yes" "$(grep '^| New logic or data behaviour' "$OWN" | grep -q 'apps/' && echo yes || echo no)"
+ck own-logic-row-provisional "yes" "$(grep '^| New logic or data behaviour' "$OWN" | grep -q '| provisional |$' && echo yes || echo no)"
+ck own-logic-row-keeps-points "yes" "$(grep -q '^| New logic or data behaviour in a code project | 2 |' "$OWN" && echo yes || echo no)"
+ck own-test-depth-apps-targeted "yes" "$(grep '^test-depth-apps:' "$OWN" | grep -q '^test-depth-apps: targeted' && echo yes || echo no)"
+ck own-protected-row-has-contracts "yes" "$(grep '^| Protected area touched' "$OWN" | grep -q 'contracts/' && echo yes || echo no)"
+ck own-protected-row-no-adr "no" "$(grep '^| Protected area touched' "$OWN" | grep -qi 'adr' && echo yes || echo no)"
+ck own-no-protected-paths-line "0" "$(grep -c '^protected-paths:' "$OWN")"
+ck setup-table-never-writes-protected-paths "0" "$(grep -c 'protected-paths' "$ST")"
 # the scan on this repository gives what the table says
 ck own-scan-agrees "yes" "$(bash "$ST" scan "$REPO" | grep -q '^type: markdown/LLM plugin' && echo yes || echo no)"
 

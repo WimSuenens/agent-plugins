@@ -127,6 +127,7 @@ table: provisional
 confirmed: by merging the pull request that adds this table (slice 3 of #207)
 project-type: markdown/LLM plugin
 test-depth: proof-only
+test-depth-apps: targeted (slices that touch `apps/`; the rest of the repository stays proof-only)
 bands: Light 0 to 2, Normal 3 to 6, Heavy 7 or more
 floor: never removed by the table: the independent QA verdict, runtime proof, security review and the person's merge approval for protected areas, and one-way doors stay with the person.
 
@@ -137,9 +138,9 @@ floor: never removed by the table: the independent QA verdict, runtime proof, se
 | Open one-way door | 3 | decision card, ADR (prototype if visual), stays with the person | a one-way door costs the most to undo, in any project | provisional |
 | Unresolved research question | 3 | research before slicing, map | an unknown fact makes the size of a slice a guess | provisional |
 | More than 3 expected slices, or dependencies between them | 2 | map, frontier round | slices that depend on each other need an order before the first one starts | provisional |
-| Protected area touched | 3 | security review, test depth at least targeted, the person's merge approval | the scan found: contracts/ (53 files), contracts/obeya/ (8 files), docs/adr/0021-the-obeya-stays-read-only-until-write-back-and-its-auth-are-decided.md | provisional |
+| Protected area touched | 3 | security review, test depth at least targeted, the person's merge approval | the scan found: contracts/ (53 files), contracts/obeya/ (8 files) | provisional |
 | Contract or interface used by others | 2 | architect, contract file | the scan found: contracts/ (53 files), contracts/obeya/ (8 files) | provisional |
-| New logic or data behaviour in a code project | 2 | tests-first (targeted) | this is a markdown/LLM plugin, not a code app: the row fires only where code with logic exists | provisional |
+| New logic or data behaviour in a code project | 2 | tests-first (targeted) | this repository also holds code apps with their own tests (`apps/obeya/`, `apps/site/`): the row fires for a slice that touches `apps/`; elsewhere in the repository it does not | provisional |
 | Visual result | 1 | demo | the scan found: apps/obeya/app/app.vue, apps/obeya/app/components/ (9 files), apps/obeya/app/pages/index.vue, apps/obeya/app/themes/base/index.vue, apps/obeya/app/themes/orbit/index.vue, apps/obeya/app/themes/transit/Station.vue | provisional |
 | Deploy, pipeline or production config (project row) | 3 | devops role, environment stage | the scan found: .github/workflows/obeya-image.yml, .github/workflows/site.yml, apps/obeya/Dockerfile, plugins/toolkit/skills/source-to-pptx/assets/docker/Dockerfile | provisional |
 

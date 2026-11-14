@@ -211,7 +211,11 @@ awk '/^## Tests$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$PROTO" > "$T/p
 # slice 112 adds one shell line for the integrator; it is the only other change allowed here
 # slice 115 replaces the final ## Memory section with ## Role knowledge (tested in test_role_knowledge.sh); both are cut out here
 nomem() { awk '/^## (Memory|Role knowledge)$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$1"; }
-ck ac8-protocol-minus-tests-section-is-baseline "$(nomem "$T/proto-base.md" | shasum -a 256 | cut -d' ' -f1)" "$(nomem "$T/proto-minus-tests.md" | grep -v '^- \*\*integrator\*\*' | shasum -a 256 | cut -d' ' -f1)"
+# slice 1 of #207 (#196) changes one line of the brief template: the Inputs line names worktrees and home paths in their permitted form
+INP_OLD='    Inputs: <file paths and tracker issue numbers>'
+INP_NEW='    Inputs: <file paths and tracker issue numbers; a worktree as `.claude/worktrees/<id>`, a home path as `~/...` in prose or `"$HOME/..."` in a quoted shell command>'
+inputs_line() { awk -v o="$INP_OLD" -v n="$INP_NEW" '$0==o {print n; next} {print}'; }
+ck ac8-protocol-minus-tests-section-is-baseline "$(nomem "$T/proto-base.md" | inputs_line | shasum -a 256 | cut -d' ' -f1)" "$(nomem "$T/proto-minus-tests.md" | grep -v '^- \*\*integrator\*\*' | shasum -a 256 | cut -d' ' -f1)"
 
 # =============================================================== AC-9 the files agree on whose test to change (script part; the cards are human review)
 for f in $FILES; do

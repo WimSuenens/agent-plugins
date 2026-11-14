@@ -5,8 +5,10 @@
 PT="$PLUGIN/scripts/post-text.sh"; RUN="$PLUGIN/skills/run/SKILL.md"
 cd "$T" || exit 1
 printf 'Status: done\nAbnormality: none\nSummary: built it\nArtifacts: x\n' >clean.md
-printf 'Status: done\nAbnormality: none\nSummary: built it\nArtifacts: /Users/alice/proj/x\n' >homepath.md
-printf 'Status: done\nAbnormality: none\nSummary: key ghp_0123456789abcdef0123456789abcdef0123\n' >secret.md
+H=/Use; H="${H}rs"   # built here so this file holds no home path itself
+printf 'Status: done\nAbnormality: none\nSummary: built it\nArtifacts: %s/alice/proj/x\n' "$H" >homepath.md
+K=gh; K="${K}p_0123456789abcdef0123456789abcdef0123"
+printf 'Status: done\nAbnormality: none\nSummary: key %s\n' "$K" >secret.md
 
 bash "$PT" render clean.md out-clean.md >/dev/null 2>&1; ck render-clean-rc 0 "$?"
 ck render-clean-first-line "<!-- factory:result v1 -->" "$(head -n1 out-clean.md)"

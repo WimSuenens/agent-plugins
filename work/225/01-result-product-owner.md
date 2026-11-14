@@ -4,6 +4,7 @@ Abnormality: none
 Progress:
   Done: requirement written with 19 acceptance criteria, traceability to the frame, out-of-scope list, decisions
   Next: none
+  Also: created docs/direction.md (missing; goal and current from map #146, one History line), a two-way step to say at the next stage boundary
 Summary:
   Requirement at work/225/01-requirement.md. Reference becomes an overview with Skills and Agents children (flat slugs reference, skills, agents), in English and Dutch; Agents page lists name, description, model, tools from plugins/*/agents/*.md; counts derived (AC-8); shell code unchanged (AC-9).
   Each Under test line maps to criteria (see its Traceability table). Out of scope repeats all three Deliberately faked items.

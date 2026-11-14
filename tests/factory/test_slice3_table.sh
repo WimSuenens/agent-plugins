@@ -245,7 +245,10 @@ ck own-table-rows "8" "$(bash "$CFG" table "$OWN" | grep -cE "^\| ($TRIGGERS)")"
 ck own-type "project-type: markdown/LLM plugin" "$(grep '^project-type:' "$OWN")"
 ck own-test-depth "test-depth: proof-only" "$(grep '^test-depth:' "$OWN")"
 ck own-rows-provisional "8" "$(grep -E "^\| ($TRIGGERS)" "$OWN" | grep -c '| provisional |$')"
-ck own-ci-none "yes" "$(grep -q '^ci: none (no workflow runs `bash tests/run.sh`)' "$OWN" && echo yes || echo no)"
+# the repository's own ci: line agrees with what the scan finds for it (it may add the name of the check after the scan's text)
+own_ci="$(grep -m1 '^ci:' "$OWN")"; scan_ci="$(bash "$ST" scan "$REPO" 2>/dev/null | grep -m1 '^ci:')"
+own_ci_ok=no; [ -n "$scan_ci" ] && [ "${own_ci#"$scan_ci"}" != "$own_ci" ] && own_ci_ok=yes
+ck own-ci-agrees-with-scan "yes" "$own_ci_ok"
 ck own-confirmed-by-merge "yes" "$(grep '^confirmed:' "$OWN" | grep -q 'merging' && echo yes || echo no)"
 ck own-line-1-kept "factory-state: 2" "$(head -n 1 "$OWN")"
 ck own-release-hook-kept "1" "$(grep -c '^release-hook: scripts/release.sh$' "$OWN")"

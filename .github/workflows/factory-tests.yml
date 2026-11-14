@@ -1,0 +1,45 @@
+# Runs the factory test suite (bash tests/run.sh) on every pull request and on main, on macOS.
+# macOS because the scripts are written for bash 3.2 and the awk and sed of a Mac. The runner is macos-26: the sed of macos-15 does not end the text of `c\` and `i\` with a newline, which two tests rely on.
+name: factory-tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels the older run; a run on main finishes.
+concurrency:
+  group: factory-tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Tests that commit need an identity; it comes from the environment, not from a global git config.
+env:
+  GIT_AUTHOR_NAME: ci
+  GIT_AUTHOR_EMAIL: ci@example.invalid
+  GIT_COMMITTER_NAME: ci
+  GIT_COMMITTER_EMAIL: ci@example.invalid
+
+jobs:
+  # No ubuntu job for now: 16 checks assume BSD tools (see #221).
+  tests-macos:
+    name: factory tests (macos)
+    # macos-26 on purpose: macos-15 fails on sed behaviour, see #221. Reconsider when GitHub retires the image or the platform decision of #221 changes.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Show the tool versions the suite runs against
+        run: |
+          bash --version | head -1
+          (awk --version 2>&1 || awk -W version 2>&1) | head -1
+          sed --version 2>&1 | head -1 || true
+          git --version
+          jq --version
+          locale | head -3
+      - name: Run the factory test suite
+        run: bash tests/run.sh

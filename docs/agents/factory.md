@@ -146,6 +146,6 @@ floor: never removed by the table: the independent QA verdict, runtime proof, se
 
 ## CI
 
-ci: none (no workflow runs `bash tests/run.sh`)
+ci: workflow .github/workflows/factory-tests.yml runs `bash tests/run.sh` on pull requests (check: `factory tests (macos)`)
 
 Whether a workflow runs the project's test command on pull requests. With `ci: none` the merge gate accepts, in place of a check, a recorded local run of the full test command on the pull request's head commit (a `## Local run` section in its description: the commit sha, the command, the last line of its output and the time). The gate prints which checks it read, and `ci: none (local run on <sha>)` when it relied on that record.

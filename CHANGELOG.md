@@ -2,6 +2,26 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.14.0 (#207)
+
+Release: `2.14.0`, a **minor** release: standard text and tooling changed (slice 0 of the revision plan [#207](https://github.com/WimSuenens/agent-plugins/issues/207)). Both fingerprints change. No migration.
+
+Issue [#207](https://github.com/WimSuenens/agent-plugins/issues/207), slice 0. Cause: `skills/run/SKILL.md` had grown to 115 KB, with mechanical procedure written out in prose, text that existed twice, and two references to sections that do not exist. The slices after it (#187 and the other revision slices) all edit that file. This release slims it **without changing behaviour**.
+
+**What changed for the person who runs the factory:**
+
+- **Nothing you see changes.** Every andon, close and gate does what it did.
+- **The andon kinds 3 and 4 are computed by a script.** `scripts/andon-detect.sh` (`kind3`, `kind4`) holds the ownership-table match and the slow-stage median that the skill used to spell out; the skill keeps one short pointer each, and rule 5.6 stays in the skill.
+- **The close of an item is one script.** `scripts/close-item.sh <id>` holds the guard and the two commits of step 8.6; the skill and `references/hansei.md` no longer carry two copies of the commands.
+- **Duplicated text is gone**: the run cycle's and *Parallel slices*' copies of "slices start whenever they can", the second copy of the cut-off role rule in *Interruptions*, and the board-field rules of step 8.4a, which stay in `references/hansei.md`, section 7.
+- **Two dangling references are fixed**, in the fenced section (a minimal reference fix, no meaning change): F1 pointed at *Production actions* and F5 at *Memory* in `references/protocol.md`, neither of which exists. F1 now names the sentence on production actions at the end of step 6, F5 names *Role knowledge*. Step 8.1 of the skill gets the same F1 fix.
+- **Two guards the prose lacked, in the scripts.** `close-item.sh` stops, with nothing removed, when `git diff --cached` itself fails (the prose only tested for exit 1, so an error would have deleted an uncommitted lead state); `andon-detect.sh kind3` exits 2 when `git log` fails instead of printing nothing. These only change what happens on an error.
+- **Not changed**: the inline "scan it first" reminders stay. `post-text.sh`, `board.sh` and `obeya.sh` do not run the scan themselves, so those posting paths still depend on the reminder.
+
+**Tests.** `tests/factory/test_andon_detect.sh` (new: the script on the ledgers of closed items #156 and #168 with their real sub-issue times, kept under `tests/factory/fixtures/ledgers/`, and on the real commits of PR 176, 182 and 202). `test_andon_kind3_kind4.sh` runs its unchanged cases against the script; the close cases of `test_standard_text.sh` run against `close-item.sh`; text pins of moved rules now point at the script or at `references/hansei.md`. The fence comparison in `test_role_tasks.sh` allows exactly the two reference fixes.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `68063c67d91024790db10b747f756f12678e51f3b139f9cf955a1aa1a6b3787c`, tooling `475978d9119e9bf9fa0c750783ffadacd35f638cd633a12720316352e14a7056`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.13.0 (#168)
 
 Release: `2.13.0`, a **minor** release: standard work changed (slice [#168](https://github.com/WimSuenens/agent-plugins/issues/168), [contract 168](contracts/168-skill-frontmatter.md)). The standard fingerprint changes; the tooling fingerprint does not. No migration.

@@ -361,7 +361,7 @@ has ac14-run-issue-open-card-running "$RUN" 'leave the sub-issue open and the ca
 has ac14-run-draft-commit-decides "$RUN" 'Where the comment and the draft differ, the draft'"'"'s commit decides.'
 has ac14-protocol-draft-written-first "$PROTO" 'Write your result file as soon as you start, with `Status: working`'
 has ac14-protocol-draft-commit-decides "$PROTO" "Where a closing comment and the draft differ, the draft's commit decides."
-has ac14-interruptions-progress-from-draft "$RUN" 'read its `Progress` from the committed draft in `work/<id>/`, not from the issue'
+has ac14-interruptions-progress-from-draft "$RUN" 'A cut-off role keeps its role task open and its card `Running` (*Role tasks*, *A cut-off role loses no Progress*).'   # the Interruptions copy of the rule was removed as a duplicate (slice 0 of #207); the rule is the Role tasks paragraph pinned above
 hasnt ac14-no-text-keeps-progress-only-in-tracker "$PROTO" 'Progress only in the tracker'
 # step 2 of the stages reads a working draft only after an interruption and the closing comment is for a finished result
 has ac14-closing-comment-is-for-non-working "$RUN" 'When you read a finished result (`Status` other than `working`)'
@@ -372,7 +372,10 @@ sect() { awk -v h="$2" '$0 == "## " h {f=1; print; next} /^## /{f=0} f' "$1"; }
 if [ -s "$T/proto-main.md" ]; then
   # slice 113 widens the integrator's shell line (the merge train); the rest of the section stays word for word
   ck ac16-shell-section-word-for-word-unchanged "$(sect "$T/proto-main.md" Shell | grep -v '^- \*\*integrator\*\*')" "$(sect "$PROTO" Shell | grep -v '^- \*\*integrator\*\*')"
-  ck f-never-overridable-locally-unchanged "$(sect "$T/proto-main.md" "Never overridable locally")" "$(sect "$PROTO" "Never overridable locally")"
+  # slice 0 of #207 fixed two references to sections that do not exist (F1 *Production actions*, F5 *Memory*) and nothing else in the fence;
+  # the two substitutions below carry exactly that fix onto the main copy, so every other character of the fence is still compared.
+  # After the merge main holds the new text and the substitutions change nothing.
+  ck f-never-overridable-locally-unchanged "$(sect "$T/proto-main.md" "Never overridable locally" | sed -e 's/step 8.1 and \*Production actions\* |/step 8.1 and the sentence on production actions at the end of step 6 |/' -e 's/| \*Memory\* here |/| *Role knowledge* here |/')" "$(sect "$PROTO" "Never overridable locally")"
   ck f-processes-and-ports-unchanged "$(sect "$T/proto-main.md" "Processes and ports")" "$(sect "$PROTO" "Processes and ports")"
   ck f-shared-resources-unchanged "$(sect "$T/proto-main.md" "Shared resources")" "$(sect "$PROTO" "Shared resources")"
   ck f-memory-section-replaced-by-role-knowledge "" "$(sect "$PROTO" "Memory")"  # slice 115 revises the section into *Role knowledge*

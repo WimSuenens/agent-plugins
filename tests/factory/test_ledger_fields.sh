@@ -96,10 +96,8 @@ has ac23-hansei-lead-time-starts-at-started "$HA" '**`started` starts the item'"
 has ac23-hansei-measure-1-source "$HA" '**total** = approval time − `started` (the ledger header)'
 has ac23-hansei-measure-6-source "$HA" "the ledger's Person's touches table"
 has ac23-hansei-measure-3-source "$HA" 'the `rework` sub-issues of the slice, counted by the `Role` of each'
-has ac23-run-kind-4-rule "$RUN" "Agent-working time of a row is its \`Duration\` (the sub-issue's \`closed_at\` minus \`created_at\`)"
-has ac23-run-kind-4-median "$RUN" 'let `m` be the median of their agent-working times (mean of the two middle values for an even count)'
-has ac23-run-kind-4-strictly-greater "$RUN" 'strictly greater than'
-has ac23-run-kind-4-fewer-than-3 "$RUN" 'With fewer than 3 earlier rows write `no baseline: fewer than 3 earlier rows` in `Notes` and stop.'
+# the kind 4 rule moved into scripts/andon-detect.sh (slice 0 of #207); its figures are pinned in test_andon_detect.sh and test_andon_kind3_kind4.sh
+has ac23-run-kind-4-script "$RUN" '"${CLAUDE_PLUGIN_ROOT}/scripts/andon-detect.sh" kind4'
 
 # ---------- AC-22, AC-20: the fields ----------
 # the grammar of hansei.md section 7, run on valid and invalid values
@@ -126,8 +124,9 @@ has ac22-run-8-4a-after-post-before-5 "$RUN" '4a. **Set the board fields**'
 a="$(grep -n '^4\. Fill the hansei template' "$RUN" | head -1 | cut -d: -f1)"; b="$(grep -n '^4a\. ' "$RUN" | head -1 | cut -d: -f1)"; c="$(grep -n '^5\. When the item had an Environment stage' "$RUN" | head -1 | cut -d: -f1)"
 ck ac22-run-8-4a-order-4-then-4a-then-5 1 "$([ -n "$a" ] && [ -n "$b" ] && [ -n "$c" ] && [ "$a" -lt "$b" ] && [ "$b" -lt "$c" ] && echo 1 || echo 0)"
 has ac22-run-every-role-task-then-slice "$RUN" "every role task's \`Tokens\` and \`Minutes\`, then the slice's \`Tokens\`, \`Hours\`, \`Rework rounds\` and \`Person touches\`"
-has ac22-run-none-left-empty "$RUN" 'None is left empty: a value you cannot compute is `not captured (<reason>)`.'
-has ac22-run-resume-does-not-overwrite "$RUN" 'does not overwrite a different value without saying so'
+has ac22-run-none-left-empty "$HA" 'A card whose value cannot be computed gets `not captured (<reason>)`.'   # the run skill's copy was removed as a duplicate of hansei.md section 7 (slice 0 of #207)
+has ac22-run-points-at-the-rules "$RUN" 'the section'"'"'s rules (never empty, one call per field, a resumed close) apply'
+has ac22-run-resume-does-not-overwrite "$HA" 'does not overwrite a different value without saying so'
 has ac22-frontier-tokens-minutes-not-captured "$RUN" 'set `Tokens` and `Minutes` of each of its role tasks to `not captured (frontier round keeps no ledger)`'
 has ac22-run-done-list-fields-set "$RUN" 'the board fields are set'
 # the five fields are all named in hansei section 7
@@ -185,6 +184,7 @@ for pat in 'stage log' 'stage-log' '## Waits' "Person's touches"; do
 done
 sort -u "$T/hits.txt" >"$T/hits2.txt"
 bad=0; while IFS= read -r h; do
+  case "$h" in *"plugins/factory/scripts/andon-detect.sh:"*'/^### Waits/'*) continue ;; esac   # the script reads the ledger's own Waits table (slice 0 of #207)
   case "$h" in *"references/hansei.md:"*"### Waits"|*"references/hansei.md:"*"### Person's touches"|*"references/hansei.md:"*"6. person's touches: decision cards"*) continue ;; esac
   case "$h" in *"plugins/factory/references/hansei.md:"*"Person's touches"*|*"plugins/factory/skills/run/SKILL.md:"*"Person's touches table"*|*"plugins/factory/references/a3.md:"*"person's touches"*|*"plugins/factory/references/baseline.md:"*"person's touches"*) continue ;; esac
   allowed_hit "$h" || { printf '%s\n' "$h" | cut -c1-220 | sed 's/^/     unexplained hit: /'; bad=$((bad + 1)); }

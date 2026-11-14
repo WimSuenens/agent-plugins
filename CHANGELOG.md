@@ -20,7 +20,7 @@ Issue [#207](https://github.com/WimSuenens/agent-plugins/issues/207), slice 0. C
 
 **Tests.** `tests/factory/test_andon_detect.sh` (new: the script on the ledgers of closed items #156 and #168 with their real sub-issue times, kept under `tests/factory/fixtures/ledgers/`, and on the real commits of PR 176, 182 and 202). `test_andon_kind3_kind4.sh` runs its unchanged cases against the script; the close cases of `test_standard_text.sh` run against `close-item.sh`; text pins of moved rules now point at the script or at `references/hansei.md`. The fence comparison in `test_role_tasks.sh` allows exactly the two reference fixes.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `68063c67d91024790db10b747f756f12678e51f3b139f9cf955a1aa1a6b3787c`, tooling `528a071e7657d673d67ee0b39b05432d0bf2804b7e7ec172f1307d1781f7c5e0`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `68063c67d91024790db10b747f756f12678e51f3b139f9cf955a1aa1a6b3787c`, tooling `475978d9119e9bf9fa0c750783ffadacd35f638cd633a12720316352e14a7056`. Any later change under `plugins/factory/` in this release is a forgotten bump.
 
 ## factory 2.13.0 (#168)
 

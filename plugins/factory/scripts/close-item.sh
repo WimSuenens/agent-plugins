@@ -20,5 +20,5 @@ git -C "${w:?}" add -u -- "work/$id" || exit 1
 git -C "${w:?}" diff --cached --quiet
 d=$?
 if [ $d = 1 ]; then git -C "${w:?}" commit -m "#$id lead: close" || exit 1
-elif [ $d != 0 ]; then echo "close: git diff --cached failed ($d); nothing removed" >&2; exit 1; fi
+elif [ $d != 0 ]; then echo "close: the staged-changes check failed ($d); nothing removed" >&2; exit 1; fi
 git -C "${w:?}" rm -r -q -- "work/$id" && git -C "${w:?}" clean -f -d -x -q -- "work/$id" && [ ! -e "${w:?}/work/$id" ] && git -C "${w:?}" commit -m "#$id lead: remove work/"

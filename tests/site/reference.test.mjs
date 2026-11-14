@@ -21,6 +21,7 @@ async function readReference(dist, route = `${BASE}/skills/`) {
     assert.equal(r.status(), 200);
     return await page.evaluate(() => ({
       lang: document.documentElement.lang,
+      englishNotes: document.querySelectorAll("main p[data-field=english-note]").length,
       langOnPluginText: [...document.querySelectorAll("main section > h2, main article > h3, main [data-field=description], main code")].every((e) => e.getAttribute("lang") === "en"),
       noLangOnPluginText: [...document.querySelectorAll("main section > h2, main article > h3, main [data-field=description], main code")].every((e) => !e.hasAttribute("lang")),
       text: document.body.innerText,
@@ -88,7 +89,7 @@ test("225 AC-14/15 the Dutch Skills page has the same entries, order and ids as 
   if (manual) assert.doesNotMatch(manual.manual, /manual command/i, "the manual marker is Dutch");
   const hinted = nl.entries.find((e) => e.hintFull);
   if (hinted) assert.doesNotMatch(hinted.hintFull, /argument hint/i, "the argument hint label is Dutch");
-  assert.equal(await (async () => { const srv = await serve(dist); const ctx = await browser.newContext(); try { const pg = await ctx.newPage(); await pg.goto(srv.origin + `${BASE}/nl/skills/`); return pg.evaluate(() => document.querySelectorAll("p[data-field=english-note]").length); } finally { await ctx.close(); await srv.close(); } })(), 1, "one visible Dutch sentence saying the entries are English");
+  assert.equal(nl.englishNotes, 1, "one visible Dutch sentence saying the entries are English");
 });
 
 test("AC-15 odd characters survive on the real page: no mojibake or visible entities, backticks literal", async () => {

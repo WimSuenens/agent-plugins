@@ -25,7 +25,9 @@ SEC="$P/agents/security-reviewer.md"
 HANS="$REPO/$P/references/hansei.md"
 FILES="$PROTO $DEV $QA $ARCH $RUN $TPL"
 
-base() { git show "$BASE:$P/$1"; }                         # a baseline file on stdout
+# a baseline file on stdout. Slice 0 of #207 fixed two references in the fence to sections that do not exist (F1 *Production actions*,
+# F5 *Memory*); the baseline carries that fix, so every other character of the fence is still compared.
+base() { git show "$BASE:$P/$1" | sed -e 's/step 8.1 and \*Production actions\* |/step 8.1 and the sentence on production actions at the end of step 6 |/' -e 's/| \*Memory\* here |/| *Role knowledge* here |/'; }
 # sect <file> <heading line>: the lines after the heading up to the next heading of the same or higher level
 sect() { awk -v h="$2" 'BEGIN{n=0; while (substr(h,n+1,1)=="#") n++} f==0 && $0==h {f=1; next} f==1 && /^#+ / {m=0; while (substr($0,m+1,1)=="#") m++; if (m<=n) exit} f==1 {print}' "$1"; }
 # lineno <file> <fixed string>: first line number holding the string, or 0

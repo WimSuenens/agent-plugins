@@ -90,21 +90,20 @@ has setup-ignore-step "$SU" 'worktree.sh" ignore'
 has setup-legacy-step "$SU" 'worktree.sh" legacy'
 has setup-move-or-finish "$SU" 'move or finish'
 has setup-excludes "$SU" '.claude/worktrees'
-has hansei-guard-main-checkout "$HN" 'close: worktree is the main checkout'
+has close-script-guard-main-checkout "$PLUGIN/scripts/close-item.sh" 'close: worktree is the main checkout'   # the guard moved from hansei.md into scripts/close-item.sh (slice 0 of #207)
 has adr-revised "$REPO/docs/adr/0002-one-branch-and-worktree-per-item.md" '.claude/worktrees'
 has glossary-worktree "$REPO/CONTEXT.md" '**Worktree folder**'
 has contract-exists "$REPO/contracts/109-worktree-folder.md" 'Issue [#109]'
 
-# the clean-up guard, run as the skill writes it, at the new location
-close_guard() { awk '/^ +0\. Guard:$/ {f=1; next} f==1 && /^ *```/ {f=2; next} f==2 && /^ *```/ {exit} f==2 {sub(/^ +/, ""); print}' "$HN" | sed "s/<id>/$1/g"; }
-G="$(close_guard 12)"
-ck guard-text-found "yes" "$([ -n "$G" ] && echo yes || echo no)"
-gout="$(cd "$R" && bash -c "$G" 2>&1)"; ck guard-ok-at-new-location-rc 0 "$?"
+# the clean-up guard of scripts/close-item.sh (its text up to the symlink check), run at the new location with the id as $1
+GUARD="$(awk '/^case "\$\{1:-\}" in/ {f=1} f {print} f && /\[ -L "\$\{w:\?\}\/work" \]/ {exit}' "$PLUGIN/scripts/close-item.sh")"
+ck guard-text-found "yes" "$([ -n "$GUARD" ] && echo yes || echo no)"
+gout="$(cd "$R" && bash -c "$GUARD" _ 12 2>&1)"; ck guard-ok-at-new-location-rc 0 "$?"
 # no worktree for the item: refuses
-ck guard-no-worktree-rc 1 "$(cd "$R" && bash -c "$(close_guard 99)" >/dev/null 2>&1; echo $?)"
+ck guard-no-worktree-rc 1 "$(cd "$R" && bash -c "$GUARD" _ 99 >/dev/null 2>&1; echo $?)"
 # the item branch is checked out in the main checkout itself: refuses
 R4="$T/r4"; mkrepo "$R4"; ( cd "$R4" && git checkout -q -b item/12 )
-gout="$(cd "$R4" && bash -c "$G" 2>&1)"; grc=$?
+gout="$(cd "$R4" && bash -c "$GUARD" _ 12 2>&1)"; grc=$?
 ck guard-main-checkout-rc 1 "$grc"
 ck guard-main-checkout-message "close: worktree is the main checkout" "$gout"
 

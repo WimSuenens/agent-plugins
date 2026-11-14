@@ -37,7 +37,9 @@ for s in obeya run; do
   ck "$s-description-byte-equal-to-pre-slice-text" "$want" "$got"
   ck "$s-line3-key-and-value-on-one-line" 1 "$(sed -n 3p "$REPO/$P" | grep -c '^description: ')"
   if git -C "$REPO" rev-parse -q --verify origin/main >/dev/null 2>&1; then
-    ck "$s-other-lines-unchanged" "" "$(diff <(git -C "$REPO" show "origin/main:$P" | sed 3d) <(sed 3d "$REPO/$P"))"
+    # the frontmatter apart from line 3 is unchanged (slice 0 of #207 edits the body of run/SKILL.md, so the body is no longer compared)
+    fm() { awk 'NR==1 {print; next} {print} /^---$/ {exit}'; }
+    ck "$s-other-frontmatter-lines-unchanged" "" "$(diff <(git -C "$REPO" show "origin/main:$P" | fm | sed 3d) <(fm < "$REPO/$P" | sed 3d))"
   else skip "$s-other-lines-unchanged" "origin/main not available"; fi
 done
 done_

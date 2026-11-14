@@ -30,6 +30,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: Show the tool versions the suite runs against
+        run: |
+          bash --version | head -1
+          (awk --version 2>&1 || awk -W version 2>&1) | head -1
+          sed --version 2>&1 | head -1 || true
+          git --version
+          jq --version
+          locale | head -3
       - name: Run the factory test suite
         run: bash tests/run.sh
 
@@ -40,5 +48,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: Show the tool versions the suite runs against
+        run: |
+          bash --version | head -1
+          (awk --version 2>&1 || awk -W version 2>&1) | head -1
+          sed --version 2>&1 | head -1 || true
+          git --version
+          jq --version
+          locale | head -3
       - name: Run the factory test suite
         run: bash tests/run.sh

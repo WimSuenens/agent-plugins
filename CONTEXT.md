@@ -119,6 +119,8 @@ _Avoid_: suggestion, request, feature request (an idea may be none of these)
 **Inbox** — the local, gitignored folder `.claude/factory-inbox/` where a file is dropped to become an idea. At intake each file becomes one tracker issue and is then removed, so the folder never grows; a file the tracker cannot carry stays and is reported. A drop zone, not a store: the tracker holds the ideas.
 _Avoid_: queue, backlog (the backlog is the tracker's)
 
+**Direction document** — `docs/direction.md`: front matter `goal` and `current` and a `## History` list, written by the product owner when a run's destination is settled and updated only when the map's Destination changes (and by a `direction` triage outcome). It is the repository's direction and is not the direction brief that the design plugin writes; the two share a name and nothing else.
+
 **Obeya room** — the opt-in, read-only web application a project owner starts with one command to see the project's direction, decisions, board, andon and intake queue in one place. A lens over the project, not a store. See [0019](docs/adr/0019-the-obeya-is-a-lens-and-holds-no-truth.md), [0020](docs/adr/0020-the-obeya-is-a-nuxt-4-container-image-on-ghcr.md), [0021](docs/adr/0021-the-obeya-stays-read-only-until-write-back-and-its-auth-are-decided.md).
 _Avoid_: dashboard (it shows no number of its own and writes nothing)
 

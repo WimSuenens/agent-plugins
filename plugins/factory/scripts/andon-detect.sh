@@ -12,7 +12,7 @@
 #   andon-detect.sh owner <table> <path>
 #       The Owner of the most specific matching table row, empty when the path is unowned. Specificity: an exact path, then a directory
 #       prefix (the longer wins), then a wildcard (more literal characters before its first `*` wins; at the same count, more literal characters in all). A token is literal except `*`.
-#       A tie between different owners prints `ambiguous owner: <path> <ownerA> <ownerB>`; kind3 prints `role-outside-role: <sha7> <role> changed <path> (ambiguous owner: <ownerA> <ownerB>)`.
+#       A tie between different owners prints `ambiguous owner: <path> <ownerA> <ownerB>`; kind3 prints `role-outside-role: <sha7> <role> changed <path> (ambiguous owner: <ownerA> <ownerB>)`, and prints nothing when the committing role is one of the two.
 #   andon-detect.sh kind4 (--ledger <ledger.md> --times <times.tsv> | --rows <file> --waits <file>) <row#>
 #       Prints `slow: <own> against median <m> of <n> earlier rows`, `not flagged`, or `no baseline: fewer than 3 earlier rows`.
 #   andon-detect.sh working (--ledger <ledger.md> --times <times.tsv> | --rows <file> --waits <file>)
@@ -96,7 +96,10 @@ kind3() {
           [ "$m" = 120000 ] || continue ;;
       esac
       o="$(owner_of "$table" "$p")"
-      case "$o" in "ambiguous owner: "*) echo "role-outside-role: ${sha:0:7} $r changed $p (ambiguous owner: ${o#*"$p" })"; continue ;; esac
+      case "$o" in "ambiguous owner: "*)
+        # the committing role is one of the tied owners: the path is its own by the table, so there is nothing to report
+        case " ${o#*"$p" } " in *" $r "*) continue ;; esac
+        echo "role-outside-role: ${sha:0:7} $r changed $p (ambiguous owner: ${o#*"$p" })"; continue ;; esac
       [ -n "$o" ] && [ "$o" != "$r" ] && echo "role-outside-role: ${sha:0:7} $r changed $p (owner $o)"
     done
   done

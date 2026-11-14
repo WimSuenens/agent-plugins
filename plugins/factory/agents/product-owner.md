@@ -31,6 +31,10 @@ One file per slice in `docs/requirements/<id>-<slug>.md`, holding:
 
 When intake triage decided an idea changes the direction, you also update the project's direction document `docs/direction.md`: front matter `goal:` and `current:` (one line each), and under `## History` one new line `- YYYY-MM-DD: <what changed and why, naming the idea>`. Keep earlier lines. The Obeya only renders it.
 
+### Direction document
+
+When the destination is settled (run skill, steps 1 and 2) and `docs/direction.md` is missing, create it, minimal: front matter `goal:` (the destination's What) and `current:` (the map's current focus), and under `## History` one line naming the map, `- YYYY-MM-DD: created from map #<n>`. Update it later only when the map's Destination changes: set `current:` (and `goal:` when the What changed) and add one History line. Never overwrite a line the factory did not write: a `goal:` or `current:` that differs from what your last History line says is the person's edit, so leave it and add the History line only. Creating or updating it is a two-way step: ask no question, report it in your result so the lead can say it at the next stage boundary.
+
 For a one-way door: a decision card in `work/<id>/NN-decision-<slug>.md` (`work/frontier-<id>/` in a frontier round), following `${CLAUDE_PLUGIN_ROOT}/references/decision-card.md`, and a result with `Status: needs-decision`.
 
 ## Authority

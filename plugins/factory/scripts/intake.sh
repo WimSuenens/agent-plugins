@@ -6,6 +6,7 @@
 #        bash intake.sh drop
 #        bash intake.sh untriaged
 #        bash intake.sh triage <issue> <outcome> <reason-file>
+#        bash intake.sh filed-since <start> [<end>] [--state open|all] [--line]
 # dir: prints the inbox folder, relative to the main checkout (.claude/factory-inbox).
 # init: creates the inbox folder and adds /.claude/factory-inbox/ to the main checkout's .gitignore; prints "created" or
 #      "already present" and changes nothing the second time. Setup runs it only after the person said yes.
@@ -18,6 +19,14 @@
 #      "created <url> <name>", "existing #<n> <name>" or "kept <name>: <reason>".
 # untriaged: lists open `idea` issues without an outcome comment of the lead, one "<n><TAB><title><TAB><new|waiting>" per line;
 #      "waiting" is an idea whose decision card (needs-you comment) is open and not yet marked "Answered:".
+# filed-since: issues filed from <start> (UTC, `YYYY-MM-DDTHH:MM:SSZ`) to <end> (default: now), counted from two sources and nothing else:
+#      (a) issues carrying the project's own triage label, read from the `needs-triage` row of `docs/agents/triage-labels.md` (the second
+#      cell; the role name in the first cell is the vocabulary's, the label string is the project's), and (b) issues whose body carries the
+#      marker `<!-- factory:improvement `. One `<n><TAB><title><TAB><label|marker|label+marker>` per issue, oldest first; an issue with both
+#      is listed once. `--state open` (default) lists open issues, `all` also closed ones. `--line` prints one line for a stage boundary:
+#      `new issues since <start>: <k> open: #<n> <title>; ... (sources: ...)` or `... : none (sources: ...)`. Without the table only the
+#      marker is counted and the line says so. Reads and ingests nothing else; an issue filed under neither source is not seen.
+#      The report is provisional: revisit after two runs, or when a report says nothing new more than once.
 # triage: posts the outcome comment <!-- factory:triage v1 --> on the issue. <outcome> is one of direction, slice-candidate,
 #      research-ticket, parked, rejected; <reason-file> holds the reason and must not be empty. A rejected idea is closed as
 #      not planned. The reason is scanned first (post-text.sh scan).
@@ -37,7 +46,7 @@ main_checkout() {
 }
 
 usage() {
-  echo "usage: intake.sh dir | init | file <title> [<body-file>] | drop | untriaged | triage <issue> <outcome> <reason-file>" >&2
+  echo "usage: intake.sh dir | init | file <title> [<body-file>] | drop | untriaged | triage <issue> <outcome> <reason-file> | filed-since <start> [<end>] [--state open|all] [--line]" >&2
   exit 2
 }
 
@@ -51,7 +60,7 @@ else
 fi
 
 [ "$cmd" = dir ] && { echo "$folder"; exit 0; }
-case "$cmd" in init | file | drop | untriaged | triage) ;; *) usage ;; esac
+case "$cmd" in init | file | drop | untriaged | triage | filed-since) ;; *) usage ;; esac
 
 main="$(main_checkout)"
 [ -n "$main" ] || { echo "intake: not a git repository" >&2; exit 2; }
@@ -153,6 +162,51 @@ case "$cmd" in
           | [ $c[] | select(.author.login == $me) | .body ] as $mine
           | select(all($mine[]; startswith("<!-- factory:triage ") | not))
           | [ .number, .title, (if any($mine[]; startswith("<!-- factory:needs-you v1 -->") and (contains("\nAnswered:") | not)) then "waiting" else "new" end) ] | @tsv'
+    ;;
+
+  filed-since)
+    shift; start=""; end=""; state=open; line=0
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --state) state="${2:-}"; shift 2 || usage ;;
+        --line) line=1; shift ;;
+        -*) usage ;;
+        *) if [ -z "$start" ]; then start="$1"; elif [ -z "$end" ]; then end="$1"; else usage; fi; shift ;;
+      esac
+    done
+    case "$state" in open | all) ;; *) usage ;; esac
+    ts='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
+    printf '%s' "$start" | grep -Eq "$ts" || usage
+    [ -n "$end" ] || end="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '%s' "$end" | grep -Eq "$ts" || usage
+    label=""
+    tbl="$main/docs/agents/triage-labels.md"
+    [ ! -f "$tbl" ] || label="$(awk -F'|' '{ a=$2; gsub(/[ `]/,"",a); if (a=="needs-triage") { b=$3; gsub(/[ `]/,"",b); print b; exit } }' "$tbl")"
+    if [ -n "$label" ]; then src="label $label, marker factory:improvement"; else
+      src="marker factory:improvement only, no docs/agents/triage-labels.md"
+      [ -f "$tbl" ] && src="marker factory:improvement only, no triage label row in docs/agents/triage-labels.md"
+      echo "intake: $src" >&2
+    fi
+    list="$(gh issue list --state all --limit 1000 --search "created:>=${start%%T*}" --json number,title,createdAt,state,labels,body)" \
+      || { echo "intake: gh issue list failed" >&2; exit 4; }
+    cut=""
+    if [ "$(printf '%s' "$list" | jq 'length' 2>/dev/null)" -ge 1000 ] 2>/dev/null; then
+      cut="; list cut at 1000: the count is a lower bound"; echo "intake: the issue list was cut at 1000 issues: the count is a lower bound" >&2
+    fi
+    rows="$(printf '%s' "$list" | jq -r --arg s "$start" --arg e "$end" --arg l "$label" --arg st "$state" '
+        [ .[] | select(.createdAt >= $s and .createdAt <= $e)
+          | select($st == "all" or (.state | ascii_downcase) == "open")
+          | ((($l != "") and (any(.labels[]?; .name == $l))) as $a
+             | ((.body // "") | contains("<!-- factory:improvement ")) as $b
+             | select($a or $b) | [ .number, .title, (if $a and $b then "label+marker" elif $a then "label" else "marker" end) ]) ]
+        | sort_by(.[0])[] | @tsv')" || { echo "intake: cannot read the issue list" >&2; exit 4; }
+    if [ "$line" = 0 ]; then [ -z "$rows" ] || printf '%s\n' "$rows"; exit 0; fi
+    [ "$state" = open ] && what=" open" || what=""
+    src="$src$cut"
+    if [ -z "$rows" ]; then printf 'new issues since %s: none (sources: %s)\n' "$start" "$src"; exit 0; fi
+    k="$(printf '%s\n' "$rows" | wc -l | tr -d ' ')"
+    items="$(printf '%s\n' "$rows" | awk -F'\t' '{ printf "#%s %s; ", $1, $2 }' | sed 's/; $//')"
+    printf 'new issues since %s: %s%s: %s (sources: %s)\n' "$start" "$k" "$what" "$items" "$src"
     ;;
 
   triage)

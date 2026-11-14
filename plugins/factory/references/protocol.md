@@ -107,7 +107,7 @@ Question (role → lead):
 
 ## Missing input
 
-Compare the brief against your role's **Inputs needed**. When one is absent, write a result with `Status: blocked` and list it under `Missing`. Work resumes on the lead's next brief. A `blocked` result whose `Missing` input is not in your **Inputs needed** is an abnormality of kind 1: write the `Abnormality:` line too (see *Andon*).
+Compare the brief against your role's **Inputs needed**. When one is absent, write a result with `Status: blocked` and list it under `Missing`. Work resumes on the lead's next brief. A `blocked` result whose `Missing` input is not in your **Inputs needed** is an abnormality of kind 1: write the `Abnormality:` line too (see *Andon*). So is a defect you find in an input another role or an earlier stage produced, when it makes your work fail or need a workaround (see *Andon*, kind 1).
 
 ## Processes and ports
 
@@ -143,7 +143,7 @@ Raise a kind only with its observation in hand.
 
 | # | Name | Observation that proves it |
 |---|---|---|
-| 1 | `blocked-input` | a result with `Status: blocked` whose `Missing` lists an input that is not in that role's `## Inputs needed` in `agents/<role>.md`. An entry is listed when it is one of those bullets or a named part of one. Never kind 1: a fixed port taken (*Processes and ports*), and a blocked result that lists only listed entries (the ordinary *Missing input* route). |
+| 1 | `blocked-input` | a result with `Status: blocked` whose `Missing` lists an input that is not in that role's `## Inputs needed` in `agents/<role>.md`. An entry is listed when it is one of those bullets or a named part of one. Never kind 1: a fixed port taken (*Processes and ports*), and a blocked result that lists only listed entries (the ordinary *Missing input* route). Kind 1 is blocked or defective input: it also covers a defect in an input that another role or an earlier stage produced (a file, a test, a contract, a tool) and that makes the finding role's own work fail or need a workaround: write the `Abnormality:` line with the producing role and the object. A `Status: needs-decision` question about such an input opens an andon of kind 1 beside the question; the question is put as before and the andon asks why the defect could ship. |
 | 2 | `same-finding-twice` | two findings in one item that the lead's matching rule pairs (same missing guard, or the same criterion failing again in a later round) |
 | 3 | `role-outside-role` | a commit whose subject names role R and that changes a path the ownership table gives to another role |
 | 4 | `slow-stage` | a role task whose agent-working time is more than twice the median of the same role's earlier tasks |

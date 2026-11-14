@@ -44,3 +44,16 @@ trap 'chmod -R u+rwx "$T" 2>/dev/null; rm -rf "$T"' EXIT
 export GIT_AUTHOR_NAME=qa GIT_AUTHOR_EMAIL=qa@example.invalid GIT_COMMITTER_NAME=qa GIT_COMMITTER_EMAIL=qa@example.invalid
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
 line() { printf '%s\n' "$1" | sed -n "${2}p"; }
+
+# Slice 2 of #207 widens andon kind 1 (blocked or defective input; F4: widening, not narrowing). The pins that compare the protocol with
+# origin/main carry the two added sentences onto the main copy; after the merge main holds them and this changes nothing.
+# Usage: <text> | slice2_kind1
+K1_OLD='the ordinary *Missing input* route). |'
+K1_NEW='the ordinary *Missing input* route). Kind 1 is blocked or defective input: it also covers a defect in an input that another role or an earlier stage produced (a file, a test, a contract, a tool) and that makes the finding role'"'"'s own work fail or need a workaround: write the `Abnormality:` line with the producing role and the object. A `Status: needs-decision` question about such an input opens an andon of kind 1 beside the question; the question is put as before and the andon asks why the defect could ship. |'
+MI_OLD='write the `Abnormality:` line too (see *Andon*).'
+MI_NEW='write the `Abnormality:` line too (see *Andon*). So is a defect you find in an input another role or an earlier stage produced, when it makes your work fail or need a workaround (see *Andon*, kind 1).'
+slice2_kind1() {
+  K1_OLD="$K1_OLD" K1_NEW="$K1_NEW" MI_OLD="$MI_OLD" MI_NEW="$MI_NEW" awk '
+    function rep(line, o, n,   i) { i = index(line, o); if (i == 0) return line; return substr(line, 1, i - 1) n substr(line, i + length(o)) }
+    { l = rep($0, ENVIRON["K1_OLD"], ENVIRON["K1_NEW"]); l = rep(l, ENVIRON["MI_OLD"], ENVIRON["MI_NEW"]); print l }'
+}

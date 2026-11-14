@@ -2,6 +2,26 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.18.0 (#207, slice 2)
+
+Release: `2.18.0`, a **minor** release: standard text changed (the A3, the andon list, the product owner and architect files, the run skill) and the intake, A3 and detection scripts changed. Both fingerprints change. No migration: an A3 posted before this release stays a valid v1 or v2.
+
+Issues [#164](https://github.com/WimSuenens/agent-plugins/issues/164), [#166](https://github.com/WimSuenens/agent-plugins/issues/166), [#167](https://github.com/WimSuenens/agent-plugins/issues/167) and [#211](https://github.com/WimSuenens/agent-plugins/issues/211), refs [#158](https://github.com/WimSuenens/agent-plugins/issues/158); slice 2 of [#207](https://github.com/WimSuenens/agent-plugins/issues/207), the improvement loop. Cause: the first site run filed ten issues about the factory and the A3 listed none of its events.
+
+**What changed for the person who runs the factory:**
+
+- **The A3 lists what happened.** A3 marker `v3` adds `events`, `issues filed during the run` and `not detectable from records`; `scripts/a3-events.sh` builds them from the ledgers, hansei records, item comments and `intake.sh filed-since`, and the lead adds only the cause of each event. `a3-check.sh` refuses a v3 A3 without them. Rework rounds, `needs-decision` rows, overturned decisions and waits are read from the structure of the records; refusals, withdrawn skips, corrections and person stops by a keyword in free text; the line `not detectable from records` names what no record holds.
+- **A phantom event is a `false alarm (<reason>)`.** `a3-check.sh` accepts that cause and refuses a bare `false alarm`; the count per run is a calibration signal.
+- **Andon kind 1 is blocked or defective input.** A defect in an input that another role or an earlier stage produced, and a `needs-decision` question about it, now open an andon of kind 1. The list of kinds is not shortened and has no kind 8.
+- **New issues at each stage boundary.** `intake.sh filed-since <start> [<end>] [--state open|all] [--line]` counts issues filed since the run start that carry the project's own triage label (read from `docs/agents/triage-labels.md`) or the `factory:improvement` marker; nothing is ingested. Provisional: revisit after two runs, or when a report says nothing new more than once.
+- **`docs/direction.md`.** The product owner creates it once the destination is settled and updates it only when the Destination changes; a line the factory did not write is not overwritten.
+- **ADR reasons are tagged** `(owner)` or `(architect)` in the architect's ADR template. The approval of a frontier PR is unchanged.
+- **Kind 3** prints no tie line when the committing role is one of the tied owners, and the run skill describes the `ambiguous owner` line.
+
+**Tests.** `tests/factory/test_slice2_loop.sh` (new), one block per item, with the real records of the first site run under `tests/factory/fixtures/a3events/`; `test_a3_check.sh` and `test_andon_owner_match.sh` follow the new behaviour.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `e8ae39e6865e2ba67d150cd5be58b154b7ae37895472d9ff8e8bb1c60ecb03a4`, tooling `0b341aaf86562ca056c0deb11d9619b2c50c897441dc4a1470e6102a28b5089e`.
+
 ## factory 2.17.0 (#214)
 
 Release: `2.17.0`, a **minor** release: standard text changed (the gemba commits fallback in `references/hansei.md`) and the posting, gate and detection scripts changed. Both fingerprints change. No migration.

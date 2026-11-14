@@ -2,6 +2,26 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.2.0 (#207, slice 4)
+
+Release: `3.2.0`, a **minor** release: standard text and scripts changed (the run skill, a new reference `run-route.md`, the start gate and the close of an item). The lead now sizes the destination, writes a plan on the ticket and takes the lightest route; the `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration: a project keeps its flow table.
+
+Closes [#159](https://github.com/WimSuenens/agent-plugins/issues/159) and [#160](https://github.com/WimSuenens/agent-plugins/issues/160). Refs [#187](https://github.com/WimSuenens/agent-plugins/issues/187) (decisions 1, 2, 3, 9, 11, 15, 16) and [#207](https://github.com/WimSuenens/agent-plugins/issues/207).
+
+**What changed for the person who runs the factory:**
+
+- **Sizing and the plan on the ticket.** After the destination is confirmed the lead names the rows of the project's flow table that fire and runs `scripts/flow-size.sh` (sum of points, band, the steps each row adds, the route). It writes the plan on the destination ticket (a slice: on the slice ticket) and runs it without waiting. The person is asked only on an open one-way door or in the Heavy band. `scripts/plan-check.sh` refuses an incomplete or inconsistent plan; role path and test depth read `standard` and are not variable yet. Before the first slice is built the stage summary names what it deliberately leaves out of an approved ADR.
+- **The direct route.** With no fired row that adds a map there is no map and no frontier round: each open one-way door goes to the person as a decision card, the ADRs land in one PR, slices are cut from the destination's Done when in the order `scripts/start-gate.sh` prints. When work reveals a one-way door, a failed assumption or a missed unknown the lead stops, charts a map and says so in one line.
+- **Run identity.** In the direct route the destination ticket holds the Factory run section. `scripts/run-state.sh` reads it from either body; `intake.sh filed-since --run-body` and `a3-events.sh --run-body` take it.
+- **Beachhead (#159).** The plan decides it. The person is asked only when a candidate puts a one-way door under test or the candidates differ on something only the person can weigh; the candidates, the choice and the reason go on the slice ticket. `plugins/wayfinding` is not changed.
+- **#160.** The start gate calls the integrator at "slice ready" and "PR opened" (`start-gate.sh`), and closing a slice runs `scripts/under-test.sh`, which flags every Under test line that is not confirmed.
+- **Fence.** F1 to F7 and the fence fixtures are untouched.
+- **`baseline.md`.** A new minor starts a new series (section 6): `3.2` starts with no items and `3.1` becomes history, indicative only, because the `standard` fingerprint changed.
+
+**Tests.** `test_slice4_size.sh`, `test_slice4_run.sh`, `test_slice4_text.sh` (new; the walkthrough numbers are printed by the last one); `test_run_split.sh` pins the lines slice 4 added to the moved text; the cap on router plus references is 136,000 (real figure 135,302), the router cap stays 70,000.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `b2abf2ad03b038dbdc9666690d0e4a139e25ec8457d48f6bb12c416f6955c3ba`, tooling `43e4673110596848842fe6cb15042b39927273191283c34c894653b25b47bbe2`.
+
 ## factory 3.1.0 (#207, split before slice 4)
 
 Release: `3.1.0`, a **minor** release: standard text changed (the run skill became a router and nine reference files). No behaviour changed: every rule moved word for word. The `standard` fingerprint changes because the text moved; the `tooling` fingerprint does not. No migration.

@@ -26,6 +26,7 @@
 #      is listed once. `--state open` (default) lists open issues, `all` also closed ones. `--line` prints one line for a stage boundary:
 #      `new issues since <start>: <k> open: #<n> <title>; ... (sources: ...)` or `... : none (sources: ...)`. Without the table only the
 #      marker is counted and the line says so. Reads and ingests nothing else; an issue filed under neither source is not seen.
+#      `--run-body` reads the start from the run ticket's `started:` and refuses (exit 2) a section without one or one that belongs to a closed run.
 #      The report is provisional: revisit after two runs, or when a report says nothing new more than once.
 # triage: posts the outcome comment <!-- factory:triage v1 --> on the issue. <outcome> is one of direction, slice-candidate,
 #      research-ticket, parked, rejected; <reason-file> holds the reason and must not be empty. A rejected idea is closed as
@@ -179,6 +180,7 @@ case "$cmd" in
     if [ -n "$runbody" ]; then
       # the run ticket's own body (the map's, or the destination ticket's in the direct route) gives the start: no explicit start next to it
       [ -z "$start" ] || usage
+      [ "$(bash "$(dirname "${BASH_SOURCE[0]}")/run-state.sh" status "$runbody")" != closed ] || { echo "intake: $runbody: the Factory run section belongs to a closed run: start the new run first (run-state.sh start)" >&2; exit 2; }
       start="$(bash "$(dirname "${BASH_SOURCE[0]}")/run-state.sh" started "$runbody")" || exit 2
     fi
     ts='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'

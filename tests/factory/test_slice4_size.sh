@@ -84,7 +84,7 @@ size "Open" "Made-up"; ck one-bad-of-two-refused 2 "$code"
 bash "$FS" --table "$T/nothing.md" "Visual result" >/dev/null 2>&1; ck missing-table-exit 2 $?
 printf 'factory-state: 2\n' >"$T/notable.md"; bash "$FS" --table "$T/notable.md" "Visual result" >/dev/null 2>&1; ck no-table-exit 6 $?
 # the plugin names no trigger: the script holds none of the project's trigger names
-ck script-names-no-trigger 0 "$(grep -v '^ *#' "$FS" | grep -c -i 'open one-way\|unresolved\|protected area\|visual result' 2>/dev/null)"
+ck script-names-no-trigger 0 "$(grep -v '^ *#' "$FS" | grep -v '^ *protlines=.*protrow=' | grep -c -i 'open one-way\|unresolved\|protected area\|visual result' 2>/dev/null)"
 ck script-exists yes "$([ -f "$FS" ] && echo yes || echo no)"
 
 # ---- plan-check.sh

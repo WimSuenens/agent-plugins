@@ -31,6 +31,8 @@ shared: none
 
 `Toc.astro` is deleted (replaced by `Contents.astro`); it stays in `Paths:` so the deletion is the developer's to make. `src/lib/url.mjs` is unused after the build (the page model builds hrefs from the base), so it is listed for deletion too. `package.json` and `package-lock.json` are listed so the developer declares `@astrojs/markdown-satteri` (the config imports it; astro pins it, so declare the same version). `astro.config.mjs` is listed in both this and the page-tree contract (markdown options and the rehype step).
 
+> Superseded in part by [225 reference section](225-reference-section.md): section 2 (navigation tree), section 4 (the Reference contents list), section 6 (see-also), section 7 (the Dutch top bar Reference link) and section 9 (the worked example): Reference now has a Dutch page, so these no longer show it as an English link.
+
 ## 1. Page shape (every page, both languages)
 
 `src/layouts/Page.astro` wraps `Base.astro`; both route files render a page only through it. Source order in `body`:

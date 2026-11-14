@@ -182,8 +182,6 @@ On a resumed item, keep what exists and continue from the lead state.
 | Documentation | docs-writer |
 | Merge, on the person's approval | you |
 
-**The release class of a factory change.** When the slice changes files under `plugins/factory/`, the class of the release comes from the bump check, not from the architect's judgement. Before the contract names a version or a release class, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh" --intended origin/main <the paths the slice will change>` and quote its answer line in the contract; the brief for the architect says so. A change that leaves the meaning of standard text unchanged still counts as standard work.
-
 Between the Contracts and ADRs row and the Tests row the lead takes the code-review decision (*Optional code review*); it is a decision, not a role task, and gives the slice no status.
 
 The **stage** of a slice is the role task that is `Running`; no field holds it. Each stage is one or more role tasks (*Role tasks*); the slice card moves by the events of *The board*, not by stage.

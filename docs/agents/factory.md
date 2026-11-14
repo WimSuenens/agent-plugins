@@ -102,3 +102,9 @@ Resolved ids for the GitHub Project:
 | security-reviewer | f858a981 |
 | devops | 582eb3ea |
 | docs-writer | f9753564 |
+
+## Releasing the factory plugin (this repository only)
+
+This repository develops the factory plugin itself. These rules belong to the repository, not to the plugin: a project that only uses the factory does not have them.
+
+When a slice changes files under `plugins/factory/`, the release class comes from the bump check, not from anyone's judgement. Before the architect's brief, the lead runs `bash scripts/release-class.sh origin/main <the paths the slice will change>` and puts its answer line in the brief; the architect quotes that line in the contract before the contract names a version or a release class. A change that leaves the meaning of standard text unchanged still counts as standard work. The real check, `check-bump.sh`, still runs at *Open PR* and at *Merge PR*.

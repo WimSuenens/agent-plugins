@@ -11,7 +11,7 @@ Issues [#162](https://github.com/WimSuenens/agent-plugins/issues/162), [#192](ht
 **What changed for the person who runs the factory:**
 
 - **One definition of a protected change (#192).** The skip check and the merge gate test the same path list: `skip.sh` adds the slice's own contract files and takes `--paths` (the PR's changed paths). The patterns in `protected-areas.sh` test one path component at a time and first take out the words that only look like a protected one, so `author`, `secretary` and `immigration` are no longer protected (a name like `authService` or `userauth` still is). A project adds its own with one line in `docs/agents/factory.md`: `protected-paths: <glob>, <glob>` (area `project`).
-- **The release class comes from the bump check (#195).** `check-bump.sh --intended <base> <path>...` answers before any commit exists; the architect and step 6 quote its answer line in the contract. A meaning-neutral change to standard text still counts as standard work.
+- **The release class is asked before the contract (#195), in this repository only.** The dry-run is dev-repo tooling, `scripts/release-class.sh` at the repository root, with the rule in this repository's `docs/agents/factory.md`; nothing about it is in the shipped plugin, which a project that only uses the factory installs. Whether the bump check itself should leave the plugin is a separate issue.
 - **`worktree.sh add` starts from `origin/main` (#162).** It fetches first; a failed fetch exits 5 with one line and creates nothing. When local `main` differs, one line names it; local-only commits are never touched or included. The new branch has no upstream. A repository without an `origin` remote, or an unreachable one, can no longer add a worktree.
 - **Briefs carry no absolute home path (#196):** `~/...` in prose, `"$HOME/..."` in a quoted shell command, `.claude/worktrees/<id>` for worktrees.
 - **The hansei cross-check reads the author date (#193)**, which a rebase keeps.
@@ -19,9 +19,9 @@ Issues [#162](https://github.com/WimSuenens/agent-plugins/issues/162), [#192](ht
 - **Slice-0 leftover:** `post-text.sh render` scans the draft itself, so the closing-comment path no longer carries its own scan step. The other inline reminders stay: no other script posts or scans.
 - **Andon kind 3** no longer flags a role writing its own `docs/agents/roles/<role>.md` or `docs/agents/skills/<role>/` (items #156 and #188 were flagged for exactly that). It narrows what the lead's detector flags, not what a role may raise.
 
-**Tests.** `tests/factory/test_protected_paths.sh`, `test_slice1_text.sh` and `test_post_text_scan.sh` (new); additions to `test_check_bump.sh`, `test_worktree_folder.sh` (its repositories now have an origin), `test_andon_kind3_kind4.sh` and `test_andon_detect.sh` (the real commits of #156 and #188 now give no flag).
+**Tests.** `tests/factory/test_protected_paths.sh`, `test_slice1_text.sh`, `test_post_text_scan.sh` and `test_release_class.sh` (new, the last for the repository-level dry-run); additions to `test_worktree_folder.sh` (its repositories now have an origin), `test_andon_kind3_kind4.sh` and `test_andon_detect.sh` (the real commits of #156 and #188 now give no flag).
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `01fea7039906943ea507b56b871cb9d3f3bcacfd6725f66e853d79a327a00738`, tooling `ec82e597d99ead50f6185b973e55970e9b9bce8b7002e649ca02aefc3d15d124`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `ed57d88db1f39d70e42e5a48c12e07967db0dc393731df34ba4fbb5b4abb310e`, tooling `afebe7fd43211aec06e93f47d5ac6406f3ef65350501f6e2a324236b989843b8`. Any later change under `plugins/factory/` in this release is a forgotten bump.
 
 ## factory 2.14.0 (#207)
 

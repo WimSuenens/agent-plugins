@@ -3,7 +3,7 @@
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
 IN="$PLUGIN/scripts/integrator.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 AG="$PLUGIN/agents/integrator.md"
 cd "$T" || exit 1
 

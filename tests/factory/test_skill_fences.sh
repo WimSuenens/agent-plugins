@@ -8,7 +8,7 @@ for f in "$RUN" "$PLUGIN"/references/*.md "$PLUGIN"/agents/*.md; do
   ck "fences-balanced-$(basename "$f")" 0 "$((n % 2))"
 done
 # no top-level heading sits inside a fence in SKILL.md except the Overrides example's own two
-inside="$(awk '/^```/{f=!f; next} f && /^## (Skill graduation|Role knowledge)/' "$RUN" | wc -l | tr -d ' ')"
+inside="$(awk '/^```/{f=!f; next} f && /^## (Skill graduation|Role knowledge)/' "$(run_all_file)" | wc -l | tr -d ' ')"
 ck sections-outside-fence 0 "$inside"
-ck overrides-example-intact 1 "$(awk '/^```/{f=!f; next} f && /^## Overrides$/{c++} END{print c+0}' "$RUN")"
+ck overrides-example-intact 1 "$(awk '/^```/{f=!f; next} f && /^## Overrides$/{c++} END{print c+0}' "$(run_all_file)")"
 done_

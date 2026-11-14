@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/lib64.sh"
 PS="$SCRIPTS/paths.sh"; FC="$SCRIPTS/factory-config.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 WF="$REPO/plugins/wayfinding/skills/wayfinder/SKILL.md"
 BH="$REPO/plugins/wayfinding/skills/beachhead/SKILL.md"
 cd "$T" || exit 1

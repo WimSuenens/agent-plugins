@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 T="$(cd "$T" && pwd -P)"
 IN="$PLUGIN/scripts/intake.sh"
-SK="$PLUGIN/skills/run/SKILL.md"
+SK="$(run_all_file)"
 ID="$PLUGIN/skills/idea/SKILL.md"
 SU="$PLUGIN/skills/setup-factory-skill/SKILL.md"
 TPL="$PLUGIN/skills/setup-factory-skill/assets/factory.md"

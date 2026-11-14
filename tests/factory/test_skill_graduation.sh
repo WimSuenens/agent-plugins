@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 T="$(cd "$T" && pwd -P)"
 SG="$PLUGIN/scripts/skill-graduation.sh"
-SK="$PLUGIN/skills/run/SKILL.md"
+SK="$(run_all_file)"
 PR="$PLUGIN/references/protocol.md"
 mkdir -p "$T/bin" "$T/g"
 cp "$REPO/tests/factory/stub-gh/gh" "$T/bin/gh"

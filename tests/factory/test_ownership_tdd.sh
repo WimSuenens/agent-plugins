@@ -19,7 +19,7 @@ PROTO="$REPO/$P/references/protocol.md"
 DEV="$REPO/$P/agents/developer.md"
 QA="$REPO/$P/agents/qa-engineer.md"
 ARCH="$REPO/$P/agents/architect.md"
-RUN="$REPO/$P/skills/run/SKILL.md"
+RUN="$(run_all_file)"   # router and references (lib.sh)
 TPL="$REPO/$P/skills/setup-factory-skill/assets/factory.md"
 SEC="$P/agents/security-reviewer.md"
 HANS="$REPO/$P/references/hansei.md"
@@ -46,7 +46,7 @@ kept() {
   else echo "FAIL $1: baseline line '$4...' is not a line of ${2#$REPO/}"; fail=1; fi
 }
 # added <file under plugins/factory>: the lines the new file adds against the baseline
-added() { diff <(base "$1") "$REPO/$P/$1" | sed -n 's/^> //p'; }
+added() { local new="$REPO/$P/$1"; [ "$1" = skills/run/SKILL.md ] && new="$(run_all_file)"; diff <(base "$1") "$new" | sed -n 's/^> //p'; }
 
 # =============================================================== the section placement in the protocol
 ck proto-tests-heading-once 1 "$(grep -c '^## Tests$' "$PROTO")"

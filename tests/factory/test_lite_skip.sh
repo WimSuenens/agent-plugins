@@ -4,7 +4,7 @@
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
 FC="$PLUGIN/scripts/factory-config.sh"; SK="$PLUGIN/scripts/skip.sh"; IN="$PLUGIN/scripts/integrator.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"; HA="$PLUGIN/references/hansei.md"; AG="$PLUGIN/agents/integrator.md"
+RUN="$(run_all_file)"; HA="$PLUGIN/references/hansei.md"; AG="$PLUGIN/agents/integrator.md"
 TPL="$PLUGIN/skills/setup-factory-skill/assets/factory.md"
 f() { printf '%b' "$2" >"$T/$1"; }
 cd "$T" || exit 1

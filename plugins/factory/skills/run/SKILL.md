@@ -25,6 +25,8 @@ State lives in the tracker (the board, the role-task sub-issues, the ledger) and
 
 A **run** is one cycle over the map's standing backlog (*The run cycle*). A **map** is a long-lived direction that new ideas keep refining; it is never dissolved by the factory. An **item** is one slice of a run, built on its own branch and merged on its own PR. There is no maximum of slices: items run side by side whenever their path lists do not overlap (ADR 0016, amended by ADR 0017). The only brake is the optional per-run budget `run-budget` (`factory-config.sh budget`). A **frontier round** is the work of step 3, clearing the map's one-way doors outside any item; it too has its own branch and one PR.
 
+**This skill is a router.** Steps 0 to 7, *The run cycle*, *The integrator*, *The board*, *Needs you*, *Role tasks*, *Scan before posting* and *Role knowledge* are written out below, because every item needs them. Every other section keeps its heading here with one line that says when to read the reference it moved to (`references/run-*.md`) and what the reference covers. A name in italics (*Andon*, *Procedure*, *Run start*, *Settle round*) is a heading of this file or of the reference its line names. Read a reference when its event happens, and not before; a rule you do not read is not applied. Only this file has `${CLAUDE_PLUGIN_ROOT}` substituted: where a reference writes it in a command, use the path on the `Plugin root:` line above.
+
 ## 0. Resume or start
 
 **First**, before the choice below, before any call to the board and before any mutation, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" state`. On a non-zero exit stop and print its stderr line (it says `run setup-factory-skill`): nothing else in this skill runs on a project that has not migrated; exit 6 means no flow table. A leftover `parallel-limit` line is ignored: `state` prints a note on stderr and exits 0, and setup removes the line. Then run `... factory-config.sh budget`; on exit 5 stop and name the line to fix, as for a bad role model value, and start nothing. Its output is the run's budget (`none`, `<N> tokens` or `<N> hours`).
@@ -55,17 +57,7 @@ A run is one cycle over the standing backlog. The backlog is every open idea, ca
 
 ## Maintenance cycle
 
-The factory decides on its own whether a maintenance cycle is opportune. It evaluates concrete signals: backlog empty or nearly empty (at most 1 ready slice), red CI or repeated rework on a path (2 or more), 5 or more merges since the last cycle, an untriaged inbox item older than a run, a known vulnerable dependency. With none present, no cycle runs.
-
-**Announce.** At run start, before intake, state in one line whether maintenance runs and on which signal. Build a snapshot file `{"backlog_ready", "ci", "rework": [{"path", "count"}], "merges_since_cycle", "inbox_aged", "vulnerable_deps"}` from the board, `gh run list` (or the project's CI), the ledger, the merge count since the last cycle's candidates and `intake.sh untriaged`, then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/maintenance.sh" decide <snapshot>` and say its line to the person unchanged.
-
-**The cycle.** When the line says `run`, work through the activities that the signals call for, using the upstream skills for triage, bug diagnosis, architecture improvement, code review and retrospective; those a model cannot invoke are read and followed by hand, as the research and triage skills are. Each activity is done by the role best placed for it, with the lead's brief.
-
-**Candidates only.** Maintenance produces backlog candidates of the maintenance kind and changes no code, file or issue directly. File each result with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/maintenance.sh" candidate <cycle> <triage|diagnose|architecture|review|retrospective> <title> <body-file>`; a candidate then goes through the same pipeline as any slice, and the integrator ranks them beside the feature candidates (*The integrator*).
-
-**One-way doors.** A candidate that touches a one-way door is filed with `--one-way-door` and is not executed: it waits for the person as a decision card (step 7).
-
-**The budget.** The per-cycle budget is `maintenance-budget` in `docs/agents/factory.md` (`<N> candidates`, default 10; `maintenance.sh budget`). `maintenance.sh candidate` counts the candidates of the cycle id; exit 7 stops the cycle: file nothing more, say `maintenance budget reached`, and go on to improvement and slice building.
+At run start, before intake, to announce whether maintenance runs, and when `maintenance.sh decide` says `run`: read `references/run-intake.md` (*Maintenance cycle*: the signals, the announce line, candidates only, one-way doors, the per-cycle budget).
 
 ## The integrator
 
@@ -300,43 +292,11 @@ The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md
    The always-human list is fenced (F1): no override widens the auto-merge, and the person's earlier approvals are not widened by it: a yes covers that one PR, and a production action still needs its own explicit yes (the sentence on production actions at the end of step 6).
 
    When the gate pauses, put the PR to the person with its stage summaries and any open decisions, and ask one question: **merge and clean up?** This one approval covers the merge and the whole clean-up, the item's environment included. Until then, the item waits: post the needs-you comment first (`Cause: merge approval`, `Options: yes or no`), then set the slice `Waiting on you`. Say in the summary how many Tasks rows read `split <m>` in their `Notes` (results that needed more than one comment), so that "more than rarely" can be judged. On the yes stamp `date -u +%FT%TZ`: that is the approval time and the touch `approval`; add `Answered:` to the comment, write the touch and the `person` wait to the ledger, and set the slice back to `Running` while it closes.
-2. Complete the ledger's Waits table with the close scan, then cross-check the Tasks table against git and the tracker, as `hansei.md` describes. The scan runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh"` once over every role agent's transcript of the item and once over each Lead session with `--since` the ledger's `started` and `--until` the approval time (`--sleep-log -` with the `hansei.md` filter where `pmset` exists), and logs or reconciles each line it prints (`hansei.md`, *Cut-offs at close*): the cut-offs an agent recovered from send no notice, and this is where they are found. Under `measurement: lite` this scan and the totals of 8.3 run only as *The measurement profile* says.
-3. Total the token spend per role with `scripts/token-spend.sh` (`--require-end` for role transcripts).
-3a. Do the gemba walk of `hansei.md`, section 6 (after the approval of 8.1 and the totals of 8.3, before the template is filled): it picks one stage by the sample rule, compares its transcript or commits with its brief, and gives the `gemba` line. A difference gets a 5 Whys as a kind 7 andon with no paused agent (*Andon*, *Procedure*). The walk comes after the approval and cannot itself stop the merge: a difference about a gating stage (QA or security did not run, or a verdict was not what its result said) is told to the person before 8.7 and the merge question is asked again; any other difference goes in the record.
-4. Fill the hansei template (it carries the `gemba` line and, under measure 1, the two derived lines), measure 7 reading `pending resurvey`, and post it (scan it first, *Scan before posting*; then *Post hansei*) on the slice ticket, before `work/<id>/` goes. Write `hansei: <comment URL> (measure 7 pending)` into the map's Factory run section, and append the item to its `closed in this run` line as `#<id> <comment URL>`.
-4a. **Set the board fields** (`references/hansei.md`, section 7), after *Post hansei* and before 8.5: every role task's `Tokens` and `Minutes`, then the slice's `Tokens`, `Hours`, `Rework rounds` and `Person touches`, each with *Set field text*; the section's rules (never empty, one call per field, a resumed close) apply.
-5. When the item had an Environment stage, brief devops to tear down the resources in the lead state's **Shared resources** list.
-6. The last commit on `item/<id>` removes `work/<id>/`, after one commit of the lead state, all in the item worktree and never reaching outside it. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/close-item.sh" <id>` from the main checkout: one script, which stops at the first failure (its header lists the guard, the commits and what it stages). When it exits 1, stop the close and put it to the person: the guard stopped and nothing has been removed, or a nested git repository under `work/<id>/` is left, with `git rm` staged and nothing committed. Other untracked files under `work/<id>/` are never staged. The tracker holds the stage summaries, the hansei record and the ADRs hold the decisions. The record is posted before this commit. It is posted before the lead-state commit too.
-7. Merge the PR and remove the worktree and branch (*Merge PR*); the integrator does the mechanical work as the merge train (*The integrator*), and the slice card turns `Done` with the merge, set by you from its `done <id>` line. When the merge fails, keep the worktree and put the failure to the person. Apply the ADR number as assigned, after rebasing on `main`, when the slice's contracts name it on their `shared:` line (*Parallel slices*), and the project's release step when it declares one; the merge train does it for you.
-8. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand; its step *Slices in flight* checks every slice in flight too. Post its outcome to the person in a few lines, then apply the pause for every slice it named (*Parallel slices*, the resurvey pause). A slice with no question stays `Running`, and you say you checked.
-9. Fill measure 7 (*Edit hansei*), scanning the edited text first (*Scan before posting*): one line per Under test line, `confirmed`, `contradicted` or `not exercised`. Remove the `hansei:` pointer from the Factory run section. If the person stops the run after the record is posted and before this edit, edit measure 7 to `not captured (run stopped before the resurvey)` first; a later session that finds the pointer still in the Factory run section does the same.
-10. Update the baseline (`references/baseline.md`, section 8.1): once the record is in its final state, recompute the baseline issue from the records and append the `baseline:` note to the map's Factory run section (every post or edit of the baseline is scanned first, *Scan before posting*). Then, before the next item starts, **decide** whether the run's experiment is written (`references/a3.md`, section 5). Nothing is committed or stored here: no worktree exists, and the decision is committed at step 5 of the next item.
-11. Advance without waiting for the person again:
-   - **The destination moved, or a `[locked]` decision was contradicted** → stop the run and put it to the person. Redrawing the destination is step 1 again.
-   - **One-way doors on the frontier** → step 3, as a new frontier round from main.
-   - **Backlog not empty** (a slice candidate, a ready slice, a frontier ticket or an untriaged idea, and the budget is not reached) → step 4 for the next slice; start every other ready slice whose list does not overlap a slice in flight.
-   - **Backlog empty, or the budget reached** → step 9. The map stays: it waits for new ideas (*The run cycle*).
-
-**Done when** the person approved, the gemba walk is done and its line is in the record, the hansei record is posted on the slice ticket, the item's environment is torn down, the PR is merged, the worktree and branch are gone, the board shows `Done`, the board fields are set, the map is resurveyed, measure 7 of the record is filled, and the next step is written into the Factory run section.
+After the approval of 8.1 (or its `auto-merge`), at every item close: read `references/run-close-item.md` (8.2 to 8.11 and the **Done when** of this step: the close scan, token totals, gemba walk, hansei record, board fields, teardown, the close commits, merge, resurvey, measure 7, baseline, advance).
 
 ## 9. Close the run
 
-Entered when the backlog is empty, the budget is reached (step 8.11) or the person stops the run. [a3.md](${CLAUDE_PLUGIN_ROOT}/references/a3.md) and [baseline.md](${CLAUDE_PLUGIN_ROOT}/references/baseline.md) hold the rules. In this order; no other batch step gathers findings at the end of the run:
-
-0. **Entry.** When the person stopped the run, ask once: `Close the run now? That posts the A3 and settles the overrides.` Silence, a timeout or an assumption is no yes. On no, write nothing: a later run start finds the unanswered overrides and settles them (*Settle round*). On yes, run 9.1 to 9.5, with the A3's `run:` line reading `run stopped`. A closed item counts; an item in flight does not (its worktree stays, resumable with `/factory:run #<slice>`, and the report says so). When the map dissolved, carry on.
-1. **Update the current section from the records.** The recomputation of `references/baseline.md`, section 8.1. When the page is unchanged, say `baseline unchanged`.
-2. **Write the experiment's before/after reading and post the A3** (`references/a3.md`): the problem (section 4), the targeted walk (`hansei.md`, section 6, *The targeted walk*), the readings (sections 6 and 7), the lines (section 2), the events lines (section 2.2: run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/a3-events.sh"` over the records of every item and `intake.sh filed-since <run start> <run end> --state all`, paste its output, and add only the cause of each event), run the check (section 9, `bash "${CLAUDE_PLUGIN_ROOT}/scripts/a3-check.sh" <file>`), scan it (*Scan before posting*), then *Post A3*. The A3 posted is v3 (`<!-- factory:a3 v3 -->`); a v1 or v2 A3 found by *Find A3* is left as it is (`references/a3.md`, section 1). When the run closed no item (the Factory run section's `closed in this run` line is absent or empty), say `0 items closed: nothing to measure`, post nothing, and go on to 9.3: the overrides still need their answers.
-3. **The settle round** (`## Andon`, *Settle round*): the lines carry the A3's before, target and after. After the settle merge, recompute the baseline again (section 8.1).
-4. **The feedback offer.** Ask the person what felt clumsy, before drafting. Then draft a factory issue for `WimSuenens/agent-plugins` **only for what the A3 lists, plus the person's remark**: the A3's `standard changes proposed` entries (plugin changes an andon proposed, and `other` (kind 7) abnormalities), the A3's `problem` and `other problems seen`, and the person's remark. Each draft states why it is listed (`listed because: standard change proposed | other abnormality A<k> | the A3's problem | other problem seen | the person's remark`). What the A3 does not list (briefs that came back `blocked` for an input the protocol should have named, a role that did another's work) stays in the project's hansei and andon records and is not drafted. Each draft holds the problem in factory terms, the exact standard change, the before and after figures from the A3 against the baseline with the item count and the release, and a neutral kind of work (the `kind of work` clause of `still uncertain`). It holds no code, no project names, no business content and no raw hansei records. A promoted override's plugin change is not drafted until its decision card is decided. Show the drafts and post only those the person approves (check each draft first with `improvement.sh check`, *Improvement loop*):
-
-   Draft only factory text. A problem or other problem seen is drafted only when its target is a path under the factory plugin's own folder (or a section of such a file) or, in the measure branch, a field name of the baseline; a project path or a bare line target stays in the project's A3. Quote a reading as `<value> (<k> of <n>; factory <semver>)`: leave out the A3's item numbers and every link. A draft holds no `#<n>` form, URL or project path; reason texts are paraphrased, not quoted.
-
-   `gh issue create --repo WimSuenens/agent-plugins --label plugin:factory --title "$title" --body-file "$rec"` (the approved title and body in scratch files, scanned first, *Scan before posting*; `title="$(cat <title file>)"`)
-
-   This is the only instruction that names `--repo WimSuenens/agent-plugins`. Everything else you measure or record, the ledger, the hansei record, the baseline and the A3 included, stays in the project's own tracker and `work/<id>/`.
-5. **Report the run closed** and set the map card `Backlog` (the map waits for new ideas; it is not finished), with the A3's link, the baseline's link, the outcome of each override and the link of each open decision card. Do not report the run closed before 9.3 has an answer, applied and merged, for every override of the run.
-
-**Done when** every override of the run has an answer applied and merged, or the run has none; the A3 is posted (or the run closed no item); the person has approved, edited or declined every draft; and the run is reported closed.
+When the backlog is empty, the budget is reached or the person stops the run: read `references/run-close-run.md` (9.0 to 9.5 and the **Done when** of this step: the entry question, the baseline update, the A3, the settle round, the feedback offer, the close report).
 
 ## The board
 
@@ -459,75 +419,23 @@ Exit 0: post. Exit 1: **post nothing**, name the file and line to the person (ne
 
 ## Parallel slices
 
-Slices run side by side whenever their path lists do not overlap, with no count limit (ADR 0016, amended by ADR 0017).
-
-**The path list.** Every contract file of a slice has a `## Paths` section directly after its title block: a line `Paths:`, one `- <path>` line per path (repo-relative, `/`-separated, no empty, `.` or `..` component: `paths.sh` exits 3 on one; a directory ends in `/`, and a directory written without it is read as a file, with a warning on stderr), then a `shared:` line (`shared: none`, or entries separated by `, `: the files the project's release hook resolves in the merge train (a `release-hook:` line of `docs/agents/factory.md`), `CONTEXT.md`, `adr-number`). The slice's list is the union of the blocks of `contracts/<id>-*.md`. Read and compare lists with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" list|overlap|check`.
-
-**Overlap.** Two slices overlap when some path in one list equals a path in the other or is a directory prefix of it (`plugins/factory/` is not a prefix of `plugins/factory-x/a.md`), or a path in one list equals a `shared:` entry of the other list or is a directory prefix of it (rule 3: `adr-number` is not a path and takes no part), or their `shared:` lines both name the same entry. Names are compared character for character, ASCII case folded (`A/b.md` and `a/` overlap). Compare with `paths.sh overlap <the new slice's contracts> -- <the contracts of one slice in flight>` (exit 0 no overlap, 1 overlap).
-
-**The start gate.** You start the next `Ready` slice only when **both** hold: (a) the run budget is not reached (`factory-config.sh reached <spent>`; no budget means it never is); (b) its list exists and `paths.sh overlap` exits 0 against **every** slice in flight, reading their contracts from **their own worktrees** (`.claude/worktrees/<id>/contracts/<id>-*.md`), not from `main`. There is no maximum of slices in flight. **In flight:** a slice card with an item branch whose `Factory status` is `Running`, `Waiting on you` or `Blocked` (a slice waiting on the person still holds its paths and its worktree); a `Ready` slice with a branch is not in flight. Otherwise the slice stays `Ready` and you say why: `budget reached` or `overlaps #<id> on <path>`. The map's `in flight:` line lists every item in flight. After a usage-limit hit the gate starts nothing new until the slices in flight have closed.
-
-**When the list is compared.** A slice's list exists only after the architect stage. The product-owner and architect stages may start for a second slice while another runs (budget part only). The comparison is made **when the architect's result is read, before the first brief of any other role** (Environment, Build, QA, security, devops, docs). No developer, QA or security role is spawned for the slice before it passes the gate. A slice whose list overlaps stays `Ready`, with its requirement and contracts kept in its worktree; when an in-flight slice closes, run the gate again. When a contract of an in-flight slice changes after the comparison (an accepted contract change proposal), run `overlap` again for that slice against the others; a new overlap pauses the slice that started **later**: `Waiting on you`, needs-you comment `Cause: resurvey pause`, its running roles finish the step in hand, no further role for it until the person answers.
-
-**QA and security check the diff against the list.** A QA or security brief for item `<id>` carries this in its `Done` list: `git fetch origin main`, then `git -c core.quotePath=false diff --no-renames --name-only origin/main...item/<id>` piped into `paths.sh check --ignore work/<id>/ --ignore reviews/qa-<id>.md --ignore reviews/security-<id>.md --ignore docs/requirements/<id>- contracts/<id>-*.md` in the item worktree; each `off-list:` line is a finding with the path named, severity at least `medium`. The version file, the changelog line and the ADR number as assigned are applied by you at merge (not in the diff when the review runs), unless the slice runs alone and names them in `Paths:`.
-
-**ADR number.** Assign the next free number at slice start and record it in the lead state; the architect names its ADR file with it. It is the shared entry `adr-number`.
-
-**The resurvey pause.** After each merge the wayfinding Resurvey checks every slice in flight; the same sentence is in both texts:
-
-> A slice in flight is questioned when the merge changes a decision its frame rests on, contradicts one of its Under test lines, or changes a path in its list.
-
-Step 8.8 invokes the Resurvey, then applies the pause for every slice it named: post the needs-you comment (`Cause: resurvey pause`, the question as `Ask`) and set the slice `Waiting on you`; its running roles finish the step in hand and no further role starts for it until the person answers. The comparison belongs to the wayfinding text; this text carries the pause sentence and the pause action. Where an installed older wayfinding text says anything about running slices one at a time, this text governs.
+After the architect's result is read (the path comparison), when another slice could start (the start gate), when you brief QA or security (the diff against the list) and after each merge (the resurvey pause): read `references/run-parallel.md` (*Parallel slices*: path lists, overlap, the start gate, the ADR number, the resurvey pause).
 
 ## Interruptions
 
-A role agent can stop mid-task on a usage or session limit (HTTP 429), often two parallel agents at once.
-
-1. Note the interruption in the lead state's `## Interrupted` section (or the Factory run section, in a frontier round): which role task and agent, when, its last commit, its draft result. In an item, the wait is written to the ledger's Waits table **when it ends** (never open), from the failure notice, with the stopped agent in its `Agent` column (`lead` for yourself): `limits` for a usage limit, `stalled` for no progress (the stream watchdog), `interrupted` for a server or connection error or a machine sleep. The resume, the respawn or the accepted result ends it; the start is the last line's start from `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>` on the stopped agent's transcript, never the file's last entry; `hansei.md` gives the detection rules, the exact sleep-log filter and the rule to copy only UTC sleep times.
-2. **Done, then stopped.** When the agent stalled or failed after writing a complete result with `Status: done` whose commits are all on `item/<id>`, and its role's paths are clean, accept it as a completion after the usual Done-list check: do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the Tasks row's Notes (`hansei.md`, *Done, then stopped*).
-3. Otherwise, after the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
-4. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
-5. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it. After a usage-limit hit the start gate behaves as `N = 1` until the slices in flight have closed (*Parallel slices*). A cut-off role keeps its role task open and its card `Running` (*Role tasks*, *A cut-off role loses no Progress*).
+When a role agent stops mid-task (a usage or session limit, a stall, a connection error) or a resumed run finds one cut off: read `references/run-interruptions.md` (*Interruptions*: note it, done then stopped, resume, respawn, no parallel roles after a limit).
 
 ## Idea intake
 
-An **idea** is a tracker issue labelled `idea`: a thought, a reference (URL, document, screenshot) or any input the person or a collaborator wants the factory to weigh. It is filed with `/factory:idea`, directly in the tracker with the label (a collaborator needs no factory for that), or by dropping a file in the **inbox**, the local gitignored folder `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" dir` prints. The ideas are the tracker's; the inbox is only a drop zone.
-
-1. **Drop the inbox.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" drop`. Each file becomes one issue with the label `idea` and is then removed, so the folder never grows; a second run over the same folder creates nothing new. A line `kept <name>: <reason>` (exit 5) is a file the body cannot carry or the scan refused: the file stays. Tell the person the reason; delete nothing yourself.
-2. **List the untriaged.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" untriaged`. It prints each open `idea` without an outcome comment as `<n>`, title and `new` or `waiting`. `waiting` is an idea whose decision card is open and not marked `Answered:`: leave it until the person answers; once answered it lists as `new`, and you record its outcome citing the card.
-3. **Triage each `new` one.** Read the upstream triage skill and follow it (it cannot be invoked by a model: read `skills/engineering/triage/SKILL.md` of the installed `mattpocock-skills` plugin and apply it by hand), using the map, `CONTEXT.md` and the ADRs as the evidence. Every idea ends with one outcome and a reason, posted as a comment:
-   - **direction**: it changes or refines where the project is going; fold it into the map's Destination or Decisions so far (the map is edited at step 4 or by a frontier round). The product-owner also updates the project's direction document `docs/direction.md` (front matter `goal` and `current`, and a `## History` line `- YYYY-MM-DD: what changed` naming the idea) in the same item; the Obeya renders it and never writes it (contract 129-obeya-direction).
-   - **slice candidate**: it is a buildable piece of work; it joins the backlog as a candidate for step 4.
-   - **research ticket**: the answer is unknown; it becomes a research ticket on the frontier.
-   - **parked**: sound, not now; the reason names what would bring it back.
-   - **rejected**: not wanted; the reason says why, and the issue is closed as not planned.
-4. **One-way doors.** An idea that touches a one-way door is put to the person as a decision card; you do not decide it. Brief it as step 7 does, post the card on the idea (*Decision card*, scanned with `--needs-you`), set its card `Waiting on you`, and post the outcome comment only after the answer, citing the card. Everything else you decide yourself: a two-way triage needs no question.
-5. **Record.** Write the reason to a scratch file, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" triage <n> <outcome> <file>`. It scans the text (exit 6 on a hit: rewrite and run again), posts the comment `<!-- factory:triage v1 -->` and, for `rejected`, closes the issue. Never post an outcome without a reason; never leave an idea with no outcome when you end a run's intake.
-
-This section collects and triages; maintenance is *Maintenance cycle*.
+At every run start, before step 1 or the next item, and whenever the person says an idea is waiting: read `references/run-intake.md` (*Idea intake*: drop the inbox, list the untriaged, triage each one, one-way doors, record).
 
 ## Improvement loop
 
-Every finding (an andon, repeated rework, a research result) is classified with one test: **would this hold in a project with a different stack, business and person?** No: **project-local**. Yes: **factory-fundamental**. Where it stays unclear, treat it as project-local (nothing leaves the project). Record the class and the reason on the finding's issue: write the reason to a scratch file, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/improvement.sh" classify <issue> <local|fundamental> <file>` (exit 6: the scan refused the reason; rewrite and run again).
-
-**Project-local.** A project-local improvement is applied by you in the project through the role files (`docs/agents/roles/<role>.md`, `docs/agents/skills/<role>/`) and kept permanently: it does not expire at the end of a run, and no run close asks about it again. The fence binds it as it binds any role file. Each one leaves a trace: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/improvement.sh" trace <name> <role> <measure|none> <before|not captured> "<what changed>" "<why>"` appends a row to `docs/agents/improvements.md`, committed with the role-file change (`#<id> lead: improvement <name>`). Name the measure it is meant to move, when there is one, and its reading before; `not captured` when it was not read, never `0`. An override (*Overrides*) is still the try-out form of a countermeasure and still ends as *Settle round* says; an improvement that proved itself is written into the role file and traced.
-
-**Factory-fundamental.** It is drafted as a sanitised proposal: no project names, code or business content, in factory terms only. The A3 is the proposal format: the problem, the 5 Whys, the countermeasure, before and after against the baseline, what is uncertain; the drafting rules of step 9.4 apply. Write it to a scratch file and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/improvement.sh" check <file>` (exit 6: it names the line and kind of each hit, never the text; rewrite and run again; read the text yourself too, the scan cannot see business content). Show the clean text to the person. Nothing leaves the project without the person's approval: only on their explicit yes, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/improvement.sh" submit <file> --approved <the sha256 that check printed for that exact text>`. Silence, a timeout or an edit after the yes is no approval (an edited text is checked and shown again). This is step 9's approved issue (the protocol's question E allows no other egress), filed by the script instead of the `gh` line there. The issue lands in the marketplace repository; the decision on where the change belongs is taken in a separate session in that repository, never in the project where the factory ran.
-
-**The next cycle measures it.** At run start, report each applied improvement: write the current reading of each traced measure as `{"<measure>": <value>}` to a scratch file and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/improvement.sh" report <file>`. It prints before and after per improvement, with `not captured` where it was not measured. Show the lines to the person; an improvement that did not move its measure is the next finding, classified as above.
-
-The andon, the A3 and the baseline work as before; this section only says where a finding goes and what happens to its countermeasure.
+When a finding is classified, when an applied improvement is reported at run start, and before an A3 draft leaves the project: read `references/run-improve.md` (*Improvement loop*: project-local or factory-fundamental, trace, check, submit, report).
 
 ## Skill graduation
 
-Plugins are toolboxes per domain, not per role: one design plugin serves several roles. A skill a role develops in `docs/agents/skills/<role>/` can graduate into one. A skill is proposed, never published, by the factory.
-
-1. **Record each use.** When an item or a project uses a skill, `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" record <skill> <item-or-project>` appends it to `docs/agents/skill-uses.md`.
-2. **Threshold and scan.** A skill is offered only with use in at least two items or two projects and a clean text: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" eligible <skill> <file>` (exit 5 below the threshold, 6 when the sanitising scan refuses). A skill that does not pass is not offered and no proposal is drafted.
-3. **Domain search.** Each plugin states its domain in one sentence in its manifest (`domain` in `plugin.json`). Before anything else, search for an existing plugin covering the domain, and propose extending it, and only otherwise a new plugin: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" draft <skill> <file> "<one sentence on the skill's domain>" <marketplace plugins dir> <out>` writes the proposal naming the best-matching plugin by its domain, or saying none matches.
-4. **Approval.** Read the proposal for business content the scan cannot see, show it to the person, and only after the person approves file it: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/skill-graduation.sh" submit <file> --approved <sha256 of that file>` (`check-proposal` prints the hash). It becomes an issue in the marketplace repository; the decision on where the skill goes is taken in a separate session in the marketplace repository, never in the project.
-
-Roles refer to plugin skills optionally, through their role file (protocol, *Role knowledge*). The factory works with no domain plugin installed.
+When a role's own skill is used again or could be offered to a domain plugin: read `references/run-improve.md` (*Skill graduation*: record, threshold and scan, domain search, approval).
 
 ## Role knowledge
 
@@ -535,186 +443,39 @@ Each role reads its own role file `docs/agents/roles/<role>.md` and skills folde
 
 ## Andon
 
-Stopping the line. The rules every role reads are in the protocol; this is your procedure. A usage limit or a stall (*Interruptions*) is not an andon unless a role writes an `Abnormality:` line or you raise kind 7. An andon has an id `A<n>`, counting up per item (per frontier round, in the map's Factory run section, which also holds the andon lines of a round). Several abnormalities in one result are several andons, run one after another. An item is never abandoned by a pause: it keeps its stage and goes through the same stages as an item without an andon, plus the andon's row.
+When an abnormality is raised or detected (a role's `Abnormality` line, or a hit of one of the kinds 1 to 7): read `references/run-andon.md` (*Procedure*, *The 5 Whys*, *The comment*); what counts as one is under *Detection* below.
 
 ### Detection
 
-Apply each rule when it is due. A hit is an abnormality: add a row to `## Abnormalities` (`hansei.md`) at once, then run the procedure below. Kinds and their observations are in the protocol's *Andon*.
-
-- **Kind 1, at each result.** Blocked or defective input. For a `blocked` result, read `agents/<role>.md`, `## Inputs needed`. An entry of `Missing` is listed when it is one of those bullets or a named part of one. Any unlisted entry makes it kind 1; name the entry in `seen`. A taken fixed port and a result listing only listed entries are not kind 1. Also kind 1: a defect in an input that another role or an earlier stage produced (a file, a test, a contract, a tool) that made the role's work fail or need a workaround, named in an `Abnormality:` line or found by you in the result; and a `Status: needs-decision` question about such an input opens an andon of kind 1 beside the question. The question goes to the person as before; the andon examines why the defect could ship. Name the producing role and the object in `seen`.
-- **Kind 2, at each result or verdict that lists findings.** A finding is one entry of a role's Findings or verdict block, or one failed criterion of the demo. Skip severity `info`, `informational` and `note`, notes to the lead, and your own rework tasks. Log each in `## Findings` as you read it: `Role | Round | Id | Severity | Text` with an optional sixth cell `Waste` (`-` or a waste type, `hansei.md`, *Tagging waste*) (role: `qa-engineer`, `security-reviewer`, `devops`, `docs-writer`, `developer` or `demo`; round: 1, 2 … as in the Tasks table's `Stage` cell; id as in its file, else `<stage letter><n>`; text: the finding's one-line title as written). Compare a new finding with every earlier row except rows of the same `(Role, Round)`. Write its signature from its text alone, `-` for a slot the text does not give:
-  - `object`: the file (basename) it is about, else the section heading it names;
-  - `trigger`: the input, state or event under which it goes wrong, as a short noun phrase;
-  - `guard`: the one check or rule that, written once, would have prevented it; at most 15 words, naming no file;
-  - `criterion`: the acceptance criterion id it says is violated, else `-`;
-  - `field`: the most specific record field or measure part it names, else `-`.
-
-  Two findings of different `(Role, Round)` are the same type when **M1** holds: their guards pass the one-fix test (the same sentence, or two sentences naming the same check on the same kind of input, so one fix written once closes both) **and** the objects are equal or the triggers name the same condition; or when **M2** holds: criterion and field are equal and not `-`, and the rounds differ. When a slot the clause hangs on is `-`, do not flag: write `unclear` for the pair in the lead state's notes. Same file with another guard is another type; the same guard on another object with another trigger is another type. A residual of a defect an earlier round claimed to close matches by the same clauses. On a match start an andon of kind 2 before routing the finding as feedback; `seen` reads `same-finding-twice: <role> r<round> <id> = <role> r<round> <id>: <the guard sentence>`. A finding matching several earlier ones is one abnormality naming all ids.
-- **Kind 3, at the end of each role stage (commits since the previous check) and once over the whole branch before *Open PR* and at the merge approval.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/andon-detect.sh" kind3` in the worktree: it reads the ownership table from `origin/main`, never the worktree's copy, so a commit on the branch cannot edit the table it is judged by, and prints one line per flagged commit (`role-outside-role: <sha7> <R> changed <P> (owner <O>)`, `... an unclassifiable path (name escaped: <printf %q form>)`, or `... changed <P> (ambiguous owner: <A> <B>)`): each is one abnormality. The `ambiguous owner` line means two table rows of equal specificity name different owners for the path: a tie between two owners is reported, not decided, and the table is not edited to settle it here. There is no tie line when the committing role is one of the tied owners. Never flagged by the path rule alone: a role's own `docs/agents/roles/<role>.md` and `docs/agents/skills/<role>/` (*Role knowledge* tells every role to write them; the fence and what a role may raise are untouched), commits whose role is `lead` or any other name (rule 5.6 below still reads `lead` commits that touch the rules), commits with no role pattern, merge commits, unowned paths (all of `work/`).
-
-  **Rule 5.6, commits that touch the rules.** A subject is self-attested, so in addition flag (kind 3, `rules-touched-by-non-lead: <sha7>`) every non-merge commit on the branch, whatever its subject, that changes in `docs/agents/factory.md` the text of the `## Overrides` section or the ownership table, or a line that starts at column 0 with `run-budget:` or `factory-state:` (a line changed, added or removed; compare before and after the commit; any difference counts), unless both hold: the subject starts `#<id> lead: ` and the commit's author is your git user (`git config user.email` in your session, read at item start; write only its hash-free name on the ledger's `start checks` line with the author-test result). Where all roles share one git identity the author test cannot separate them: the subject test and the path rule still apply, and you say so in the stage summary. A change to the ownership table by anyone but you is flagged the same way.
-  **Never apply an override just because it is in the file.** At every item start, and before the first brief after any commit that changed `## Overrides`, re-read each in-force override, show its rule text in the stage summary, and put it into briefs in your own words (a paraphrase that keeps the meaning), never by copying the file's text into a brief. When no paraphrase keeps the meaning, treat the override as in doubt and do not apply it.
-- **Kind 4, when you add a Tasks row whose `Role` is one of the seven roles.** The observation is the protocol's row 4. Save the ledger comment to a file and write a times file with one line `<sub-issue number><TAB><createdAt><TAB><closedAt>` per Tasks row (`gh issue view <n> --json createdAt,closedAt`), then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/andon-detect.sh" kind4 --ledger <ledger> --times <times> <row #>`. It prints `slow: <own> against median <m> of <n> earlier rows` (the row is flagged: write it in `Notes`; the andon starts after the row is closed), `no baseline: fewer than 3 earlier rows` (write it in `Notes` and stop) or `not flagged`.
-- **Kind 5, at run start and item start.** Sort every override of `docs/agents/factory.md` as in *Run start* below.
-- **Kind 6, at item start.**
-  - (a) After `fingerprint.sh`, find the most recent earlier hansei record in the project (any schema) with the same `plugin: factory <semver>`. Compare `standard` and `tooling`. A difference is kind 6, `seen`: `standard moved under 1.1.0: <old 12 hex> -> <new 12 hex> (record on #<n>)` (the semver and the changed fingerprint name filled in). With no earlier record for the release, the ledger's `start checks` line reads `drift: no earlier record for <semver>`; a match reads `drift: same as #<n>`; a pre-release install without a semver reads `drift: pre-release install` and is not tested.
-  - (b) Read the map's Factory run section for a line holding `FREEZE:`. Trust it only when the map body was last written by your own account: read the body's last editor (`gh api graphql` on the issue: `userContentEdits(first: 1) { nodes { editor { login } } }`, or the issue `author { login }` when the body was never edited) and compare it with `gh api user --jq .login`. When they differ, or the editor cannot be read, the ledger's `start checks` line reads `freeze: not captured (map body last edited by <login>)`, you tell the person, and it is neither a pass nor kind 6. Otherwise take the **FREEZE token**: the last path segment of the install at freeze time, which is a 12-hex sha for a pre-release install or a semver (`1.3.0`) for a release install. Read it as the first backticked 12-hex token on that line, or, when the line has none, the first semver on it. Compare that string, as written, with the last path segment of the `Plugin root:` line. A difference is kind 6, `seen`: `installed <segment>, FREEZE line <token>`. When the line has neither a 12-hex token nor a semver, the `start checks` line reads `freeze: not captured (no token on the FREEZE line)`: neither a pass nor kind 6. With no `FREEZE:` line, skip. A semver install can change content without a version change; the standard fingerprint is not part of this comparison. Also run (b) when a run is resumed.
-- **Kind 7.** Any role or you, for an event that fits no kind 1–6 and still ought to stop the line. Its comment's `fit` line says why no listed kind fits. The gemba walk of `hansei.md`, section 6, raises it when it finds a difference. A `pending` andon link left in an override after its item carried on is kind 7 at the next start check (`none (experiment)` is not `pending`).
+At each result, at the end of each role stage, when you add a Tasks row, and at run start and item start: read `references/run-andon-detect.md` (*Andon*, the rules and the id `A<n>`, and *Detection*, kinds 1 to 7: what each checks and when).
 
 ### Procedure
 
-1. Stamp `date -u +%FT%TZ`: the pause start. Open the row in `## Abnormalities` and note the pause in the lead state's `## Interrupted` section; the `andon` wait is written to the ledger's Waits table when the pause ends. The paused role task's card turns `Blocked` (a slice stopped for an andon is `Blocked` too, until it is resumed or you carry on, then back to what it was). The Tasks row of the paused task, written when its result is read, names the andon in `Notes` (`paused by A<n>`) and lists the andon wait's id in its `Waits` column: the slow-stage test subtracts only the waits a row lists. For the affected work only (the running agents that depend on it; others carry on).
-2. Stop the running agent. Read the last line of its result file's `Progress` (`Next:`) and write it, with the agent id and the pause time, into the draft file `work/<id>/NN-andon-lead.md` (message type `andon`, role `lead`; it starts with a front matter block `andon: A<n>`, `item: <number>`, `owner: <role or lead>`, `status: open`, `reason: <one line>`, `since: <UTC time>`, so the Obeya shows it; when the andon ends set `status: resolved` and add `countermeasure: <one line>`; the block is not posted; its body is the comment of *The comment* being written, with a `## Refused drafts` section). Then `TaskStop` the agent id. An agent that already handed back is not stopped: skip `TaskStop`.
-3. Run the 5 Whys in the draft file; read evidence while the line is stopped.
-4. Decide the countermeasure inside the fence. Write the override in the item's worktree, or decide `none: needs a plugin change`, or `none`. When the override is the run's experiment (`references/a3.md`, section 5: the fence is asked first, a closed item exists in the current series, it addresses the run's one problem, it names one measure with a captured before-reading and a direction, and its form is an override), write the experiment's extra lines with it. The run has at most one experiment; the same decision is made between items, in the worktree of the next item, with `andon: none (experiment)`. An andon raised outside any worktree (steps 1, 2, 4) writes no override: the countermeasure is `none` and you note the proposal in the map's Factory run section.
-5. Resume the same agent with `SendMessage` to its agent id. The message names the countermeasure (the override's name and rule, or "no countermeasure"), says what to continue (the saved `Next:` line), and asks for nothing else. For an agent that had handed back, it carries the follow-up brief. Stamp the time when sent: it ends the `andon` wait, which you now write to the ledger, and the card goes back to `Running`. The wait is `Held item: yes` when no other role agent of the item worked meanwhile, `no` otherwise (split as `hansei.md` says). Its `Agent` is the paused agent's id, or `lead` when none was paused.
-6. When `SendMessage` is refused as cancelled (the person stopped the agent from the UI), make no second attempt by any route. Spawn a fresh agent of the role with a brief whose Inputs are the role's result file (`Progress` and `Next`) and the commits it names. Log both agents in the stage row's `Agents` column and in `## Abnormalities` (`paused: <old id> cancelled; fresh <new id>`), and end the `andon` wait at the spawn. Never abandon the item for a refused resume.
-7. Scan the comment (*Scan before posting*), then post it after the resume, or when you decided to carry on with no override. Complete the `## Abnormalities` row (resume time, comment link) and commit the lead state. There is no `Andon A<n>` row in the Tasks table.
-
-Kind 5 needs no pause and you do not apply the crossing override. After kind 3, 4 or 2 the agent has handed back: no `TaskStop`; the resume message goes to it only when the countermeasure needs that role's rework, otherwise the next brief carries the override. Kind 1: supply the missing input in the next brief and ask why the Inputs needed list lacks it. Kind 6: pause before the item's first brief; `none: needs a plugin change` is the usual countermeasure for (a), a decision for the person.
-
-A kind 7 andon raised by the gemba walk at step 8.3a (`hansei.md`, section 6) takes the rows of that section's table: stamp but no `andon` wait, no agent to stop, no override, no resume; the 5 Whys, the comment, the row and the lead-state commit apply.
-
-A stop can lose work in flight (an unfinished edit, an uncommitted change, a shell the agent started); the protocol's checkpoint rule is the guard.
+When a detection hits and the line must stop: read `references/run-andon.md` (*Procedure*: the pause, the 5 Whys in the draft, the countermeasure inside the fence, the resume, the post).
 
 ### The 5 Whys
 
-**Blame the process first.** A role is expected to stop the line, and an agent has no motive to hide a defect when the record that exposes it blames the process, not the agent. A chain that names an actor before the process teaches roles to hide defects and costs the factory its alarm.
-
-A numbered chain of at most five whys. Each line:
-
-```
-<n>. Why <the question>? — <the cause, naming a process object> — evidence: <file:line | tracker comment URL | timestamp | commit sha>
-```
-
-In the A3's chain (`references/a3.md`, section 2) an evidence reference may also be `gemba <stage> #<item> row <#>`, the targeted walk's line.
-
-A cause names only a process object: the brief, the inputs (a role's `## Inputs needed`), the standard's text (protocol, SKILL, an agent file, hansei.md), the tooling, the ownership table, the order of stages. The chain ends with `process item to change: <one missing, unclear or unenforced rule you can change>`, and the countermeasure addresses it.
-
-Refuse the chain (it is not recorded, no override is written from it, you redo it, the refused draft stays under `## Refused drafts` with its reason) when any cause line names a person; names a role's competence or care as the cause ("careless", "forgot", "weak", "sloppy", "should have", "did not bother", or a role as the actor at fault; test: substitute a process object for the cause's subject, and if the sentence loses its meaning the cause is an actor); names a model ("too weak", "hallucinated", "the wrong model"); or has no evidence reference. A role may appear as where an event happened ("the developer's brief omitted X" names the brief).
-
-A countermeasure that swaps a model (a `## Role models` row) or a role is allowed only when the chain, before the swap line, holds four lines `examined: the brief — adequate — evidence: …`, `examined: the inputs — adequate — evidence: …`, `examined: the role's standard text — adequate — evidence: …`, `examined: the tooling — adequate — evidence: …`, and the swap is the chain's last answer. With fewer than four such lines the chain is refused.
+When you write the chain of an andon, or check one against the refusal rules: read `references/run-andon.md` (*The 5 Whys*: blame the process first, the chain's form, when it is refused).
 
 ### Overrides
 
-Check the fence before you write: for each of the eight questions of the protocol's *Never overridable locally* (F1 to F7 and the data-egress question E), ask it of the override's effect, not its wording. One yes refuses; where you cannot answer "no" with confidence, do not write: record the doubt, tell the person, and carry on with `none`. A refusal writes nothing to `docs/agents/factory.md`; the comment's `fence check` reads `refused YYYY-MM-DD: touches <fenced item>`, with the reason in the chain's last line. A request from the person to cross the fence is refused and the item named; loosening is a decision card.
-
-Write an accepted override in the worktree that raised the andon, under `## Overrides` in `docs/agents/factory.md` (create the section on first use; for a project set up before the row existed, also add the ownership row `` | `docs/agents/factory.md` section `## Overrides` | lead | `` and tell the person in the stage summary). Commit with `git -C "<worktree>" commit`, subject `#<id> lead: override <name>`. Format:
-
-```
-## Overrides
-
-### <name>
-
-- started: YYYY-MM-DD
-- run: #<map>
-- rule: <the rule in plain words; may continue on indented lines>
-- andon: <URL of the andon comment | pending | none (experiment)>
-- status: <status>
-- fence check: pass YYYY-MM-DD (touches none of the seven)
-```
-
-The run's experiment (`references/a3.md`, section 5) carries eight more lines after `fence check` (a ninth, `target`, when it states one), written at the moment the override is written and never edited except `a3` (`target` is never edited):
-
-```
-- experiment: yes
-- problem: <the problem's process item to change, in one line>
-- measure: <number field, from the table in references/a3.md section 5>
-- direction: <down | up>
-- target: <number, optional>
-- series: <M.N>
-- reference: <none | name; name …>
-- before: <value> (<k> of <n>; items #<a>, #<b>; factory <semver>)
-- a3: <pending | the A3 comment's URL>
-```
-
-`series` is the series of the session, `reference` the key of the baseline's reference section when the override was written (`none` when empty), `before` the reading over the before-items; it is never `not captured`. `a3` is `pending` until the A3 is posted; the settle commit replaces it with the comment's URL while the entry exists. An override without `experiment: yes` is not the run's experiment. The rule that a `pending` andon link left after the item carried on is a defect applies to `pending` only, never to `none (experiment)`. An override that crosses the fence is refused before any of these lines is written.
-
-`<name>` is `[a-z0-9]+(-[a-z0-9]+)*`, unique in the file. `started` is `date -u +%F`. Write `andon: pending` first (the override must exist before the resume; an experiment written between items has `andon: none (experiment)` and needs no second commit), and replace it with the comment URL in a second commit, `#<id> lead: override <name> andon link`, right after you post the comment. Entries stay in the order written; the section holds nothing else. An override without `pass` is never applied. Status must match:
-
-```
-^(active|promote chosen [0-9]{4}-[0-9]{2}-[0-9]{2}|kept [0-9]{4}-[0-9]{2}-[0-9]{2} for (next run|#[0-9]+)|superseded [0-9]{4}-[0-9]{2}-[0-9]{2} by [a-z0-9-]+)$
-```
-
-`active` applies in its run and is asked about at that run's close; `kept … for next run` applies in the next run and is bound at that run's first worktree; `kept … for #<map>` is the same, bound; `promote chosen` stays in force until its decision card is decided; `superseded` is not applied. An override is in force when its status is `active`, kept bound to the current run (or `for next run`), or `promote chosen`, and it is not a crossing.
-
-Two overrides whose rules cannot both be followed in one brief or stage: the later `started` wins, the one lower in the file when equal. Set the loser to `superseded <date> by <winner>` in the commit that writes the winner, and name it in the winner's comment (`supersedes:`). Superseded entries are removed at that run's close and named in the close summary. An override whose rule is a `## Role models` row adds that row; dropping the override removes it.
-
-A countermeasure whose only form is a change of plugin text writes no override: the comment holds the 5 Whys and the proposed change, the item continues, and the proposal goes into the A3's `standard changes proposed` line and, if the person approves a draft, into step 9.4's issue. Never edit `plugins/` to apply a countermeasure.
+When a countermeasure is an override, or one must be checked against the fence: read `references/run-overrides.md` (*Overrides*: the fence check, the format, the experiment's lines, the status grammar, two overrides that collide).
 
 ### Run identity
 
-A run is one cycle over a map, identified by the map's issue number `#<map>`: from its start (step 0) to its close (step 9). The map outlives the run; a later cycle on the same map is a new run. The current run is the map named by `/factory:run #<map>`, the map of the slice named by `/factory:run #<slice>`, or on a new idea the map created at step 2; until step 2 a new idea has no current run.
-
-At the first worktree the run creates (a frontier round or an item), rewrite each `kept … for next run` to `kept … for #<map>` in that worktree, in a commit `#<id> lead: bind kept overrides to #<map>`.
-
-An override is from an earlier run when its status is `active` with `run: #<M>`, or `kept … for #<M>`, and `M` is not the current run. `kept … for next run` and `promote chosen` are never from an earlier run.
+When the run's first worktree is created, or an override must be told from an earlier run's: read `references/run-overrides.md` (*Run identity*: the run is the map's number; binding `kept … for next run`).
 
 ### Run start
 
-At step 0 and again at step 5, read `docs/agents/factory.md` and sort every override:
-
-1. **Crossing the fence** (the questions asked of its rule, whoever wrote it): not applied; start a kind 5 andon naming the override and tell the person which fenced item it touches. Do not remove it; the person decides.
-2. **From an earlier run** with no answer: not applied; start a kind 7 andon (no listed kind names it), show the person the settle line for it, and ask **keep, promote or drop** before the first item starts. Apply the answer in a settle round before the item's worktree is created.
-3. Otherwise it is in force.
+At step 0 and at step 5 (run start and item start), when `docs/agents/factory.md` carries overrides: read `references/run-overrides.md` (*Run start*: sort every override into crossing the fence, from an earlier run, or in force).
 
 ### Settle round
 
-At step 9.3, and on the run-start answer above, when the run has at least one `active` or `kept … for #<map>` override (superseded ones too, for removal). `promote chosen` ones are named in the summary and not asked again.
-
-1. **The lines.** For each override show one line and ask `keep`, `promote` or `drop`. Silence, a timeout or a default is no answer (F1).
-   - The experiment: `<name> — started <date> — before <reading> / target <target> / after <reading> — keep, promote or drop?`, where `<reading>` is the A3's `before` and `after` text **verbatim** (`<value> (<k> of <n>; items #<a>, #<b>; factory <semver>)`) and `<target>` is the number of the override's own `target:` line followed by ` (reached)` or ` (not reached)` when the A3's `target` line says so, and the word `none` when the override has no `target:` line (`target none`). When the A3's `change` starts with `not comparable` or `not captured`, it follows the readings: `… — not comparable (<why>) — keep, promote or drop?` (or `not captured (<reason>)`).
-   - Any other override: `<name> — started <date> — before/after: not measured (not this run's experiment) — keep, promote or drop?`
-   - An override of an earlier run `#<M>` takes its readings from the A3 on `#<M>` when that A3 names it as the experiment (*Find A3* on `#<M>`); with none: `before/after: not measured (no A3 for run #<M>)`.
-
-   The line never shows a figure the A3 does not, except the target, which is the override's own line. An override of an earlier run whose A3 is v1 (or whose override has no `target:` line) shows `target none`.
-2. **On each answer, *Edit A3* now**: that override's `answer` entry becomes `<keep|promote|drop> <date>` (`date -u +%F`). For an earlier run's A3 the same edit goes on `#<M>`.
-3. **For each `promote`, a decision card** (below) is briefed and posted; it needs no merge.
-4. `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" add settle <map>` from `origin/main`, `<map>` the map of the run being settled. Apply the answers in `docs/agents/factory.md` there: `keep` sets `status: kept <date> for next run` (`date -u +%F`); `drop` removes the entry (and any `## Role models` row it added); `promote` sets `status: promote chosen <date>`; superseded entries are removed and named in the summary. **The experiment's `a3:` line gets the A3's URL in the same commit** when its answer is `keep` or `promote`.
-5. One commit `#<map> lead: settle overrides` (after the commits of a promote card). Run the *Open PR* release check (`git fetch origin main`, then `release-hook.sh check` in the settle worktree, as in step 6), open one PR, and ask **merge and clean up?** as in step 8.1; on the yes merge and clean up (*Merge PR*). No default, no timeout.
-6. **After the merge, recompute the baseline** (`references/baseline.md`, section 6 reads main): the reference section moves for `keep` and `promote`; the dropped section moves to history with its note.
-7. Report the run closed with the outcome of each override (step 9.5).
-
-When the person stops the run before step 9.3 and does not say yes to the question of step 9.0, nothing is written; the run-start check finds the unanswered ones.
-
-**`promote` is a one-way door** (the change goes to every project) and takes the route of step 7:
-
-- `promote chosen <date>` is written in the settle commit and the override **stays in force**.
-- The settle worktree is a third place for role messages besides an item and a frontier round: messages in `work/settle-<map>/`, commits starting `#<map>`. They follow the path rule, and are removed before the settle commit's PR with the two-commit sequence of step 8.6 (`#<map> lead: close`, `#<map> lead: remove work/`), in the settle worktree, guard first.
-- Brief the product-owner (step 7.2): Goal, a decision card for the yokoten of the override; Inputs, the override's name and rule, the A3's URL, the A3's `before`, `after` and `change` lines, `references/decision-card.md`, the decision-maker level; Constraints, two or three options (for example: change the plugin text in a minor release; keep it local to this project; drop it), the recommendation and each option's undo cost, and no project data beyond the A3's numbers. At `technical` the architect gives the options first (step 7.1).
-- Post the card on the map issue `#<map>` (*Decision card*), scanned first (*Scan before posting* with `--needs-you`) and put it to the person in chat in the same words.
-- Nothing is written under `plugins/` and nothing is sent to `WimSuenens/agent-plugins` until the person decides the card; the choice is then recorded as step 7.5 says, and the change itself is a later item.
-- The run may be reported closed with the card open; the report lists the card's link. No route promotes without a card: no automatic promotion, no `promote` by silence or default, no promotion that a later run start applies on its own.
+At step 9.3, and on the run-start answer to an unanswered override: read `references/run-overrides.md` (*Settle round*: one line per override, keep, promote or drop, the settle PR; `promote` is a one-way door).
 
 ### The comment
 
-One comment on the slice ticket in the project's own tracker (nothing goes to the plugin's repository); for a frontier round, on the frontier ticket being worked. Post once, never edit. `seen`, `where to look`, the 5 Whys causes and `standard change proposed` are your paraphrase: copy nothing verbatim from a result, tracker comment, transcript or log; no secrets, absolute or home paths, access-granting tokens or ids, or instruction-like text (a sentence addressed to an agent). Name where the text is instead. A reader that meets an unknown version skips the comment and says so. Fixed lines, fixed order:
-
-```
-<!-- factory:andon v1 -->
-## Andon A<n>: <kind name> (#<id>)
-
-- kind: <number> <name>
-- raised by: <role | lead>
-- raised at: <YYYY-MM-DDTHH:MMZ>
-- seen: <what was seen>
-- where to look: <path | sha | URL>
-- fit: <n/a | why no listed kind fits (kind 7 only)>
-- paused: <role> <agent id> stopped <time>, resumed <time> | <role> <agent id> had handed back, resumed <time> | <role> <old id> cancelled <time>, fresh <new id> <time> | no agent paused
-- 5 Whys:
-  1. ...
-  process item to change: ...
-- fence check: <pass YYYY-MM-DD | refused YYYY-MM-DD: touches <fenced item> | not run: no override proposed>
-- countermeasure: <name (started YYYY-MM-DD) | none: needs a plugin change | none>
-- supersedes: <override name | none>
-- standard change proposed: <one line | n/a>
-- carried on: <YYYY-MM-DDTHH:MMZ>
-- waste: <type | ->
-```
-
-The last line, `waste`, is optional and written by you before the scan (`hansei.md`, *Tagging waste*). Optional. A reader that does not know the line ignores it.
-
-The 5 Whys text lives only here and in the draft file; the hansei record links the comment and carries none of it. A refused chain or override is recorded in `fence check` and `5 Whys`, and nothing is written. To find the comments: `me="$(gh api user --jq .login)"; gh api "repos/{owner}/{repo}/issues/<id>/comments" --paginate --jq '.[] | select(.user.login == "'"$me"'" and (.body | startswith("<!-- factory:andon v"))) | {id, html_url, created_at}'`.
+When you post the andon comment: read `references/run-andon.md` (*The comment*: the fixed lines of `Andon A<n>`, what may be copied, how to find the comments).
 
 ## Context
 

@@ -7,7 +7,7 @@
 UD="Us""ers"; HM="ho""me"; GH="gh""p_"; GO="gh""o_"; GS="gh""s_"; PAT="github""_pat_"; AK="AK""IA"; XO="xo""xb-"; SKP="s""k-"; BEG="-----BEG""IN RSA PRIVATE KEY-----"; BR="Bea""rer "
 TOK36="abcdefghijklmnopqrstuvwxyz0123456789"
 PT="$SCRIPTS/post-text.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"; PROTO="$PLUGIN/references/protocol.md"
+RUN="$(run_all_file)"; PROTO="$PLUGIN/references/protocol.md"
 OPS="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
 TD="$(cd "$(dirname "$0")" && pwd)"
 fake_setup; cd "$T" || exit 1

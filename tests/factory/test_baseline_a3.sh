@@ -3,14 +3,14 @@
 # fragments it fixes. The rules that measure (AC-2 to AC-6, 11, 14, 15) are replayed in test_baseline_replay.sh.
 # Where the Lead's act is a judgment, the tests pin the text and the mechanical part; QA's reading is in reviews/qa-57.md.
 . "$(dirname "$0")/lib.sh"
-SK="$PLUGIN/skills/run/SKILL.md"; BA="$PLUGIN/references/baseline.md"; A3="$PLUGIN/references/a3.md"; HA="$PLUGIN/references/hansei.md"
+SK="$(run_all_file)"; BA="$PLUGIN/references/baseline.md"; A3="$PLUGIN/references/a3.md"; HA="$PLUGIN/references/hansei.md"
 PR="$PLUGIN/references/protocol.md"; TP="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
 sect() { awk -v h="$2" '/^```/ {fence = !fence} !fence && /^## / {if (f) exit} $0==h && !fence {f=1} f {print}' "$1"; }
 ln_of() { n="$(grep -nF -- "$2" "$1" | head -1 | cut -d: -f1)"; echo "${n:-0}"; }
 before() { la="$(ln_of "$2" "$3")"; lb="$(ln_of "$2" "$4")"
   if [ "$la" -gt 0 ] && [ "$lb" -gt 0 ] && [ "$la" -lt "$lb" ]; then echo "ok   $1"; passed=$((passed + 1)); else echo "FAIL $1: '$3' ($la) not before '$4' ($lb)"; fail=1; fi; }
 block_after() { awk -v h="$2" 'f==0 && $0==h {f=1; next} f==1 && /^```/ {f=2; next} f==2 && /^```/ {exit} f==2 {print}' "$1"; }
-S9="$T/step9.md"; sect "$SK" '## 9. Close the run' > "$S9"
+S9="$T/step9.md"; run_section '9. Close the run' > "$S9"
 ck sections-extracted 1 "$([ -s "$S9" ] && echo 1 || echo 0)"
 
 # ---------- the new reference files exist and the run skill reads them ----------
@@ -123,7 +123,7 @@ ck ac3-no-instruction-for-a-mean 0 "$(grep -iE '\bmean of (all|the items|the sec
 # ---------- AC-9: baseline data and A3 stay in the project ----------
 repo_all="$(grep -rnF -- '--repo' "$PLUGIN" | grep -v 'None names `--repo`' | grep -v 'No command here names `--repo`' | grep -v 'only instruction that names `--repo' | grep -vF -- '--repo <owner>/<repo>')"
 ck ac9-only-step9-4-names-repo 1 "$(printf '%s\n' "$repo_all" | grep -c .)"
-ck ac9-it-is-in-step9 1 "$(printf '%s\n' "$repo_all" | grep -c 'skills/run/SKILL.md:.*gh issue create --repo WimSuenens/agent-plugins')"
+ck ac9-it-is-in-step9 1 "$(printf '%s\n' "$repo_all" | grep -c 'references/run-close-run.md:.*gh issue create --repo WimSuenens/agent-plugins')"
 ck ac9-issue-create-lines "3" "$(grep -rn 'gh issue create' "$PLUGIN" --exclude=intake.sh --exclude=maintenance.sh --exclude=improvement.sh | grep -c .)"   # #110, #117: intake.sh and maintenance.sh file ideas in the project's own tracker, counted by test_idea_intake.sh; slice 64: the third is Create role task (a role-task sub-issue); only the step 9 line names --repo
 ck ac9-create-baseline-is-project-local 0 "$(grep -F -- '- **Create baseline**' "$TP" | grep -c 'agent-plugins')"
 ck ac9-baseline-and-a3-files-no-write-to-plugin-repo 0 "$(grep -nE 'agent-plugins' "$BA" "$A3" | grep -vE 'Never in `WimSuenens/agent-plugins`' | grep -c .)"
@@ -192,7 +192,7 @@ ck ac18-rule-words-not-in-a3 0 "$(grep -ciE 'careless|sloppy|too weak|hallucinat
 ck ac18-rule-once-in-skill 1 "$(grep -c 'examined: the brief' "$SK")"
 ck ac18-a3-names-no-other-whys-rule 0 "$(grep -c 'a role.s care or competence' "$A3")"
 has ac18-refused-chain-not-posted "$A3" 'A refused chain is not posted.'
-ck ac18-skill-section-exists 1 "$(grep -c '^### The 5 Whys$' "$SK")"
+ck ac18-skill-section-exists 1 "$(grep -c '^### The 5 Whys$' "$(run_section_file 'The 5 Whys')")"   # the section sits once in the reference that holds it; the router keeps a heading and a pointer
 
 # ---------- AC-12, AC-13: the experiment is one override with a measure and a before-reading ----------
 has ac12-fence-first "$A3" '1. **Fence first.**'
@@ -276,7 +276,8 @@ before ac22-2-before-3 "$S9" '2. **Write the experiment' '3. **The settle round*
 before ac22-3-before-4 "$S9" '3. **The settle round**' '4. **The feedback offer.**'
 before ac22-4-before-5 "$S9" '4. **The feedback offer.**' '5. **Report the run closed**'
 ck ac22-no-step-10 0 "$(grep -c '^## 10\.' "$SK")"
-ck ac22-one-step-9 1 "$(grep -c '^## 9\. ' "$SK")"
+ck ac22-one-step-9 1 "$(grep -c '^## 9\. ' "$(run_section_file '9. Close the run')")"
+ck ac22-one-step-9-heading-in-router 1 "$(grep -c '^## 9\. ' "$RUN_ROUTER")"
 ck ac22-no-old-offer-step 0 "$(grep -c 'Offer factory feedback' "$SK")"
 ck ac22-no-other-batch-step 0 "$(grep -nE 'gather(s)? (the )?(findings|abnormalit)|batch' "$SK" | grep -v 'no other batch step gathers findings at the end of the run' | grep -c .)"
 has ac22-no-report-before-answer "$S9" 'Do not report the run closed before 9.3 has an answer, applied and merged, for every override of the run.'

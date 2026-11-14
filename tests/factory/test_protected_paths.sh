@@ -4,7 +4,7 @@
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
 PA="$PLUGIN/scripts/protected-areas.sh"; SK="$PLUGIN/scripts/skip.sh"; MG="$PLUGIN/scripts/merge-gate.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 cd "$T" || exit 1
 area() { ( . "$PA"; protected_path_area "$1" ) ; }
 

@@ -3,10 +3,10 @@
 # and the grammars it fixes (override format, status, comment marker). Where the Lead's act is a judgment (the 5 Whys, the fence
 # questions) the tests pin the text and the mechanical part of the rule; QA's step-by-step application is in reviews/qa-49.md.
 . "$(dirname "$0")/lib.sh"
-SK="$PLUGIN/skills/run/SKILL.md"; PR="$PLUGIN/references/protocol.md"; HA="$PLUGIN/references/hansei.md"
+SK="$(run_all_file)"; PR="$PLUGIN/references/protocol.md"; HA="$PLUGIN/references/hansei.md"
 SU="$PLUGIN/skills/setup-factory-skill/SKILL.md"; SA="$PLUGIN/skills/setup-factory-skill/assets/factory.md"
 sect() { awk -v h="$2" '/^```/ {fence = !fence} !fence && /^## / {if (f) exit} $0==h && !fence {f=1} f {print}' "$1"; }   # a "## " section, to the next "## " outside a code fence
-AN="$T/andon.md"; sect "$SK" '## Andon' > "$AN"
+AN="$T/andon.md"; run_andon > "$AN"   # the old ## Andon section, reassembled from the references in its old order (lib.sh)
 PA="$T/protocol-andon.md"; sect "$PR" '## Andon' > "$PA"
 FE="$T/fence.md"; sect "$PR" '## Never overridable locally' > "$FE"
 OV="$T/overrides.md"; sect "$PR" '## Overrides' > "$OV"

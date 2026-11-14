@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/lib64.sh"
 TD="$(cd "$(dirname "$0")" && pwd)"
-RUN="$PLUGIN/skills/run/SKILL.md"; HA="$PLUGIN/references/hansei.md"; PROTO="$PLUGIN/references/protocol.md"
+RUN="$(run_all_file)"; HA="$PLUGIN/references/hansei.md"; PROTO="$PLUGIN/references/protocol.md"
 SK="$PLUGIN/skills/setup-factory-skill/SKILL.md"
 RP="$FX64/replay"; PY="$TD/replay64.py"
 cd "$T" || exit 1

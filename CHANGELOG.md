@@ -11,7 +11,7 @@ Issue [#214](https://github.com/WimSuenens/agent-plugins/issues/214), part of [#
 **What changed for the person who runs the factory:**
 
 - **Protected paths are read from main first.** `protected-paths:` comes from `docs/agents/factory.md` at `origin/main`, relative to the repository top level; the working tree's own line counts only where main has none. A slice can no longer drop the line that judges it.
-- **A path with a space keeps its components.** `--paths` of `skip.sh` and `merge-gate.sh` is one path per line; a one-line list is still split on whitespace as before, and each line is also tested whole.
+- **A path with a space keeps its components.** `--paths` of `skip.sh` and `merge-gate.sh` is one path per line; a one-line list from an older caller is tested whole and still split on whitespace as before.
 - **`post-text.sh render` checks first, scans second.** A draft without Status or Summary exits 3 even with a scan hit; scan lines go to stderr. The exit codes are unchanged.
 - **The gemba commits fallback reads author time** (`%aI`), as section 2 already did.
 - **A symlink is not a role's own file.** Under `docs/agents/skills/<role>/` and as `docs/agents/roles/<role>.md`, a symlink is judged like any other path by kind 3.
@@ -19,7 +19,7 @@ Issue [#214](https://github.com/WimSuenens/agent-plugins/issues/214), part of [#
 
 **Tests.** `tests/factory/test_leftovers_214.sh` (new), one block per item, each red first. `test_gemba.sh` follows the new wording (`%aI`, author time).
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `d92accfd1302950c207263de0a90b93c0e4fb9a8ddb858fb808d19c3cf3829fb`, tooling `8be89965d34e78f5e0d246bced1769cc28281cf01060781013bb1bd9dfab09e7`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `d92accfd1302950c207263de0a90b93c0e4fb9a8ddb858fb808d19c3cf3829fb`, tooling `e090a7cb6874cbadc4b6802dcb55efe3a28a4387e85df1feda786c3ae8c736c0`.
 
 ## factory 2.16.0 (#210)
 

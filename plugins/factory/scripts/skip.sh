@@ -48,7 +48,7 @@ if [ -z "$prot" ]; then
     case "$f" in contracts/* | */contracts/*) own="$own"$'\n'"contracts/$(basename "$f")" ;; esac
   done
   set -f
-  extra="$(protected_list_paths "$own"$'\n'"$pr_paths")"
+  extra="${own#$'\n'}"$'\n'"$(protected_list_paths "$pr_paths")"
   while read -r kind p; do
     [ "$kind" = path ] || continue
     protected_path_area "$p" >/dev/null && { prot="$p"; break; }

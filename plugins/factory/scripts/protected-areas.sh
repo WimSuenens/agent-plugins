@@ -7,10 +7,10 @@
 #   prints nothing and returns 1 otherwise. ASCII case is folded.
 # protected_touch_area <name>: prints the area for a declared name (contract|contracts, authentication, secrets,
 #   migration|data-migration, door|one-way-door) and returns 0; returns 1 for an unknown name.
-# protected_paths_line: prints the `protected-paths:` line of docs/agents/factory.md and returns 0, or returns 1 when there is none.
+# protected_paths_line: sets _PP_LINE to the `protected-paths:` line of docs/agents/factory.md and returns 0, or returns 1 when there is none.
 #   Read from origin/main first, so a branch cannot drop the line that judges it; the working tree's own file only where origin/main
 #   has no such line (the branch that introduces it). Relative to the repository top level, not the current directory; outside a
-#   repository, the current directory. Cached per directory.
+#   repository, the current directory. Sets _PP_LINE (cached per directory); call it without a command substitution to keep the cache.
 protected_paths_line() {
   local top l=""
   if [ "${_PP_KEY-}" != "$PWD" ]; then
@@ -19,8 +19,7 @@ protected_paths_line() {
     if [ -z "$l" ] && [ -r "${top:-.}/docs/agents/factory.md" ]; then l="$(grep -m 1 '^protected-paths:' "${top:-.}/docs/agents/factory.md")"; fi
     _PP_KEY="$PWD"; _PP_LINE="$l"
   fi
-  [ -n "$_PP_LINE" ] && { printf '%s\n' "$_PP_LINE"; return 0; }
-  return 1
+  [ -n "$_PP_LINE" ]
 }
 protected_path_area() {
   local lp rest c w b a="" noglob=0 line g
@@ -44,8 +43,8 @@ protected_path_area() {
     [ -n "$a" ] && { echo "$a"; return 0; }
   done
   # the project's own extension: one line at column 0 in docs/agents/factory.md, `protected-paths: <glob>, <glob>` (shell globs, case folded)
-  line="$(protected_paths_line)" || return 1
-  line="$(printf '%s' "$line" | tr -d '\r' | LC_ALL=C tr 'A-Z' 'a-z')"
+  protected_paths_line || return 1
+  line="$(printf '%s' "$_PP_LINE" | tr -d '\r' | LC_ALL=C tr 'A-Z' 'a-z')"
   line="${line#protected-paths:}"
   case "$-" in *f*) noglob=1 ;; esac
   set -f
@@ -61,16 +60,17 @@ protected_path_area() {
   [ -n "$a" ] && { echo "$a"; return 0; }
   return 1
 }
-# protected_list_paths <list>: the paths to test for a changed-path list (--paths), one per line. The list is one path per line (a path may
-#   hold a space); a one-line list from an older caller is still split on whitespace, so each line is tested whole and, when it holds
-#   whitespace, piece by piece as well. Never expands a glob.
+# protected_list_paths <list>: the paths to test for a changed-path list (--paths), one per line. A list of several lines is one path per
+#   line (a path may hold a space) and is tested as it stands. A one-line list from an older caller may be several paths split by
+#   spaces, so a single line is tested whole and, when it holds whitespace, piece by piece as well. Never expands a glob.
 protected_list_paths() {
   local e w
-  printf '%s\n' "$1" | while IFS= read -r e; do
-    [ -n "$e" ] || continue
-    printf '%s\n' "$e"
-    case "$e" in *[[:space:]]*) set -f; for w in $e; do printf '%s\n' "$w"; done ;; esac
-  done
+  case "$1" in
+    *$'\n'*) printf '%s\n' "$1" | while IFS= read -r e; do [ -n "$e" ] && printf '%s\n' "$e"; done; return 0 ;;
+  esac
+  [ -n "$1" ] || return 0
+  printf '%s\n' "$1"
+  case "$1" in *[[:space:]]*) set -f; for w in $1; do printf '%s\n' "$w"; done ;; esac
 }
 protected_touch_area() {
   case "$1" in

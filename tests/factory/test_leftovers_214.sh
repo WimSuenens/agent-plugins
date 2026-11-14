@@ -42,6 +42,10 @@ bash "$MG" check 7 --qa pass --security pass --paths $'plugins/x/a.md\nsrc/my se
 ( cd "$R1" && bash "$MG" check 7 --qa pass --security pass --paths "my docs/page.md" >/dev/null 2>&1 ); ck item1-gate-space-path-protected-by-glob 10 "$?"
 bash "$MG" check 7 --qa pass --security pass --paths "plugins/x/a.md docs/b.md" >/dev/null 2>&1; ck item1-gate-legacy-one-line-list-clean 0 "$?"
 
+# review: a newline list is not also split into pieces (a harmless path with a space is not read as its tail)
+( cd "$R1" && bash "$SK" protected --paths $'plugins/x/my .env.md\nplugins/x/b.md' "$T/plain.md" >/dev/null ); ck review-newline-list-not-split-into-pieces 0 "$?"
+( cd "$R1" && bash "$MG" check 7 --qa pass --security pass --paths $'plugins/x/my .env.md\nplugins/x/b.md' >/dev/null 2>&1 ); ck review-gate-newline-list-not-split-into-pieces 0 "$?"
+
 # --- item 3: render checks Status and Summary first, scans second; scan lines go to stderr
 hp="/Us""ers/bob/work"
 printf 'Status: done\nSummary: ran in %s\n' "$hp" >"$T/hit.md"

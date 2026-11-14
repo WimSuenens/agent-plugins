@@ -54,6 +54,7 @@ set -f   # no glob expansion of the path and touch lists
 for t in $(printf '%s' "$touches" | tr ',' ' '); do
   a="$(protected_touch_area "$t")" && addh "$a"
 done
+protected_paths_line   # read the project's line once here: the calls below run in subshells
 while IFS= read -r p; do
   a="$(protected_path_area "$p")" && addh "$a"
 done <<PATHS

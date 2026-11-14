@@ -1,7 +1,7 @@
 # Lead state: #225
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhIwPmQ
-- next step: 6, Requirement (product-owner)
+- next step: architect notes on the 188 contracts, then runtime proof, merge gate
 - open questions: none
 - frozen on: factory 3.2.0
 - ADR number: none (no one-way door open)
@@ -37,4 +37,6 @@ none yet
 
 ## Abnormalities
 
-none yet
+| Id | Raised (UTC) | Kind | Raised by | Paused agent | Resumed (UTC) | Andon comment | Override |
+|---|---|---|---|---|---|---|---|
+| A1 | 2026-11-14T19:38:40Z | 1 blocked-input | docs-writer | docs-writer a8b401 (had handed back) | 2026-11-14T19:38:40Z | https://github.com/WimSuenens/agent-plugins/issues/225#issuecomment-6883133253 | none |

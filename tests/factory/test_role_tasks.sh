@@ -367,32 +367,29 @@ hasnt ac14-no-text-keeps-progress-only-in-tracker "$PROTO" 'Progress only in the
 has ac14-closing-comment-is-for-non-working "$RUN" 'When you read a finished result (`Status` other than `working`)'
 
 # ---------- AC-16, AC-17: who writes, which files remain ----------
-git -C "$REPO" show origin/main:plugins/factory/references/protocol.md >"$T/proto-main.md" 2>/dev/null
+# The fenced protocol sections are pinned to committed text in tests/factory/fixtures/fence/ (not to origin/main): a change to a fenced
+# section needs an edit of its fixture in the same PR, which the diff shows and the person reads.
+FX="$REPO/tests/factory/fixtures/fence"
 sect() { awk -v h="$2" '$0 == "## " h {f=1; print; next} /^## /{f=0} f' "$1"; }
-if [ -s "$T/proto-main.md" ]; then
-  # slice 113 widens the integrator's shell line (the merge train); the rest of the section stays word for word
-  ck ac16-shell-section-word-for-word-unchanged "$(sect "$T/proto-main.md" Shell | grep -v '^- \*\*integrator\*\*')" "$(sect "$PROTO" Shell | grep -v '^- \*\*integrator\*\*')"
-  # slice 0 of #207 fixed two references to sections that do not exist (F1 *Production actions*, F5 *Memory*) and nothing else in the fence;
-  # the two substitutions below carry exactly that fix onto the main copy, so every other character of the fence is still compared.
-  # After the merge main holds the new text and the substitutions change nothing.
-  ck f-never-overridable-locally-unchanged "$(sect "$T/proto-main.md" "Never overridable locally" | sed -e 's/step 8.1 and \*Production actions\* |/step 8.1 and the sentence on production actions at the end of step 6 |/' -e 's/| \*Memory\* here |/| *Role knowledge* here |/')" "$(sect "$PROTO" "Never overridable locally")"
-  ck f-processes-and-ports-unchanged "$(sect "$T/proto-main.md" "Processes and ports")" "$(sect "$PROTO" "Processes and ports")"
-  ck f-shared-resources-unchanged "$(sect "$T/proto-main.md" "Shared resources")" "$(sect "$PROTO" "Shared resources")"
-  ck f-memory-section-replaced-by-role-knowledge "" "$(sect "$PROTO" "Memory")"  # slice 115 revises the section into *Role knowledge*
-  ck f-overrides-section-unchanged "$(sect "$T/proto-main.md" "Overrides")" "$(sect "$PROTO" "Overrides")"
-  ck f-doors-unchanged "$(sect "$T/proto-main.md" "Doors")" "$(sect "$PROTO" "Doors")"
-  ck f-missing-input-unchanged "$(sect "$T/proto-main.md" "Missing input" | slice2_kind1)" "$(sect "$PROTO" "Missing input")"
-  # the andon section: the list's rows 1-3 and 5-7 word for word; row 4 differs only by the noun
-  ck f4-andon-seven-rows 7 "$(sect "$PROTO" Andon | grep -cE '^\| [1-7] \|')"
-  for r in 1 2 3 5 6 7; do ck "f4-andon-row-$r-unchanged" "$(sect "$T/proto-main.md" Andon | slice2_kind1 | grep -E "^\| $r \|")" "$(sect "$PROTO" Andon | grep -E "^\| $r \|")"; done
-  ck f4-andon-row-4-name "4 | \`slow-stage\`" "$(sect "$PROTO" Andon | grep -E '^\| 4 \|' | cut -d'|' -f2,3 | sed 's/^ *//;s/ *| */ | /;s/ *$//')"
-  ck f4-andon-row-4-differs-only-by-the-noun "a role task whose agent-working time is more than twice the median of the same role's earlier tasks" "$(sect "$PROTO" Andon | grep -E '^\| 4 \|' | cut -d'|' -f4 | sed 's/^ *//;s/ *$//')"
-  ck f4-rest-of-andon-section-unchanged "$(sect "$T/proto-main.md" Andon | slice2_kind1 | grep -vE '^\| 4 \|')" "$(sect "$PROTO" Andon | grep -vE '^\| 4 \|')"
-  # the honesty rule text in hansei.md
-  git -C "$REPO" show origin/main:plugins/factory/references/hansei.md >"$T/hansei-main.md"
-  hsect() { awk '/^### Value grammar/{f=1;print;next} /^### /{f=0} /^## /{f=0} f' "$1"; }
-  ck f7-value-grammar-unchanged "$(hsect "$T/hansei-main.md")" "$(hsect "$PLUGIN/references/hansei.md")"
-else skip ac16-fence-diff "origin/main is not available in this checkout"; fi
+fx() { cat "$FX/$1.md"; }
+ck ac16-fence-fixtures-present 10 "$(ls "$FX"/*.md | wc -l | tr -d ' ')"
+ck ac16-shell-section-word-for-word-unchanged "$(fx protocol-shell)" "$(sect "$PROTO" Shell)"
+ck f-never-overridable-locally-unchanged "$(fx protocol-never-overridable-locally)" "$(sect "$PROTO" "Never overridable locally")"
+ck f-processes-and-ports-unchanged "$(fx protocol-processes-and-ports)" "$(sect "$PROTO" "Processes and ports")"
+ck f-shared-resources-unchanged "$(fx protocol-shared-resources)" "$(sect "$PROTO" "Shared resources")"
+ck f-memory-section-replaced-by-role-knowledge "" "$(sect "$PROTO" "Memory")"  # slice 115 revises the section into *Role knowledge*
+ck f-overrides-section-unchanged "$(fx protocol-overrides)" "$(sect "$PROTO" "Overrides")"
+ck f-doors-unchanged "$(fx protocol-doors)" "$(sect "$PROTO" "Doors")"
+ck f-missing-input-unchanged "$(fx protocol-missing-input)" "$(sect "$PROTO" "Missing input")"
+# the andon section: the list's rows 1-3 and 5-7 word for word; row 4 differs only by the noun
+ck f4-andon-seven-rows 7 "$(sect "$PROTO" Andon | grep -cE '^\| [1-7] \|')"
+for r in 1 2 3 5 6 7; do ck "f4-andon-row-$r-unchanged" "$(fx protocol-andon | grep -E "^\| $r \|")" "$(sect "$PROTO" Andon | grep -E "^\| $r \|")"; done
+ck f4-andon-row-4-name "4 | \`slow-stage\`" "$(sect "$PROTO" Andon | grep -E '^\| 4 \|' | cut -d'|' -f2,3 | sed 's/^ *//;s/ *| */ | /;s/ *$//')"
+ck f4-andon-row-4-differs-only-by-the-noun "a role task whose agent-working time is more than twice the median of the same role's earlier tasks" "$(sect "$PROTO" Andon | grep -E '^\| 4 \|' | cut -d'|' -f4 | sed 's/^ *//;s/ *$//')"
+ck f4-rest-of-andon-section-unchanged "$(fx protocol-andon | grep -vE '^\| 4 \|')" "$(sect "$PROTO" Andon | grep -vE '^\| 4 \|')"
+# the honesty rule text in hansei.md
+hsect() { awk '/^### Value grammar/{f=1;print;next} /^### /{f=0} /^## /{f=0} f' "$1"; }
+ck f7-value-grammar-unchanged "$(fx hansei-value-grammar)" "$(hsect "$PLUGIN/references/hansei.md")"
 # no agent file or brief template tells a role to write to the tracker
 for f in "$PLUGIN"/agents/*.md; do
   n="$(basename "$f" .md)"

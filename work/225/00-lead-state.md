@@ -29,11 +29,15 @@ none
 - overrides at start: none
 - wayfinding: bb9268f0245b (skill base dir)
 - mattpocock-skills: 1.3.1 (plugin list)
-- lead sessions: not captured yet
+- lead sessions: 4830b8ac-2a25-4e00-b06f-659f21ac5e2b
 
 ## Findings
 
-none yet
+| Role | Round | Id | Severity | Text |
+|---|---|---|---|---|
+| security-reviewer | 1 | F1 | low | the no-agent-files build error prints the absolute plugins path |
+| security-reviewer | 1 | F2 | medium | docs/direction.md is not on the item's path list (off-list) |
+| security-reviewer | 1 | F3 | medium | a role-knowledge file is not on the item's path list (off-list) |
 
 ## Abnormalities
 

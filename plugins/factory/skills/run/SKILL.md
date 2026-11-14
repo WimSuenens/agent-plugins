@@ -73,7 +73,7 @@ The factory decides on its own whether a maintenance cycle is opportune. It eval
 
 The events: intake processed, slice ready, PR opened, merge done, map changed. At each one, take a board snapshot to a scratch file, create a role task for the integrator (*Role tasks*), spawn it, and read its plan. It keeps no state: the same board gives the same plan.
 
-**The merge train.** After the person approves *merge and clean up?* (step 8.1), the integrator does the mechanical merge: create a role task for it with `Approved: <time>`, the item number and the worktree of each approved slice, in the order of the plan's `merge` lines, and spawn it. It runs `scripts/merge-train.sh` for each slice in turn (rebase on the one before, version bump and changelog line after the rebase, ADR number, merge, tag, clean-up) and stops at the first failed step with the worktree kept; each slice is approved by the person or has passed the gate (`scripts/merge-gate.sh`, step 8.1), and the card turning `Done` stays yours.
+**The merge train.** After the person approves *merge and clean up?* (step 8.1), the integrator does the mechanical merge: create a role task for it with `Approved: <time>`, the item number and the worktree of each approved slice, in the order of the plan's `merge` lines, and spawn it. It runs `scripts/merge-train.sh` for each slice in turn (rebase on the one before, ADR number, the project's release hook when it declares one, merge, clean-up) and stops at the first failed step with the worktree kept; each slice is approved by the person or has passed the gate (`scripts/merge-gate.sh`, step 8.1), and the card turning `Done` stays yours.
 
 ## 1. Clarify the destination
 
@@ -136,7 +136,7 @@ An open card or task blocks only the tickets and slices that hang off it through
 When no unblocked one-way door is left and no correction or card on the round's tickets is open, end the round:
 
 1. The round's last commit removes `work/`.
-2. Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh` in the round's worktree) with the same exit handling as in step 6, then open one PR from `frontier/<map>` carrying only ADRs and glossary changes.
+2. Run the *Open PR* release check (`git fetch origin main`, then `release-hook.sh check` in the round's worktree, as in step 6) with the same exit handling, then open one PR from `frontier/<map>` carrying only ADRs and glossary changes.
 3. Ask **merge and clean up?** as in step 8.1 (the map card turns `Waiting on you` with its needs-you comment first); the round itself is no card, its tickets are. On approval, merge the PR to main and clean up (*Merge PR*), before step 4 cuts the next item.
 
 A card decided after its round merged, or one-way doors reopened by a resurvey, start a **new** frontier round on a fresh `frontier/<map>` branch from main.
@@ -206,12 +206,12 @@ When the developer is done, and before *Open PR*, check the diff for breadth. Th
 
 Open the PR (*Open PR*) when the developer is done, so QA and security review the diff in place. Before `gh pr create`, always:
 
-1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"` in the item worktree.
-2. Exit 0: open the PR, and say the pass line in the stage summary.
+1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/release-hook.sh" check <item worktree> <id> origin/main`. It runs the release hook the project declares (a `release-hook:` line in `docs/agents/factory.md`); with no such line it prints nothing, exits 0, and there is no release step.
+2. Exit 0: open the PR, and say the hook's line in the stage summary when it printed one.
 3. Exit 1: do not open the PR. Create a rework task for the developer (`Source: lead`) quoting the refusal, and run *Open PR* again when it is done.
 4. Exit 2: do not open the PR; put the stderr line to the person.
 
-No instruction anywhere opens a PR without this check.
+No instruction anywhere opens a PR without this step.
 
 Production actions wait for the person's explicit approval (a needs-you comment first, `Cause: delivery approval`; see *The board*).
 
@@ -295,7 +295,7 @@ The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md
 4a. **Set the board fields** (`references/hansei.md`, section 7), after *Post hansei* and before 8.5: every role task's `Tokens` and `Minutes`, then the slice's `Tokens`, `Hours`, `Rework rounds` and `Person touches`, each with *Set field text*; the section's rules (never empty, one call per field, a resumed close) apply.
 5. When the item had an Environment stage, brief devops to tear down the resources in the lead state's **Shared resources** list.
 6. The last commit on `item/<id>` removes `work/<id>/`, after one commit of the lead state, all in the item worktree and never reaching outside it. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/close-item.sh" <id>` from the main checkout: one script, which stops at the first failure (its header lists the guard, the commits and what it stages). When it exits 1, stop the close and put it to the person: the guard stopped and nothing has been removed, or a nested git repository under `work/<id>/` is left, with `git rm` staged and nothing committed. Other untracked files under `work/<id>/` are never staged. The tracker holds the stage summaries, the hansei record and the ADRs hold the decisions. The record is posted before this commit. It is posted before the lead-state commit too.
-7. Merge the PR and remove the worktree and branch (*Merge PR*, which also tags a factory release); the integrator does the mechanical work as the merge train (*The integrator*), and the slice card turns `Done` with the merge, set by you from its `done <id>` line. When the merge fails, keep the worktree and put the failure to the person. Apply the version bump and the changelog line, and the ADR number as assigned, after rebasing on `main`, when the slice's contracts name them on their `shared:` line (*Parallel slices*); the merge train does it for you.
+7. Merge the PR and remove the worktree and branch (*Merge PR*); the integrator does the mechanical work as the merge train (*The integrator*), and the slice card turns `Done` with the merge, set by you from its `done <id>` line. When the merge fails, keep the worktree and put the failure to the person. Apply the ADR number as assigned, after rebasing on `main`, when the slice's contracts name it on their `shared:` line (*Parallel slices*), and the project's release step when it declares one; the merge train does it for you.
 8. Invoke `/wayfinding:wayfinder` to resurvey the map with the frame's **Under test** list in hand; its step *Slices in flight* checks every slice in flight too. Post its outcome to the person in a few lines, then apply the pause for every slice it named (*Parallel slices*, the resurvey pause). A slice with no question stays `Running`, and you say you checked.
 9. Fill measure 7 (*Edit hansei*), scanning the edited text first (*Scan before posting*): one line per Under test line, `confirmed`, `contradicted` or `not exercised`. Remove the `hansei:` pointer from the Factory run section. If the person stops the run after the record is posted and before this edit, edit measure 7 to `not captured (run stopped before the resurvey)` first; a later session that finds the pointer still in the Factory run section does the same.
 10. Update the baseline (`references/baseline.md`, section 8.1): once the record is in its final state, recompute the baseline issue from the records and append the `baseline:` note to the map's Factory run section (every post or edit of the baseline is scanned first, *Scan before posting*). Then, before the next item starts, **decide** whether the run's experiment is written (`references/a3.md`, section 5). Nothing is committed or stored here: no worktree exists, and the decision is committed at step 5 of the next item.
@@ -449,7 +449,7 @@ Exit 0: post. Exit 1: **post nothing**, name the file and line to the person (ne
 
 Slices run side by side whenever their path lists do not overlap, with no count limit (ADR 0016, amended by ADR 0017).
 
-**The path list.** Every contract file of a slice has a `## Paths` section directly after its title block: a line `Paths:`, one `- <path>` line per path (repo-relative, `/`-separated, no empty, `.` or `..` component: `paths.sh` exits 3 on one; a directory ends in `/`, and a directory written without it is read as a file, with a warning on stderr), then a `shared:` line (`shared: none`, or entries separated by `, `: the plugin version files, `CHANGELOG.md`, `CONTEXT.md`, `adr-number`). The slice's list is the union of the blocks of `contracts/<id>-*.md`. Read and compare lists with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" list|overlap|check`.
+**The path list.** Every contract file of a slice has a `## Paths` section directly after its title block: a line `Paths:`, one `- <path>` line per path (repo-relative, `/`-separated, no empty, `.` or `..` component: `paths.sh` exits 3 on one; a directory ends in `/`, and a directory written without it is read as a file, with a warning on stderr), then a `shared:` line (`shared: none`, or entries separated by `, `: the files the project's release hook resolves in the merge train (a `release-hook:` line of `docs/agents/factory.md`), `CONTEXT.md`, `adr-number`). The slice's list is the union of the blocks of `contracts/<id>-*.md`. Read and compare lists with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/paths.sh" list|overlap|check`.
 
 **Overlap.** Two slices overlap when some path in one list equals a path in the other or is a directory prefix of it (`plugins/factory/` is not a prefix of `plugins/factory-x/a.md`), or a path in one list equals a `shared:` entry of the other list or is a directory prefix of it (rule 3: `adr-number` is not a path and takes no part), or their `shared:` lines both name the same entry. Names are compared character for character, ASCII case folded (`A/b.md` and `a/` overlap). Compare with `paths.sh overlap <the new slice's contracts> -- <the contracts of one slice in flight>` (exit 0 no overlap, 1 overlap).
 
@@ -659,7 +659,7 @@ At step 9.3, and on the run-start answer above, when the run has at least one `a
 2. **On each answer, *Edit A3* now**: that override's `answer` entry becomes `<keep|promote|drop> <date>` (`date -u +%F`). For an earlier run's A3 the same edit goes on `#<M>`.
 3. **For each `promote`, a decision card** (below) is briefed and posted; it needs no merge.
 4. `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" add settle <map>` from `origin/main`, `<map>` the map of the run being settled. Apply the answers in `docs/agents/factory.md` there: `keep` sets `status: kept <date> for next run` (`date -u +%F`); `drop` removes the entry (and any `## Role models` row it added); `promote` sets `status: promote chosen <date>`; superseded entries are removed and named in the summary. **The experiment's `a3:` line gets the A3's URL in the same commit** when its answer is `keep` or `promote`.
-5. One commit `#<map> lead: settle overrides` (after the commits of a promote card). Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh`), open one PR, and ask **merge and clean up?** as in step 8.1; on the yes merge and clean up (*Merge PR*). No default, no timeout.
+5. One commit `#<map> lead: settle overrides` (after the commits of a promote card). Run the *Open PR* release check (`git fetch origin main`, then `release-hook.sh check` in the settle worktree, as in step 6), open one PR, and ask **merge and clean up?** as in step 8.1; on the yes merge and clean up (*Merge PR*). No default, no timeout.
 6. **After the merge, recompute the baseline** (`references/baseline.md`, section 6 reads main): the reference section moves for `keep` and `promote`; the dropped section moves to history with its note.
 7. Report the run closed with the outcome of each override (step 9.5).
 

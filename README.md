@@ -149,7 +149,7 @@ The scripts behind the labels, the bump check, the spend and the cut-offs are de
 
 ```bash
 bash plugins/factory/scripts/fingerprint.sh plugins/factory          # release, standard and tooling lines
-bash plugins/factory/scripts/check-bump.sh                           # in the branch's worktree, after git fetch origin main
+bash scripts/check-bump.sh                           # in the branch's worktree, after git fetch origin main
 bash plugins/factory/scripts/token-spend.sh -- <transcript.jsonl>... # spend and peak context; needs jq
 bash plugins/factory/scripts/token-spend.sh --require-end -- <role transcript.jsonl>...  # exit 6 when a transcript was cut off
 bash plugins/factory/scripts/cut-offs.sh -- <transcript.jsonl>...    # one line per stall, interruption or limit gap; prints nothing for a clean transcript; needs jq
@@ -204,7 +204,7 @@ Any change under `plugins/factory/` needs a bump in `plugin.json`:
 - **patch** or more for every other path under `plugins/factory/`, including `hooks/`, `scripts/`, the setup skill and `plugin.json` itself;
 - **major** when message formats or the protocol break. The check never requires a major; the architect calls it.
 
-`scripts/check-bump.sh` enforces this. The lead runs it before a PR is opened and again before it is merged, and a PR that fails it does not open or merge. Changes outside `plugins/factory/` pass without a bump.
+`scripts/check-bump.sh` enforces this (this repository's release hook, `scripts/release.sh`, runs it). The lead runs the hook before a PR is opened and again before it is merged, and a PR that fails it does not open or merge. Changes outside `plugins/factory/` pass without a bump.
 
 Installs of the factory change only when its version string changes, so a push without a bump does not reach other projects. The measurement baseline resets on a minor or major release only: from 1.2.0 a project's `1.2` series begins with its first item run on that release, from 1.3.0 its `1.3` series does the same, from 2.0.0 its `2.0` series begins with the first item run on that release, and earlier releases stay in its baseline as history. A run can be frozen on one install (a calibration run): then `/plugin marketplace update` and `/reload-plugins` wait until it closes, because the freeze holds for every project on the machine.
 
@@ -469,7 +469,7 @@ The `factory` plugin, on macOS with gh `2.94.0`:
 | `claude plugin validate ./plugins/factory` | passed, no warning (version 1.0.0) |
 | `claude plugin validate ./plugins/factory/skills` | passed |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.0.0` and the standard and tooling fingerprints |
-| `bash plugins/factory/scripts/check-bump.sh` on `item/39` | `pass: minor bump needed, 0.0.0 -> 1.0.0` (main has no version yet) |
+| `bash scripts/check-bump.sh` on `item/39` | `pass: minor bump needed, 0.0.0 -> 1.0.0` (main has no version yet) |
 | `bash plugins/factory/scripts/token-spend.sh -- <PO transcript of #39>` | `spend 387472 …; peak 53942; messages 11`, the figures the contract records |
 | `bash tests/run.sh` | the factory's script and standard-text tests: `ALL PASSED`, with no named skip, on 2026-11-05 at the docs commit. The QA verdict is in [reviews/qa-39.md](reviews/qa-39.md) |
 | `bash plugins/factory/scripts/cut-offs.sh -- <PO transcript of #39>` | prints nothing (no gap in that transcript), exit 0 |
@@ -486,7 +486,7 @@ The `factory` plugin at 1.1.0, on macOS (Claude Code 2.1.287, `/bin/bash` 3.2.57
 | `claude plugin validate .` | passed; the same four version warnings for the plugins without a `version` |
 | `claude plugin list --json` | the user-scope `factory@wimsuenens` is still `9147301f75c3`; the freeze holds |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.1.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`) |
-| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 1.0.0 -> 1.1.0` |
+| `git fetch origin main`, then `bash scripts/check-bump.sh` | `pass: minor bump needed, 1.0.0 -> 1.1.0` |
 | `bash tests/run.sh` | `ALL PASSED`: 952 passed, 0 skipped, exit 0 |
 | `bash plugins/factory/scripts/token-spend.sh -- <PO transcript of #39>` | `spend 387472 …; peak 53942; messages 11`, the figures the contract records (unchanged from 1.0.0) |
 | `bash plugins/factory/scripts/token-spend.sh --require-end -- <same transcript>` | exit 0 |
@@ -500,7 +500,7 @@ The `factory` plugin at 1.2.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | `claude plugin validate ./plugins/factory` | passed, no warning |
 | `claude plugin validate ./plugins/factory/skills` | passed, no warning |
 | `claude plugin list --json` | `factory@wimsuenens` is `9147301f75c3`; the freeze holds |
-| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 1.1.0 -> 1.2.0`, exit 0 |
+| `git fetch origin main`, then `bash scripts/check-bump.sh` | `pass: minor bump needed, 1.1.0 -> 1.2.0`, exit 0 |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.2.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`); the tooling line equals 1.1.0's |
 | `bash tests/run.sh` | `ALL PASSED`: 1436 passed, 0 skipped, exit 0, across ten test files |
 | *Find baseline*, *Find records*, *Find A3s* and *Find A3* from the tracker doc, read-only | each exits 0 and prints no line: this repo holds no `Factory baseline` issue, no hansei record with its marker and no A3, as the calibration run expects |
@@ -514,7 +514,7 @@ The `factory` plugin at 1.3.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | `claude plugin validate ./plugins/factory` | passed, no warning |
 | `claude plugin validate ./plugins/factory/skills` | passed, no warning |
 | `claude plugin list --json` | `factory@wimsuenens` is `9147301f75c3`; the freeze holds |
-| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 1.2.0 -> 1.3.0`, exit 0 |
+| `git fetch origin main`, then `bash scripts/check-bump.sh` | `pass: minor bump needed, 1.2.0 -> 1.3.0`, exit 0 |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 1.3.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`); the tooling line equals 1.2.0's, the standard line does not |
 | `bash tests/run.sh` | `ALL PASSED`: 1939 passed, 0 skipped, exit 0, across eleven test files; the changelog check of 1.3.0 runs and passes |
 | `bash plugins/factory/scripts/token-spend.sh -- <transcript of this run's docs-writer agent>` | prints spend, peak and message count, exit 0 |
@@ -532,7 +532,7 @@ The `factory` plugin at 2.0.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | `claude plugin validate ./plugins/factory` | passed, no warning |
 | `claude plugin validate ./plugins/factory/skills` | passed, no warning |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 2.0.0`, `standard: 4bb4220e38b7…` and `tooling: 92746e5d526a…` (in full in the runbook, *Release 2.0.0*) |
-| `bash plugins/factory/scripts/check-bump.sh`, after `git fetch origin main` | `pass: minor bump needed, 1.3.0 -> 2.0.0`, exit 0 |
+| `bash scripts/check-bump.sh`, after `git fetch origin main` | `pass: minor bump needed, 1.3.0 -> 2.0.0`, exit 0 |
 | `bash plugins/factory/scripts/board.sh plan --owner WimSuenens --project 9 --project-id <id>` | read-only; prints the status mapping and the snapshot file it would write, exit 0 |
 | `bash tests/run.sh` | `ALL PASSED`, no failure, with seven named skips (listed in the runbook, *Release 2.0.0*, check 5) |
 | `claude plugin list --json` | `factory@wimsuenens` is 1.3.0, scope user, enabled: the frozen install of this run; nothing was changed |
@@ -547,7 +547,7 @@ The `factory` plugin at 2.1.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | `claude plugin validate ./plugins/factory` | passed, no warning |
 | `claude plugin validate ./plugins/factory/skills` | passed, no warning |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 2.1.0` and the standard and tooling fingerprints (not written here: they change with any edit under `plugins/factory/`); the tooling line equals 2.0.0's, the standard line does not |
-| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 2.0.0 -> 2.1.0`, exit 0 |
+| `git fetch origin main`, then `bash scripts/check-bump.sh` | `pass: minor bump needed, 2.0.0 -> 2.1.0`, exit 0 |
 | `bash tests/factory/test_ownership_tdd.sh` | `186 passed, 0 skipped, fail=0`; the changelog entry and the README row of this release are checked, and were skipped before they existed |
 | `bash tests/run.sh` | `ALL PASSED`: 3315 passed, 15 skipped, 0 failed, exit 0, across 19 test files |
 | `claude plugin list --json` | `factory@wimsuenens` is 2.0.0, scope user, enabled: the frozen install of this run; nothing was changed |
@@ -561,7 +561,7 @@ The `factory` plugin at 2.3.0, on macOS (Claude Code `2.1.287`, `/bin/bash` 3.2.
 | `claude plugin validate .` | passed with the four version warnings for the plugins without a `version` (wayfinding, toolkit, discover, design), intentional |
 | `claude plugin validate ./plugins/factory` and `./plugins/factory/skills` | passed, no warning |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 2.3.0`; the standard and tooling fingerprints are on the last line of the 2.3.0 entry in [CHANGELOG.md](CHANGELOG.md), not written here |
-| `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh` | `pass: minor bump needed, 2.2.0 -> 2.3.0`, exit 0 |
+| `git fetch origin main`, then `bash scripts/check-bump.sh` | `pass: minor bump needed, 2.2.0 -> 2.3.0`, exit 0 |
 | `bash plugins/factory/scripts/a3-check.sh <file>` on the v2 and the v1 worked examples of `plugins/factory/references/a3.md`, section 3 | `ok v2` and `ok v1`, exit 0 |
 | `bash tests/run.sh` | `ALL PASSED`: 3767 passed, 17 skipped, 0 failed, across 21 test files. The three named skips of the 2.3.0 docs are passes now; the 17 that remain are named skips of older releases, each with its reason in the output |
 | `claude plugin list --json` | `factory@wimsuenens` is 2.2.0, scope user, the frozen install of this run; nothing was changed |
@@ -574,7 +574,7 @@ The `factory` plugin at 2.3.1 (#106), on macOS, on 2026-11-10, from `fix/106-awk
 | --- | --- |
 | `claude plugin validate ./plugins/factory` | passed |
 | `bash plugins/factory/scripts/fingerprint.sh plugins/factory` | prints `release: 2.3.1`; the standard fingerprint is the same as for 2.3.0 and the tooling fingerprint moved; both are on the last line of the 2.3.1 entry in [CHANGELOG.md](CHANGELOG.md) |
-| `bash plugins/factory/scripts/check-bump.sh` | `pass: patch bump needed, 2.3.0 -> 2.3.1`, exit 0 |
+| `bash scripts/check-bump.sh` | `pass: patch bump needed, 2.3.0 -> 2.3.1`, exit 0 |
 | `bash tests/factory/test_awk_operand_guard.sh` | 17 passed; before the fix it failed 10 checks |
 | `bash tests/run.sh` | `ALL PASSED`: 3784 passed, 17 skipped, 0 failed, across 22 test files |
 

@@ -324,7 +324,7 @@ def baseline(records, session, mainpath, a3s):
         if r.mn not in series_std:
             series_std[r.mn] = r.standard
         elif r.standard != series_std[r.mn]:
-            excluded.append('excluded: #%d %s (standard differs under %s; a forgotten version bump, see andon kind 6)' % (r.item, r.url, r.mn))
+            excluded.append('excluded: #%d %s (standard differs under %s; the declared release step was skipped, see andon kind 6)' % (r.item, r.url, r.mn))
             continue
         if r.version in (4, 5) and r.ov_list_v3:
             # S3: an `active overrides` line outside the extent grammar is skipped and named; the key it carried is not used

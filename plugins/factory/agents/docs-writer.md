@@ -22,7 +22,7 @@ Every statement traces to a contract, an ADR, a diff, or a command you ran. Run 
 
 ## Output
 
-User and operational docs, `README.md`, and one `CHANGELOG.md` entry per item.
+User and operational docs, `README.md`, and one changelog entry per item: a line in the project's own changelog that says what changed for its users, in the style the file already has. When the project's rules (`docs/agents/factory.md`) say more about the entry, follow them.
 
 ## Done
 

@@ -192,8 +192,8 @@ has ac7-run-rework-rule-text "$RUN" 'repeat until both verdicts are `pass`'
 has ac7-run-done-when-both-verdicts-pass "$RUN" 'both verdicts are `pass`, every Human-only criterion passed its demo'
 has ac7-run-qa-and-security-check-the-diff-paragraph "$RUN" '**QA and security check the diff against the list.**'  # extended by #86
 kept ac7-run-done-when-line "$RUN" skills/run/SKILL.md '**Done when** every stage has run or was skipped'
-kept ac7-run-open-pr-bump-check-line "$RUN" skills/run/SKILL.md '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"`'
-kept ac7-run-open-pr-no-instruction "$RUN" skills/run/SKILL.md 'No instruction anywhere opens a PR without this check.'
+has ac7-run-open-pr-release-check-line "$RUN" '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/release-hook.sh" check'  # was check-bump.sh until #210
+has ac7-run-open-pr-no-instruction "$RUN" 'No instruction anywhere opens a PR without this step.'
 has ac7-run-architect-done-comparison "$RUN" 'After the **architect'"'"'s** `done`, make the path comparison before any other brief (*Parallel slices*).'
 kept ac7-protocol-F3-row "$PROTO" references/protocol.md '| F3 |'
 for n in 1 2 4 5 6 7; do kept "ac7-protocol-F$n-row" "$PROTO" references/protocol.md "| F$n |"; done

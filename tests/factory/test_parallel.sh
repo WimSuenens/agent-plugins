@@ -55,7 +55,7 @@ lf a1.md none "x/"; lf a2.md none "m/"; lf b1.md none "y/"; lf b2.md none "m/n.m
 bash "$PS" overlap "$T/a1.md" "$T/a2.md" -- "$T/b1.md" "$T/b2.md" >/dev/null; ck ac28-union-of-files-overlaps 1 "$?"
 bash "$PS" overlap "$T/a1.md" -- "$T/b1.md" "$T/b2.md" >/dev/null; ck ac28-union-of-files-no-overlap 0 "$?"
 # the standard states the shared set and the rule
-for w in "plugin version files" "CHANGELOG.md" "CONTEXT.md" "adr-number"; do has "ac28-run-text-lists-shared-$w" "$RUN" "$w"; done
+for w in "the files the project's release hook resolves in the merge train" "CONTEXT.md" "adr-number"; do has "ac28-run-text-lists-shared-$w" "$RUN" "$w"; done
 has ac28-run-text-rule-not-a-prefix "$RUN" '`plugins/factory/` is not a prefix of `plugins/factory-x/a.md`'
 has ac28-run-text-compares-with-paths-sh "$RUN" '`paths.sh overlap <the new slice'"'"'s contracts> -- <the contracts of one slice in flight>`'
 
@@ -154,7 +154,7 @@ hits="$(grep -rniE "one at a time|one slice at a time|items run one at a time" "
 ck ac33-no-text-states-the-old-rule 0 "$hits"
 has ac33-run-cites-adr-0016-amended-by-0017 "$RUN" 'ADR 0016, amended by ADR 0017'
 has ac33-adr-number-assigned-at-slice-start "$RUN" 'Assign the next free number at slice start and record it in the lead state'
-has ac33-version-bump-at-merge-after-rebase "$RUN" 'Apply the version bump and the changelog line, and the ADR number as assigned, after rebasing on `main`'
+has ac33-release-step-at-merge-after-rebase "$RUN" 'Apply the ADR number as assigned, after rebasing on `main`'
 has ac33-factory-run-section-lists-items-in-flight "$RUN" 'in flight: #<id> (item/<id>), … | none'
 has ac33-beachhead-line "$BH" 'path list'
 

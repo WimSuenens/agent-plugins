@@ -38,15 +38,15 @@ has ac6-unreadable-not-captured "$HA" 'Otherwise `not captured (<reason>)`'
 has ac6-label-wayfinding "$HA" '- wayfinding: <version> (<source>)'
 
 # --- AC-8: the Open PR check
-has ac8-fetch-then-check "$SK" '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-bump.sh"` in the item worktree.'
+has ac8-fetch-then-check "$SK" '1. `git fetch origin main`, then `bash "${CLAUDE_PLUGIN_ROOT}/scripts/release-hook.sh" check <item worktree> <id> origin/main`.'
 has ac8-before-pr-create "$SK" 'Before `gh pr create`, always:'
 has ac8-exit1-no-pr "$SK" 'Exit 1: do not open the PR.'
 has ac8-exit1-feedback-source-lead "$SK" 'Create a rework task for the developer (`Source: lead`) quoting the refusal'
 has ac8-exit1-logged-refused "$SK" 'and run *Open PR* again when it is done'
 has ac8-exit2-no-pr "$SK" 'Exit 2: do not open the PR'
-has ac8-refusal-in-stage-log-format "$HA" 'A refused *Open PR* (bump check) is told in the session and handled as a `Source: lead` rework task'
+has ac8-refusal-in-stage-log-format "$HA" 'A refused *Open PR* (the release hook, when the project declares one) is told in the session and handled as a `Source: lead` rework task'
 # every instruction that opens a PR must run the check first. PR-opening lines, outside the check's own paragraph:
-pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'check-bump|do not open the PR|opens a PR without this check|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR|once over the whole branch before \*Open PR\* and at the merge approval')"
+pr_lines="$(grep -nE 'gh pr create|[Oo]pen (one |the )?PR' "$SK" | grep -vE 'release-hook|do not open the PR|opens a PR without this step|Open the PR \(\*Open PR\*\)|Exit 0: open the PR|run \*Open PR\* again|merged on its own PR|has its own branch and one PR|once over the whole branch before \*Open PR\* and at the merge approval')"
 if [ -z "$pr_lines" ]; then ck ac8-no-pr-without-check "" ""
 else skip ac8-no-pr-without-check "QA-39 F1: PR opened without the bump check at SKILL.md:$(printf '%s' "$pr_lines" | cut -d: -f1 | tr '\n' ' ')(frontier round end) (developer)"; fi
 # the tracker patch's Open PR bullet is the command the check guards
@@ -278,13 +278,15 @@ EOT
   if [ $? = 0 ]; then echo "ok   $1"; passed=$((passed + 1)); else echo "FAIL $1: '$3' not before '$4'"; fail=1; fi; }
 MP="$(grep -F -- '- **Merge PR**' "$TP")"
 ck merge-pr-one-bullet 1 "$(printf '%s\n' "$MP" | grep -c .)"
-inline_before merge-recheck-before-merge "$MP" 'First re-run the bump check' 'Exit 0: `gh pr merge <branch> --merge`'
-has merge-recheck-fetch-and-script "$TP" 'First re-run the bump check: `git fetch origin main`, then `bash "<plugin root>/scripts/check-bump.sh"` in the branch'"'"'s worktree'
+inline_before merge-recheck-before-merge "$MP" 'First re-run the release check' 'Exit 0: `gh pr merge <branch> --merge`'
+has merge-recheck-fetch-and-script "$TP" 'First re-run the release check: `git fetch origin main`, then `bash "<plugin root>/scripts/release-hook.sh" check <worktree> <id> origin/main`'
 has merge-recheck-refuse-no-merge "$TP" 'Exit 1 or 2: do not merge'
 ck merge-pr-no-literal-var 0 "$(printf '%s' "$MP" | grep -cF '${CLAUDE_PLUGIN_ROOT}')"
-inline_before tag-semver-before-tag "$(grep -F 'tag only when it is MAJOR.MINOR.PATCH' "$TP")" 'tag only when it is MAJOR.MINOR.PATCH' 'git tag factory-v<version>'
-# the tag check must be the contract's semver (no leading zeros); pull the regex out of the patch and run it
-RX="$(grep -oE "grep -Eq '[^']+'" "$TP" | head -1 | sed -E "s/^grep -Eq '//; s/'$//")"
+# the tag step moved out of the plugin (#210): it is the repository's release hook, with the same semver rule
+RH="$REPO/scripts/release.sh"
+ck tag-semver-before-tag 1 "$([ "$(grep -n 'MAJOR.MINOR.PATCH; no tag' "$RH" | head -1 | cut -d: -f1)" -lt "$(grep -n 'tag "factory-v' "$RH" | head -1 | cut -d: -f1)" ] && echo 1 || echo 0)"
+# the tag check must be the contract's semver (no leading zeros); pull the regex out of the hook and run it
+RX="$(sed -n "s/^semver_re='\(.*\)'\$/\1/p" "$RH" | head -1)"
 ck tag-regex-present 1 "$([ -n "$RX" ] && echo 1)"
 okc=0; for v in 1.0.0 0.0.0 10.20.30; do printf '%s' "$v" | grep -Eq "$RX" && okc=$((okc + 1)); done; ck tag-regex-accepts-semver 3 $okc
 badc=0; for v in 1.0 v1.0.0 1.0.0-rc1 '1.0.0 x'; do printf '%s' "$v" | grep -Eq "$RX" || badc=$((badc + 1)); done; ck tag-regex-rejects-non-semver 4 $badc
@@ -293,7 +295,7 @@ ck tag-regex-rejects-leading-zeros 3 $lz   # QA-39 F5, fixed in 9ee1cdc
 # SKILL.md step 7 sends the merge through Merge PR (which holds the re-check)
 has merge-through-merge-pr "$SK" '7. Merge the PR and remove the worktree and branch (*Merge PR*'
 has frontier-merge-through-merge-pr "$SK" 'merge the PR to main and clean up (*Merge PR*)'
-has frontier-pr-bump-check "$SK" '2. Run the *Open PR* bump check (`git fetch origin main`, then `check-bump.sh` in the round'"'"'s worktree) with the same exit handling as in step 6, then open one PR from `frontier/<map>`'
+has frontier-pr-bump-check "$SK" '2. Run the *Open PR* release check (`git fetch origin main`, then `release-hook.sh check` in the round'"'"'s worktree, as in step 6) with the same exit handling, then open one PR from `frontier/<map>`'
 
 # --- feedback 15 #7 (security L3): Find hansei keeps only the Lead's own comments with the marker; run its jq on sample comments
 FH="$(grep -F -- '- **Find hansei**' "$TP")"
@@ -516,6 +518,7 @@ if grep -qF 'The merge style is open (#48)' "$REPO/CHANGELOG.md"; then
 else ck docs-changelog-merge-style 1 "$(grep -c -- '--merge' "$REPO/CHANGELOG.md" | awk '{print ($1>0)}')"; fi
 
 # --- AC-7 support: the tag step exists in Merge PR
-has ac7-tag-in-merge-pr "$TP" 'git tag factory-v<version> "$(gh pr view <branch> --json mergeCommit --jq .mergeCommit.oid)"'
+has ac7-tag-in-merge-pr "$TP" 'release-hook.sh" tag <worktree> <id> origin/main <branch>'
+has ac7-tag-command-in-the-hook "$REPO/scripts/release.sh" 'git -C "$main" tag "factory-v$new" "$sha"'
 
 done_

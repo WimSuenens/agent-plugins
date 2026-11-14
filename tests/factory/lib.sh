@@ -4,7 +4,7 @@
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PLUGIN="${FACTORY_ROOT:-$REPO/plugins/factory}"
 FP="$PLUGIN/scripts/fingerprint.sh"
-CB="$PLUGIN/scripts/check-bump.sh"
+CB="$REPO/scripts/check-bump.sh"
 TS="$PLUGIN/scripts/token-spend.sh"
 CO="$PLUGIN/scripts/cut-offs.sh"
 

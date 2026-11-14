@@ -37,7 +37,7 @@ ck ac2-plugin-dir-release "release: $PV" "$(line "$pdir" 1)"
 ck ac2-real-plugin-json "$PV" "$(jq -r .version "$PLUGIN/.claude-plugin/plugin.json")"
 
 # --- AC-3: two copies, different absolute paths, different mtimes, separate runs
-touch -t 200001010000 "$T/dir/plugins/factory/references/protocol.md" "$T/dir/plugins/factory/scripts/check-bump.sh"
+touch -t 200001010000 "$T/dir/plugins/factory/references/protocol.md" "$T/dir/plugins/factory/scripts/merge-train.sh"
 chmod 600 "$T/dir/plugins/factory/agents/developer.md"
 pdir2="$(cd "$T" && bash "$FP" dir/plugins/factory/)"   # relative path, trailing slash, other cwd
 ck ac3-same-fingerprints "$(sed 1d <<<"$inst")" "$(sed 1d <<<"$pdir2")"

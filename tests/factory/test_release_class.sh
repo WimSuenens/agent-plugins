@@ -32,7 +32,7 @@ run no-such-ref $F/scripts/s.sh; ck bad-base-exit-2 2 $code
 # the answer agrees with the real check on the real change, for each class
 for f in $F/references/protocol.md $F/scripts/s.sh; do
   git checkout -q main; git branch -q -D w 2>/dev/null; git checkout -q -b w; echo more >> $f; git commit -qam c
-  want="$(bash "$REPO/plugins/factory/scripts/check-bump.sh" origin/main | head -n1 | sed -E 's/.*needs at least a ([a-z]+) bump.*/\1/')"
+  want="$(bash "$REPO/scripts/check-bump.sh" origin/main | head -n1 | sed -E 's/.*needs at least a ([a-z]+) bump.*/\1/')"
   run origin/main $f
   ck "agrees-with-check-bump-$(basename $f)" "$want" "$(printf '%s' "$out" | sed -E 's/^needs: ([a-z]+) bump.*/\1/')"
 done

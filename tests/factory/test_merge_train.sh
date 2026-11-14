@@ -28,6 +28,9 @@ M="$T/m"; git clone -q "$ORIGIN" "$M" 2>/dev/null; cd "$M" || exit 1; git checko
 mkdir -p plugins/factory/.claude-plugin plugins/factory/agents docs/adr
 printf '{\n  "name": "factory",\n  "version": "1.0.0"\n}\n' >plugins/factory/.claude-plugin/plugin.json
 printf '# Changelog\n\nintro\n\n## factory 1.0.0 (#1)\n\nold\n' >CHANGELOG.md
+# this repository's release tooling and the one line that switches it on (#210): the merge train itself knows no release step
+mkdir -p scripts docs/agents; cp "$REPO"/scripts/release.sh "$REPO"/scripts/release-lib.sh "$REPO"/scripts/check-bump.sh scripts/
+printf 'release-hook: scripts/release.sh\n' >docs/agents/factory.md
 echo a >docs/adr/0001-a.md; touch plugins/factory/agents/.gitkeep; echo r >README.md; printf '/.claude/worktrees/\n' >.gitignore
 git add -A && git commit -qm init && git push -q origin main
 git branch --set-upstream-to=origin/main main >/dev/null 2>&1
@@ -112,6 +115,19 @@ ck failed-merge-reported "yes" "$(printf '%s\n' "$out" | grep -q '^merge failed:
 ck failed-merge-worktree-kept "yes" "$([ -e "$W6" ] && echo yes || echo no)"
 ck failed-merge-branch-kept "item/6" "$(git -C "$M" branch --list item/6 | tr -d ' *+')"
 ck failed-merge-no-done-line "0" "$(printf '%s\n' "$out" | grep -c '^done ')"
+
+# --- a project without `release-hook:` gets a purely mechanical train: no release line, no tag, no version or changelog touched (#210)
+( cd "$M" && git pull -q && git rm -q docs/agents/factory.md && git commit -qm "no release hook" && git push -q origin main )
+W7="$(NOCL=1 slice 7 seven)"
+sed -i.bak "s/1\\.2\\.0/9.9.9/" "$W7/plugins/factory/.claude-plugin/plugin.json" && rm -f "$W7/plugins/factory/.claude-plugin/plugin.json.bak"; git -C "$W7" commit -qam "#7 version"
+tags_before="$(git -C "$ORIGIN" tag -l | wc -l | tr -d ' ')"
+out="$(bash "$MT" run "$W7" 7 --approved now 2>&1)"; rc=$?
+ck nohook-exit-0 0 "$rc"
+ck nohook-merged "yes" "$(git -C "$ORIGIN" log --format=%s main | grep -q 'Merge item/7' && echo yes || echo no)"
+ck nohook-no-release-words "0" "$(printf '%s\n' "$out" | grep -ciE 'bump|changelog|tag|release|version')"
+ck nohook-no-new-tag "$tags_before" "$(git -C "$ORIGIN" tag -l | wc -l | tr -d ' ')"
+ck nohook-version-as-the-branch-had-it "9.9.9" "$(git -C "$ORIGIN" show main:plugins/factory/.claude-plugin/plugin.json | jq -r .version)"
+ck nohook-worktree-removed "no" "$([ -e "$W7" ] && echo yes || echo no)"
 
 # --- standard-text seam: who owns the steps
 has agent-runs-train "$AG" 'scripts/merge-train.sh'

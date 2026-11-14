@@ -93,7 +93,7 @@ Rules:
 
 - **Duration and agent working are computed, never stored.** Duration = `closed_at` − `created_at` in whole minutes. Agent working = Duration less the union of the intervals of the waits named in `Waits` that are `Held item: yes` and of kind `person`, `limits`, `stalled`, `interrupted` or `andon`, each cut to the row's interval (overlaps once).
 - **A row's End is the sub-issue's `closed_at`** (after the closing comment and the close), not the moment the lead read the result. In a live run that is seconds to a minute later than the End the 1.x lead state recorded; it is the one definition that moved.
-- A refused *Open PR* (bump check) is told in the session and handled as a `Source: lead` rework task; the next attempt is a new *Open PR*. There is no row for the lead's or the person's steps (`Start item`, `Open PR`, `Acceptance demo`, `Merge approval`, `Andon A<n>`): no reader reads them.
+- A refused *Open PR* (the release hook, when the project declares one) is told in the session and handled as a `Source: lead` rework task; the next attempt is a new *Open PR*. There is no row for the lead's or the person's steps (`Start item`, `Open PR`, `Acceptance demo`, `Merge approval`, `Andon A<n>`): no reader reads them.
 - A paused task's `Notes` read `paused by A<n>` and its `Waits` list the andon wait, since the slow-stage test subtracts only the waits a row lists.
 
 ### The Waits and Touches tables

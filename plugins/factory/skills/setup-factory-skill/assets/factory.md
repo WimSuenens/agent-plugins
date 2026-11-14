@@ -48,6 +48,10 @@ measurement: full
 
 An optional line, at the start of a line: `protected-paths: <glob>, <glob>` (for example `protected-paths: infra/*, apps/billing/*`). A path matching a glob is a protected area, `project`, for the skip check and the merge gate alike, on top of the built-in ones (contracts, authentication, secrets, migrations). No line means no extra paths.
 
+## Release hook
+
+An optional line, at the start of a line: `release-hook: <path of a script in this repository>` (for example `release-hook: scripts/release.sh`). The factory runs that script at *Open PR* and in the merge train (`scripts/release-hook.sh` documents its phases: `check`, `resolve`, `prepare`, `tag`). No line means no release step: the factory runs nothing and prints nothing about a release.
+
 ## Run budget
 
 run-budget: none

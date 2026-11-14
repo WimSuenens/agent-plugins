@@ -11,7 +11,7 @@ How the `factory` plugin is released, checked, rolled back and rolled forward. F
 - Tag `factory-v<semver>` points at the merge commit on `main`. The Lead creates it in *Merge PR*.
 - The pre-release factory had no version: its identity is the marketplace commit it was fetched at. The run that produces 1.0.0 is frozen on `9147301f75c3` (full sha `9147301f75c33859f8ad179b6ba336e1690435e6`, an ancestor of `main`).
 - An open session keeps the factory skill text it read at start. A new version reaches a session only after a restart; `/reload-plugins` is not relied on (not tested to reload skill text).
-- Every merge bump is checked by `plugins/factory/scripts/check-bump.sh` (exit 0 pass, 1 bump missing, 2 unusable repo or base).
+- Every merge bump is checked by `scripts/check-bump.sh` (exit 0 pass, 1 bump missing, 2 unusable repo or base).
 
 ## Release checks (before the Lead asks to merge)
 
@@ -19,7 +19,7 @@ Read-only; none of these touch the installed plugin.
 
 1. `claude plugin validate .` passes (four warnings for plugins without a version: wayfinding, toolkit, discover, design; intentional, the factory has none).
 2. `claude plugin validate ./plugins/factory` and `./plugins/factory/skills` pass with no warning.
-3. `bash plugins/factory/scripts/check-bump.sh` in the branch's worktree, after `git fetch origin main`: `pass: minor bump needed, 0.0.0 -> 1.0.0`, exit 0.
+3. `bash scripts/check-bump.sh` in the branch's worktree, after `git fetch origin main`: `pass: minor bump needed, 0.0.0 -> 1.0.0`, exit 0.
 4. `bash tests/run.sh` prints `ALL PASSED`. A tag waits while the suite reports any named skip; the Lead tags only when none is left, or the person accepts them by name.
 5. `bash plugins/factory/scripts/obeya.sh check-pin` prints `pinned image ... exists` (needs Docker; #125). It fails when the image tag pinned in `plugins/factory/obeya/compose.yml` is not in the registry: publish the app first (see *Obeya image* below) or move the pin.
 6. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 1.0.0` and both fingerprints. Note them; any later change to either under the same release is a forgotten bump.
@@ -30,7 +30,7 @@ Run the bump check once more on the branch, then merge (PR #40, by number; the m
 
 ```
 git fetch origin main
-bash plugins/factory/scripts/check-bump.sh        # in the item/39 worktree; expect exit 0
+bash scripts/check-bump.sh        # in the item/39 worktree; expect exit 0
 gh pr merge 40 --merge
 printf '%s' "1.0.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
 git ls-remote --tags origin factory-v1.0.0        # must print nothing, else the tag exists: stop
@@ -120,7 +120,7 @@ Minor release (standard work changed, ADR 0012 point 3: the baseline resets). Sa
 
 **Release checks** (as above, with these values):
 
-1. `bash plugins/factory/scripts/check-bump.sh` in the item/49 worktree after `git fetch origin main`: `pass: minor bump needed, 1.0.0 -> 1.1.0`, exit 0.
+1. `bash scripts/check-bump.sh` in the item/49 worktree after `git fetch origin main`: `pass: minor bump needed, 1.0.0 -> 1.1.0`, exit 0.
 2. `bash tests/run.sh` prints `ALL PASSED`; the two named skips (docs-writer items) are gone or accepted by name before tagging.
 3. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
 
@@ -136,7 +136,7 @@ tooling: 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5
 
 ```
 git fetch origin main
-bash plugins/factory/scripts/check-bump.sh        # in the item/49 worktree; expect exit 0
+bash scripts/check-bump.sh        # in the item/49 worktree; expect exit 0
 gh pr merge 56 --merge
 printf '%s' "1.1.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
 git ls-remote --tags origin factory-v1.1.0        # must print nothing, else the tag exists: stop
@@ -162,7 +162,7 @@ Minor release (standard work changed, ADR 0012 point 3: the baseline resets to a
 **Release checks** (read-only; run on the branch at 33b521d plus this runbook edit, after `git fetch origin main`):
 
 1. `claude plugin validate .` passes with the same four version warnings as before (wayfinding, toolkit, discover, design); `./plugins/factory` and `./plugins/factory/skills` pass with no warning.
-2. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 1.1.0 -> 1.2.0`, exit 0.
+2. `bash scripts/check-bump.sh` prints `pass: minor bump needed, 1.1.0 -> 1.2.0`, exit 0.
 3. `bash tests/run.sh` prints `ALL PASSED` (`test_token_spend.sh: 93 passed, 0 skipped, fail=0`); no named skip is left.
 4. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
 
@@ -178,7 +178,7 @@ tooling: 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5
 
 ```
 git fetch origin main
-bash plugins/factory/scripts/check-bump.sh        # in the item/57 worktree; expect exit 0
+bash scripts/check-bump.sh        # in the item/57 worktree; expect exit 0
 gh pr merge 58 --merge
 printf '%s' "1.2.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
 git ls-remote --tags origin factory-v1.2.0        # must print nothing, else the tag exists: stop
@@ -210,7 +210,7 @@ Minor release (standard work changed, ADR 0012 point 3: the baseline resets to a
 
 **Release checks** (read-only; run on the branch after `git fetch origin main`):
 
-1. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 1.2.0 -> 1.3.0`, exit 0.
+1. `bash scripts/check-bump.sh` prints `pass: minor bump needed, 1.2.0 -> 1.3.0`, exit 0.
 2. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
 
 ```
@@ -225,7 +225,7 @@ tooling: 295033f4e6c6fcc69a2ceb6caf71968c5cc3fb233a92f6bd074fffaff2423ff5
 
 ```
 git fetch origin main
-bash plugins/factory/scripts/check-bump.sh        # in the item/60 worktree; expect exit 0
+bash scripts/check-bump.sh        # in the item/60 worktree; expect exit 0
 gh pr merge 61 --merge
 printf '%s' "1.3.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
 git ls-remote --tags origin factory-v1.3.0        # must print nothing, else the tag exists: stop
@@ -255,7 +255,7 @@ git push origin factory-v1.3.0
 
 1. `claude plugin validate .` exits 0 with the four version warnings for wayfinding, toolkit, discover and design (intentional).
 2. `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills` exit 0 with no warning.
-3. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 1.3.0 -> 2.0.0`, exit 0. The script is unchanged; its word "minor" is a floor, and the major level is the architect's decision (decision 8 of [64-release](../../contracts/64-release.md) §6).
+3. `bash scripts/check-bump.sh` prints `pass: minor bump needed, 1.3.0 -> 2.0.0`, exit 0. The script is unchanged; its word "minor" is a floor, and the major level is the architect's decision (decision 8 of [64-release](../../contracts/64-release.md) §6).
 4. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints exactly:
 
 ```
@@ -272,7 +272,7 @@ tooling: 92746e5d526aeaebcbd1ab94af461c973d1bd417265eb71e940db31b36da324a
 
 ```
 git fetch origin main
-bash plugins/factory/scripts/check-bump.sh        # in the item/64 worktree; expect exit 0
+bash scripts/check-bump.sh        # in the item/64 worktree; expect exit 0
 gh pr merge <pr> --merge
 printf '%s' "2.0.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
 git ls-remote --tags origin factory-v2.0.0        # must print nothing, else the tag exists: stop
@@ -326,7 +326,7 @@ Still unverified after the try: that the view filters correctly in the UI with t
 **Release checks** (read-only; on the branch after `git fetch origin main`, in the item/94 worktree):
 
 1. `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills` exit 0 with no warning.
-2. `bash plugins/factory/scripts/check-bump.sh` prints `pass: minor bump needed, 2.2.0 -> 2.3.0`, exit 0.
+2. `bash scripts/check-bump.sh` prints `pass: minor bump needed, 2.2.0 -> 2.3.0`, exit 0.
 3. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 2.3.0`. The two fingerprints are kept on the last line of the 2.3.0 entry in [CHANGELOG.md](../../CHANGELOG.md), not repeated here: they move with any edit under `plugins/factory/`, and any later change under the same release is a forgotten bump.
 4. `bash tests/run.sh` prints `ALL PASSED` with no named skip. The three checks that waited for this release's changelog, runbook and docs (`ac19-changelog-2.3.0`, `ac19-runbook-2.3.0-note`, `ac17-docs-say-v2`) are passes.
 5. `bash plugins/factory/scripts/a3-check.sh <file>` on an A3 saved to a file prints `ok v2` (exit 0) for a v2 A3 and `ok v1` for a v1 A3 of 2.2.0. It is a format check; the *Scan before posting* step stays the gate for secrets and paths.
@@ -335,7 +335,7 @@ Still unverified after the try: that the view filters correctly in the UI with t
 
 ```
 git fetch origin main
-bash plugins/factory/scripts/check-bump.sh        # expect exit 0
+bash scripts/check-bump.sh        # expect exit 0
 gh pr merge <pr> --merge
 printf '%s' "2.3.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
 git ls-remote --tags origin factory-v2.3.0        # must print nothing, else the tag exists: stop

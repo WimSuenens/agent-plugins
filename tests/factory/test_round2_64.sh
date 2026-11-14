@@ -79,7 +79,7 @@ for f in "$PLUGIN/agents/qa-engineer.md" "$PLUGIN/agents/security-reviewer.md" "
 done
 bad="$(cd "$REPO" && grep -rn -- '--name-only' plugins | grep -v 'git -c core.quotePath=false diff --no-renames --name-only' | grep -v 'plugins/factory/scripts/check-bump.sh' | grep -v 'diff-tree -z --no-commit-id --name-only -r --no-renames' | grep -v '^plugins/toolkit' | wc -l | tr -d ' ')"
 ck r2-name-only-only-the-intended-forms 0 "$bad"
-ck r2-check-bump-uses-the-z-form "yes" "$(grep -q 'diff -z --no-renames --name-only' "$SCRIPTS/check-bump.sh" && echo yes || echo no)"
+ck r2-check-bump-uses-the-z-form "yes" "$(grep -q 'diff -z --no-renames --name-only' "$REPO/scripts/check-bump.sh" && echo yes || echo no)"
 
 # ---------- rule 5.6 on run-budget and factory-state (S7) ----------
 has r2-rule-5-6-names-both-lines "$RUN" 'or a line that starts at column 0 with `run-budget:` or `factory-state:` (a line changed, added or removed; compare before and after the commit; any difference counts)'

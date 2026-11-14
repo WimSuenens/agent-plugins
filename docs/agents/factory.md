@@ -4,6 +4,12 @@ factory-state: 2
 
 How the `factory` plugin runs in this repo. Every factory role reads this after the protocol; `/factory:run` reads it before starting an item.
 
+## Release hook
+
+release-hook: scripts/release.sh
+
+This repository develops the factory plugin, so it declares the hook of the plugin's release: `scripts/release.sh` (see *Releasing the factory plugin*).
+
 ## Decision-maker
 
 decision-maker: technical
@@ -105,6 +111,10 @@ Resolved ids for the GitHub Project:
 
 ## Releasing the factory plugin (this repository only)
 
-This repository develops the factory plugin itself. These rules belong to the repository, not to the plugin: a project that only uses the factory does not have them.
+This repository develops the factory plugin itself. These rules belong to the repository, not to the plugin: a project that only uses the factory does not have them. The tooling is at the repository root, in `scripts/`, and the plugin reaches it only through the `release-hook:` line above.
 
-When a slice changes files under `plugins/factory/`, the release class comes from the bump check, not from anyone's judgement. Before the architect's brief, the lead runs `bash scripts/release-class.sh origin/main <the paths the slice will change>` and puts its answer line in the brief; the architect quotes that line in the contract before the contract names a version or a release class. A change that leaves the meaning of standard text unchanged still counts as standard work. The real check, `check-bump.sh`, still runs at *Open PR* and at *Merge PR*.
+- **Release class.** When a slice changes files under `plugins/factory/`, the class comes from the bump check, not from anyone's judgement: standard text and the run skill need a minor bump, any other factory file a patch (`scripts/release-lib.sh` holds that one classification; `check-bump.sh` and `release-class.sh` both read it). Before the architect's brief, the lead runs `bash scripts/release-class.sh origin/main <the paths the slice will change>` and puts its answer line in the brief; the architect quotes that line in the contract before the contract names a version or a release class. A change that leaves the meaning of standard text unchanged still counts as standard work.
+- **At *Open PR* and before the merge**, the hook's `check` runs `scripts/check-bump.sh`: exit 0 pass, 1 the bump is missing, 2 an unusable repository or base.
+- **In the merge train**, the hook resolves a clash in `plugins/factory/.claude-plugin/plugin.json` (it takes main's version) or `CHANGELOG.md` (both entries kept, the branch's above main's), raises the version to the level the check names and moves the entry `## factory <version> (#<id>)` with it, and, after the merge, tags `factory-v<version>` and pushes the tag. A missing changelog entry, or two entries for one version, stops the train (exit 4).
+- **The changelog entry** is the plugin's release record: one `## factory <version> (#<id>)` entry per item that changes the plugin, with a `Release:` line and the fingerprints (`plugins/factory/scripts/fingerprint.sh` reproduces them). The docs-writer adds it before the merge.
+- The tag scheme `factory-v<semver>`, the fingerprint label, andon kind 6 and the hansei `release` field are fixed: they say which release ran.

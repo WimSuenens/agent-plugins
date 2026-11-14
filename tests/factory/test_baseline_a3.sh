@@ -115,7 +115,7 @@ has honesty-a3-change "$A3" 'and `0` never stands for a value not captured.'
 has honesty-f7-fenced "$PR" 'let a value read as anything other than a measured value, `0`, `n/a (did not run)` or `not captured (<reason>)`?'
 has honesty-hansei-rule "$HA" '**Honesty rule**: an uncaptured value is never `0`, never blank, never dropped.'
 has ac2-manual-comments-not-records "$BA" 'Manual calibration comments are this case.'
-has ac5-forgotten-bump-is-kind6 "$BA" 'the forgotten bump belongs to the andon of kind 6'
+has ac5-skipped-release-step-is-kind6 "$BA" 'the skipped release step belongs to the andon of kind 6'
 has ac4-calibration-no-series "$BA" '`series: calibration (pre-baseline)` → **no series**'
 has ac3-median-not-mean "$BA" 'the **median** of the `k` values'
 ck ac3-no-instruction-for-a-mean 0 "$(grep -iE '\bmean of (all|the items|the section)|average' "$BA" "$A3" | grep -c .)"

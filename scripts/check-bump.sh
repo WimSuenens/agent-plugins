@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Refuses a factory change that comes without the version bump it needs.
-# Usage: bash check-bump.sh [<base-ref>]     (default base: origin/main; run in the item worktree)
+# Dev-repo tooling, not part of the factory plugin (moved here by #210): refuses a factory change that comes without the version bump it needs.
+# Usage: bash scripts/check-bump.sh [<base-ref>]     (default base: origin/main; run in the item worktree)
 # Exit: 0 pass; 1 refuse; 2 not a git repo, base ref missing, or base version not a semver (reason on stderr).
 # See contracts/39-plugin-scripts.md section 2 in the repo that hosts the factory.
 
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1091
+. "$here/release-lib.sh"
 base="${1:-origin/main}"
-pj="plugins/factory/.claude-plugin/plugin.json"
+pj="$rel_pj"
 
 top="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "check-bump: not a git repository" >&2; exit 2; }
 cd "$top" || exit 2
@@ -19,24 +22,13 @@ if [ ! -s "$tmp" ]; then
   exit 0
 fi
 
-# Needed level: minor for standard work, else patch.
-level=patch
-what="factory files"
-while IFS= read -r -d '' p; do
-  case "$p" in
-    *$'\n'*) level=minor ;;   # a name holding a newline cannot be classified: standard work
-    plugins/factory/skills/run/SKILL.md) level=minor ;;
-    plugins/factory/references/*/* | plugins/factory/agents/*/*) ;;
-    plugins/factory/references/*.md | plugins/factory/agents/*.md) level=minor ;;
-  esac
-done <"$tmp"
-[ "$level" = minor ] && what="standard work"
+# Needed level: minor for standard work, else patch (release-lib.sh).
+rel_reset
+while IFS= read -r -d '' p; do rel_add "$p"; done <"$tmp"
+level="$REL_LEVEL"; what="$REL_WHAT"
 
-# plugin.json version at a revision: prints the version, or nothing when absent.
-version_at() {
-  git show "$1:$pj" 2>/dev/null | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1
-}
-is_semver() { printf '%s' "$1" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; }
+version_at() { rel_version_at "$1"; }
+is_semver() { rel_is_semver "$1"; }
 
 old="$(version_at "$base")"
 if [ -z "$old" ] && git show "$base:$pj" 2>/dev/null | grep -Eq '"version"[[:space:]]*:'; then
@@ -51,7 +43,7 @@ fi
 new="$(version_at HEAD)"
 
 o_major="${old%%.*}"; rest="${old#*.}"; o_minor="${rest%%.*}"; o_patch="${rest#*.}"
-if [ "$level" = minor ]; then suggested="$o_major.$((o_minor + 1)).0"; else suggested="$o_major.$o_minor.$((o_patch + 1))"; fi
+suggested="$(rel_suggest "$old" "$level")"
 
 ok=0
 if is_semver "$new"; then

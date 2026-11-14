@@ -26,7 +26,7 @@ Thirty-one contracts: four from 1.0.0 (`39-*`, the record, the stage log, the sc
 
 - **Contract**: [contracts/39-plugin-scripts.md](../../contracts/39-plugin-scripts.md). Unchanged for 1.1.0: no script changed ([49-standard-changes](../../contracts/49-standard-changes.md) §1). For 2.0.0 four scripts were added beside these four (`board.sh`, `paths.sh`, `factory-config.sh`, `post-text.sh`), described in the 64 entries below; the four of this entry are unchanged. For 2.3.0 a fifth, `scripts/a3-check.sh`, is described in the [94-a3-v2](#94-a3-v2-the-a3-at-v2-the-three-new-lines-the-check-and-v1-kept-valid) entry; it counts in the tooling fingerprint.
 - **Governs**: the exact stdout lines and exit codes of each script; the two fingerprints and their file sets (standard: `skills/run/SKILL.md`, `references/*.md`, `agents/*.md`; tooling: `hooks/` and `scripts/`, recursively); the bump check's levels and refusal text (a file name with a newline counts as standard work); the token-spend window, the peak rule, and `--require-end` (exit 6 for a transcript that was cut off: a `[Request interrupted` entry, or no final reply at its end); the cut-offs of a transcript (§4: one line per gap of kind `limits`, `stalled` or `interrupted`, with its start, read from the transcript and the optional sleep log).
-- **Implemented in**: `plugins/factory/scripts/fingerprint.sh`, `plugins/factory/scripts/check-bump.sh`, `plugins/factory/scripts/token-spend.sh`, `plugins/factory/scripts/cut-offs.sh`. All are bash 3.2 compatible; `token-spend.sh` and `cut-offs.sh` also need `jq`.
+- **Implemented in**: `plugins/factory/scripts/fingerprint.sh`, `scripts/check-bump.sh`, `plugins/factory/scripts/token-spend.sh`, `plugins/factory/scripts/cut-offs.sh`. All are bash 3.2 compatible; `token-spend.sh` and `cut-offs.sh` also need `jq`.
 - **Acceptance criteria**: AC-2 to AC-5, AC-8 to AC-10, AC-16; `cut-offs.sh` is the evidence for AC-11 (its tests) and AC-17 (the replay of the demo's transcripts).
 
 ### 39-standard-changes: where each rule lives
@@ -231,7 +231,7 @@ Use this when a change touches anything under `plugins/factory/`.
 
 1. Make the change on a branch of its own; for a factory item that is `item/<id>`. Each commit starts with `#<id>`.
 2. Bump `version` in `plugins/factory/.claude-plugin/plugin.json` at the level the rule asks: minor for standard work (`skills/run/SKILL.md`, `references/*.md`, `agents/*.md`), patch for anything else under `plugins/factory/`, major only when message formats or the protocol break.
-3. From the branch's worktree: `git fetch origin main`, then `bash plugins/factory/scripts/check-bump.sh`. Exit 0 is a pass; exit 1 names the level it needs; exit 2 is a repository or version error to fix first.
+3. From the branch's worktree: `git fetch origin main`, then `bash scripts/check-bump.sh`. Exit 0 is a pass; exit 1 names the level it needs; exit 2 is a repository or version error to fix first.
 4. Run the suite: `bash tests/run.sh`. It prints `ALL PASSED` when every check holds.
 5. Run `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills`.
 6. Open the PR. The lead runs the same bump check before `gh pr create`, so a PR that fails it does not open.

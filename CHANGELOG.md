@@ -2,6 +2,22 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.16.0 (#210)
+
+Release: `2.16.0`, a **minor** release: standard text and tooling changed. Both fingerprints change. No migration: a project with no `release-hook:` line runs no release step, and this repository declares its own.
+
+Issue [#210](https://github.com/WimSuenens/agent-plugins/issues/210), part of [#207](https://github.com/WimSuenens/agent-plugins/issues/207). Cause: the plugin that projects install carried the release machinery of the repository that develops it (the bump check, the bump, changelog and tag steps of the merge train, the tag step of the tracker doc), dormant elsewhere only because the path `plugins/factory/` does not exist there.
+
+**What changed for the person who runs the factory:**
+
+- **The merge train is purely mechanical.** `merge-train.sh` rebases, numbers an ADR, merges and cleans up. Its `bump` step is now `release`, and it runs a project's release hook only when `docs/agents/factory.md` declares one (`release-hook: <script>`); `scripts/release-hook.sh` is the one dispatcher (phases `check`, `resolve`, `prepare`, `tag`). No line: no release step, nothing printed.
+- **Where the release tooling went.** At the repository root, `scripts/`: `release.sh` (the hook), `check-bump.sh` (moved, same answers), `release-class.sh` and the new `release-lib.sh`, which holds the one classification both read. This repository declares `release-hook: scripts/release.sh` and keeps its release rules in `docs/agents/factory.md`. The tag scheme `factory-v<semver>`, the fingerprint label, andon kind 6 and the hansei `release` field are unchanged.
+- **Wording.** *Open PR*, *Merge PR*, the integrator and the tracker doc call the hook only when declared; the docs-writer's changelog entry is the project's own; the baseline and hansei rule for a skipped release step is worded generically and excludes the same runs. The setup skill's `factory.md` template documents the optional `release-hook:` line.
+
+**Tests.** `tests/factory/test_release_split.sh` (new): a grep over `plugins/factory/` with an allow list, the dispatcher, the moved check against the old one on 14 merges of this repository's history, the architect's shell scope and the baseline exclusions unchanged. `test_merge_train.sh` gains a train without a hook.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `4040451deb2b2b42da0985d29ba383642c941209cb097de76b0e8b36578d2d6b`, tooling `1d0346be1985bbcdc4dfdcf71ba8c9ddf55bdaf598e57d218f18debda681fbbc`.
+
 ## factory 2.15.1 (#211)
 
 Release: `2.15.1`, a **patch** release: `andon-detect.sh owner` matches a table token literally and picks the most specific row. The standard fingerprint is unchanged; the tooling fingerprint moves. No migration.

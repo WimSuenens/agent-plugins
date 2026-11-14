@@ -67,6 +67,23 @@ ck k3-section-row-token-skipped "" "$(printf '%s\n' '| Path | Owner |' '|---|---
 ck k3-section-row-does-not-own-file docs-writer "$(owner_of "$T/tbl.md" docs/agents/factory.md)"
 ck k3-section-row-docs-rest-owns-docs-writer-other docs-writer "$(owner_of "$T/tbl.md" docs/guide.md)"
 
+# --- a role writing its own role file or skills folder is not flagged; nothing else is excused (slice 1 of #207)
+R="$T/k3own"; mkrepo "$R"
+cm "$R" "#7 developer: own role file" docs/agents/roles/developer.md
+cm "$R" "#7 qa-engineer: own role file" docs/agents/roles/qa-engineer.md
+cm "$R" "#7 docs-writer: own role file" docs/agents/roles/docs-writer.md
+cm "$R" "#7 developer: own skill" docs/agents/skills/developer/graduate.md docs/agents/skills/developer/deep/x.md
+ck k3-own-role-file-and-skills-not-flagged "" "$(kind3 "$R" "$R/docs/agents/factory.md" main)"
+R="$T/k3other"; mkrepo "$R"
+cm "$R" "#7 developer: someone else's role file" docs/agents/roles/qa-engineer.md
+cm "$R" "#7 developer: someone else's skills" docs/agents/skills/qa-engineer/s.md
+cm "$R" "#7 qa-engineer: a doc beside the role files" docs/agents/roles/README.md
+cm "$R" "#7 developer: the role file with a suffix" docs/agents/roles/developer.md.bak
+cm "$R" "#7 developer: a different folder with the role's name" docs/agents/skills/developer-extra/s.md
+cm "$R" "#7 developer: own role file plus a doc" docs/agents/roles/developer.md docs/guide.md
+out="$(kind3 "$R" "$R/docs/agents/factory.md" main | sed -E 's/^role-outside-role: [0-9a-f]{7} //' | tr '\n' ';')"
+ck k3-others-role-files-still-flagged "developer changed docs/guide.md (owner docs-writer);developer changed docs/agents/skills/developer-extra/s.md (owner docs-writer);developer changed docs/agents/roles/developer.md.bak (owner docs-writer);qa-engineer changed docs/agents/roles/README.md (owner docs-writer);developer changed docs/agents/skills/qa-engineer/s.md (owner docs-writer);developer changed docs/agents/roles/qa-engineer.md (owner docs-writer);" "$out"
+
 # ---- S4: git diff-tree -z with an accented and a newline filename (without -z git quote-escapes both) ----
 R3="$T/k3z"; mkrepo "$R3"
 nl="$(printf 'tests/bad\nname.sh')"

@@ -4,7 +4,7 @@
 #   <pr>        the PR number or branch; its description and checks are read with `gh pr view <pr> --json body,statusCheckRollup`.
 #   --qa, --security   the verdicts of the QA and security tasks; QA must be `pass`; security is `pass`, or `skipped` with --skip-reason when the lead skipped the role by skip.sh's rule (a written reason, no protected area; a skip on a protected slice blocks). Anything else, or a missing verdict, blocks.
 #   --touches   comma-separated: contract, authentication, secrets, migration, door (what the lead knows about the slice).
-#   --paths     the files the slice changed; migration, secret and authentication paths count as touches too.
+#   --paths     the files the slice changed, one per line (a path may hold a space; a one-line list is still split on whitespace); migration, secret and authentication paths count as touches too.
 # Output: `gate <pr>: auto-merge | pause | blocked`, then `reason: ...` lines. A pause is followed by `validation script:`
 # and plain-language steps for the person; the lead posts them and sets the card `Waiting on you` (`Cause: validation`).
 # Exit: 0 auto-merge; 10 pause (a human must decide); 11 blocked (a gate is not met; the reasons say which); 2 usage or no PR.
@@ -54,9 +54,12 @@ set -f   # no glob expansion of the path and touch lists
 for t in $(printf '%s' "$touches" | tr ',' ' '); do
   a="$(protected_touch_area "$t")" && addh "$a"
 done
-for p in $paths; do
+protected_paths_line   # read the project's line once here: the calls below run in subshells
+while IFS= read -r p; do
   a="$(protected_path_area "$p")" && addh "$a"
-done
+done <<PATHS
+$(protected_list_paths "$paths")
+PATHS
 set +f
 [ "$sec" = skipped ] && [ -n "$humans" ] && addb "security review cannot be skipped for a protected area ($(printf '%s' "$humans" | sort -u | tr '\n' ' ' | sed 's/ $//'))"
 humans="$(printf '%s' "$humans" | sort -u)"

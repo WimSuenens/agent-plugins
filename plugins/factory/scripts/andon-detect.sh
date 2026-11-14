@@ -7,11 +7,11 @@
 #       Commits <base>..<head>, not merges. Defaults: repo = the current directory, head = HEAD, base = `git merge-base origin/main <head>`.
 #       The role is read from the subject `^#[0-9]+ ([a-z-]+): `; only the seven roles are read. The ownership table is
 #       `git show origin/main:docs/agents/factory.md` unless --table names a file (a table of the branch must never judge the branch).
-#       A role's own `docs/agents/roles/<role>.md` and `docs/agents/skills/<role>/` are never flagged (protocol, *Role knowledge*); nothing else is excused.
+#       A role's own `docs/agents/roles/<role>.md` and `docs/agents/skills/<role>/` are never flagged (protocol, *Role knowledge*), a symlink (mode 120000) there excepted; nothing else is excused.
 #       Prints `role-outside-role: <sha7> <role> changed <path> (owner <owner>)`, or `... changed an unclassifiable path (name escaped: <%q form>)`.
 #   andon-detect.sh owner <table> <path>
 #       The Owner of the most specific matching table row, empty when the path is unowned. Specificity: an exact path, then a directory
-#       prefix (the longer wins), then a wildcard (more literal characters before its first `*` wins). A token is literal except `*`.
+#       prefix (the longer wins), then a wildcard (more literal characters before its first `*` wins; at the same count, more literal characters in all). A token is literal except `*`.
 #       A tie between different owners prints `ambiguous owner: <path> <ownerA> <ownerB>`; kind3 prints `role-outside-role: <sha7> <role> changed <path> (ambiguous owner: <ownerA> <ownerB>)`.
 #   andon-detect.sh kind4 (--ledger <ledger.md> --times <times.tsv> | --rows <file> --waits <file>) <row#>
 #       Prints `slow: <own> against median <m> of <n> earlier rows`, `not flagged`, or `no baseline: fewer than 3 earlier rows`.
@@ -51,9 +51,9 @@ owner_of() { # <table> <path>
         if (tok ~ /^[# ]/) continue
         if (rest ~ /^ *section/) continue
         m=0
-        # rank: an exact path, then a directory prefix (longer wins), then a wildcard (more literal characters before the first `*` wins)
+        # rank: an exact path, then a directory prefix (longer wins), then a wildcard (more literal characters before the first `*` wins, then more in all)
         if (tok ~ /\/$/) { t=substr(tok,1,length(tok)-1); if (P==t || index(P,tok)==1) { m=1; rank=2*1000000+length(tok) } }
-        else if (tok ~ /\*/) { if (glob(tok,P)) { m=1; rank=1*1000000+index(tok,"*")-1 } }
+        else if (tok ~ /\*/) { if (glob(tok,P)) { m=1; wt=tok; gsub(/\*/,"",wt); rank=1*1000000+(index(tok,"*")-1)*1000+length(wt) } }
         else if (P==tok) { m=1; rank=3*1000000 }
         if (!m) continue
         if (!found || rank>best) { found=1; best=rank; own=owner; other="" }
@@ -89,7 +89,12 @@ kind3() {
     git -C "$repo" diff-tree -z --no-commit-id --name-only -r --no-renames "$sha" | while IFS= read -r -d '' p; do
       case "$p" in *[[:cntrl:]]*) echo "role-outside-role: ${sha:0:7} $r changed an unclassifiable path (name escaped: $(printf '%q' "$p"))"; continue ;; esac
       # a role maintains its own role file and skills folder (protocol, *Role knowledge*): that path is never flagged, nothing else is excused
-      case "$p" in "docs/agents/roles/$r.md" | "docs/agents/skills/$r/"*) continue ;; esac
+      # ... unless it is a symlink (mode 120000), which can point anywhere: a symlink is judged like any other path
+      case "$p" in
+        "docs/agents/roles/$r.md" | "docs/agents/skills/$r/"*)
+          m="$(git --literal-pathspecs -C "$repo" ls-tree "$sha" -- "$p" 2>/dev/null | cut -c1-6)"
+          [ "$m" = 120000 ] || continue ;;
+      esac
       o="$(owner_of "$table" "$p")"
       case "$o" in "ambiguous owner: "*) echo "role-outside-role: ${sha:0:7} $r changed $p (ambiguous owner: ${o#*"$p" })"; continue ;; esac
       [ -n "$o" ] && [ "$o" != "$r" ] && echo "role-outside-role: ${sha:0:7} $r changed $p (owner $o)"

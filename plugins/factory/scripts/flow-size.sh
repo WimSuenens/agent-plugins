@@ -79,7 +79,7 @@ ROWS
 done
 
 # --paths: the protected paths fire "Protected area touched" (once, even when the lead names it too)
-protlines=""
+protlines=""; protrow="protected area touched"   # the one row the script derives; every other row is named by the lead
 if [ "$havepaths" = 1 ]; then
   # shellcheck disable=SC1091
   . "$here/protected-areas.sh"
@@ -92,11 +92,11 @@ PATHS
   if [ -n "$protlines" ]; then
     hit=""; i=0
     while IFS=$'\037' read -r n _ _; do
-      i=$((i + 1)); [ "$(lc "$n")" = "protected area touched" ] && hit="$i"
+      i=$((i + 1)); [ "$(lc "$n")" = "$protrow" ] && hit="$i"
     done <<ROWS
 $rows
 ROWS
-    [ -n "$hit" ] || { echo "flow-size: $file has no \`Protected area touched\` row: the paths cannot be sized" >&2; exit 2; }
+    [ -n "$hit" ] || { echo "flow-size: $file has no \`$protrow\` row: the paths cannot be sized" >&2; exit 2; }
     case " $fired " in *" $hit "*) ;; *) fired="$fired $hit" ;; esac
   fi
 fi

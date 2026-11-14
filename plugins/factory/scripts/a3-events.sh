@@ -32,6 +32,7 @@ usage() { sed -n '2,/^# Exit/p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 NOT_DETECTABLE="a brief refused by the scan; why a rework round happened; a contradiction between two contract rules (only the rework round it caused shows); the cause of a defect in an input; any event no role or the lead wrote down"
 
+US="$(printf '\037')"
 items=""; filed=""
 cur=""; ledger=""; hansei=""; comments=""
 flush() {
@@ -39,7 +40,7 @@ flush() {
   for f in "$ledger" "$hansei" "$comments"; do
     [ -z "$f" ] || { [ -r "$f" ] && [ -f "$f" ]; } || { echo "a3-events: cannot read $f" >&2; exit 2; }
   done
-  items="$items$cur|$ledger|$hansei|$comments
+  items="$items$cur$US$ledger$US$hansei$US$comments
 "
 }
 while [ $# -gt 0 ]; do
@@ -56,7 +57,7 @@ flush
 [ -z "$filed" ] || { [ -f "$filed" ] && [ -r "$filed" ]; } || { echo "a3-events: cannot read $filed" >&2; exit 2; }
 
 detect() {
-  printf '%s' "$items" | while IFS='|' read -r n led han com; do
+  printf '%s' "$items" | while IFS="$US" read -r n led han com; do
   [ -n "$n" ] || continue
   if [ -n "$led" ]; then
     awk -v N="$n" '

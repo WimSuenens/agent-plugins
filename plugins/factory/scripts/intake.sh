@@ -189,6 +189,10 @@ case "$cmd" in
     fi
     list="$(gh issue list --state all --limit 1000 --search "created:>=${start%%T*}" --json number,title,createdAt,state,labels,body)" \
       || { echo "intake: gh issue list failed" >&2; exit 4; }
+    cut=""
+    if [ "$(printf '%s' "$list" | jq 'length' 2>/dev/null)" -ge 1000 ] 2>/dev/null; then
+      cut="; list cut at 1000: the count is a lower bound"; echo "intake: the issue list was cut at 1000 issues: the count is a lower bound" >&2
+    fi
     rows="$(printf '%s' "$list" | jq -r --arg s "$start" --arg e "$end" --arg l "$label" --arg st "$state" '
         [ .[] | select(.createdAt >= $s and .createdAt <= $e)
           | select($st == "all" or (.state | ascii_downcase) == "open")
@@ -198,6 +202,7 @@ case "$cmd" in
         | sort_by(.[0])[] | @tsv')" || { echo "intake: cannot read the issue list" >&2; exit 4; }
     if [ "$line" = 0 ]; then [ -z "$rows" ] || printf '%s\n' "$rows"; exit 0; fi
     [ "$state" = open ] && what=" open" || what=""
+    src="$src$cut"
     if [ -z "$rows" ]; then printf 'new issues since %s: none (sources: %s)\n' "$start" "$src"; exit 0; fi
     k="$(printf '%s\n' "$rows" | wc -l | tr -d ' ')"
     items="$(printf '%s\n' "$rows" | awk -F'\t' '{ printf "#%s %s; ", $1, $2 }' | sed 's/; $//')"

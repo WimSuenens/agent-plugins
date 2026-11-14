@@ -269,7 +269,7 @@ Every two-way door a role decided comes back in its `Decisions`. Show them to th
 
 Two lines join the stage summary. Neither is a question; nothing is ingested or decided by them.
 
-- **New issues.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" filed-since <run start> --line` and put its line in the summary. It counts the open issues filed since the run start from two sources: issues carrying the project's own triage label (read from `docs/agents/triage-labels.md`) and issues whose body carries the marker `factory:improvement`. An issue filed under neither is not seen, and the line says which sources it read. The run start is the `started:` line of the map's Factory run section. **Provisional:** revisit after two runs, or when a report says nothing new more than once.
+- **New issues.** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/intake.sh" filed-since <run start> --line` and put its line in the summary. It counts the open issues filed since the run start from two sources: issues carrying the project's own triage label (read from `docs/agents/triage-labels.md`) and issues whose body carries the marker `factory:improvement`. An issue filed under neither is not seen, and the line says which sources it read. The run start is the `started:` line of the map's Factory run section; for a Factory run section without a `started:` line (a run begun before 2.18.0): use the earliest `started:` line of the ledgers of the run's items. **Provisional:** revisit after two runs, or when a report says nothing new more than once.
 - **Direction document.** When the product owner created or updated `docs/direction.md` since the last boundary, say so in one line (step 1, step 2).
 
 ## 7. Take a one-way door to the person

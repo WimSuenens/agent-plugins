@@ -3,7 +3,7 @@
 # Usage: bash a3-check.sh <file | ->
 # Reads the A3 body, decides the version by the marker on the first line, applies that version's checks.
 # Exit 0 prints "ok v1", "ok v2" or "ok v3"; exit 1 prints "refused: <key> (<reason>)" per finding, in template order;
-# exit 2 prints a usage line on stderr; exit 3 prints "skipped: ..." (no marker, or a version not 1 or 2).
+# exit 2 prints a usage line on stderr; exit 3 prints "skipped: ..." (no marker, or a version not 1, 2 or 3).
 # Changes no file, reads nothing but its argument, makes no network call.
 
 if [ $# -ne 1 ]; then

@@ -19,7 +19,7 @@ Issues [#164](https://github.com/WimSuenens/agent-plugins/issues/164), [#166](ht
 
 **Tests.** `tests/factory/test_slice2_loop.sh` (new), one block per item, with the real records of the first site run under `tests/factory/fixtures/a3events/`; `test_a3_check.sh` and `test_andon_owner_match.sh` follow the new behaviour.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `1d489a407401ecddb2cf978e191e3f679ba436fc79a92ac4c103408d91d37ed2`, tooling `ae6c52da060a643d73e6460b66eedaea6fa7a4f73e25128de84df1bbcb6bfda4`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `05fd75f9e6d050ae890a34f516f7e85ce75aa656380951f3ed6b57358d2406c2`, tooling `c405240919014fd1ed444f103a8322d661291ecdc050061306bf2e6f2022a3cc`.
 
 ## factory 2.17.0 (#214)
 

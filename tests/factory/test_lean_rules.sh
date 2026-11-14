@@ -155,7 +155,7 @@ ck ac17-step-9-2-runs-the-check-script 1 "$([ "$(printf '%s\n' "$S92" | grep -c 
 ck ac17-step-9-2-posts-v2 1 "$([ "$(printf '%s\n' "$S92" | grep -ci 'v2')" -ge 1 ] && echo 1 || echo 0)"
 has ac17-a3-md-section-9-runs-the-script "$A3" 'a3-check.sh'
 has ac17-v1-found-is-left-as-it-is "$A3" 'left as it is'
-has ac15-baseline-reads-v1-or-v2 "$BA" 'an A3 of marker v1 or v2 is read; any other version is skipped and named'
+has ac15-baseline-reads-v1-v2-or-v3 "$BA" 'an A3 of marker v1, v2 or v3 is read; any other version is skipped and named'
 ck ac15-no-tracker-template-bullet-names-v2 0 "$(grep -c 'a3 v2' "$TP")"
 
 # ---------- AC-19: the release: changelog names the four changes; the fingerprints in its last line are the plugin's ----------

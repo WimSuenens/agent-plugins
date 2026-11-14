@@ -188,4 +188,26 @@ has item1-standard-lead-adds-cause "$A3S" 'The lead adds the cause of each event
 has item1-standard-not-detectable "$A3S" '- not detectable from records:'
 has item1-skill-runs-script "$SK" 'scripts/a3-events.sh'
 
+# ---- code review of slice 2 ----
+BL="$PLUGIN/references/baseline.md"
+# a v3 A3 is read like v1 and v2 wherever the standard reads A3 markers
+has review-baseline-reads-v3-answers "$BL" 'an A3 of marker v1, v2 or v3 is read; any other version is skipped and named'
+has review-a3-resume-reads-v3 "$A3S" 'when its marker is v2 or v3, rewrite the comment with *Edit A3*'
+has review-a3-resume-v3-events-recomputed "$A3S" 'a v3 A3'"'"'s events lines are recomputed by `a3-events.sh`, never copied'
+has review-a3-section9-v3 "$A3S" 'section 2 for v2, section 2.2 on top of it for v3, section 2.1 for v1) and prints `ok v1`, `ok v2` or `ok v3`'
+has review-a3-section9-skipped "$A3S" 'for a marker that is not v1, v2 or v3 (exit 3)'
+has review-a3check-header-skipped "$AC" 'a version not 1, 2 or 3'
+has review-a3-v3-template-how "$A3S" 'To write a v3 A3, take the template above, change its marker to `<!-- factory:a3 v3 -->` and insert these lines'
+# a path with a bar in it is read whole
+mkdir -p "$T/we|ird"; cp "$FX/ledger-156.md" "$T/we|ird/ledger.md"
+ck review-path-with-bar "needs-decision #156 row 4 (developer)" "$(bash "$EV" --item 156 --ledger "$T/we|ird/ledger.md" | sed -n 's/^  event: \(needs-decision[^—]*\) — .*/\1/p')"
+# no started line (a run begun before 2.18.0): say what the lead does instead of passing an empty start
+has review-skill-no-started-line "$SK" 'a Factory run section without a `started:` line (a run begun before 2.18.0): use the earliest `started:` line of the ledgers of the run'"'"'s items'
+# a list cut at the limit is a lower bound, and the report says so
+jq -n '[range(0;1000) | {number: (. + 1000), title: "t", createdAt: "2026-11-13T10:00:00Z", state: "OPEN", labels: [{name: "inbox"}], body: ""}]' > "$T/big.json"
+cd "$R" || exit 1; printf '%s\n' '| a | b |' '|---|---|' '| `needs-triage` | `inbox` |' > "$R/docs/agents/triage-labels.md"
+got="$(STUB_ISSUES="$T/big.json" bash "$IN" filed-since $START $END --line 2>"$T/err" | grep -c 'list cut at 1000: the count is a lower bound')"; ck review-cut-list-line 1 "$got"
+ck review-cut-list-stderr 1 "$(grep -c 'cut at 1000' "$T/err")"
+cd "$T" || exit 1
+
 done_

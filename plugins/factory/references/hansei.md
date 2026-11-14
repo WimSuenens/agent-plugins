@@ -211,7 +211,7 @@ Rules: (1) one tag per entry; when two types fit, tag the **cause**, and when th
 
 Before posting the record, compare every row of the Tasks table with the evidence for that row. A row's interval is [`created_at`, `closed_at`] of its sub-issue:
 
-- **git**: the role's commits on `item/<id>` belonging to that row, `git log item/<id> --format='%cI %s'`, messages starting `#<id> <role>:`, converted to UTC.
+- **git**: the role's commits on `item/<id>` belonging to that row, `git log item/<id> --format='%aI %s'`, messages starting `#<id> <role>:`, converted to UTC. Read the author date, not the committer date: a rebase rewrites the committer date of every commit it replays, and the author date stays.
 - **tracker**: the stage summary comment for that row, and the task's closing comment (first line `<!-- factory:result v1 -->`), with their times: `gh api "repos/{owner}/{repo}/issues/<id>/comments" --paginate --jq '.[] | [.created_at, (.body | split("\n")[0])] | @tsv'`.
 
 A row's gap is, for each piece of evidence, its distance in minutes to the row's interval (0 when inside); the row's gap is the largest. The record's `stage-log cross-check` (the header key keeps its 1.x name; it checks the Tasks table) names the largest gap across rows, its row and evidence: `largest gap 6m (Build: last developer commit 14:52Z after logged end 14:46Z)`. With no evidence for any row it reads `not captured (<reason>)`. A stage summary is posted right after the row's End, so its gap is your own delay; a gap larger than the row's duration contradicts the ledger. Do not fix the ledger to remove a gap: record it.

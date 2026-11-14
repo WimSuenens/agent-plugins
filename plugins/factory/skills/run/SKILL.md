@@ -393,7 +393,7 @@ One spawn of one role on one item is one **role task**: one sub-issue, one card 
 | Part | Rule |
 |---|---|
 | marker | line 1 of the body, exactly `<!-- factory:task <role> <n> -->`: `<role>` one of the seven names, `<n>` counts that role's tasks in this item (or frontier ticket), the first being 1, **rework and re-briefs included** |
-| brief | the rest of the body after one blank line: the protocol's brief template, unchanged in fields |
+| brief | the rest of the body after one blank line: the protocol's brief template, unchanged in fields. A brief never carries a path under the home directory as the substituted absolute path: write `~/...` in prose and `"$HOME/..."` inside a quoted shell command (a leading `~/` inside double quotes is not expanded), and name a worktree as `.claude/worktrees/<id>`. |
 | title | `<Stage>: <role> on #<id>` (`Build (round 2): developer on #12`); a rework task `rework <k>: <one line of the finding>` |
 | parent | the slice ticket for an item; the **frontier ticket** for a frontier round, never the map. Depth: map, ticket, role task |
 | card | `Kind` `role task`, `Role` the role, `Factory status` by *The board* |

@@ -14,4 +14,16 @@ has bump-dryrun-step6-neutral "$S6" 'A change that leaves the meaning of standar
 has bump-dryrun-architect "$AR" 'check-bump.sh" --intended origin/main'
 has bump-dryrun-architect-quote "$AR" 'quote its answer line in the contract'
 has bump-dryrun-architect-neutral "$AR" 'A change that leaves the meaning of standard text unchanged still counts as standard work.'
+
+# --- #196: briefs name home paths in home-relative form and worktrees repository-relative
+PR_="$PLUGIN/references/protocol.md"
+RT="$T/roletasks.md"; sect "$RUN" '## Role tasks' > "$RT"
+has home-paths-run-rule "$RT" 'A brief never carries a path under the home directory as the substituted absolute path: write `~/...` in prose and `"$HOME/..."` inside a quoted shell command (a leading `~/` inside double quotes is not expanded), and name a worktree as `.claude/worktrees/<id>`.'
+has home-paths-template "$PR_" '    Inputs: <file paths and tracker issue numbers; a worktree as `.claude/worktrees/<id>`, a home path as `~/...` in prose or `"$HOME/..."` in a quoted shell command>'
+
+# --- #193: the cross-check reads the author date, which a rebase keeps
+S2="$T/sec2.md"; sect "$HA" '## 2. Cross-check before the record' > "$S2"
+hasnt crosscheck-no-committer-date "$S2" '%cI'
+has crosscheck-author-date "$S2" "git log item/<id> --format='%aI %s'"
+has crosscheck-why "$S2" 'Read the author date, not the committer date: a rebase rewrites the committer date of every commit it replays, and the author date stays.'
 done_

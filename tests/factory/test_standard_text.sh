@@ -90,7 +90,7 @@ has done-then-stopped-skill "$SK" '**Done, then stopped.** When the agent stalle
 has done-then-stopped-skill-no-resume "$SK" 'do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the Tasks row'"'"'s Notes'
 
 # --- AC-13: cross-check written in, before posting
-has ac13-git-evidence "$HA" "git log item/<id> --format='%cI %s'"
+has ac13-git-evidence "$HA" "git log item/<id> --format='%aI %s'"
 has ac13-tracker-evidence "$HA" '.created_at, (.body | split("\n")[0])'
 has ac13-largest-gap "$HA" 'names the largest gap across rows'
 before ac13-cross-check-before-post "$SK" '2. Complete the ledger'"'"'s Waits table with the close scan, then cross-check the Tasks table' '4. Fill the hansei template'

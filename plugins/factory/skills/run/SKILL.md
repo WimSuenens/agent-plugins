@@ -81,9 +81,9 @@ Grill the person with `/grilling`, together with `/domain-modeling` for the term
 
 **Done when** the person has confirmed the four fields and the plan is on the ticket.
 
-Once the four fields are confirmed the product owner creates `docs/direction.md` if it is missing (`agents/product-owner.md`, *Direction document*). That is a two-way step: no question to the person, reported at the next stage boundary. The file is a minimal `goal` and `current` plus one History line naming the map, written by a role task of the product owner that lands with the first PR that follows. It is the repository's own direction document, not the design plugin's direction brief.
+Once the four fields are confirmed the product owner creates `docs/direction.md` if it is missing (`agents/product-owner.md`, *Direction document*). That is a two-way step: no question to the person, reported at the next stage boundary. The file is a minimal `goal` and `current` plus one History line naming the run ticket (the map, or the destination ticket in the direct route), written by a role task of the product owner that lands with the first PR that follows. It is the repository's own direction document, not the design plugin's direction brief.
 
-**Size the destination.** Once the four fields are confirmed, size the destination with the project's own flow table, write the plan on the destination ticket and run it without waiting; the person is asked only on an open one-way door (step 7) or in the Heavy band.
+**Size the destination.** Once the four fields are confirmed, size the destination with the project's own flow table, write the plan on the destination ticket (the issue the idea came from, or one you file from the four fields) and run it without waiting; the person is asked only on an open one-way door (step 7) or in the Heavy band.
 
 After the four fields are confirmed, when a slice is cut, and when the work reveals what the sizing missed: read `references/run-route.md` (*Sizing*, *The plan*, *Escalation*, *Heavy band*: the table, `flow-size.sh`, the plan fields, who is asked, what the first slice leaves out).
 

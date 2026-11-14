@@ -30,6 +30,14 @@ printf '## Factory run\n\n- step: 1\n' >"$T/nofield.md"
 bash "$RS" started "$T/nofield.md" >/dev/null 2>&1; ck run-state-no-field-exit 3 $?
 bash "$RS" colour "$MAPB" >/dev/null 2>&1; ck run-state-unknown-field-exit 2 $?
 bash "$RS" started "$T/missing.md" >/dev/null 2>&1; ck run-state-unreadable-exit 2 $?
+# review of slice 4: a run that escalated leaves `Factory run: moved to #<map>` on the destination ticket; the reader follows it (exit 4, names the map)
+printf '# dest\n\nFactory run: moved to #77\n\n## Notes\n\nx\n' >"$T/moved.md"
+out="$(bash "$RS" started "$T/moved.md" 2>&1)"; code=$?
+ck run-state-moved-exit 4 "$code"
+ck run-state-moved-names-the-map "run-state: the run moved to #77: read the body of #77" "$out"
+bash "$IN" filed-since --run-body "$T/moved.md" 2>/dev/null; ck filed-since-moved-exit-2 2 $?
+ck run-state-moved-field "#77" "$(bash "$RS" moved "$T/moved.md")"
+bash "$RS" moved "$MAPB" >/dev/null 2>&1; ck run-state-moved-none-exit 3 $?
 # which ticket is the run ticket
 ck run-ticket-direct "#41" "$(bash "$RS" ticket --route direct --destination 41 --map 7)"
 ck run-ticket-map "#7" "$(bash "$RS" ticket --route map --destination 41 --map 7)"
@@ -103,6 +111,9 @@ bash "$SG" --board "$T/board2.json" --factory "$T/f-nobudget.md" --slice 9 --eve
 bash "$SG" --board "$T/board2.json" --factory "$T/f-nobudget.md" --slice 2 --event lunch >/dev/null 2>&1; ck gate-unknown-event-exit 2 $?
 bash "$SG" --board "$T/nope.json" --factory "$T/f-nobudget.md" --slice 2 --event slice-ready >/dev/null 2>&1; ck gate-unreadable-board-exit 2 $?
 
+# ---- review: the gate leaves no temp file behind
+ck gate-no-temp-file 0 "$(grep -c 'start-gate\.\$\$' "$SG")"
+
 # ---- item 6 (a): an Under test line that is not confirmed is flagged at close
 cat >"$T/frame.md" <<'F'
 ## Question
@@ -147,6 +158,11 @@ ck under-test-pending-exit 1 "$code"
 ck under-test-pending-flags-every-line 3 "$(printf '%s\n' "$out" | grep -c '^flag: .*: missing -- ')"
 rec confirmed confirmed bogus
 out="$(bash "$UT" "$T/frame.md" "$T/rec.md")"; ck under-test-bad-state-flag "flag: Escalation is one line: missing -- no line of the record says confirmed, contradicted or not exercised for it" "$(printf '%s\n' "$out" | grep '^flag: ')"
+# review of slice 4: only measure 7 counts, not a same-named line elsewhere in the record
+printf '<!-- factory:hansei v5 -->\n3. rework: x\n   - The rows carry the band: confirmed\n7. doors: per-line list below\n   - The rows carry the band: not exercised\n   - The route is recorded: confirmed\n   - Escalation is one line: confirmed\n8. other: y\n   - Escalation is one line: contradicted\n' >"$T/rec.md"
+out="$(bash "$UT" "$T/frame.md" "$T/rec.md")"
+ck under-test-scoped-to-measure-7 "flag: The rows carry the band: not exercised -- confirm it or say why it could not be observed" "$(printf '%s\n' "$out" | grep '^flag: ')"
+ck under-test-scoped-count "under-test: 2 of 3 confirmed" "$(printf '%s\n' "$out" | tail -1)"
 printf '## Question\n\nx\n' >"$T/noframe.md"; rec confirmed confirmed confirmed
 bash "$UT" "$T/noframe.md" "$T/rec.md" >/dev/null 2>&1; ck under-test-frame-without-section-exit 2 $?
 bash "$UT" "$T/frame.md" "$T/none.md" >/dev/null 2>&1; ck under-test-unreadable-exit 2 $?

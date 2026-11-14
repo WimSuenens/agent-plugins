@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # Checks the flow plan the lead writes on the destination ticket or the slice ticket (#187 decisions 2 and 16; #207 slice 4).
-# Usage: bash plan-check.sh <plan file> [--table <factory.md>]
+# Usage: bash plan-check.sh <plan file> [--table <factory.md>]      (default docs/agents/factory.md)
 # The plan is `- <field>: <value>` lines, under a `## Plan` heading or not. Fields, all required:
 #   route (direct | map), role path, test depth (both read `standard` until slice 5 makes them variable), triggers (`<row> (+<n>), ...` or `none`),
 #   points, band, bands (the boundaries as they stood at sizing), reason, release, expected slices, first slice leaves out (a list, or `none`).
-# It checks that the points are the sum of the triggers and the band is the one the plan's own `bands` line gives for them. With --table it also
-# reads each trigger from the project's flow table (through flow-size.sh) and checks that the points and the route are the table's.
+# It checks that the points are the sum of the triggers and the band is the one the plan's own `bands` line gives for them. It also
+# reads each trigger from the project's flow table (through flow-size.sh, which refuses a name that is not a row) and checks that the points and the route are the table's.
 # Output: the first failure as `missing: <field>` or `<field>: <what is wrong>` (exit 1); otherwise `plan ok` and, as they apply,
 #   tell the person in the stage summary: the first slice leaves out: <list>     (decision 16: an approved ADR is never contradicted unseen)
 #   ask the person before running: Heavy band                                     (the open-ended last band of the plan's bands line)
-# Exit: 0 ok; 1 the plan is wrong; 2 usage or the file is unreadable.
+# Exit: 0 ok; 1 the plan is wrong; 2 usage, or the plan or the table file is unreadable.
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 plan="${1:-}"; shift 2>/dev/null
-table=""
+table="docs/agents/factory.md"
 while [ $# -gt 0 ]; do
   case "$1" in --table) [ $# -ge 2 ] || { echo "usage: plan-check.sh <plan file> [--table <factory.md>]" >&2; exit 2; }; table="$2"; shift 2 ;; *) echo "usage: plan-check.sh <plan file> [--table <factory.md>]" >&2; exit 2 ;; esac
 done
@@ -44,27 +44,19 @@ else
 fi
 [ "$sum" = "$pts" ] || fail "points: plan says $pts, its triggers add up to $sum"
 
-# the band from the plan's own bands line, and the route and points from the table when one is given
-args=(--bands "$bands")
-[ -n "$table" ] && args=(--table "$table" "${args[@]}")
-if [ -z "$table" ]; then
-  # without the table the band is still checked: reuse flow-size.sh on a one-row table made of the plan's own sum
-  tmp="$(mktemp "${TMPDIR:-/tmp}/plan-check.XXXXXX")"; trap 'rm -f "$tmp"' EXIT
-  { printf '## Flow table\n\nbands: %s\nfloor: x\n\n| Trigger | Points | Adds | Reason | Status |\n|---|---|---|---|---|\n' "$bands"
-    i=0; while [ "$i" -lt 8 ]; do i=$((i + 1)); printf '| t%s | %s | x | r | p |\n' "$i" "$([ "$i" = 1 ] && echo "$pts" || echo 0)"; done; } >"$tmp"
-  got="$(bash "$here/flow-size.sh" --table "$tmp" t1 2>&1)"; rc=$?
-else
-  tl=()
-  if [ -n "$names" ]; then while IFS= read -r n; do tl+=("$n"); done <<NAMES
+# the band from the plan's own bands line, and each trigger, the points and the route from the project's table
+[ -r "$table" ] || { echo "plan-check: $table: unreadable (the plan is checked against the project's flow table)" >&2; exit 2; }
+args=(--table "$table" --bands "$bands")
+tl=()
+if [ -n "$names" ]; then while IFS= read -r n; do tl+=("$n"); done <<NAMES
 $names
 NAMES
-  fi
-  got="$(bash "$here/flow-size.sh" "${args[@]}" ${tl[@]+"${tl[@]}"} 2>&1)"; rc=$?
 fi
+got="$(bash "$here/flow-size.sh" "${args[@]}" ${tl[@]+"${tl[@]}"} 2>&1)"; rc=$?
 [ "$rc" = 0 ] || fail "triggers: $(printf '%s\n' "$got" | head -1)"
 gb="$(printf '%s\n' "$got" | sed -n 's/^band: //p')"
 [ "$gb" = "$band" ] || fail "band: plan says $band, the bands line gives $gb"
-if [ -n "$table" ]; then
+if true; then
   gp="$(printf '%s\n' "$got" | sed -n 's/^points: //p')"
   [ "$gp" = "$pts" ] || fail "points: plan says $pts, the table gives $gp"
   gr="$(printf '%s\n' "$got" | sed -n 's/^route: //p')"

@@ -3,7 +3,7 @@
 # (#160 (a); #207 slice 4).
 # Usage: bash under-test.sh <frame file> <hansei record file>
 # The frame's `## Under test` section holds one `- [<name>](<link>) — <what would contradict it>` line each (the name is the link text, or the
-# text before ` — `). The record's measure 7 holds one `   - <name>: confirmed | contradicted | not exercised` line each.
+# text before ` — `). Only the record's measure 7 (the `7.` line and what follows it up to the next numbered line) is read; it holds one `   - <name>: confirmed | contradicted | not exercised` line each.
 # Output: one `flag:` line per Under test line that is not `confirmed`, then `under-test: <k> of <n> confirmed`.
 #   flag: <name>: contradicted -- resurvey the map            (the observation failed: the resurvey decides)
 #   flag: <name>: not exercised -- confirm it or say why it could not be observed
@@ -23,7 +23,7 @@ n=0; ok=0; bad=0
 while IFS= read -r name; do
   [ -n "$name" ] || continue
   n=$((n + 1))
-  state="$(tr -d '\r' <"$2" | grep -F -- "- $name: " | grep -E ': (confirmed|contradicted|not exercised)[[:space:]]*$' | head -1 | sed -E 's/^.*: (confirmed|contradicted|not exercised)[[:space:]]*$/\1/')"
+  state="$(tr -d '\r' <"$2" | awk '/^[0-9]+\. /{ on = ($0 ~ /^7\. /); next } on' | grep -F -- "- $name: " | grep -E ': (confirmed|contradicted|not exercised)[[:space:]]*$' | head -1 | sed -E 's/^.*: (confirmed|contradicted|not exercised)[[:space:]]*$/\1/')"
   case "$state" in
     confirmed) ok=$((ok + 1)) ;;
     contradicted) bad=1; echo "flag: $name: contradicted -- resurvey the map" ;;

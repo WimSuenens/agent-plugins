@@ -4,15 +4,15 @@ Read this when the destination is confirmed, a slice is cut, the plan's route is
 
 ## Sizing
 
-Size right after the person confirmed the four fields of step 1, before any map exists. The points table is the project's own: print it with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" table` (its rows, points, bands and floor are not repeated anywhere in this plugin). Decide from the four fields, from what you can see in the project and from what the person said which rows fire, and name them. When you cannot tell whether a row fires, count it: the plan may scale down only at the next slice, and up at any time.
+Size right after the person confirmed the four fields of step 1, before any map exists. The destination ticket is the issue the idea came from; when the run starts without one, file one from the four fields (scanned first, *Scan before posting*) and use its number everywhere below. In the map route the plan stays on that ticket, and the map of step 2 is created afterwards. The points table is the project's own: print it with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" table` (its rows, points, bands and floor are not repeated anywhere in this plugin). Decide from the four fields, from what you can see in the project and from what the person said which rows fire, and name them. When you cannot tell whether a row fires, count it: the plan may scale down only at the next slice, and up at any time.
 
-Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/flow-size.sh" "<row>" "<row>" ...` (a whole row name, or a prefix that picks one row; no name is the lightest path). It prints the points, the band, the bands line it used, the steps each fired row adds, the route (`map` when a fired row adds a map, otherwise `direct`) and who is asked. It refuses a name that is not a row. The sizing reports; it never removes a step the table's `floor:` keeps, and one-way doors stay with the person.
+Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/flow-size.sh" "<row>" "<row>" ...` (a whole row name, or a prefix that picks one row; no name is the lightest path). It prints the points, the band, the bands line it used, the steps each fired row adds, the route (`map` when a fired row adds a map, otherwise `direct`) and who is asked. It refuses a name that is not a row. It reads the route and the question to the person from the table's Adds column: a row that adds a map says `map` in its Adds, and a row that does not never uses the word; a row that stays with the person says `stays with the person`. The sizing reports; it never removes a step the table's `floor:` keeps, and one-way doors stay with the person.
 
 A change of the table's bands applies to new sizings only: the plan records the bands line it was sized under, and an older plan is never re-banded.
 
 ## The plan
 
-Write the plan as one comment on the destination ticket (a slice: on the slice ticket), scanned first (*Scan before posting*), and run it without waiting. The fields, one `- <field>: <value>` line each:
+Write the plan as one comment on the destination ticket (a slice: on the slice ticket), scanned first (*Scan before posting*), and run it without waiting. The newest plan comment is the plan: a changed plan is a new comment, never an edit of an old one. The fields, one `- <field>: <value>` line each:
 
 ```
 ## Plan
@@ -46,7 +46,7 @@ The route is `direct` when no fired row adds a map. There is no map and no front
 
 ## Escalation
 
-When work reveals a one-way door, a failed assumption or an unknown the sizing missed, stop starting slices (roles in hand finish their step) and chart a map for what is now foggy: invoke `/wayfinding:wayfinder` with the destination and the finding. Say it to the person in one line: `Escalated to a map: <what the work found>.` The map now identifies the run: copy the Factory run section into the map's body unchanged (the same `started`, `closed in this run` and `baseline`), put `Factory run: moved to #<map>` in its place on the destination ticket, and write the changed plan (route `map`, the reason). A frontier round for the doors found follows (step 3). A contradicted **Under test** line still triggers the resurvey, as before.
+When work reveals a one-way door, a failed assumption or an unknown the sizing missed, stop starting slices (roles in hand finish their step) and chart a map for what is now foggy: invoke `/wayfinding:wayfinder` with the destination and the finding. Say it to the person in one line: `Escalated to a map: <what the work found>.` The map now identifies the run: copy the Factory run section into the map's body unchanged (the same `started`, `closed in this run` and `baseline`), put `Factory run: moved to #<map>` in its place on the destination ticket, and write the changed plan (route `map`, the reason). A session that resumes from the destination ticket and finds that pointer follows it: `run-state.sh` exits 4 and names the map, and the map's body holds the run. A frontier round for the doors found follows (step 3). A contradicted **Under test** line still triggers the resurvey, as before.
 
 ## Heavy band
 

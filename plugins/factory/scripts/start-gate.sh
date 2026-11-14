@@ -32,8 +32,7 @@ case "$slice$spent" in *[!0-9]*) usage ;; esac
 
 plan="$(bash "$here/integrator.sh" plan "$board" 2>&1)" || { printf '%s\n' "$plan" >&2; exit 2; }
 jq -e --arg s "$slice" 'any(.slices[]; (.id | tostring) == $s)' "$board" >/dev/null 2>&1 || { echo "start-gate: slice $slice is not on the board $board" >&2; exit 2; }
-bash "$here/factory-config.sh" reached "$spent" "$factory" >/dev/null 2>"${TMPDIR:-/tmp}/start-gate.$$"; rc=$?
-err="$(cat "${TMPDIR:-/tmp}/start-gate.$$")"; rm -f "${TMPDIR:-/tmp}/start-gate.$$"
+err="$(bash "$here/factory-config.sh" reached "$spent" "$factory" 2>&1 >/dev/null)"; rc=$?
 case "$rc" in
   0) budget=ok ;;
   1) budget=reached ;;

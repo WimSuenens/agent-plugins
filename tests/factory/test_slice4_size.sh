@@ -64,6 +64,10 @@ size "Protected area touched" "Contract or interface used by others" "Visual res
 ck person-heavy-band "Heavy band: ask before running" "$(val person)"
 size "Visual result"; ck person-none "no question" "$(val person)"
 
+# review of slice 4: in the Heavy band a fired one-way-door row is still reported next to the Heavy question
+size "Open one-way door" "Protected area touched" "Visual result"
+ck person-heavy-and-door "Heavy band: ask before running; one-way door: decision card" "$(val person)"
+
 # the bands as recorded at sizing: a change of the boundaries applies to new slices only (the output carries the line it used)
 size "Open one-way door" "Visual result"
 ck bands-recorded "Light 0 to 2, Normal 3 to 6, Heavy 7 or more" "$(val bands)"
@@ -119,6 +123,16 @@ plan; sed -i.bak 's/^- points: 4/- points: 5/' "$T/plan.md"; out="$(bash "$PC" "
 plan; sed -i.bak 's/^- band: Normal/- band: Light/' "$T/plan.md"; out="$(bash "$PC" "$T/plan.md" --table "$TBL" 2>&1)"; ck plan-band-must-match "1 band: plan says Light, the bands line gives Normal" "$? $(printf '%s\n' "$out" | head -1)"
 plan; sed -i.bak 's/^- route: direct/- route: map/' "$T/plan.md"; out="$(bash "$PC" "$T/plan.md" --table "$TBL" 2>&1)"; ck plan-route-must-match "1 route: plan says map, the table gives direct" "$? $(printf '%s\n' "$out" | head -1)"
 plan; sed -i.bak 's/^- triggers: .*/- triggers: Made-up (+2)/' "$T/plan.md"; bash "$PC" "$T/plan.md" --table "$TBL" >/dev/null 2>&1; ck plan-unknown-trigger 1 $?
+# review of slice 4: without --table the plan is checked against docs/agents/factory.md of the project (cwd); no sum-only mode, no made-up table
+mkdir -p "$T/pc/docs/agents"; cp "$TBL" "$T/pc/docs/agents/factory.md"; plan
+out="$(cd "$T/pc" && bash "$PC" "$T/plan.md" 2>&1)"; code=$?
+ck plan-default-table-ok-exit 0 "$code"
+plan; sed -i.bak 's/^- triggers: .*/- triggers: Visual result (+9), none-such (+0)/; s/^- points: 4/- points: 9/' "$T/plan.md"
+out="$(cd "$T/pc" && bash "$PC" "$T/plan.md" 2>&1)"; code=$?
+ck plan-default-table-refuses-invented-trigger "1 triggers: flow-size: unknown trigger \"none-such\"" "$code $(printf '%s\n' "$out" | head -1)"
+plan; out="$(cd "$T" && bash "$PC" "$T/plan.md" 2>&1)"; code=$?
+ck plan-no-table-at-all-exit 2 "$code"
+ck plan-script-makes-no-table-of-its-own 0 "$(grep -c 'mktemp' "$PC")"
 # a Heavy plan says the person is asked
 cat >"$T/heavy.md" <<'P'
 - route: map

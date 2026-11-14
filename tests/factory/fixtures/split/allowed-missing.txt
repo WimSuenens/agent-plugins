@@ -1,6 +1,6 @@
-
 - **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
 **Done when** the person has confirmed the four fields.
+Once the four fields are confirmed the product owner creates `docs/direction.md` if it is missing (`agents/product-owner.md`, *Direction document*). That is a two-way step: no question to the person, reported at the next stage boundary. The file is a minimal `goal` and `current` plus one History line naming the map, written by a role task of the product owner that lands with the first PR that follows. It is the repository's own direction document, not the design plugin's direction brief.
 Invoke `/wayfinding:wayfinder` to chart the map, passing the destination from step 1 in, so it skips its own naming step. Its frontier grilling and triage still talk to the person here, in the main session. Stop it before it names a beachhead; cutting slices is step 4.
 This step runs as a **frontier round**:
 Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unblocked. Its number is `<id>`.

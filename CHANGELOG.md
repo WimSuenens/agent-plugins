@@ -18,9 +18,9 @@ Closes [#159](https://github.com/WimSuenens/agent-plugins/issues/159) and [#160]
 - **Fence.** F1 to F7 and the fence fixtures are untouched.
 - **`baseline.md`.** A new minor starts a new series (section 6): `3.2` starts with no items and `3.1` becomes history, indicative only, because the `standard` fingerprint changed.
 
-**Tests.** `test_slice4_size.sh`, `test_slice4_run.sh`, `test_slice4_text.sh` (new; the walkthrough numbers are printed by the last one); `test_run_split.sh` pins the lines slice 4 added to the moved text; the cap on router plus references is 136,000 (real figure 135,302), the router cap stays 70,000.
+**Tests.** `test_slice4_size.sh`, `test_slice4_run.sh`, `test_slice4_text.sh` (new; the walkthrough numbers are printed by the last one); `test_run_split.sh` pins the lines slice 4 added to the moved text; the cap on router plus references is 137,000 (real figure 136,218), the router cap stays 70,000.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `b2abf2ad03b038dbdc9666690d0e4a139e25ec8457d48f6bb12c416f6955c3ba`, tooling `43e4673110596848842fe6cb15042b39927273191283c34c894653b25b47bbe2`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `a4fb106c3f5fd33188ac98a0d01a8721eeaa78d44b57b349cfb011bfee2b3705`, tooling `fc7fc5ef893bf9cab088a411dfc63b63af63405d0747e0154233ffcd8eff7fad`.
 
 ## factory 3.1.0 (#207, split before slice 4)
 

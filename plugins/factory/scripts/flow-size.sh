@@ -12,7 +12,9 @@
 #   triggers: none                     (only when nothing fired)
 #   trigger: <row> +<points> -- <Adds> one line per fired row, in table order
 #   person: <who is asked>             `Heavy band: ask before running` (the open-ended band), `one-way door: decision card` (a fired row whose
-#                                      Adds say it stays with the person), or `no question`
+#                                      Adds say it stays with the person), both joined by `; ` when both hold, or `no question`
+# Route and the question to the person are read from the Adds column of the table: a row that adds a map says `map` there (and a row that does
+# not never uses the word), and a row that stays with the person says `stays with the person`.
 # The sizing never chooses what the fence reserves: it only reports.
 # Exit: 0 done; 2 usage, the table file is unreadable, or an unknown or ambiguous trigger (nothing on stdout); 6 no or an incomplete flow table.
 
@@ -94,7 +96,9 @@ for b in $bandsline; do
     case "$lo$hi" in '' | *[!0-9]*) ;; *)
       if [ -z "$band" ] && [ "$points" -ge "$lo" ] && [ "$points" -le "$hi" ]; then
         band="$bn"
-        [ "$hi" = 999999 ] && person="Heavy band: ask before running"
+        if [ "$hi" = 999999 ]; then
+          if [ "$person" = "no question" ]; then person="Heavy band: ask before running"; else person="Heavy band: ask before running; $person"; fi
+        fi
       fi ;;
     esac
   fi

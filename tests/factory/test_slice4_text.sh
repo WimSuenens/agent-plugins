@@ -41,6 +41,16 @@ has route-beachhead-on-the-ticket "$ROUTE" 'Write the candidates, the choice and
 has route-beachhead-feedback "$ROUTE" 'Overturning the choice is feedback and never stops the work'
 has route-wayfinding-untouched "$ROUTE" 'The wayfinding plugin is not changed'
 
+# review of slice 4: where the destination ticket comes from, the pointer after an escalation, how a row says it adds a map, the direction line
+has route-destination-ticket-source "$ROUTE" 'The destination ticket is the issue the idea came from; when the run starts without one, file one from the four fields'
+has route-escalation-pointer-followed "$ROUTE" '`run-state.sh` exits 4 and names the map'
+has route-newest-plan-wins "$ROUTE" 'The newest plan comment is the plan'
+has route-adds-column-wording "$ROUTE" 'a row that adds a map says `map` in its Adds, and a row that does not never uses the word'
+has route-door-wording "$ROUTE" 'a row that stays with the person says `stays with the person`'
+hasnt router-direction-line-names-no-map-only "$ROUTER" 'one History line naming the map, written by'
+has router-direction-line-names-the-run-ticket "$ROUTER" 'one History line naming the run ticket (the map, or the destination ticket in the direct route)'
+has router-step1-destination-ticket "$ROUTER" 'the issue the idea came from, or one you file from the four fields'
+
 # ---- router lines of steps 0 to 5
 has router-step0-run-ticket "$ROUTER" 'or the destination ticket of a direct run (the run ticket)'
 has router-step1-sizing "$ROUTER" '**Size the destination.**'

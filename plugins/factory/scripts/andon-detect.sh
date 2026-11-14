@@ -10,7 +10,9 @@
 #       A role's own `docs/agents/roles/<role>.md` and `docs/agents/skills/<role>/` are never flagged (protocol, *Role knowledge*); nothing else is excused.
 #       Prints `role-outside-role: <sha7> <role> changed <path> (owner <owner>)`, or `... changed an unclassifiable path (name escaped: <%q form>)`.
 #   andon-detect.sh owner <table> <path>
-#       The Owner of the table row with the longest matching token, empty when the path is unowned.
+#       The Owner of the most specific matching table row, empty when the path is unowned. Specificity: an exact path, then a directory
+#       prefix (the longer wins), then a wildcard (more literal characters before its first `*` wins). A token is literal except `*`.
+#       A tie between different owners prints `ambiguous owner: <path> <ownerA> <ownerB>`; kind3 prints `role-outside-role: <sha7> <role> changed <path> (ambiguous owner: <ownerA> <ownerB>)`.
 #   andon-detect.sh kind4 (--ledger <ledger.md> --times <times.tsv> | --rows <file> --waits <file>) <row#>
 #       Prints `slow: <own> against median <m> of <n> earlier rows`, `not flagged`, or `no baseline: fewer than 3 earlier rows`.
 #   andon-detect.sh working (--ledger <ledger.md> --times <times.tsv> | --rows <file> --waits <file>)
@@ -28,7 +30,18 @@ ROLES="product-owner architect developer qa-engineer security-reviewer devops do
 usage() { sed -n '2,/^# bash 3.2/p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 owner_of() { # <table> <path>
-  awk -F'|' -v P="$2" '
+  OWN_PATH="$2" awk -F'|' '
+    # a token is literal except `*`, which stands for any run of characters: matched by pieces, no regular expression is built
+    function glob(tok, str,   n,parts,i,pos,k,last) {
+      n=split(tok,parts,"*")
+      if (substr(str,1,length(parts[1]))!=parts[1]) return 0
+      pos=length(parts[1])+1; last=length(parts[n])
+      if (length(str)-pos+1<last || substr(str,length(str)-last+1)!=parts[n]) return 0
+      str=substr(str,1,length(str)-last)
+      for (i=2;i<n;i++) { k=index(substr(str,pos),parts[i]); if (!k) return 0; pos+=k-1+length(parts[i]) }
+      return 1
+    }
+    BEGIN { P=ENVIRON["OWN_PATH"] }  # not -v: awk would read a backslash in a path as an escape
     /^\| / && NF>=4 {
       cell=$2; owner=$3; gsub(/^ +| +$/,"",owner)
       s=cell
@@ -38,13 +51,16 @@ owner_of() { # <table> <path>
         if (tok ~ /^[# ]/) continue
         if (rest ~ /^ *section/) continue
         m=0
-        if (tok ~ /\/$/) { t=substr(tok,1,length(tok)-1); if (P==t || index(P,tok)==1) m=1 }
-        else if (tok ~ /\*/) { re=tok; gsub(/[.]/,"\\.",re); gsub(/\*/,".*",re); if (P ~ "^" re "$") m=1 }
-        else if (P==tok) m=1
-        if (m && length(tok)>best) { best=length(tok); own=owner }
+        # rank: an exact path, then a directory prefix (longer wins), then a wildcard (more literal characters before the first `*` wins)
+        if (tok ~ /\/$/) { t=substr(tok,1,length(tok)-1); if (P==t || index(P,tok)==1) { m=1; rank=2*1000000+length(tok) } }
+        else if (tok ~ /\*/) { if (glob(tok,P)) { m=1; rank=1*1000000+index(tok,"*")-1 } }
+        else if (P==tok) { m=1; rank=3*1000000 }
+        if (!m) continue
+        if (!found || rank>best) { found=1; best=rank; own=owner; other="" }
+        else if (rank==best && owner!=own && other=="") other=owner
       }
     }
-    END { print own }' "$1"
+    END { if (other!="") print "ambiguous owner: " P " " own " " other; else print own }' "$1"
 }
 
 kind3() {
@@ -75,6 +91,7 @@ kind3() {
       # a role maintains its own role file and skills folder (protocol, *Role knowledge*): that path is never flagged, nothing else is excused
       case "$p" in "docs/agents/roles/$r.md" | "docs/agents/skills/$r/"*) continue ;; esac
       o="$(owner_of "$table" "$p")"
+      case "$o" in "ambiguous owner: "*) echo "role-outside-role: ${sha:0:7} $r changed $p (ambiguous owner: ${o#*"$p" })"; continue ;; esac
       [ -n "$o" ] && [ "$o" != "$r" ] && echo "role-outside-role: ${sha:0:7} $r changed $p (owner $o)"
     done
   done

@@ -2,6 +2,22 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.15.1 (#211)
+
+Release: `2.15.1`, a **patch** release: `andon-detect.sh owner` matches a table token literally and picks the most specific row. The standard fingerprint is unchanged; the tooling fingerprint moves. No migration.
+
+Issue [#211](https://github.com/WimSuenens/agent-plugins/issues/211). Cause: `owner_of()` escaped only `.` and `*` when it turned a wildcard token into a regular expression, and it ranked matches by the length of the token text, so a long wildcard could outweigh a shorter exact path or directory.
+
+**What changed for the person who runs the factory:**
+
+- **Every regex character is literal in a token except `*`** (`+ ? [ ] ( ) { } ^ $ \` as well as `.`). A token such as `docs/(old)/*.md` matches the path it names.
+- **The most specific row owns the path:** an exact path, then a directory prefix (the longer prefix wins), then a wildcard (more literal characters before its first `*` wins).
+- **A tie between different owners is reported**, not decided by row order: `ambiguous owner: <path> <ownerA> <ownerB>`. `andon-detect.sh kind3` prints it as `role-outside-role: <sha7> <role> changed <path> (ambiguous owner: <ownerA> <ownerB>)`. The output is unchanged where there is no tie; on this repository's table no path changes owner.
+
+**Tests.** `tests/factory/test_andon_owner_match.sh` (new): one case per metacharacter, specificity over length, the tie report and its kind 3 line.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `ed57d88db1f39d70e42e5a48c12e07967db0dc393731df34ba4fbb5b4abb310e`, tooling `07548e213ec02a8592e0d249462eaef385b211235833db7e7498fecf151cbcec`.
+
 ## factory 2.15.0 (#207)
 
 Release: `2.15.0`, a **minor** release: standard text and tooling changed (slice 1 of the revision plan [#207](https://github.com/WimSuenens/agent-plugins/issues/207)). Both fingerprints change. No migration; a project without a `protected-paths:` line behaves as before, apart from the items below.

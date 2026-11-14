@@ -205,7 +205,7 @@ has ac31-wayfinder-compares-with-paths-check "$WF" 'paths.sh'
 
 # ---------- AC-34: the factory-state check ----------
 st() { bash "$FC" state "$T/$1" 2>"$T/st.err"; echo "rc=$?"; }
-fcfile s-ok "$(printf 'factory-state: 2\n\n# Factory\n')"; ck ac34-state-2-proceeds "rc=0" "$(st s-ok)"
+fcfile s-ok "$(printf 'factory-state: 2\n\n# Factory\n'; flow_table_text)"; ck ac34-state-2-proceeds "rc=0" "$(st s-ok)"
 ck ac34-state-2-prints-nothing "" "$(cat "$T/st.err")"
 fcfile s-none "$(printf '# Factory\n\n## Tracker\n')"; ck ac34-no-line-exit-3 "rc=3" "$(st s-none)"
 ck ac34-no-line-message "factory.md has no factory-state line: run setup-factory-skill" "$(cat "$T/st.err")"
@@ -221,7 +221,10 @@ fcfile s-long "factory-state: $(printf 'x%.0s' $(seq 1 80))"; st s-long >/dev/nu
 ck ac34-long-line-cut-to-40-characters "yes" "$(awk -F'"' '{print length($2)}' "$T/st.err" | awk '{print ($1<=40)?"yes":"no"}')"
 bash "$FC" state "$T/gone.md" >/dev/null 2>"$T/st.err"; ck ac34-missing-file-exit-2 2 "$?"
 ck ac34-missing-file-message "factory.md missing: run setup-factory-skill" "$(cat "$T/st.err")"
-ck ac34-template-passes-state 0 "$(bash "$FC" state "$TPL" >/dev/null 2>&1; echo $?)"
+# since 3.0.0 the template alone has no flow table (setup step 9a writes it): the gate says so, and passes once setup-table.sh has written it
+ck ac34-template-needs-the-table 6 "$(bash "$FC" state "$TPL" >/dev/null 2>&1; echo $?)"
+cp "$TPL" "$T/tpl-copy.md"; bash "$PLUGIN/scripts/setup-table.sh" write --dir "$T" "$T/tpl-copy.md" >/dev/null 2>&1
+ck ac34-template-passes-state-with-the-table 0 "$(bash "$FC" state "$T/tpl-copy.md" >/dev/null 2>&1; echo $?)"
 ck ac34-template-first-line "factory-state: 2" "$(head -1 "$TPL")"
 ck ac34-template-second-line-blank "" "$(sed -n 2p "$TPL")"
 # the check comes first in step 0

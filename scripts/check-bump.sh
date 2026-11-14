@@ -25,6 +25,19 @@ fi
 # Needed level: minor for standard work, else patch (release-lib.sh).
 rel_reset
 while IFS= read -r -d '' p; do rel_add "$p"; done <"$tmp"
+computed="$REL_LEVEL"
+# a slice may declare its class in its changelog entry (release-lib.sh): it can only raise the class, never lower it
+rel_read_declared "$base"
+if [ "$REL_DECL_BAD" = reason ]; then
+  echo "refuse: Release: major needs a reason in brackets, for example Release: major (<reason>)"
+  exit 1
+fi
+rel_apply_declared
+if [ "$REL_LOWER" = 1 ]; then
+  lo_old="$(rel_version_at "$base")"; rel_is_semver "$lo_old" || lo_old="0.0.0"
+  echo "refuse: declared $REL_DECL but $REL_WHAT needs at least a $computed bump ($(rel_suggest "$lo_old" "$computed"))"
+  exit 1
+fi
 level="$REL_LEVEL"; what="$REL_WHAT"
 
 version_at() { rel_version_at "$1"; }
@@ -48,7 +61,9 @@ suggested="$(rel_suggest "$old" "$level")"
 ok=0
 if is_semver "$new"; then
   n_major="${new%%.*}"; rest="${new#*.}"; n_minor="${rest%%.*}"; n_patch="${rest#*.}"
-  if [ "$level" = minor ]; then
+  if [ "$level" = major ]; then
+    if [ "$n_major" -gt "$o_major" ]; then ok=1; fi
+  elif [ "$level" = minor ]; then
     if [ "$n_major" -gt "$o_major" ] || { [ "$n_major" -eq "$o_major" ] && [ "$n_minor" -gt "$o_minor" ]; }; then ok=1; fi
   else
     if [ "$n_major" -gt "$o_major" ] \
@@ -64,7 +79,8 @@ if [ "$ok" = 1 ]; then
   exit 0
 fi
 
-echo "refuse: $what changed; plugin.json version $old -> $new; needs at least a $level bump ($suggested)"
+if [ "$REL_RAISED" = 1 ]; then what="$what ($level)"; else what="$what changed"; fi
+echo "refuse: $what; plugin.json version $old -> $new; needs at least a $level bump ($suggested)"
 # plugin.json is the thing being compared; list it only when it is the sole change.
 changed="$(tr '\0' '\n' <"$tmp")"   # display only
 others="$(printf '%s\n' "$changed" | grep -vxF "$pj")"

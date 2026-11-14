@@ -43,4 +43,9 @@ T="$(mktemp -d "${TMPDIR:-/tmp}/factory-test.XXXXXX")"
 trap 'chmod -R u+rwx "$T" 2>/dev/null; rm -rf "$T"' EXIT
 export GIT_AUTHOR_NAME=qa GIT_AUTHOR_EMAIL=qa@example.invalid GIT_COMMITTER_NAME=qa GIT_COMMITTER_EMAIL=qa@example.invalid
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
+# flow_table_text: a minimal valid flow table section (what setup-table.sh writes), for tests where `state` has to pass (#207 slice 3)
+flow_table_text() {
+  printf '\n## Flow table\n\ntable: provisional\nfloor: never removed by the table\n\n| Trigger | Points | Adds | Reason | Status |\n|---|---|---|---|---|\n'
+  for i in 1 2 3 4 5 6 7 8; do printf '| Trigger %s | 1 | x | r | provisional |\n' "$i"; done
+}
 line() { printf '%s\n' "$1" | sed -n "${2}p"; }

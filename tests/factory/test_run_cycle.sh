@@ -9,13 +9,13 @@ TPL="$PLUGIN/skills/setup-factory-skill/assets/factory.md"
 f() { printf '%b' "$2" >"$T/$1"; }
 
 # --- scripts seam: no slice maximum is read
-f lim 'factory-state: 2\nparallel-limit: 1\n'
+f lim 'factory-state: 2\nparallel-limit: 1\n'; flow_table_text >>"$T/lim"
 bash "$FC" state "$T/lim" >/dev/null 2>"$T/e"; ck old-limit-state-exit-0 0 "$?"
 ck old-limit-note "yes" "$(grep -q 'parallel-limit line; it is ignored' "$T/e" && echo yes || echo no)"
-f nolim 'factory-state: 2\n'
+f nolim 'factory-state: 2\n'; flow_table_text >>"$T/nolim"
 ck no-limit-no-note "" "$(bash "$FC" state "$T/nolim" 2>&1)"
 bash "$FC" limit "$T/lim" >/dev/null 2>&1; ck limit-command-gone 2 "$?"
-f bad 'factory-state: 2\nparallel-limit: zero\n'
+f bad 'factory-state: 2\nparallel-limit: zero\n'; flow_table_text >>"$T/bad"
 bash "$FC" state "$T/bad" >/dev/null 2>&1; ck bad-old-limit-still-ignored 0 "$?"
 ck old-limit-does-not-change-budget "none" "$(bash "$FC" budget "$T/lim")"
 

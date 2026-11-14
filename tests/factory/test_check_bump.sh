@@ -175,4 +175,27 @@ newb; echo changed2 > $F/skills/run/SKILL.md; ver 1.3.0; git add -A; git commit 
 ck same-version-with-standard-work-refused 1 $code
 ck same-version-refusal-says-standard-work 1 "$(printf '%s\n' "$out" | grep -c '^refuse: standard work changed;')"
 
+# --- dry-run at the decision (#195): --intended <base> <path>... names the release class before any commit exists
+newb; ver 1.3.0; git add -A; git commit -q --allow-empty -am base2; git push -q -f origin w:main 2>/dev/null; git fetch -q origin
+run --intended origin/main $F/references/hansei.md
+ck intended-standard-text "needs: minor bump (standard work), 1.3.0 -> 1.4.0" "$out"; ck intended-standard-text-exit 0 $code
+run --intended origin/main $F/agents/architect.md $F/scripts/s.sh
+ck intended-agent-and-script-minor "needs: minor bump (standard work), 1.3.0 -> 1.4.0" "$out"
+run --intended origin/main $F/skills/run/SKILL.md
+ck intended-run-skill-minor "needs: minor bump (standard work), 1.3.0 -> 1.4.0" "$out"
+# a change that leaves the meaning of standard text unchanged is still standard work (same answer as for a rewording)
+run --intended origin/main $F/skills/setup-factory-skill/SKILL.md $F/references/protocol.md
+ck intended-meaning-neutral-text-still-minor "needs: minor bump (standard work), 1.3.0 -> 1.4.0" "$out"
+run --intended origin/main $F/scripts/s.sh
+ck intended-script-only-patch "needs: patch bump (factory files), 1.3.0 -> 1.3.1" "$out"
+run --intended origin/main docs/d.md README.md
+ck intended-no-factory-paths "needs: no bump (no factory paths intended)" "$out"; ck intended-no-factory-paths-exit 0 $code
+run --intended origin/main
+ck intended-no-paths-usage 2 $code
+run --intended no-such-ref $F/scripts/s.sh
+ck intended-bad-base-exit-2 2 $code
+# the answer agrees with the check run on the real change
+newb; echo more >> $F/references/protocol.md; git commit -qam c; run
+ck intended-agrees-with-the-check "refuse: standard work changed; plugin.json version 1.3.0 -> 1.3.0; needs at least a minor bump (1.4.0)" "$(printf '%s\n' "$out" | head -n1)"
+
 done_

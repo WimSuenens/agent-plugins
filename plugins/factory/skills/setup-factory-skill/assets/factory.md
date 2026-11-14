@@ -44,6 +44,10 @@ measurement: full
 
 `full` (the default, and the same as no line) is the whole measurement. `measurement: lite` gives a short hansei record and computes cut-offs and token spend only when asked. The baseline and the A3 are the same under both.
 
+## Protected paths
+
+An optional line, at the start of a line: `protected-paths: <glob>, <glob>` (for example `protected-paths: infra/*, apps/billing/*`). A path matching a glob is a protected area, `project`, for the skip check and the merge gate alike, on top of the built-in ones (contracts, authentication, secrets, migrations). No line means no extra paths.
+
 ## Run budget
 
 run-budget: none

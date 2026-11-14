@@ -87,4 +87,16 @@ run; ck prepare-then-check-passes "pass: major bump needed, 2.18.0 -> 3.0.0" "$o
 # a bare declaration stops the train
 newb; echo y >> $F/references/protocol.md; entry 8 2.19.0 'Release: major'; ver 2.19.0; git add -A; git commit -qm c
 pout="$(bash "$RS" prepare "$T/r" 8 origin/main 2>&1)"; ck prepare-bare-major-stops-exit 4 $?
+
+# --- review: a malformed or capitalised declaration is read, not ignored
+newb; echo y >> $F/references/protocol.md; ver 2.19.0; entry 7 2.19.0 'Release: major(breaking)'; git add -A; git commit -qm c; run
+ck no-space-before-brackets-read-as-major-exit 1 $code
+ck no-space-before-brackets-says-3.0.0 "yes" "$(printf '%s' "$out" | head -n1 | grep -q 'needs at least a major bump (3.0.0)' && echo yes || echo no)"
+newb; echo y >> $F/references/protocol.md; ver 2.19.0; entry 7 2.19.0 'Release: Major (reason)'; git add -A; git commit -qm c; run
+ck capitalised-read-as-major-exit 1 $code
+newb; echo y >> $F/references/protocol.md; ver 3.0.0; entry 7 3.0.0 'Release: major because it breaks'; git add -A; git commit -qm c; run
+ck major-without-brackets-refused-exit 1 $code
+ck major-without-brackets-says-reason "yes" "$(printf '%s' "$out" | grep -q 'needs a reason in brackets' && echo yes || echo no)"
+newb; echo y >> $F/references/protocol.md; ver 2.19.0; entry 7 2.19.0 'Release: majority view' 'Release: `2.19.0`, a **minor** release.'; git add -A; git commit -qm c; run
+ck other-word-is-no-declaration "pass: minor bump needed, 2.18.0 -> 2.19.0" "$out"
 done_

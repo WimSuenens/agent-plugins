@@ -45,8 +45,8 @@ fi
 flow_table() {
   sec="$(awk '/^## /{p = ($0 ~ /^## Flow table[ \t\r]*$/); if (p) next} p' "$file" | tr -d '\r')"
   grep -q '^## Flow table[[:space:]]*$' "$file" || return 6
-  rows="$(printf '%s\n' "$sec" | grep -cE '^\| [^|]+\|[^|]*\|' )"
-  data=$((rows - 1))   # the header row is not a trigger (the separator row starts with `|-`)
+  # a trigger row starts with `| `; the header row (`| Trigger |`) and the separator row (`|---`) are not triggers
+  data="$(printf '%s\n' "$sec" | grep -E '^\| [^|]+\|[^|]*\|' | grep -cvE '^\| Trigger[[:space:]]*\|')"
   if [ "$data" -lt 8 ] || ! printf '%s\n' "$sec" | grep -q '^floor:'; then return 7; fi
   return 0
 }

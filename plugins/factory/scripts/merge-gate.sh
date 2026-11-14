@@ -9,7 +9,7 @@
 # and plain-language steps for the person; the lead posts them and sets the card `Waiting on you` (`Cause: validation`).
 # Exit: 0 auto-merge; 10 pause (a human must decide); 11 blocked (a gate is not met; the reasons say which); 2 usage or no PR.
 # Checks: every outcome prints `checks read: <name>=<state>, ...` (or `none`) after the first line, so the reader sees which checks the gate read.
-# `ci:` line (column 0 of docs/agents/factory.md, origin/main's first, so a branch cannot declare it for itself): with `ci: none` a PR with no
+# `ci:` line (column 0 of docs/agents/factory.md, read from origin/main so a branch cannot declare it for itself; the working tree's copy only where there is no origin/main): with `ci: none` a PR with no
 #   check at all is accepted on a recorded local run on its head: a `## Local run` section in the description with `sha:`, `command:`,
 #   `last line:` and `time:` lines (a list dash is allowed), the sha being the head of the PR. The gate then prints `ci: none (local run on <sha>)`.
 #   A failing or pending check stays blocking. With neither a check nor the declaration the gate blocks and the reason names both ways out.
@@ -50,16 +50,18 @@ esac
 notgreen="$(jq -r '(.statusCheckRollup // []) as $c | if ($c|length) == 0 then "none" else ([$c[] | select(((.conclusion // .state // "") | ascii_upcase) as $k | ($k=="SUCCESS" or $k=="NEUTRAL" or $k=="SKIPPED") | not)] | length | tostring) end' <<<"$json")"
 checks_read="$(jq -r '(.statusCheckRollup // []) as $c | if ($c|length) == 0 then "none" else ([$c[] | "\(.name // .context // "check")=\((.conclusion // .state // "") | ascii_upcase)"] | join(", ")) end' <<<"$json")"
 infos="checks read: $checks_read"$'\n'
-ci_declared() {   # the project's ci: line: origin/main's copy first, the working tree's where main has none
+ci_declared() {   # the project's ci: line, from origin/main: a branch cannot declare it for itself. The working tree's copy is read only where there is no origin/main to read
   local top l=""
   top="$(git rev-parse --show-toplevel 2>/dev/null)"
-  [ -n "$top" ] && l="$(git -C "$top" show origin/main:docs/agents/factory.md 2>/dev/null | grep -m 1 '^ci:')"
-  if [ -z "$l" ] && [ -r "${top:-.}/docs/agents/factory.md" ]; then l="$(grep -m 1 '^ci:' "${top:-.}/docs/agents/factory.md")"; fi
+  if [ -n "$top" ] && git -C "$top" rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+    l="$(git -C "$top" show origin/main:docs/agents/factory.md 2>/dev/null | grep -m 1 '^ci:')"
+  elif [ -r "${top:-.}/docs/agents/factory.md" ]; then
+    l="$(grep -m 1 '^ci:' "${top:-.}/docs/agents/factory.md")"
+  fi
   printf '%s' "$l" | tr -d '\r'
 }
 ciline="$(ci_declared)"
 if [ "$notgreen" = none ]; then
-  ok=0
   case "$ciline" in
     "ci: none" | "ci: none "*)
       body="$(jq -r '.body // ""' <<<"$json")"
@@ -68,16 +70,16 @@ if [ "$notgreen" = none ]; then
       rcmd="$(printf '%s\n' "$lr" | sed -n 's/^command:[[:space:]]*//p' | head -n1)"
       rlast="$(printf '%s\n' "$lr" | sed -n 's/^last line:[[:space:]]*//p' | head -n1)"
       rtime="$(printf '%s\n' "$lr" | sed -n 's/^time:[[:space:]]*//p' | head -n1)"
-      head="$(jq -r '.headRefOid // ""' <<<"$json" | tr 'A-F' 'a-f')"
+      headsha="$(jq -r '.headRefOid // ""' <<<"$json" | tr 'A-F' 'a-f')"
       lsha="$(printf '%s' "$rsha" | tr 'A-F' 'a-f')"
       if [ -z "${rsha}${rcmd}${rlast}${rtime}" ]; then
         addb "CI is not green (no checks reported); the project declares \`ci: none\`, so record a local run on the PR head in the description: a \`## Local run\` section with sha, command, last line and time"
       elif [ -z "$rsha" ] || [ -z "${rcmd//[[:space:]]/}" ] || [ -z "${rlast//[[:space:]]/}" ] || [ -z "${rtime//[[:space:]]/}" ]; then
         addb "CI is not green (no checks reported); the \`## Local run\` section needs all four lines: sha, command, last line and time"
-      elif ! printf '%s' "$lsha" | grep -Eq '^[0-9a-f]{7,40}$' || [ -z "$head" ] || [ "${head#"$lsha"}" = "$head" ]; then
-        addb "CI is not green (no checks reported); the local run is not on the PR head (it names ${rsha:-no sha}, the head is ${head:0:12})"
+      elif ! printf '%s' "$lsha" | grep -Eq '^[0-9a-f]{7,40}$' || [ -z "$headsha" ] || [ "${headsha#"$lsha"}" = "$headsha" ]; then
+        addb "CI is not green (no checks reported); the local run is not on the PR head (it names ${rsha:-no sha}, the head is ${headsha:0:12})"
       else
-        ok=1; infos="${infos}ci: none (local run on $rsha)"$'\n'
+        infos="${infos}ci: none (local run on $rsha)"$'\n'
       fi ;;
     "ci: "*) addb "CI is not green (no checks reported); ci: says a workflow runs the tests: wait for its check on the PR head, or fix the workflow's trigger" ;;
     *) addb "CI is not green (no checks reported); two ways out: a workflow that runs the test command on pull requests, or declare \`ci: none\` in docs/agents/factory.md (setup-factory-skill writes the line) and record a local run on the PR head in a \`## Local run\` section" ;;

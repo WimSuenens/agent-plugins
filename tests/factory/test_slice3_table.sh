@@ -188,7 +188,23 @@ git init -q -b main . 2>/dev/null; git add -A; git commit -qm base; git update-r
 printf 'factory-state: 2\n\nci: none (branch says so)\n' >docs/agents/factory.md
 pr "$PROOF$LOCAL" "$HEAD40"; run "${args[@]}"
 ck branch-cannot-declare-ci-none 11 "$rc"
+# main has no ci: line at all: the branch still cannot declare ci: none for itself
+git checkout -q -b w2 2>/dev/null; printf 'factory-state: 2\n' >docs/agents/factory.md; git commit -qam noci; git update-ref refs/remotes/origin/main HEAD
+printf 'factory-state: 2\n\nci: none (branch says so)\n' >docs/agents/factory.md
+pr "$PROOF$LOCAL" "$HEAD40"; run "${args[@]}"
+ck branch-cannot-declare-ci-none-when-main-has-no-line 11 "$rc"
+ck branch-no-line-says-both-ways "yes" "$(printf '%s\n' "$out" | grep '^reason: CI is not green' | grep -q 'declare `ci: none`' && echo yes || echo no)"
 cd "$T" || exit 1
+
+# --- review: the completeness check does not depend on the header row, and a stray row is not a trigger
+{ cat "$T/f.md"; printf '\n## Flow table\n\nfloor: x\n\n'; for i in 1 2 3 4 5 6 7 8; do printf '| Trigger %s | 1 | x | r | provisional |\n' "$i"; done; } >"$T/f7.md"
+bash "$CFG" state "$T/f7.md" >/dev/null 2>&1; ck state-table-without-header-row-ok $? 0
+{ cat "$T/f.md"; printf '\n## Flow table\n\nfloor: x\n\n| Trigger | Points | Adds | Reason | Status |\n|---|---|---|---|---|\n'; for i in 1 2 3 4 5 6 7; do printf '| Trigger %s | 1 | x | r | provisional |\n' "$i"; done; } >"$T/f8.md"
+bash "$CFG" state "$T/f8.md" >/dev/null 2>&1; ck state-seven-rows-and-header-incomplete $? 6
+# a ## CI heading without a ci: line is not appended a second time
+mk2x "$T/w4.md"; printf '\n## CI\n\nci: none is written here by hand later\n' >"$T/w4.md.tail"; sed 's/^ci: none/- ci: none/' "$T/w4.md.tail" >>"$T/w4.md"
+bash "$ST" write --dir "$T/p1" "$T/w4.md" >/dev/null 2>&1
+ck write-ci-heading-once "1" "$(grep -c '^## CI$' "$T/w4.md")"
 
 # --- text: the setup skill, the run skill's one line, baseline.md
 has setup-names-scan "$SETUP" 'setup-table.sh" scan'

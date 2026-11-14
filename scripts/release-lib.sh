@@ -54,9 +54,9 @@ rel_parse_decl() {
   local t cls rest why
   REL_DECL=""; REL_DECL_WHY=""; REL_DECL_BAD=""
   t="$(printf '%s' "$1" | tr -d '\r')"
-  cls="${t%% *}"
+  cls="$(printf '%s' "$t" | sed -n 's/^\([A-Za-z][A-Za-z]*\).*/\1/p' | tr 'A-Z' 'a-z')"
   case "$cls" in major | minor | patch) ;; *) return 0 ;; esac
-  rest=""; [ "$t" = "$cls" ] || rest="${t#* }"
+  rest="${t#"${t%%[![:space:]]*}"}"; rest="${rest:${#cls}}"; rest="${rest#"${rest%%[![:space:]]*}"}"
   why=""
   case "$rest" in "("*")") why="${rest#(}"; why="${why%)}" ;; esac
   why="${why#"${why%%[![:space:]]*}"}"; why="${why%"${why##*[![:space:]]}"}"

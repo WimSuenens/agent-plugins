@@ -173,7 +173,7 @@ write() {
     echo "added: flow table ($file)"
     added=1
   fi
-  if ! grep -q '^ci:' "$file"; then
+  if ! grep -q '^ci:' "$file" && ! grep -q '^## CI[[:space:]]*$' "$file"; then
     [ -z "$(tail -c1 "$file")" ] || printf '\n' >>"$file"
     ci="$(printf '%s\n' "$f" | grep -m1 '^ci:')"
     {

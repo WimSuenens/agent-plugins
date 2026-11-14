@@ -2,6 +2,27 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.0.0 (#207, slice 3)
+
+Release: major (a project without its flow table can no longer run: `factory-config.sh state` now refuses it)
+
+Release: `3.0.0`, a **major** release: the `state` check requires the project's flow table, so a project that ran on 2.x has to run `setup-factory-skill` once more before `/factory:run` starts (ADR [0023](docs/adr/0023-a-project-needs-its-flow-table-to-run.md)). The setup skill, the setup and gate scripts, the run skill (one line) and `baseline.md` changed. Both fingerprints change.
+
+Issue [#179](https://github.com/WimSuenens/agent-plugins/issues/179), refs [#187](https://github.com/WimSuenens/agent-plugins/issues/187); slice 3 of [#207](https://github.com/WimSuenens/agent-plugins/issues/207).
+
+**What changed for the person who runs the factory:**
+
+- **Setup scans the project and writes the flow table.** `setup-table.sh scan` reads the project (type, test command, whether a workflow runs it on pull requests, protected-area candidates, deploy or pipeline config, contracts, visual output); the setup skill shows the table (the eight triggers with points and what each adds, the bands Light 0 to 2, Normal 3 to 6, Heavy 7 or more, the starting test depth of the project type, a reason per row, every row `provisional`, the floor) and asks one question. On a yes, `setup-table.sh write` appends the sections `## Flow table` and `## CI` to `docs/agents/factory.md` and changes no other line; a second run changes nothing.
+- **`state` requires the table.** A project without it exits 6 and prints `factory.md has no flow table: run setup-factory-skill`; exits 3, 4 and 5 keep their meaning. `factory-config.sh table` prints the section.
+- **The `ci:` line and the merge gate.** Setup writes `ci: <how>` or `ci: none (<reason>)`. The gate prints `checks read: ...` in every case. With `ci: none` and no check it accepts a recorded local run on the PR head (a `## Local run` section: sha, command, last line, time) and prints `ci: none (local run on <sha>)`; with neither a check nor the declaration it blocks and the message names both ways out. A failing check still blocks. The line is read from `origin/main` first, so a branch cannot declare it for itself. The offer to have devops write a test workflow is dropped.
+- **`baseline.md`:** a new major starts a new series, as a new minor does (pinned by a replay).
+
+**After the upgrade, a project that ran on 2.x** sees `/factory:run` stop with `run setup-factory-skill`. Running setup scans the project, shows the table and the `ci:` line once, and appends them on a yes. Nothing else in `docs/agents/factory.md` changes.
+
+**Tests.** `tests/factory/test_slice3_table.sh` (new), with the record of the grill session in `tests/factory/fixtures/slice3/` for the provenance tags of the ADR. Four existing tests follow the new behaviour: `state` on a file without the table now exits 6 (`test_board_script.sh`, `test_parallel.sh`, `test_run_cycle.sh`), and they use `flow_table_text` from `lib.sh` where `state` has to pass.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `f54e5652247bbeab1ca20aecf56e200460b3547d3a9cab8137f5c0e2e8afb7f9`, tooling `7860a7fe1cb2a3de5e7f8bffe95084d4a799dc99f25c7e7069ed353364d5d8e3`.
+
 ## factory 2.18.0 (#207, slice 2)
 
 Release: `2.18.0`, a **minor** release: standard text changed (the A3, the andon list, the product owner and architect files, the run skill) and the intake, A3 and detection scripts changed. Both fingerprints change. No migration: an A3 posted before this release stays a valid v1 or v2.

@@ -1,0 +1,9 @@
+Source: the grill-session record on https://github.com/WimSuenens/agent-plugins/issues/187#issuecomment-6875271136 (the design update) and the one-way-door section of https://github.com/WimSuenens/agent-plugins/issues/207, copied read-only. The test of the ADR for the gate checks that every reason it tags (owner) is quoted from here.
+
+Principle (#187 comment): The lead sizes each destination and each slice with a points table, takes the lightest path that keeps the floor, and the factory learns from the gap between estimated and actual points. One trigger table replaces fixed lanes or standards.
+
+Decision 12, Maturity (#187 comment): Setup scans the project and writes the initial table with reasons, every row `provisional`. The person confirms it once. `factory-config.sh state` refuses a run without the table ("run setup-factory-skill"). A row turns `settled` after enough slices without large calibration error.
+
+One-way door decided (#207): Enforcing the table: a project without the table can no longer run (#187 decision 12). The grill session is the decision card. The architect writes the ADR in slice 3 with the rejected alternatives and without inventing the person's reasons. Release 3.0.0 belongs to that slice only; all other slices stay 2.x. Fence F1 is not loosened (auto-merge of a frontier PR was not chosen).
+
+Open question decided (#187 comment): **3.0.0 only for the slice that adds the `state` gate** (#207 slice 3); all other slices stay 2.x. The gate is the one-way door below.

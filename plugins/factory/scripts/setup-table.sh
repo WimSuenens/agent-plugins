@@ -27,8 +27,15 @@ usage() {
   exit 2
 }
 
-# files <dir>: the project's files, relative, without .git, node_modules and the agent worktrees
-files() { (cd "$1" && find . \( -name .git -o -name node_modules -o -path ./.claude/worktrees \) -prune -o -type f -print 2>/dev/null | sed 's|^\./||' | LC_ALL=C sort | head -n 20000); }
+# files <dir>: the project's files, relative: the ones git tracks or would add (so ignored build output is not scanned), else every
+# file except .git, node_modules and the agent worktrees
+files() {
+  if git -C "$1" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git -C "$1" ls-files --cached --others --exclude-standard 2>/dev/null | LC_ALL=C sort -u | head -n 20000
+  else
+    (cd "$1" && find . \( -name .git -o -name node_modules -o -path ./.claude/worktrees \) -prune -o -type f -print 2>/dev/null | sed 's|^\./||' | LC_ALL=C sort | head -n 20000)
+  fi
+}
 
 # collapse: paths on stdin -> at most a handful of entries; a folder with more than 3 hits is named once
 collapse() {
@@ -140,7 +147,7 @@ write() {
     prot="$(val "$f" protected-candidates)"; con="$(val "$f" contracts)"; vis="$(val "$f" visual)"; dep="$(val "$f" deploy)"
     if [ "$prot" = none ]; then prot="the scan found no path the built-in patterns hit; contracts, authentication, secrets and migrations still count when they appear"; else prot="the scan found: $prot"; fi
     if [ "$con" = none ]; then con="the scan found none; the row fires when a change touches an interface others use"; else con="the scan found: $con"; fi
-    if [ "$vis" = no ]; then vis="the scan found no visual output; the row fires when a change has one"; else vis="the scan found: ${vis#yes }"; fi
+    if [ "$vis" = no ]; then vis="the scan found no visual output; the row fires when a change has one"; else vis="${vis#yes (}"; vis="the scan found: ${vis%)}"; fi
     if [ "$dep" = none ]; then dep="the scan found no pipeline, deploy or production config; the row fires when a change touches one"; else dep="the scan found: $dep"; fi
     if [ "$type" = "code app" ]; then logic="this is a code app: new logic or data behaviour gets tests first"; else logic="this is a $type, not a code app: the row fires only where code with logic exists"; fi
     {

@@ -27,7 +27,7 @@ A **run** is one cycle over the map's standing backlog (*The run cycle*). A **ma
 
 ## 0. Resume or start
 
-**First**, before the choice below, before any call to the board and before any mutation, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" state`. On a non-zero exit stop and print its stderr line (it says `run setup-factory-skill`): nothing else in this skill runs on a project that has not migrated. A leftover `parallel-limit` line is ignored: `state` prints a note on stderr and exits 0, and setup removes the line. Then run `... factory-config.sh budget`; on exit 5 stop and name the line to fix, as for a bad role model value, and start nothing. Its output is the run's budget (`none`, `<N> tokens` or `<N> hours`).
+**First**, before the choice below, before any call to the board and before any mutation, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" state`. On a non-zero exit stop and print its stderr line (it says `run setup-factory-skill`): nothing else in this skill runs on a project that has not migrated; exit 6 means no flow table. A leftover `parallel-limit` line is ignored: `state` prints a note on stderr and exits 0, and setup removes the line. Then run `... factory-config.sh budget`; on exit 5 stop and name the line to fix, as for a bad role model value, and start nothing. Its output is the run's budget (`none`, `<N> tokens` or `<N> hours`).
 
 - **An idea, or nothing** → start a new run at step 1.
 - **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.

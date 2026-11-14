@@ -118,3 +118,33 @@ This repository develops the factory plugin itself. These rules belong to the re
 - **In the merge train**, the hook resolves a clash in `plugins/factory/.claude-plugin/plugin.json` (it takes main's version) or `CHANGELOG.md` (both entries kept, the branch's above main's), raises the version to the level the check names and moves the entry `## factory <version> (#<id>)` with it, and, after the merge, tags `factory-v<version>` and pushes the tag. A missing changelog entry, or two entries for one version, stops the train (exit 4).
 - **The changelog entry** is the plugin's release record: one `## factory <version> (#<id>)` entry per item that changes the plugin, with a `Release:` line and the fingerprints (`plugins/factory/scripts/fingerprint.sh` reproduces them). The docs-writer adds it before the merge.
 - The tag scheme `factory-v<semver>`, the fingerprint label, andon kind 6 and the hansei `release` field are fixed: they say which release ran.
+
+## Flow table
+
+The points table the lead sizes each destination and each slice with. The path is the sum of the triggers that fire; the lightest path is zero points. The lead may add and adjust rows within the fence and records every change in the hansei. A row turns `settled` after enough slices without a large calibration error.
+
+table: provisional
+confirmed: by merging the pull request that adds this table (slice 3 of #207)
+project-type: markdown/LLM plugin
+test-depth: proof-only
+bands: Light 0 to 2, Normal 3 to 6, Heavy 7 or more
+floor: never removed by the table: the independent QA verdict, runtime proof, security review and the person's merge approval for protected areas, and one-way doors stay with the person.
+
+`test-depth` is the starting depth for this project type: a markdown/LLM plugin or a static site starts at `proof-only`, a code app at `targeted`; full depth exists only after an escalation or an escaped defect.
+
+| Trigger | Points | Adds | Reason | Status |
+|---|---|---|---|---|
+| Open one-way door | 3 | decision card, ADR (prototype if visual), stays with the person | a one-way door costs the most to undo, in any project | provisional |
+| Unresolved research question | 3 | research before slicing, map | an unknown fact makes the size of a slice a guess | provisional |
+| More than 3 expected slices, or dependencies between them | 2 | map, frontier round | slices that depend on each other need an order before the first one starts | provisional |
+| Protected area touched | 3 | security review, test depth at least targeted, the person's merge approval | the scan found: contracts/ (53 files), contracts/obeya/ (8 files), docs/adr/0021-the-obeya-stays-read-only-until-write-back-and-its-auth-are-decided.md | provisional |
+| Contract or interface used by others | 2 | architect, contract file | the scan found: contracts/ (53 files), contracts/obeya/ (8 files) | provisional |
+| New logic or data behaviour in a code project | 2 | tests-first (targeted) | this is a markdown/LLM plugin, not a code app: the row fires only where code with logic exists | provisional |
+| Visual result | 1 | demo | the scan found: apps/obeya/app/app.vue, apps/obeya/app/components/ (9 files), apps/obeya/app/pages/index.vue, apps/obeya/app/themes/base/index.vue, apps/obeya/app/themes/orbit/index.vue, apps/obeya/app/themes/transit/Station.vue | provisional |
+| Deploy, pipeline or production config (project row) | 3 | devops role, environment stage | the scan found: .github/workflows/obeya-image.yml, .github/workflows/site.yml, apps/obeya/Dockerfile, plugins/toolkit/skills/source-to-pptx/assets/docker/Dockerfile | provisional |
+
+## CI
+
+ci: none (no workflow runs `bash tests/run.sh`)
+
+Whether a workflow runs the project's test command on pull requests. With `ci: none` the merge gate accepts, in place of a check, a recorded local run of the full test command on the pull request's head commit (a `## Local run` section in its description: the commit sha, the command, the last line of its output and the time). The gate prints which checks it read, and `ci: none (local run on <sha>)` when it relied on that record.

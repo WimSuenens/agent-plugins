@@ -324,7 +324,10 @@ ck ac41-finish-makes-no-mutation-call 0 "$(log_mutations)"
 ck ac41-line-1-is-factory-state-2 "factory-state: 2" "$(head -1 "$T/factory.md")"
 ck ac41-line-2-blank "" "$(sed -n 2p "$T/factory.md")"
 ck ac41-line-3-is-the-old-first-line "$(head -1 "$T/factory.before")" "$(sed -n 3p "$T/factory.md")"
-ck ac41-factory-state-check-passes-after "0" "$(bash "$SCRIPTS/factory-config.sh" state "$T/factory.md" >/dev/null 2>&1; echo $?)"
+# since 3.0.0 `state` also needs the flow table, which setup writes after the board (step 9a): finish alone leaves exit 6
+ck ac41-factory-state-check-waits-for-the-table-after "6" "$(bash "$SCRIPTS/factory-config.sh" state "$T/factory.md" >/dev/null 2>&1; echo $?)"
+{ cat "$T/factory.md"; flow_table_text; } >"$T/factory.table.md"
+ck ac41-factory-state-check-passes-with-the-table "0" "$(bash "$SCRIPTS/factory-config.sh" state "$T/factory.table.md" >/dev/null 2>&1; echo $?)"
 # the diff of factory.md: only the allowed hunks
 diff "$T/factory.before" "$T/factory.md" | grep '^[<>]' | sed 's/^\([<>]\) .*/\1/' | sort | uniq -c | tr -s ' ' >"$T/hunks.txt"
 ck ac41-no-line-removed-except-status-ids-and-key-rows "yes" "$(diff "$T/factory.before" "$T/factory.md" | grep '^<' | grep -vE '^< \| (Designed|In progress|In review|Ready to deploy|Backlog|Ready|Done|field id|owner|project) ' | grep -vE '^< $' >/dev/null && echo no || echo yes)"

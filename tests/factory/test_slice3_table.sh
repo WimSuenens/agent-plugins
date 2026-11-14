@@ -221,4 +221,58 @@ if command -v python3 >/dev/null; then
 else
   skip major-replay "python3 missing"
 fi
+
+# --- item 4: this repository's own table, scanned and committed
+OWN="$REPO/docs/agents/factory.md"
+bash "$CFG" state "$OWN" >/dev/null 2>&1; ck own-state-passes $? 0
+ck own-table-rows "8" "$(bash "$CFG" table "$OWN" | grep -cE "^\| ($TRIGGERS)")"
+ck own-type "project-type: markdown/LLM plugin" "$(grep '^project-type:' "$OWN")"
+ck own-test-depth "test-depth: proof-only" "$(grep '^test-depth:' "$OWN")"
+ck own-rows-provisional "8" "$(grep -E "^\| ($TRIGGERS)" "$OWN" | grep -c '| provisional |$')"
+ck own-ci-none "yes" "$(grep -q '^ci: none (no workflow runs `bash tests/run.sh`)' "$OWN" && echo yes || echo no)"
+ck own-confirmed-by-merge "yes" "$(grep '^confirmed:' "$OWN" | grep -q 'merging' && echo yes || echo no)"
+ck own-line-1-kept "factory-state: 2" "$(head -n 1 "$OWN")"
+ck own-release-hook-kept "1" "$(grep -c '^release-hook: scripts/release.sh$' "$OWN")"
+# the scan on this repository gives what the table says
+ck own-scan-agrees "yes" "$(bash "$ST" scan "$REPO" | grep -q '^type: markdown/LLM plugin' && echo yes || echo no)"
+
+# --- item 5: the ADR for the gate (one-way door)
+ADR="$(ls "$REPO"/docs/adr/ | grep -E '^0023-' | head -1)"
+ck adr-number-23 "yes" "$([ -n "$ADR" ] && echo yes || echo no)"
+ck adr-numbers-unique "0" "$(ls "$REPO/docs/adr" | grep -E '^[0-9]{4}-' | cut -c1-4 | sort | uniq -d | wc -l | tr -d ' ')"
+A="$REPO/docs/adr/$ADR"
+for h in "status:" "## Context" "## Options considered" "## Decision" "## Consequences" "## Way back"; do has "adr-has-$h" "$A" "$h"; done
+has adr-option-refuse "$A" 'Refuse a run without the table'
+has adr-option-warn "$A" 'Warn and auto-seed'
+has adr-option-leave "$A" 'Leave as is'
+ck adr-chosen-is-refuse "yes" "$(grep -E '^- \*\*Refuse a run without the table' "$A" | grep -q 'chosen' && echo yes || echo no)"
+has adr-links-decision-card "$A" 'issues/187#issuecomment-6875271136'
+has adr-way-back-needs-card "$A" 'decision card'
+has adr-says-major "$A" '3.0.0'
+# every reason line carries exactly one tag; an (owner) tag only on a quote found in the grill record
+bad=0; own=0
+while IFS= read -r l; do
+  case "$l" in
+    "- **"*)
+      o=$(printf '%s' "$l" | grep -o '`(owner)`' | wc -l | tr -d ' '); a=$(printf '%s' "$l" | grep -o '`(architect)`' | wc -l | tr -d ' ')
+      [ $((o + a)) -ge 1 ] || bad=$((bad + 1))
+      if [ "$o" -ge 1 ]; then
+        own=$((own + 1))
+        q="$(printf '%s' "$l" | sed -n 's/.*"\([^"]*\)".*/\1/p')"
+        [ -n "$q" ] && grep -qF -- "$q" "$REPO/tests/factory/fixtures/slice3/grill-record.txt" || bad=$((bad + 1))
+      fi ;;
+  esac
+done <"$A"
+ck adr-every-option-line-tagged "0" "$bad"
+ck adr-owner-tag-only-on-a-quote "yes" "$([ "$own" -ge 1 ] && echo yes || echo no)"
+ck adr-says-no-reason-for-rejection "yes" "$(grep -qi 'gave no reason' "$A" && echo yes || echo no)"
+ck adr-no-owner-tag-in-consequences "0" "$(sed -n '/^## Consequences/,$p' "$A" | grep -c '(owner)')"
+
+# --- item 6: the release
+PJ="$PLUGIN/.claude-plugin/plugin.json"
+ck version-3-0-0 "3.0.0" "$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$PJ")"
+CL="$REPO/CHANGELOG.md"
+ck changelog-entry "1" "$(grep -c '^## factory 3.0.0 (#207, slice 3)$' "$CL")"
+ck changelog-declares-major "yes" "$(grep -q '^Release: major (.\+)$' "$CL" && echo yes || echo no)"
+ck changelog-names-closes "yes" "$(awk '/^## factory 3.0.0/{f=1;next} /^## /{f=0} f' "$CL" | grep -q 'issues/179' && echo yes || echo no)"
 done_

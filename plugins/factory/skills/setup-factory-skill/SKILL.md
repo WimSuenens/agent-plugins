@@ -1,12 +1,12 @@
 ---
 name: setup-factory-skill
-description: Wire a repo for the factory plugin — runs the wayfinding setup if needed, writes docs/agents/factory.md and its AGENTS.md pointer, adds the factory operations to the tracker doc, and prepares or migrates the GitHub Project board. Run once per repo; run again to migrate a 1.x project to 2.0.0.
+description: Wire a repo for the factory plugin — runs the wayfinding setup if needed, writes docs/agents/factory.md and its AGENTS.md pointer, adds the factory operations to the tracker doc, and prepares or migrates the GitHub Project board. Run once per repo; run again to migrate a 1.x project to 2.0.0 or to add the flow table a 2.x project needs from 3.0.0.
 disable-model-invocation: true
 ---
 
 # Setup the factory
 
-`/factory:run` and the seven role agents read two repo files: `docs/agents/factory.md` (decision-maker, role model overrides, path ownership, worktree location (`.claude/worktrees`), the optional run budget, tracker ids) and the `## Factory operations` section of `docs/agents/issue-tracker.md`. This skill writes both, once. `/factory:run` accepts a project only when line 1 of `docs/agents/factory.md` is `factory-state: 2`; a 1.x project gets that line from this skill's migration, written last. A re-run of the whole skill on a migrated project reports `already migrated` and changes nothing.
+`/factory:run` and the seven role agents read two repo files: `docs/agents/factory.md` (decision-maker, role model overrides, path ownership, worktree location (`.claude/worktrees`), the optional run budget, tracker ids) and the `## Factory operations` section of `docs/agents/issue-tracker.md`. This skill writes both, once. `/factory:run` accepts a project only when line 1 of `docs/agents/factory.md` is `factory-state: 2` and the flow table is there (step 9a); a 1.x project gets that line from this skill's migration, written last. A re-run of the whole skill on a migrated project reports `already migrated` and changes nothing, except that it appends the flow table and the `ci:` line when they are missing.
 
 ## Process
 
@@ -147,6 +147,16 @@ Slices are built by the factory's role agents. See `docs/agents/factory.md`.
 ```
 
 **Done when** exactly one `### Factory` subsection exists in the block.
+
+### 9a. Scan the project and write the flow table
+
+The lead sizes work with a points table, and a project without one cannot run (`factory-config.sh state` exits 6 and says `run setup-factory-skill`). Run this step on every run, also on a repo reported `already migrated`: a 2.x project gets the table here, appended as its own section.
+
+1. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/setup-table.sh" scan`. It reads the project and prints findings, one per line, and changes nothing: the project type (markdown/LLM plugin, static site, code app), its test command, whether a workflow runs that command on pull requests (the `ci:` line: `ci: workflow <file> runs ... on pull requests`, or `ci: none (<reason>)`), the protected-area candidates, deploy or pipeline config, contracts or interfaces others use, and visual output. These are candidates: correct any the project's own files show to be wrong.
+2. Show the person the table the findings give: the eight triggers with their points and what each adds (an open one-way door 3, an unresolved research question 3, more than 3 expected slices 2, a protected area 3, a contract or interface 2, new logic in a code project 2, a visual result 1, deploy or pipeline config 3), the bands (Light 0 to 2, Normal 3 to 6, Heavy 7 or more), the starting test depth of the project type (proof-only for a markdown/LLM plugin or a static site, targeted for a code app), each row's reason from the scan with the status `provisional`, the floor (never removed by the table), and the `ci:` line with its reason. Ask one question: confirm this table? Only a clear yes (the word `yes`) leads to step 3; anything else writes nothing, and the project stays without a table. This is the only question of this step. The setup does not offer a test workflow: a project with `ci: none` declares it and the merge gate accepts a recorded local run in place of a check.
+3. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/setup-table.sh" write`. It appends the section `## Flow table` and the section `## CI` to `docs/agents/factory.md` and changes no other line (so a re-run on a 2.x project appends the section and touches nothing else); a section already there is left as it is, so a second run prints `already present` and changes nothing. Commit the changed file on main.
+
+**Done when** `bash "${CLAUDE_PLUGIN_ROOT}/scripts/factory-config.sh" state` exits 0, and the person has confirmed the table or has been told that the project stays without one.
 
 ### 10. Report completion
 

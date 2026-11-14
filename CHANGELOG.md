@@ -21,7 +21,7 @@ Issues [#162](https://github.com/WimSuenens/agent-plugins/issues/162), [#192](ht
 
 **Tests.** `tests/factory/test_protected_paths.sh`, `test_slice1_text.sh` and `test_post_text_scan.sh` (new); additions to `test_check_bump.sh`, `test_worktree_folder.sh` (its repositories now have an origin), `test_andon_kind3_kind4.sh` and `test_andon_detect.sh` (the real commits of #156 and #188 now give no flag).
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `FP_STD`, tooling `FP_TOOL`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `01fea7039906943ea507b56b871cb9d3f3bcacfd6725f66e853d79a327a00738`, tooling `ec82e597d99ead50f6185b973e55970e9b9bce8b7002e649ca02aefc3d15d124`. Any later change under `plugins/factory/` in this release is a forgotten bump.
 
 ## factory 2.14.0 (#207)
 

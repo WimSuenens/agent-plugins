@@ -151,7 +151,9 @@ V1E="$(awk '/^## 3\. Worked example/ {s=1} s && /^```/ {g++; next} s && g==3 {pr
 ck ac16-v1-example-marker '<!-- factory:a3 v1 -->' "$(printf '%s\n' "$V1E" | sed -n 1p)"
 ck ac16-v1-example-keys "$V1KEYS" "$(printf '%s\n' "$V1E" | keys | paste -sd'|' -)"
 ck ac16-v1-example-has-no-new-lines 0 "$(printf '%s\n' "$V1E" | grep -cE '^- (waste|gemba \(targeted\)|target):')"
-has ac16-marker-prose-is-the-templates "$A3" 'The body'"'"'s first line is exactly `'"$(printf '%s\n' "$TEMPL" | sed -n 1p)"'`.'
+# from 2.18.0 the posted A3 is v3: the marker prose names v3, section 2's template block is the v2 form, section 2.2 adds the v3 lines
+has ac16-marker-prose-is-the-posted-version "$A3" 'The body'"'"'s first line is exactly `<!-- factory:a3 v3 -->`.'
+ck ac16-template-block-is-v2 '<!-- factory:a3 v2 -->' "$(printf '%s\n' "$TEMPL" | sed -n 1p)"
 has ac16-marker-prose-regex "$A3" 'A reader finds an A3 by `^<!-- factory:a3 v([0-9]+) -->$` on the first line'
 has ac16-no-line-left-out "$A3" 'Fixed lines, fixed order, **no line may be left out**; a line with nothing to say reads `none (<reason>)`.'
 has ac16-unknown-version-skipped "$A3" 'a reader that meets a version it does not know skips the comment and says so'

@@ -27,6 +27,21 @@ Frontend and backend build in parallel against contracts you define.
 - `docs/adr/`: one ADR per one-way door: context, options considered, decision, consequences, and the non-functional targets it serves. A door the person decided links the ticket comment that records the choice; researched findings link the ticket's resolution comment. Never cite a path under `work/`.
 - For a one-way door that is still open: a question to the lead with two or three options and your leaning, so the product-owner can write the decision card.
 
+### ADR template
+
+```
+# <title>
+
+## Context
+## Options considered
+- <option>: chosen. <reason> `(owner)` or `(architect)`
+- <option>: rejected. <reason> `(owner)` or `(architect)`
+## Decision
+## Consequences
+```
+
+Every stated reason carries exactly one tag. Tag `(owner)` only for a reason quoted from the person's answer on the decision card, with the quote and the comment it comes from; tag `(architect)` for your own assessment. When the person gave no reason for rejecting an option, say so and tag the reasons you give `(architect)`: never credit the person with a reason they did not give. The person's approval of the PR that records the ADR (run skill, *merge and clean up?*) is unchanged; the tags make that read a short glance.
+
 ## Authority
 
 Decides structure, technology, and standards on two-way doors.

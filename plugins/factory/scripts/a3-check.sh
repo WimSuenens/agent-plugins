@@ -1,8 +1,8 @@
 #!/bin/bash
-# a3-check.sh: the check before Post A3 and before an Edit A3 that rewrites a v2 A3 (references/a3.md section 9).
+# a3-check.sh: the check before Post A3 and before an Edit A3 that rewrites a v2 or v3 A3 (references/a3.md section 9).
 # Usage: bash a3-check.sh <file | ->
 # Reads the A3 body, decides the version by the marker on the first line, applies that version's checks.
-# Exit 0 prints "ok v1" or "ok v2"; exit 1 prints "refused: <key> (<reason>)" per finding, in template order;
+# Exit 0 prints "ok v1", "ok v2" or "ok v3"; exit 1 prints "refused: <key> (<reason>)" per finding, in template order;
 # exit 2 prints a usage line on stderr; exit 3 prints "skipped: ..." (no marker, or a version not 1 or 2).
 # Changes no file, reads nothing but its argument, makes no network call.
 
@@ -52,15 +52,15 @@ function notcaptured(v,   r) {
 function emit(key, why) { out[++nf] = "refused: " key " (" why ")" }
 
 BEGIN {
-  nk = split("run|series and release|problem|evidence|waste|gemba (targeted)|5 whys|CHAIN|process item to change|countermeasure|measure targeted|before|after|change|target|items counted|still uncertain|other problems seen|other overrides|standard changes proposed|baseline|answer", K, "|")
+  nk = split("run|series and release|problem|evidence|waste|gemba (targeted)|5 whys|CHAIN|process item to change|countermeasure|measure targeted|before|after|change|target|items counted|events|issues filed during the run|not detectable from records|still uncertain|other problems seen|other overrides|standard changes proposed|baseline|answer", K, "|")
   split("transport inventory motion waiting overproduction over-processing defects skills", T, " ")
-  skip = ""; nf = 0; firstnum = 0; nwl = 0; whysl = 0; cite = 0
+  skip = ""; nf = 0; firstnum = 0; nwl = 0; whysl = 0; cite = 0; nev = 0; evbad = 0
 }
 { sub(/\r$/, "") }
 NR == 1 {
   if ($0 !~ /^<!-- factory:a3 v[0-9]+ -->$/) { skip = "skipped: no A3 marker on the first line"; exit_code = 3; next }
   ver = $0; sub(/^<!-- factory:a3 v/, "", ver); sub(/ -->$/, "", ver)
-  if (ver != "1" && ver != "2") { skip = "skipped: A3 marker v" ver " (version not known)"; exit_code = 3; next }
+  if (ver != "1" && ver != "2" && ver != "3") { skip = "skipped: A3 marker v" ver " (version not known)"; exit_code = 3; next }
   next
 }
 skip != "" { next }
@@ -68,6 +68,12 @@ skip != "" { next }
   if (index($0, "  process item to change:") == 1) {
     cnt["CHAIN"]++
     if (cnt["CHAIN"] == 1) first["CHAIN"] = NR
+  }
+  if (index($0, "  event: ") == 1) {
+    nev++
+    cp = index($0, " " EM " cause:")
+    ct = (cp > 0) ? trim(substr($0, cp + length(" " EM " cause:"))) : ""
+    if (ct == "" || ct == "?") evbad++
   }
   if ($0 ~ /^  [0-9]+\. /) {
     if (firstnum == 0) firstnum = NR
@@ -88,7 +94,7 @@ skip != "" { next }
 END {
   if (NR == 0 && skip == "") skip = "skipped: no A3 marker on the first line"
   if (skip != "") { print skip; exit 3 }
-  v2 = (ver == "2")
+  v2 = (ver == "2" || ver == "3"); v3 = (ver == "3")
   multi = (cnt["5 whys"] > 0 && val["5 whys"] == "")
   prev = 0
   for (i = 1; i <= nk; i++) {
@@ -97,6 +103,11 @@ END {
     kname = (k == "CHAIN") ? "process item to change (chain)" : k
     if (isnew && !v2) {
       for (j = 0; j < cnt[k]; j++) emit(kname, "not part of v1")
+      continue
+    }
+    isv3 = (k == "events" || k == "issues filed during the run" || k == "not detectable from records")
+    if (isv3 && !v3) {
+      for (j = 0; j < cnt[k]; j++) emit(kname, "not part of v" ver)
       continue
     }
     if (k == "CHAIN" && !multi) continue
@@ -115,6 +126,18 @@ END {
     }
     if (!v2 || k == "CHAIN" || val[k] == "") continue
     v = val[k]
+    if (k == "events") {
+      if (v ~ /^none/) {
+        if (!noneshape(v)) emit(kname, "none needs a reason in parentheses")
+        else if (nev > 0) emit(kname, "count does not match the event lines")
+      } else if (v !~ /^[1-9][0-9]*$/ || v + 0 != nev) emit(kname, "count does not match the event lines")
+      else if (evbad > 0) emit(kname, "event without a cause")
+    } else if (k == "issues filed during the run") {
+      if (v ~ /^none/) { if (!noneshape(v)) emit(kname, "none needs a reason in parentheses") }
+      else if (v !~ /^[1-9][0-9]*: ./) emit(kname, "not in its grammar")
+    } else if (k == "not detectable from records") {
+      if (v ~ /^none/ && !noneshape(v)) emit(kname, "none needs a reason in parentheses")
+    }
     if (k == "waste") {
       if (v ~ /^none/) {
         if (!noneshape(v)) emit(kname, "none needs a reason in parentheses")

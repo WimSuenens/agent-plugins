@@ -48,7 +48,7 @@ ck tie-lower-rank-ignored qa-engineer "$(own x/y.md 'x/|developer' 'x/y.md|qa-en
 D="$T/r"; mkdir -p "$D/docs/agents"; git -C "$D" init -q -b main
 printf '%s\n' '| Path | Owner |' '|---|---|' '| `x/*.md` | developer |' '| `x/*.md` | qa-engineer |' '| `z/` | qa-engineer |' > "$D/docs/agents/factory.md"
 echo b > "$D/README.md"; git -C "$D" add -A; git -C "$D" commit -qm base; git -C "$D" checkout -q -b item/9
-mkdir -p "$D/x" "$D/z"; echo 1 > "$D/x/y.md"; echo 1 > "$D/z/q"; git -C "$D" add -A; git -C "$D" commit -qm "#9 developer: change"
-ck kind3-tie-and-plain-lines "role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) developer changed x/y.md (ambiguous owner: developer qa-engineer);role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) developer changed z/q (owner qa-engineer);" \
+mkdir -p "$D/x" "$D/z"; echo 1 > "$D/x/y.md"; echo 1 > "$D/z/q"; git -C "$D" add -A; git -C "$D" commit -qm "#9 devops: change"
+ck kind3-tie-and-plain-lines "role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) devops changed x/y.md (ambiguous owner: developer qa-engineer);role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) devops changed z/q (owner qa-engineer);" \
   "$(bash "$AD" kind3 --in "$D" --table "$D/docs/agents/factory.md" --base main | sort | tr '\n' ';')"
 done_

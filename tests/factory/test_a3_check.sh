@@ -45,7 +45,7 @@ ck no-gh-curl-called 0 "$(ls "$T" | grep -c '^called-')"
 # ---------- exits 2 and 3 ----------
 run; ck no-argument-exit-2 2 "$RC"; ck no-argument-usage-on-stderr 1 "$([ -n "$ERR" ] && echo 1 || echo 0)"; ck no-argument-stdout-empty '' "$OUT"
 run "$T/does-not-exist.md"; ck unreadable-exit-2 2 "$RC"
-sedm "$FX/v2-ok.md" '1s/v2/v3/'; verdict marker-v3-skipped 3 'skipped: A3 marker v3 (version not known)' "$T/m.md"
+sedm "$FX/v2-ok.md" '1s/v2/v4/'; verdict marker-v4-skipped 3 'skipped: A3 marker v4 (version not known)' "$T/m.md"
 sedm "$FX/v2-ok.md" '1s/v2/v0/'; verdict marker-v0-skipped 3 'skipped: A3 marker v0 (version not known)' "$T/m.md"
 sedm "$FX/v2-ok.md" '1s/v2/v01/'; verdict marker-v01-skipped 3 'skipped: A3 marker v01 (version not known)' "$T/m.md"
 sedm "$FX/v2-ok.md" '1s/v2/v12/'; verdict marker-v12-skipped 3 'skipped: A3 marker v12 (version not known)' "$T/m.md"

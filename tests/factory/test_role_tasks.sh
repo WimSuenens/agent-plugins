@@ -381,13 +381,13 @@ if [ -s "$T/proto-main.md" ]; then
   ck f-memory-section-replaced-by-role-knowledge "" "$(sect "$PROTO" "Memory")"  # slice 115 revises the section into *Role knowledge*
   ck f-overrides-section-unchanged "$(sect "$T/proto-main.md" "Overrides")" "$(sect "$PROTO" "Overrides")"
   ck f-doors-unchanged "$(sect "$T/proto-main.md" "Doors")" "$(sect "$PROTO" "Doors")"
-  ck f-missing-input-unchanged "$(sect "$T/proto-main.md" "Missing input")" "$(sect "$PROTO" "Missing input")"
+  ck f-missing-input-unchanged "$(sect "$T/proto-main.md" "Missing input" | slice2_kind1)" "$(sect "$PROTO" "Missing input")"
   # the andon section: the list's rows 1-3 and 5-7 word for word; row 4 differs only by the noun
   ck f4-andon-seven-rows 7 "$(sect "$PROTO" Andon | grep -cE '^\| [1-7] \|')"
-  for r in 1 2 3 5 6 7; do ck "f4-andon-row-$r-unchanged" "$(sect "$T/proto-main.md" Andon | grep -E "^\| $r \|")" "$(sect "$PROTO" Andon | grep -E "^\| $r \|")"; done
+  for r in 1 2 3 5 6 7; do ck "f4-andon-row-$r-unchanged" "$(sect "$T/proto-main.md" Andon | slice2_kind1 | grep -E "^\| $r \|")" "$(sect "$PROTO" Andon | grep -E "^\| $r \|")"; done
   ck f4-andon-row-4-name "4 | \`slow-stage\`" "$(sect "$PROTO" Andon | grep -E '^\| 4 \|' | cut -d'|' -f2,3 | sed 's/^ *//;s/ *| */ | /;s/ *$//')"
   ck f4-andon-row-4-differs-only-by-the-noun "a role task whose agent-working time is more than twice the median of the same role's earlier tasks" "$(sect "$PROTO" Andon | grep -E '^\| 4 \|' | cut -d'|' -f4 | sed 's/^ *//;s/ *$//')"
-  ck f4-rest-of-andon-section-unchanged "$(sect "$T/proto-main.md" Andon | grep -vE '^\| 4 \|')" "$(sect "$PROTO" Andon | grep -vE '^\| 4 \|')"
+  ck f4-rest-of-andon-section-unchanged "$(sect "$T/proto-main.md" Andon | slice2_kind1 | grep -vE '^\| 4 \|')" "$(sect "$PROTO" Andon | grep -vE '^\| 4 \|')"
   # the honesty rule text in hansei.md
   git -C "$REPO" show origin/main:plugins/factory/references/hansei.md >"$T/hansei-main.md"
   hsect() { awk '/^### Value grammar/{f=1;print;next} /^### /{f=0} /^## /{f=0} f' "$1"; }

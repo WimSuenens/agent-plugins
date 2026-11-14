@@ -3,7 +3,8 @@
 # docs/agents/factory.md declares it with `release-hook: scripts/release.sh`; the plugin's merge train calls it through
 # plugins/factory/scripts/release-hook.sh and knows nothing else about releases.
 # Usage: bash scripts/release.sh <phase> <worktree> <id> <base> [<extra>]     (base is origin/main)
-#   check    the bump check (check-bump.sh) in the worktree: its line and exit code (0 pass, 1 refuse, 2 unusable).
+#   check    the bump check (check-bump.sh) in the worktree: its line and exit code (0 pass, 1 refuse, 2 unusable). The id is not used
+#            (a frontier or settle branch passes `-`).
 #   resolve  <file>: a clash in the manifest or the changelog during the rebase. Exit 0 resolved and staged (the line says how),
 #            1 not a file of this hook (the merge train reports the clash).
 #   prepare  after the rebase: `check` must pass; when it refuses, the manifest version is raised to the level it names and the
@@ -109,7 +110,11 @@ do_tag() {
   sha="$(gh pr view "$branch" --json mergeCommit --jq .mergeCommit.oid 2>/dev/null)"
   if [ -n "$sha" ] && git -C "$main" tag "factory-v$new" "$sha" && git -C "$main" push -q origin "factory-v$new"; then
     echo "tag factory-v$new"
-  else echo "tag factory-v$new failed; the lead reports it"; return 1; fi
+  else
+    # a local tag whose push failed would make the retry stop at "already exists"
+    [ -n "$(git -C "$main" ls-remote --tags origin "factory-v$new")" ] || git -C "$main" tag -d "factory-v$new" >/dev/null 2>&1
+    echo "tag factory-v$new failed; the lead reports it"; return 1
+  fi
 }
 
 case "$phase" in

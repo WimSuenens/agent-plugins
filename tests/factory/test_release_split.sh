@@ -64,6 +64,15 @@ bash "$RH" check "$T/p1" 7 origin/main >/dev/null 2>&1; ck hook-outside-the-repo
 printf '# Factory\n\nrelease-hook: scripts/none.sh\n' >"$T/p1/docs/agents/factory.md"
 bash "$RH" check "$T/p1" 7 origin/main >/dev/null 2>&1; ck declared-but-missing-exit-2 2 "$?"
 
+# the declaration on the base wins: a branch cannot drop the line that judges it; where the base has none, the branch's own line counts
+rm -rf "$T/p3"; mkdir -p "$T/p3/docs/agents" "$T/p3/scripts"; ( cd "$T/p3" && git init -q -b main && printf 'release-hook: scripts/h.sh\n' >docs/agents/factory.md && printf 'echo ran\n' >scripts/h.sh && git add -A && git -c user.name=t -c user.email=t@t commit -qm a && git update-ref refs/remotes/origin/main HEAD && rm docs/agents/factory.md )
+ck base-declaration-wins-over-a-branch-that-drops-it "scripts/h.sh" "$(bash "$RH" declared "$T/p3")"
+ck base-declaration-runs-the-hook "ran" "$(bash "$RH" check "$T/p3" 7 origin/main)"
+rm -rf "$T/p4"; mkdir -p "$T/p4/docs/agents" "$T/p4/scripts"; ( cd "$T/p4" && git init -q -b main && printf 'measurement: full\n' >docs/agents/factory.md && git add -A && git -c user.name=t -c user.email=t@t commit -qm a && git update-ref refs/remotes/origin/main HEAD && printf 'release-hook: scripts/h.sh\n' >docs/agents/factory.md && printf 'echo ran\n' >scripts/h.sh )
+ck branch-line-counts-where-the-base-has-none "ran" "$(bash "$RH" check "$T/p4" 7 origin/main)"
+printf 'release-hook: scripts/link.sh\n' >"$T/p4/docs/agents/factory.md"; ln -sf h.sh "$T/p4/scripts/link.sh"
+bash "$RH" check "$T/p4" 7 origin/main >/dev/null 2>&1; ck symlinked-hook-refused 2 "$?"
+
 # --- this repository declares its hook, and the setup template documents the optional line
 ck this-repo-declares-the-hook "scripts/release.sh" "$(bash "$RH" declared "$REPO")"
 ck this-repo-hook-exists 1 "$([ -f "$REPO/scripts/release.sh" ] && [ -f "$REPO/scripts/check-bump.sh" ] && [ -f "$REPO/scripts/release-class.sh" ] && echo 1 || echo 0)"

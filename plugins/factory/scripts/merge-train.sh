@@ -105,11 +105,14 @@ do_adr() {
 }
 
 do_release() {
-  bash "$hook" prepare "$w" "$id" "$base" || exit 4
+  bash "$hook" prepare "$w" "$id" "$base"; rc=$?
+  [ "$rc" = 0 ] || { [ "$rc" = 4 ] || echo "release: the release hook stopped with exit $rc"; exit 4; }
 }
 
 do_merge() {
-  bash "$hook" check "$w" "$id" "$base" >/dev/null 2>&1 || { echo "merge refused: the release hook does not pass; nothing merged"; exit 4; }
+  if ! chk="$(bash "$hook" check "$w" "$id" "$base" 2>&1)"; then
+    echo "merge refused: the release hook does not pass; nothing merged"; printf '%s\n' "$chk"; exit 4
+  fi
   main="$(git -C "$w" worktree list --porcelain | awk '/^worktree /{print substr($0,10); exit}')"
   cd "$main" || exit 2
   if ! perr="$(git -C "$w" push -q --force-with-lease origin "$branch" 2>&1)"; then

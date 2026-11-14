@@ -10,13 +10,13 @@ Issue [#210](https://github.com/WimSuenens/agent-plugins/issues/210), part of [#
 
 **What changed for the person who runs the factory:**
 
-- **The merge train is purely mechanical.** `merge-train.sh` rebases, numbers an ADR, merges and cleans up. Its `bump` step is now `release`, and it runs a project's release hook only when `docs/agents/factory.md` declares one (`release-hook: <script>`); `scripts/release-hook.sh` is the one dispatcher (phases `check`, `resolve`, `prepare`, `tag`). No line: no release step, nothing printed.
+- **The merge train is purely mechanical.** `merge-train.sh` rebases, numbers an ADR, merges and cleans up. Its `bump` step is now `release`, and it runs a project's release hook only when `docs/agents/factory.md` declares one (`release-hook: <script>`); `scripts/release-hook.sh` is the one dispatcher (phases `check`, `resolve`, `prepare`, `tag`). No line: no release step, nothing printed. The line is read from `origin/main` first, so a branch cannot drop the line that judges it.
 - **Where the release tooling went.** At the repository root, `scripts/`: `release.sh` (the hook), `check-bump.sh` (moved, same answers), `release-class.sh` and the new `release-lib.sh`, which holds the one classification both read. This repository declares `release-hook: scripts/release.sh` and keeps its release rules in `docs/agents/factory.md`. The tag scheme `factory-v<semver>`, the fingerprint label, andon kind 6 and the hansei `release` field are unchanged.
 - **Wording.** *Open PR*, *Merge PR*, the integrator and the tracker doc call the hook only when declared; the docs-writer's changelog entry is the project's own; the baseline and hansei rule for a skipped release step is worded generically and excludes the same runs. The setup skill's `factory.md` template documents the optional `release-hook:` line.
 
 **Tests.** `tests/factory/test_release_split.sh` (new): a grep over `plugins/factory/` with an allow list, the dispatcher, the moved check against the old one on 14 merges of this repository's history, the architect's shell scope and the baseline exclusions unchanged. `test_merge_train.sh` gains a train without a hook.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `4040451deb2b2b42da0985d29ba383642c941209cb097de76b0e8b36578d2d6b`, tooling `1d0346be1985bbcdc4dfdcf71ba8c9ddf55bdaf598e57d218f18debda681fbbc`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `4040451deb2b2b42da0985d29ba383642c941209cb097de76b0e8b36578d2d6b`, tooling `cef3d96fe6d649511005bc09a5b615b51d0044d86827ac26287f513bc8d8ebc9`.
 
 ## factory 2.15.1 (#211)
 

@@ -6,39 +6,47 @@
 . "$(dirname "$0")/lib.sh"
 FX="$REPO/tests/factory/fixtures/split"
 OLD="$FX/run-skill-3.0.0.md"      # plugins/factory/skills/run/SKILL.md of origin/main at 19d1df3 (factory 3.0.0), before the split
-ALLOW="$FX/allowed-missing.txt"   # old lines that may be missing from router and references (a line a pointer replaced); verbatim, one per line
+ALLOW="$FX/allowed-missing.txt"   # old lines that may be missing from router and references (a line a pointer replaced, or slice 4 changed); verbatim, one per line
+ADDOK="$FX/slice4-added.txt"      # lines slice 4 (factory 3.2.0) added to the router and the moved references: the only additions besides pointers, stubs and headers
 ROUTER="$RUN_ROUTER"
 refs="$(run_refs)"
 nrefs="$(printf '%s\n' "$refs" | grep -c .)"
+# run-route.md is new in slice 4 (it holds no moved line): proof A reads the nine moved references only; the rest of the tests read it too
+arefs="$(printf '%s\n' "$refs" | grep -v '/run-route\.md$')"
+narefs="$(printf '%s\n' "$arefs" | grep -c .)"
 bytes() { wc -c <"$1" | tr -d ' '; }
 
 # ---- A. no rule lost; nothing added except pointer lines, stub headings and the three header lines of a reference
 ck a0-fixture-is-the-old-skill 115665 "$(bytes "$OLD")"
 ck a0-references-exist yes "$([ "$nrefs" -ge 5 ] && echo yes || echo no)"
+ck a0-slice4-added-lines-are-few yes "$([ "$(grep -c . "$ADDOK")" -le 20 ] && echo yes || echo no)"
 # shellcheck disable=SC2086
-rep="$(awk -v allow="$ALLOW" -v nref="$nrefs" '
-  BEGIN { while ((getline l < allow) > 0) if (l != "") { ok[l]++; nallow++ } }
+rep="$(awk -v allow="$ALLOW" -v addok="$ADDOK" -v nref="$narefs" '
+  BEGIN { while ((getline l < allow) > 0) if (l != "") { ok[l]++; nallow++ }
+          while ((getline l < addok) > 0) if (l != "") { aok[l]++; nadd++ } }
   FNR == 1 { fi++ }
   fi == 1 { if ($0 != "") { c[$0]++; old[$0] = 1 } next }
   $0 == "" { next }
   fi <= 1 + nref { if (FNR <= 3) { hdr++; next }
-                   if (c[$0] > 0) c[$0]--; else { added++; print "ADDED in " FILENAME ": " $0 }
+                   if (c[$0] > 0) c[$0]--; else if (aok[$0] > 0) { aok[$0]--; s4++ } else { added++; print "ADDED in " FILENAME ": " $0 }
                    next }
   { if (c[$0] > 0) { c[$0]--; next }
     if ($0 ~ /^#+ / && old[$0]) { stubs++; next }
     if ($0 ~ /references\/run-/) { ptr++; next }
+    if (aok[$0] > 0) { aok[$0]--; s4++; next }
     added++; print "ADDED in router: " $0 }
   END { for (l in c) if (c[l] > 0) { if (ok[l] > 0) allowed += c[l]; else { lost++; print "LOST: " l } }
-        print "SUMMARY lost=" lost+0 " added=" added+0 " allowed=" allowed+0 " allowlist=" nallow+0 " stubs=" stubs+0 " pointers=" ptr+0 " headers=" hdr+0 }
-' "$OLD" $refs "$ROUTER")"
+        print "SUMMARY lost=" lost+0 " added=" added+0 " allowed=" allowed+0 " allowlist=" nallow+0 " stubs=" stubs+0 " pointers=" ptr+0 " headers=" hdr+0 " slice4=" s4+0 " slice4allow=" nadd+0 }
+' "$OLD" $arefs "$ROUTER")"
 printf '%s\n' "$rep" | grep -v '^SUMMARY' | head -20
 sum="$(printf '%s\n' "$rep" | grep '^SUMMARY')"
 echo "     $sum"
 num() { printf '%s\n' "$sum" | sed -n "s/.*$1=\([0-9]*\).*/\1/p"; }
 ck a1-no-old-line-lost 0 "$(num lost)"
 ck a2-no-line-added-but-pointers-stubs-headers 0 "$(num added)"
+ck a2b-every-pinned-slice4-line-is-present "$(num slice4allow)" "$(num slice4)"
 ck a3-allow-list-is-explicit-and-small "yes" "$([ "$(num allowlist)" -le 10 ] && echo yes || echo no)"
-ck a4-title-and-trigger-line-per-reference "$((nrefs * 2))" "$(num headers)"
+ck a4-title-and-trigger-line-per-reference "$((narefs * 2))" "$(num headers)"
 # the two directions together: a pointer line is the only thing that may differ, and every reference starts with title, blank, trigger
 for r in $refs; do
   ck "a5-$(basename "$r")-header-shape" "yes" "$(awk 'NR==1 && /^# /{a=1} NR==2 && $0==""{b=1} NR==3 && /^Read this when /{c=1} END{print (a&&b&&c) ? "yes" : "no"}' "$r")"
@@ -76,7 +84,8 @@ ck h2-no-rule-text-in-both-router-and-references 0 "$dup"
 
 # ---- the fence and steps 0 to 7 stay in the router, word for word (F1 step 8.1, F2 step 7, F3 step 6)
 sec() { awk -v n="$2" '/^```/ {fence=!fence; if (on) print; next} !fence && /^## / {if (on) exit; if (substr($0, 4) == n) on=1} on {print}' "$1"; }
-for h in "0. Resume or start" "The run cycle" "The integrator" "1. Clarify the destination" "2. Chart the route" "3. Clear the frontier's one-way doors" "4. Cut the next slice" "5. Start the item" "6. Run the stages" "7. Take a one-way door to the person" "The board" "Role tasks" "Scan before posting" "Role knowledge" "Context"; do
+# steps 0 to 5 changed in slice 4 (sizing, the direct route, the beachhead, the start gate): their new lines are pinned in test_slice4_text.sh and listed in fixtures/split/slice4-added.txt
+for h in "The run cycle" "The integrator" "6. Run the stages" "7. Take a one-way door to the person" "The board" "Role tasks" "Scan before posting" "Role knowledge" "Context"; do
   ck "f-section-unchanged-in-router: $h" "$(sec "$OLD" "$h" | cksum)" "$(sec "$ROUTER" "$h" | cksum)"
 done
 f81() { awk '/^1\. Once delivery and documentation are done/ {on=1} /^(2\. Complete the ledger|After the approval of 8\.1)/ {on=0} on' "$1"; }

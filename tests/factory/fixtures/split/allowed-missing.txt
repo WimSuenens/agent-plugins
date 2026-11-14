@@ -1,0 +1,7 @@
+
+- **`#<map>`** → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
+**Done when** the person has confirmed the four fields.
+Invoke `/wayfinding:wayfinder` to chart the map, passing the destination from step 1 in, so it skips its own naming step. Its frontier grilling and triage still talk to the person here, in the main session. Stop it before it names a beachhead; cutting slices is step 4.
+This step runs as a **frontier round**:
+Invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unblocked. Its number is `<id>`.
+0. **The start gate, budget part** (*The run cycle*, *Parallel slices*). When `factory-config.sh reached <spent>` exits 1, the slice stays `Ready` and you say `budget reached`. Otherwise go on. There is no count of slices in flight to check.

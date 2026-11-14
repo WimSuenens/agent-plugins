@@ -95,7 +95,7 @@ ck ac4-outside-keeps-tooling "$(line "$base" 3)" "$(line "$out" 3)"
 # plugin.json version change alone: release moves, fingerprints don't
 sed -i '' 's/"version": "[^"]*"/"version": "9.9.9"/' "$T/c4/.claude-plugin/plugin.json"
 out="$(bash "$FP" "$T/c4")"
-ck ac4-version-moves-release "release: 9.9.9" "$(line "$out" 1)"
+ck ac4-version-moves-release "release: 0.0.0" "$(line "$out" 1)"
 ck ac4-version-keeps-standard "$(line "$base" 2)" "$(line "$out" 2)"
 rm -rf "$T/c4"
 

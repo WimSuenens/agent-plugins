@@ -5,15 +5,18 @@
 #        bash worktree.sh ignore
 #        bash worktree.sh legacy
 # dir: prints the folder, relative to the main checkout.
-# add: creates the worktree in the folder on its branch (item/<id>, frontier/<map>, settle/<map>) from the current main
-#      checkout HEAD, and prints its absolute path. The folder is .claude/worktrees/<id>, .../frontier-<map>, .../settle-<map>.
+# add: fetches origin/main, creates the worktree in the folder on its branch (item/<id>, frontier/<map>, settle/<map>) from
+#      origin/main, and prints its absolute path. The folder is .claude/worktrees/<id>, .../frontier-<map>, .../settle-<map>.
+#      When the local main differs from origin/main (ahead, behind or both), one line on stderr names the difference; the local
+#      main and its local-only commits are never touched and never enter the new branch.
 # ignore: adds /.claude/worktrees/ to the main checkout's .gitignore; prints "added" or "already present" and changes
 #      nothing the second time. A line that already ignores the folder (with or without the leading slash or the
 #      trailing slash) counts as present.
 # legacy: lists worktrees at the old location, ../wt/<name> beside the main checkout, one "<path><TAB><branch>" per line.
 # Every command works from the main checkout or from any worktree of it.
 # Exit: 0 ok (legacy: none found); 2 usage, a bad id, or not a git repository; 3 add: the folder is not ignored (run ignore
-#       first); 4 add: git refused the worktree (message on stderr); 10 legacy: at least one found.
+#       first); 4 add: git refused the worktree (message on stderr);
+#       5 add: the fetch of origin/main failed (one line on stderr; nothing was created); 10 legacy: at least one found.
 # See contracts/109-worktree-folder.md in the repo that hosts the factory.
 
 folder=".claude/worktrees"
@@ -45,8 +48,19 @@ case "$cmd" in
       echo "worktree: $folder is not ignored in $main: run 'worktree.sh ignore' (setup-factory-skill does it)" >&2
       exit 3
     fi
+    if ! git -C "$main" fetch -q origin main >/dev/null 2>&1; then
+      echo "worktree: cannot fetch origin/main: no worktree was created; tell the person instead of building on a stale base" >&2
+      exit 5
+    fi
+    if git -C "$main" rev-parse --verify -q refs/heads/main >/dev/null; then
+      counts="$(git -C "$main" rev-list --left-right --count main...origin/main 2>/dev/null)"
+      ahead="${counts%%[[:space:]]*}"; behind="${counts##*[[:space:]]}"
+      if [ -n "$counts" ] && { [ "$ahead" != 0 ] || [ "$behind" != 0 ]; }; then
+        echo "worktree: local main differs from origin/main (ahead $ahead, behind $behind); the branch starts from origin/main" >&2
+      fi
+    fi
     mkdir -p "$main/$folder" || exit 4
-    if ! git -C "$main" worktree add -q "$main/$folder/$name" -b "$branch" >&2; then exit 4; fi
+    if ! git -C "$main" worktree add -q "$main/$folder/$name" -b "$branch" --no-track origin/main >&2; then exit 4; fi
     echo "$main/$folder/$name"
     ;;
   ignore)

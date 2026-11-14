@@ -68,7 +68,7 @@ Brief (lead → role), the body of the role-task issue after its marker line and
 
     # Brief: <role> — <id>
     Goal: <one sentence>
-    Inputs: <file paths and tracker issue numbers>
+    Inputs: <file paths and tracker issue numbers; a worktree as `.claude/worktrees/<id>`, a home path as `~/...` in prose or `"$HOME/..."` in a quoted shell command>
     Constraints: <list>
     Output: <paths>
     Done: <the role's Done list>

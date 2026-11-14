@@ -44,8 +44,9 @@ real3() { # <name> <base> <head> <expected lines, ; separated>
   if [ $rc = 99 ]; then skip "$1" "history of PR not present in this clone (shallow)"; return; fi
   ck "$1" "$4" "$(printf '%s' "$out" | tr '\n' ';')"; }
 real3 k3-real-pr176-item168-none 0127389 3b135c3 ""
-real3 k3-real-pr182-item156 3da67e7 1347782 "role-outside-role: bf9de7e developer changed docs/agents/roles/developer.md (owner docs-writer)"
-real3 k3-real-pr202-item188 fa8d15c ba2d3aa "role-outside-role: b81bec5 developer changed docs/agents/roles/developer.md (owner docs-writer);role-outside-role: 72da26a qa-engineer changed docs/agents/roles/qa-engineer.md (owner docs-writer)"
+# the three commits the slice-0 detector flagged were each a role writing its own role file (protocol, *Role knowledge*): no flag now
+real3 k3-real-pr182-item156 3da67e7 1347782 ""
+real3 k3-real-pr202-item188 fa8d15c ba2d3aa ""
 
 # ---- defaults and failures (code review of slice 0): base from merge-base with origin/main of the given head; a failing git log is not "no hits" ----
 D="$T/def"; mkdir -p "$D/docs/agents"; git -C "$D" init -q -b main; cp "$REPO/docs/agents/factory.md" "$D/docs/agents/factory.md"; echo r > "$D/README.md"

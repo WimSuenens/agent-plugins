@@ -371,7 +371,7 @@ has k2-before-feedback "$AN" 'On a match start an andon of kind 2 before routing
 # is pinned by behaviour in test_andon_kind3_kind4.sh and test_andon_detect.sh.
 has k3-script-pointer "$AN" '"${CLAUDE_PLUGIN_ROOT}/scripts/andon-detect.sh" kind3'
 has k3-origin-main-table "$AN" 'it reads the ownership table from `origin/main`, never the worktree'"'"'s copy'
-has k3-never-flagged "$AN" 'Never flagged by the path rule alone: commits whose role is `lead` or any other name (rule 5.6 below still reads `lead` commits that touch the rules)'
+has k3-never-flagged "$AN" 'commits whose role is `lead` or any other name (rule 5.6 below still reads `lead` commits that touch the rules)'
 has k4-script-pointer "$AN" '"${CLAUDE_PLUGIN_ROOT}/scripts/andon-detect.sh" kind4'
 has k4-no-baseline "$AN" '`no baseline: fewer than 3 earlier rows` (write it in `Notes` and stop)'
 has k3-script-reads-origin-main "$PLUGIN/scripts/andon-detect.sh" 'git -C "$repo" show origin/main:docs/agents/factory.md'

@@ -233,7 +233,7 @@ ck ac18-home-path-result-scan-exit-1 1 "$rc"
 ck ac18-home-path-result-both-hits-reported "scan: hpres.md:3: home-path
 scan: hpres.md:3: secret" "$(cat "$T/scan.out")"
 has ac18-run-scan-before-post-brief "$RUN" '**Scan it** (`post-text.sh scan <file>`); on a hit post nothing, tell the person which line, and keep the slice `Running`.'
-has ac18-run-scan-before-post-closing "$RUN" '(1) **scan** the draft (a hit: post nothing, tell the person, keep the task `Running` and the issue open)'
+has ac18-run-scan-before-post-closing "$RUN" 'which scans the draft itself: a hit prints the file and line, writes nothing and exits 1; then post nothing, tell the person, keep the task `Running` and the issue open'  # the script enforces it: test_post_text_scan.sh
 has ac18-run-scan-needs-you "$RUN" 'post-text.sh" scan --needs-you <file>'
 # --needs-you: work/ paths and branches
 printf 'see work/12/00-lead-state.md\n' >"$T/ny1.md"; bash "$PT" scan --needs-you "$T/ny1.md" >/dev/null; ck ac5-needs-you-rejects-work-path 1 "$?"

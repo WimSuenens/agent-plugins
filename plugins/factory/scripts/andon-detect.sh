@@ -7,6 +7,7 @@
 #       Commits <base>..<head>, not merges. Defaults: repo = the current directory, head = HEAD, base = `git merge-base origin/main <head>`.
 #       The role is read from the subject `^#[0-9]+ ([a-z-]+): `; only the seven roles are read. The ownership table is
 #       `git show origin/main:docs/agents/factory.md` unless --table names a file (a table of the branch must never judge the branch).
+#       A role's own `docs/agents/roles/<role>.md` and `docs/agents/skills/<role>/` are never flagged (protocol, *Role knowledge*); nothing else is excused.
 #       Prints `role-outside-role: <sha7> <role> changed <path> (owner <owner>)`, or `... changed an unclassifiable path (name escaped: <%q form>)`.
 #   andon-detect.sh owner <table> <path>
 #       The Owner of the table row with the longest matching token, empty when the path is unowned.
@@ -71,6 +72,8 @@ kind3() {
     case " $ROLES " in *" $r "*) ;; *) continue ;; esac
     git -C "$repo" diff-tree -z --no-commit-id --name-only -r --no-renames "$sha" | while IFS= read -r -d '' p; do
       case "$p" in *[[:cntrl:]]*) echo "role-outside-role: ${sha:0:7} $r changed an unclassifiable path (name escaped: $(printf '%q' "$p"))"; continue ;; esac
+      # a role maintains its own role file and skills folder (protocol, *Role knowledge*): that path is never flagged, nothing else is excused
+      case "$p" in "docs/agents/roles/$r.md" | "docs/agents/skills/$r/"*) continue ;; esac
       o="$(owner_of "$table" "$p")"
       [ -n "$o" ] && [ "$o" != "$r" ] && echo "role-outside-role: ${sha:0:7} $r changed $p (owner $o)"
     done

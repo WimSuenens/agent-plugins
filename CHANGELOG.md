@@ -2,6 +2,27 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.15.0 (#207)
+
+Release: `2.15.0`, a **minor** release: standard text and tooling changed (slice 1 of the revision plan [#207](https://github.com/WimSuenens/agent-plugins/issues/207)). Both fingerprints change. No migration; a project without a `protected-paths:` line behaves as before, apart from the items below.
+
+Issues [#162](https://github.com/WimSuenens/agent-plugins/issues/162), [#192](https://github.com/WimSuenens/agent-plugins/issues/192), [#193](https://github.com/WimSuenens/agent-plugins/issues/193), [#194](https://github.com/WimSuenens/agent-plugins/issues/194), [#195](https://github.com/WimSuenens/agent-plugins/issues/195), [#196](https://github.com/WimSuenens/agent-plugins/issues/196). Cause: scripts and wording that disagreed with each other in the first real run (a skip the gate then refused, a release class the bump check then refused, a worktree built on an unpushed commit, briefs the scanner refused, hansei figures a rebase or a parallel item had distorted).
+
+**What changed for the person who runs the factory:**
+
+- **One definition of a protected change (#192).** The skip check and the merge gate test the same path list: `skip.sh` adds the slice's own contract files and takes `--paths` (the PR's changed paths). The patterns in `protected-areas.sh` test one path component at a time and first take out the words that only look like a protected one, so `author`, `secretary` and `immigration` are no longer protected (a name like `authService` or `userauth` still is). A project adds its own with one line in `docs/agents/factory.md`: `protected-paths: <glob>, <glob>` (area `project`).
+- **The release class is asked before the contract (#195), in this repository only.** The dry-run is dev-repo tooling, `scripts/release-class.sh` at the repository root, with the rule in this repository's `docs/agents/factory.md`; nothing about it is in the shipped plugin, which a project that only uses the factory installs. Whether the bump check itself should leave the plugin is a separate issue.
+- **`worktree.sh add` starts from `origin/main` (#162).** It fetches first; a failed fetch exits 5 with one line and creates nothing. When local `main` differs, one line names it; local-only commits are never touched or included. The new branch has no upstream. A repository without an `origin` remote, or an unreachable one, can no longer add a worktree.
+- **Briefs carry no absolute home path (#196):** `~/...` in prose, `"$HOME/..."` in a quoted shell command, `.claude/worktrees/<id>` for worktrees.
+- **The hansei cross-check reads the author date (#193)**, which a rebase keeps.
+- **Parallel items read `not captured (items ran in parallel)` (#194, option b)** for flow efficiency and the lead's token lines. No new wait kind.
+- **Slice-0 leftover:** `post-text.sh render` scans the draft itself, so the closing-comment path no longer carries its own scan step. The other inline reminders stay: no other script posts or scans.
+- **Andon kind 3** no longer flags a role writing its own `docs/agents/roles/<role>.md` or `docs/agents/skills/<role>/` (items #156 and #188 were flagged for exactly that). It narrows what the lead's detector flags, not what a role may raise.
+
+**Tests.** `tests/factory/test_protected_paths.sh`, `test_slice1_text.sh`, `test_post_text_scan.sh` and `test_release_class.sh` (new, the last for the repository-level dry-run); additions to `test_worktree_folder.sh` (its repositories now have an origin), `test_andon_kind3_kind4.sh` and `test_andon_detect.sh` (the real commits of #156 and #188 now give no flag).
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `ed57d88db1f39d70e42e5a48c12e07967db0dc393731df34ba4fbb5b4abb310e`, tooling `afebe7fd43211aec06e93f47d5ac6406f3ef65350501f6e2a324236b989843b8`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.14.0 (#207)
 
 Release: `2.14.0`, a **minor** release: standard text and tooling changed (slice 0 of the revision plan [#207](https://github.com/WimSuenens/agent-plugins/issues/207)). Both fingerprints change. No migration.

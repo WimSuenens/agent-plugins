@@ -2,6 +2,23 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.3.0 (#230)
+
+Release: `3.3.0`, a **minor** release: standard text and scripts changed (`flow-size.sh`, `run-state.sh`, `a3-events.sh`, `intake.sh`, a new `stage-report.sh`, the run skill and two references). The `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration.
+
+Closes [#230](https://github.com/WimSuenens/agent-plugins/issues/230). Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207) and [#187](https://github.com/WimSuenens/agent-plugins/issues/187) (decisions 2, 3, 9). Decision 2 is unchanged: a Heavy band still asks the person as before.
+
+**What changed for the person who runs the factory:**
+
+- **Sizing derives protected paths.** `scripts/flow-size.sh --paths <expected paths>` fires `Protected area touched` itself through `protected-areas.sh` (the project's `protected-paths:` line included) and prints which paths fired it. The expected paths include the contract files the architect stage will write; the lead still names the other rows. No `--paths`: the output is as before. An empty list is refused.
+- **A new run replaces the old run's state.** `scripts/run-state.sh start` replaces the Factory run section of a closed run (its A3 is posted) with a new one: `started:` now, `closed in this run: none`, step 0, no stale `in flight`, a pointer to the previous A3. An open run's section is left alone. `run-state.sh status` says which. `a3-events.sh --run-body` and `intake.sh filed-since --run-body` read the new `started:` and refuse a closed run's section.
+- **The stage-boundary report comes from a script.** `scripts/stage-report.sh` prints the new-issues line, a line when `docs/direction.md` was created since the last boundary, and the waits so far; the lead pastes it unchanged. The router no longer describes those lines in prose.
+- **Fence.** F1 to F7 and the fence fixtures are untouched.
+
+**Tests.** `test_lead_gaps_230.sh` (new, written before the scripts); `test_run_split.sh` and `test_slice2_loop.sh` pins follow the moved text.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `ca8e3866b9cf28753b9697a51c31cd153a55bb7412b40433ec77c93c68713e04`, tooling `73e88dc1f452e88182ff7892dffe6af3242d875aa5d8dd8b072d35f3ec5de32f`.
+
 ## factory 3.2.0 (#207, slice 4)
 
 Release: `3.2.0`, a **minor** release: standard text and scripts changed (the run skill, a new reference `run-route.md`, the start gate and the close of an item). The lead now sizes the destination, writes a plan on the ticket and takes the lightest route; the `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration: a project keeps its flow table.

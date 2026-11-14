@@ -23,6 +23,11 @@ ck meta-brace-not-count ""         "$(own d/aa/x.md 'd/a{2}/*.md|developer')"
 ck meta-wildcard-still-wild developer "$(own docs/deep/er/x.md 'docs/*.md|developer')"
 ck meta-wildcard-middle developer "$(own plugins/f/skills/run/SKILL.md 'plugins/*/skills/*/SKILL.md|developer')"
 
+ck glob-star-matches-empty developer "$(own d/ab/x.md 'd/a*b/*.md|developer')"
+ck glob-middle-segments-in-order developer "$(own p/a1/b2/c.md 'p/*1/*2/*.md|developer')"
+ck glob-order-matters "" "$(own p/b2/a1/c.md 'p/*1/*2/*.md|developer')"
+ck glob-suffix-must-end "" "$(own p/x.md.bak 'p/*.md|developer')"
+
 # ---- point 2: specificity, not text length ----
 ck rank-exact-beats-longer-wildcard docs-writer "$(own plugins/factory/skills/run/SKILL.md 'plugins/factory/skills/*/SKILL.md|developer' 'plugins/factory/skills/run/SKILL.md|docs-writer')"
 ck rank-exact-beats-longer-wildcard-order docs-writer "$(own plugins/factory/skills/run/SKILL.md 'plugins/factory/skills/run/SKILL.md|docs-writer' 'plugins/factory/skills/*/SKILL.md|developer')"
@@ -39,11 +44,11 @@ ck tie-reported-exact "ambiguous owner: x/y.md developer qa-engineer" "$(own x/y
 ck tie-same-owner-is-no-tie developer "$(own x/y.md 'x/*.md|developer' 'x/*.md|developer')"
 ck tie-lower-rank-ignored qa-engineer "$(own x/y.md 'x/|developer' 'x/y.md|qa-engineer')"
 
-# ---- kind 3 prints the tie as it is, and keeps its own line where there is none ----
+# ---- kind 3 prints the tie as a role-outside-role line with the commit and role, and keeps its own line where there is none ----
 D="$T/r"; mkdir -p "$D/docs/agents"; git -C "$D" init -q -b main
 printf '%s\n' '| Path | Owner |' '|---|---|' '| `x/*.md` | developer |' '| `x/*.md` | qa-engineer |' '| `z/` | qa-engineer |' > "$D/docs/agents/factory.md"
 echo b > "$D/README.md"; git -C "$D" add -A; git -C "$D" commit -qm base; git -C "$D" checkout -q -b item/9
 mkdir -p "$D/x" "$D/z"; echo 1 > "$D/x/y.md"; echo 1 > "$D/z/q"; git -C "$D" add -A; git -C "$D" commit -qm "#9 developer: change"
-ck kind3-tie-and-plain-lines "ambiguous owner: x/y.md developer qa-engineer;role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) developer changed z/q (owner qa-engineer);" \
+ck kind3-tie-and-plain-lines "role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) developer changed x/y.md (ambiguous owner: developer qa-engineer);role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) developer changed z/q (owner qa-engineer);" \
   "$(bash "$AD" kind3 --in "$D" --table "$D/docs/agents/factory.md" --base main | sort | tr '\n' ';')"
 done_

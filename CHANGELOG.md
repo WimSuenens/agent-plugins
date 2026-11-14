@@ -2,6 +2,27 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 2.15.0 (#207)
+
+Release: `2.15.0`, a **minor** release: standard text and tooling changed (slice 1 of the revision plan [#207](https://github.com/WimSuenens/agent-plugins/issues/207)). Both fingerprints change. No migration; a project without a `protected-paths:` line behaves as before, apart from the items below.
+
+Issues [#162](https://github.com/WimSuenens/agent-plugins/issues/162), [#192](https://github.com/WimSuenens/agent-plugins/issues/192), [#193](https://github.com/WimSuenens/agent-plugins/issues/193), [#194](https://github.com/WimSuenens/agent-plugins/issues/194), [#195](https://github.com/WimSuenens/agent-plugins/issues/195), [#196](https://github.com/WimSuenens/agent-plugins/issues/196). Cause: scripts and wording that disagreed with each other in the first real run (a skip the gate then refused, a release class the bump check then refused, a worktree built on an unpushed commit, briefs the scanner refused, hansei figures a rebase or a parallel item had distorted).
+
+**What changed for the person who runs the factory:**
+
+- **One definition of a protected change (#192).** The skip check and the merge gate test the same path list: `skip.sh` adds the slice's own contract files and takes `--paths` (the PR's changed paths). The patterns in `protected-areas.sh` read whole path components, so `author`, `secretary` and `immigration` are no longer protected. A project adds its own with one line in `docs/agents/factory.md`: `protected-paths: <glob>, <glob>` (area `project`).
+- **The release class comes from the bump check (#195).** `check-bump.sh --intended <base> <path>...` answers before any commit exists; the architect and step 6 quote its answer line in the contract. A meaning-neutral change to standard text still counts as standard work.
+- **`worktree.sh add` starts from `origin/main` (#162).** It fetches first; a failed fetch exits 5 with one line and creates nothing. When local `main` differs, one line names it; local-only commits are never touched or included. A repository without an `origin` remote can no longer add a worktree.
+- **Briefs carry no absolute home path (#196):** `~/...` in prose, `"$HOME/..."` in a quoted shell command, `.claude/worktrees/<id>` for worktrees.
+- **The hansei cross-check reads the author date (#193)**, which a rebase keeps.
+- **Parallel items read `not captured (items ran in parallel)` (#194, option b)** for flow efficiency and the lead's token lines. No new wait kind.
+- **Slice-0 leftover:** `post-text.sh render` scans the draft itself, so the closing-comment path no longer carries its own scan step. The other inline reminders stay: no other script posts or scans.
+- **Andon kind 3** no longer flags a role writing its own `docs/agents/roles/<role>.md` or `docs/agents/skills/<role>/` (items #156 and #188 were flagged for exactly that). It narrows what the lead's detector flags, not what a role may raise.
+
+**Tests.** `tests/factory/test_protected_paths.sh`, `test_slice1_text.sh` and `test_post_text_scan.sh` (new); additions to `test_check_bump.sh`, `test_worktree_folder.sh` (its repositories now have an origin), `test_andon_kind3_kind4.sh` and `test_andon_detect.sh` (the real commits of #156 and #188 now give no flag).
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `FP_STD`, tooling `FP_TOOL`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+
 ## factory 2.14.0 (#207)
 
 Release: `2.14.0`, a **minor** release: standard text and tooling changed (slice 0 of the revision plan [#207](https://github.com/WimSuenens/agent-plugins/issues/207)). Both fingerprints change. No migration.

@@ -7,10 +7,10 @@
 # scan: prints "scan: <basename>:<line>: home-path | secret | work-path" per hit; it never prints the text itself.
 #       --needs-you also flags a path under work/<n>, work/frontier-<n>, work/settle-<n> and a branch item/<n>, frontier/<n> or settle/<n>.
 #       A canary self-check runs first; a canary that does not hit prints "scan: self-check failed (<name>)" on stderr and exits 2.
-# render: marker, Status, Abnormality and Summary visible, every other field of the draft inside one <details>, byte for byte.
+# render: scans the draft first (a hit: the scan lines, no output file, exit 1; the self-check failing: exit 2); then marker, Status, Abnormality and Summary visible, every other field of the draft inside one <details>, byte for byte.
 # elide: replaces each fenced block over --max bytes (default 20000) by one line naming <ref>; prints the number of blocks elided.
 # split: writes part-1.md .. part-<m>.md (each at most 60000 bytes) into <outdir> and prints <m>; an over-long line is cut (one newline added) and reported on stderr.
-# Exit: scan 0 clean, 1 a hit, 2 usage or a file unreadable; render 0, 3 no Status or Summary or Summary over 10 lines; elide 0; split 0, 4 Status and Summary alone exceed the cap.
+# Exit: scan 0 clean, 1 a hit, 2 usage or a file unreadable; render 0, 1 a scan hit, 3 no Status or Summary or Summary over 10 lines; elide 0; split 0, 4 Status and Summary alone exceed the cap.
 # No network; no write outside the named output paths.
 # See contracts/64-role-tasks.md sections 5, 6 and 9 in the repo that hosts the factory.
 
@@ -123,6 +123,7 @@ case "$cmd" in
     draft="$1"
     out="$2"
     [ -f "$draft" ] && [ -r "$draft" ] || { echo "render: $(basename "$draft"): unreadable" >&2; exit 2; }
+    bash "${BASH_SOURCE[0]}" scan "$draft" || exit $?   # the closing comment is scanned here: a hit writes nothing
     tmpf="$(mktemp)" || exit 2
     trap 'rm -f "$tmpf"' EXIT
     LC_ALL=C awk '

@@ -15,11 +15,12 @@ Issue [#207](https://github.com/WimSuenens/agent-plugins/issues/207), slice 0. C
 - **The close of an item is one script.** `scripts/close-item.sh <id>` holds the guard and the two commits of step 8.6; the skill and `references/hansei.md` no longer carry two copies of the commands.
 - **Duplicated text is gone**: the run cycle's and *Parallel slices*' copies of "slices start whenever they can", the second copy of the cut-off role rule in *Interruptions*, and the board-field rules of step 8.4a, which stay in `references/hansei.md`, section 7.
 - **Two dangling references are fixed**, in the fenced section (a minimal reference fix, no meaning change): F1 pointed at *Production actions* and F5 at *Memory* in `references/protocol.md`, neither of which exists. F1 now names the sentence on production actions at the end of step 6, F5 names *Role knowledge*. Step 8.1 of the skill gets the same F1 fix.
+- **Two guards the prose lacked, in the scripts.** `close-item.sh` stops, with nothing removed, when `git diff --cached` itself fails (the prose only tested for exit 1, so an error would have deleted an uncommitted lead state); `andon-detect.sh kind3` exits 2 when `git log` fails instead of printing nothing. These only change what happens on an error.
 - **Not changed**: the inline "scan it first" reminders stay. `post-text.sh`, `board.sh` and `obeya.sh` do not run the scan themselves, so those posting paths still depend on the reminder.
 
 **Tests.** `tests/factory/test_andon_detect.sh` (new: the script on the ledgers of closed items #156 and #168 with their real sub-issue times, kept under `tests/factory/fixtures/ledgers/`, and on the real commits of PR 176, 182 and 202). `test_andon_kind3_kind4.sh` runs its unchanged cases against the script; the close cases of `test_standard_text.sh` run against `close-item.sh`; text pins of moved rules now point at the script or at `references/hansei.md`. The fence comparison in `test_role_tasks.sh` allows exactly the two reference fixes.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `68063c67d91024790db10b747f756f12678e51f3b139f9cf955a1aa1a6b3787c`, tooling `163452c9b9eba3e1a022bc9890216c6751446b8c8d0c554692a8802adca417e3`. Any later change under `plugins/factory/` in this release is a forgotten bump.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `68063c67d91024790db10b747f756f12678e51f3b139f9cf955a1aa1a6b3787c`, tooling `528a071e7657d673d67ee0b39b05432d0bf2804b7e7ec172f1307d1781f7c5e0`. Any later change under `plugins/factory/` in this release is a forgotten bump.
 
 ## factory 2.13.0 (#168)
 

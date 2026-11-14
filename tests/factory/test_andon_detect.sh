@@ -46,4 +46,24 @@ real3() { # <name> <base> <head> <expected lines, ; separated>
 real3 k3-real-pr176-item168-none 0127389 3b135c3 ""
 real3 k3-real-pr182-item156 3da67e7 1347782 "role-outside-role: bf9de7e developer changed docs/agents/roles/developer.md (owner docs-writer)"
 real3 k3-real-pr202-item188 fa8d15c ba2d3aa "role-outside-role: b81bec5 developer changed docs/agents/roles/developer.md (owner docs-writer);role-outside-role: 72da26a qa-engineer changed docs/agents/roles/qa-engineer.md (owner docs-writer)"
+
+# ---- defaults and failures (code review of slice 0): base from merge-base with origin/main of the given head; a failing git log is not "no hits" ----
+D="$T/def"; mkdir -p "$D/docs/agents"; git -C "$D" init -q -b main; cp "$REPO/docs/agents/factory.md" "$D/docs/agents/factory.md"; echo r > "$D/README.md"
+git -C "$D" add -A; git -C "$D" commit -qm base; git -C "$D" update-ref refs/remotes/origin/main HEAD
+git -C "$D" checkout -q -b item/7; mkdir -p "$D/tests"; echo x > "$D/tests/a.sh"; git -C "$D" add -A; git -C "$D" commit -qm "#7 developer: touch tests"
+git -C "$D" checkout -q main
+# HEAD is main (no commits past origin/main); the branch is named with --head only
+ck kind3-default-base-follows-head "role-outside-role: $(git -C "$D" rev-parse --short=7 item/7) developer changed tests/a.sh (owner qa-engineer)" "$(cd "$D" && bash "$AD" kind3 --head item/7)"
+ck kind3-head-defaults-to-HEAD "" "$(cd "$D" && bash "$AD" kind3)"
+git -C "$D" checkout -q item/7
+ck kind3-default-no-flags-on-the-branch "role-outside-role: $(git -C "$D" rev-parse --short=7 HEAD) developer changed tests/a.sh (owner qa-engineer)" "$(cd "$D" && bash "$AD" kind3)"
+(cd "$D" && bash "$AD" kind3 --base no-such-ref >/dev/null 2>&1); ck kind3-bad-base-exit-2 2 "$?"
+# kind 4 ledger edge cases: a wait without an end, and a row without times, are left out with a warning on stderr (never shifted fields)
+awk -F'|' '/^\| W1 \|/ {print; print "| W5 | person | - | 2026-11-12T22:08Z |  | yes | still open |"; next} {print}' "$FX/ledger-168.md" | sed 's/^| 4 | #174 \(.*\)| - |/| 4 | #174 \1| W5 |/' > "$T/open.md"
+out="$(bash "$AD" working --ledger "$T/open.md" --times "$FX/times-168.tsv" 2>"$T/open.err" | grep '^4 ')"
+ck k4-open-wait-left-out-row-unchanged "4 developer 10" "$(sed -E 's/\| (architect|qa-engineer|docs-writer|security-reviewer) \|/| developer |/' "$T/open.md" > "$T/open2.md"; bash "$AD" working --ledger "$T/open2.md" --times "$FX/times-168.tsv" 2>/dev/null | grep '^4 ')"
+ck k4-open-wait-warned 1 "$(bash "$AD" working --ledger "$T/open.md" --times "$FX/times-168.tsv" 2>&1 >/dev/null | grep -c 'wait W5 has no start or end time')"
+grep -v '^174' "$FX/times-168.tsv" > "$T/times-no174.tsv"
+ck k4-row-without-times-left-out "" "$(bash "$AD" working --ledger "$FX/ledger-168.md" --times "$T/times-no174.tsv" 2>/dev/null | grep '^4 ')"
+ck k4-row-without-times-warned 1 "$(bash "$AD" working --ledger "$FX/ledger-168.md" --times "$T/times-no174.tsv" 2>&1 >/dev/null | grep -c 'row 4 (#174) has no start or end time')"
 done_

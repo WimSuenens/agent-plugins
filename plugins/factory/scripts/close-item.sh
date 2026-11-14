@@ -7,7 +7,7 @@
 # alone, a check that nothing is left (a nested git repository stays on purpose), and the commit `#<id> lead: remove work/`.
 # Other untracked files under work/<id>/ are never staged: a commit stays in the project's history for good.
 # Exit: 0 done; 1 the guard stopped (a message on stderr, nothing removed) or a step failed (a nested repository: `git rm` staged,
-# nothing committed). On 1, stop the close and put it to the person.
+# nothing committed), or `git diff --cached` itself failed (so the lead state is never removed uncommitted). On 1, stop the close and put it to the person.
 case "${1:-}" in ''|*[!0-9]*) echo "close: id not numeric" >&2; exit 1 ;; esac
 id="$1"
 w="$(git worktree list --porcelain | awk -v b="branch refs/heads/item/$id" '/^worktree /{p=substr($0,10)} $0==b{print p}')"
@@ -18,5 +18,7 @@ if [ -L "${w:?}/work" ] || [ -L "${w:?}/work/$id" ]; then echo "close: work/ is 
 git -C "${w:?}" add -- ":(glob)work/$id/[0-9][0-9]-*.md" || exit 1
 git -C "${w:?}" add -u -- "work/$id" || exit 1
 git -C "${w:?}" diff --cached --quiet
-if [ $? = 1 ]; then git -C "${w:?}" commit -m "#$id lead: close" || exit 1; fi
+d=$?
+if [ $d = 1 ]; then git -C "${w:?}" commit -m "#$id lead: close" || exit 1
+elif [ $d != 0 ]; then echo "close: git diff --cached failed ($d); nothing removed" >&2; exit 1; fi
 git -C "${w:?}" rm -r -q -- "work/$id" && git -C "${w:?}" clean -f -d -x -q -- "work/$id" && [ ! -e "${w:?}/work/$id" ] && git -C "${w:?}" commit -m "#$id lead: remove work/"

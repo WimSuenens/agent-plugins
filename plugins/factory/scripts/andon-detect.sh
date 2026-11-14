@@ -47,7 +47,7 @@ owner_of() { # <table> <path>
 }
 
 kind3() {
-  local repo=. base="" head=HEAD table="" tmp="" rc=0
+  local repo=. base="" head=HEAD table="" tmp="" rc=0 commits
   while [ $# -gt 0 ]; do
     case "$1" in
       --in) repo="${2:?}"; shift 2 ;;
@@ -57,14 +57,15 @@ kind3() {
       *) usage ;;
     esac
   done
-  [ -n "$base" ] || base="$(git -C "$repo" merge-base origin/main HEAD)" || { echo "andon-detect: no merge base with origin/main" >&2; exit 2; }
+  [ -n "$base" ] || base="$(git -C "$repo" merge-base origin/main "$head")" || { echo "andon-detect: no merge base with origin/main" >&2; exit 2; }
   if [ -z "$table" ]; then
     tmp="$(mktemp)"
     git -C "$repo" show origin/main:docs/agents/factory.md > "$tmp" 2>/dev/null || { rm -f "$tmp"; echo "andon-detect: no ownership table at origin/main" >&2; exit 3; }
     table="$tmp"
   fi
   [ -r "$table" ] || { echo "andon-detect: unreadable table" >&2; exit 3; }
-  git -C "$repo" log --no-merges --format='%H%x09%s' "$base".."$head" | while IFS="$(printf '\t')" read -r sha subj; do
+  commits="$(git -C "$repo" log --no-merges --format='%H%x09%s' "$base".."$head")" || { [ -z "$tmp" ] || rm -f "$tmp"; echo "andon-detect: git log $base..$head failed" >&2; exit 2; }
+  [ -z "$commits" ] || printf '%s\n' "$commits" | while IFS="$(printf '\t')" read -r sha subj; do
     r="$(printf '%s' "$subj" | sed -nE 's/^#[0-9]+ ([a-z-]+): .*/\1/p')"
     [ -n "$r" ] || continue
     case " $ROLES " in *" $r "*) ;; *) continue ;; esac
@@ -97,11 +98,13 @@ ledger_to_numeric() {
     /^### / { sec=""; next }
     sec=="t" && /^\| [0-9]+ \|/ {
       n=trim($2); task=trim($3); sub(/^#/,"",task); stage=trim($4); gsub(/ /,"_",stage); role=trim($5); w=trim($7); gsub(/ /,"",w)
-      if (!(task in cs) || cs[task]=="" || ce[task]=="") next
+      if (!(task in cs) || cs[task]=="" || ce[task]=="") { print "andon-detect: row " n " (#" task ") has no start or end time and is left out" > "/dev/stderr"; next }
       print n, stage, role, cs[task], ce[task], (w==""?"-":w) > ROWS
     }
     sec=="w" && /^\| W[0-9]+ \|/ {
-      print trim($2), trim($3), trim($7), mins(trim($5)), mins(trim($6)) > WAITS
+      a=mins(trim($5)); b=mins(trim($6))
+      if (a=="" || b=="") { print "andon-detect: wait " trim($2) " has no start or end time and is left out" > "/dev/stderr"; next }
+      print trim($2), trim($3), trim($7), a, b > WAITS
     }' ROWS="$3" WAITS="$4" TIMES="$2" "$2" "$1"
   [ -e "$3" ] || : > "$3"; [ -e "$4" ] || : > "$4"
 }

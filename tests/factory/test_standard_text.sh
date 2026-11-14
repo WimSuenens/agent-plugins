@@ -327,57 +327,41 @@ ck post-hansei-rm 1 "$(printf '%s' "$PH" | grep -cF 'rm -f "$rec"')"
 inline_before post-hansei-mktemp-before-post "$PH" 'rec="$(mktemp)"' '--body-file "$rec"'
 inline_before post-hansei-post-before-rm "$PH" '--body-file "$rec"' 'rm -f "$rec"'
 
-# --- close order (v2 #47; round 5 L8/L9; final round L11, contract ce920d4): guard, then the lead-state commit staging only
-# ':(glob)work/<id>/[0-9][0-9]-*.md' and tracked changes, then git rm && git clean -fdx && [ ! -e ] && commit, every command as
-# git -C "${w:?}", guard and both steps in ONE shell call. Same text in the run skill's step 6 and hansei.md section 5.
+# --- close order (v2 #47; round 5 L8/L9; final round L11): the close of step 8.6 is scripts/close-item.sh (slice 0 of #207 moved it out of
+# the prose, where hansei.md carried a second copy). The script is one shell call by construction, so the old "w is gone in a split call"
+# case (7) has no counterpart; the other cases (1 to 6) run unchanged against the script. The text still pins what the person reads.
+SK_CI="$PLUGIN/scripts/close-item.sh"
 C6="$(awk '/^6\. The last commit on `item\/<id>` removes `work\/<id>\/`/ {f=1} f && /^7\. Merge the PR/ {exit} f' "$SK" | tr '\n' ' ')"
-H6="$(awk '/^6\. Remove `work\/<id>\/`, in the item worktree, in this order/ {f=1} f && /^7\. \*Merge PR\*/ {exit} f' "$HA" | tr '\n' ' ')"
+H6="$(awk '/^6\. Remove `work\/<id>\/`, in the item worktree/ {f=1} f && /^7\. \*Merge PR\*/ {exit} f' "$HA" | tr '\n' ' ')"
 ck close-step6-one-bullet 1 "$(grep -cF '6. The last commit on `item/<id>` removes `work/<id>/`' "$SK")"
 ck close-ha-step6-present 1 "$([ -n "$H6" ] && echo 1)"
-guard_of() { awk -v h="$2" '$0 ~ h {f=1; next} f==1 && /^ *```/ {f=2; next} f==2 && /^ *```/ {exit} f==2 {sub(/^ +/, ""); print}' "$1"; }
-GS="$(guard_of "$SK" '^6\. The last commit on')"; GH="$(guard_of "$HA" '^ +0\. Guard:$')"
-ck close-guard-six-lines 6 "$(printf '%s\n' "$GH" | grep -c .)"
-ck close-guard-same-in-both "$GH" "$GS"
-W='"${w:?}"'
 for X in C6 H6; do
   eval "Y=\"\$$X\""
-  ck "close-$X-one-shell-call" 1 "$(printf '%s' "$Y" | grep -c 'as \*\*one shell call\*\* (one Bash tool call, one script that stops at the first failure)')"
-  ck "close-$X-why-w-guarded" 1 "$(printf '%s' "$Y" | grep -cF 'so `w` exists only inside that call, and every use is written `"${w:?}"`')"
-  # every use of w is "${w:?}": the only bare "$w" left is the guard's own emptiness test
-  ck "close-$X-only-guarded-w" '[ -n "$w"|[ "$w"' "$(printf '%s' "$Y" | grep -oE '.{6}"\$w[/"]' | sed 's/^ *//' | paste -sd'|' -)"
-  ck "close-$X-no-rm-rf" 0 "$(printf '%s' "$Y" | grep -c 'rm -rf')"
-  inline_before "close-$X-guard-id-before-worktree" "$Y" 'case "<id>" in' 'w="$(git worktree list --porcelain'
-  inline_before "close-$X-symlink-guard-before-add" "$Y" 'if [ -L "${w:?}/work" ] || [ -L "${w:?}/work/<id>" ]' "git -C $W add -- ':(glob)work/<id>/[0-9][0-9]-*.md'"
-  inline_before "close-$X-add-nn-before-add-u" "$Y" "git -C $W add -- ':(glob)work/<id>/[0-9][0-9]-*.md'" "git -C $W add -u -- \"work/<id>\""
-  inline_before "close-$X-add-before-commit" "$Y" "git -C $W add -u -- \"work/<id>\"" "git -C $W commit -m \"#<id> lead: close\""
-  inline_before "close-$X-commit-staged-only" "$Y" "git -C $W diff --cached --quiet" "git -C $W commit -m \"#<id> lead: close\""
-  inline_before "close-$X-lead-state-before-rm" "$Y" "git -C $W commit -m \"#<id> lead: close\"" "git -C $W rm -r -q -- \"work/<id>\""
-  ck "close-$X-rm-chain" 1 "$(printf '%s' "$Y" | grep -cF "git -C $W rm -r -q -- \"work/<id>\" && git -C $W clean -f -d -x -q -- \"work/<id>\" && [ ! -e \"\${w:?}/work/<id>\" ] && git -C $W commit -m \"#<id> lead: remove work/\"")"
-  ck "close-$X-nested-repo-stops" 1 "$(printf '%s' "$Y" | grep -c 'a nested git repository).*then stop the close and put it to the person, with `git rm` staged and nothing committed')"
-  ck "close-$X-glob-why" 1 "$(printf '%s' "$Y" | grep -cF 'the `glob` magic keeps `*` inside one directory level')"
-  ck "close-$X-every-git-names-worktree" 0 "$(printf '%s' "$Y" | grep -oE 'git (add|commit|rm|diff) |git clean -f -d' | grep -c .)"
+  ck "close-$X-points-at-the-script" 1 "$(printf '%s' "$Y" | grep -cF 'scripts/close-item.sh')"
+  ck "close-$X-stops-to-person" 1 "$(printf '%s' "$Y" | grep -cF 'stop the close and put it to the person')"
+  ck "close-$X-no-inline-git" 0 "$(printf '%s' "$Y" | grep -cE 'git -C|rm -rf')"
 done
-ck close-no-add-all 0 "$(grep -cF 'git add -A' "$SK" "$HA" | awk -F: '{s+=$2} END {print s+0}')"
-ck close-no-force-git-rm 0 "$(grep -cE 'git rm -[a-z]*f' "$SK" "$HA" | awk -F: '{s+=$2} END {print s+0}')"
-ck close-no-shell-rm-on-var 0 "$(grep -hoE '(^|[;&|`(] *)rm -[a-z]*r[a-z]* [^`]*' "$SK" "$HA" | grep -cE '\$\{?w')"
 has close-posted-before-lead-state-commit "$SK" 'It is posted before the lead-state commit too.'
 has close-untracked-never-staged "$SK" 'Other untracked files under `work/<id>/` are never staged.'
-has close-guard-stops-to-person "$HA" 'When the guard stops, stop the close and put it to the person; nothing has been removed.'
-before close-ha-post-before-remove "$HA" '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*' '6. Remove `work/<id>/`, in the item worktree, in this order'
-before close-ha-guard-before-commit "$HA" '   0. Guard:' '   1. Commit the lead state'
-before close-ha-commit-before-rm "$HA" '   1. Commit the lead state' "   2. \`git -C $W rm -r -q -- \"work/<id>\""
-# run hansei.md's own commands, verbatim, in scratch repos, as ONE shell call (bash -c of the guard + 6.1 + 6.2): the shell in
-# the main checkout, the item in a worktree. The step-1 commands are the backticked `git -C "${w:?}" …` snippets of step 6.1 in
-# their order: add, add -u, diff, commit.
-S1="$(awk '/^   1\. Commit the lead state/' "$HA" | grep -oE '`git -C "[$][{]w:[?][}]" [^`]+`' | tr -d '`')"
-ck close-step1-four-commands 4 "$(printf '%s\n' "$S1" | grep -c .)"
-S2="$(awk -v p="   2. \`git -C $W rm" 'index($0, p) == 1' "$HA" | grep -oE '^   2\. `[^`]+`' | sed -E 's/^   2\. `//; s/`$//')"
-ck close-step2-extracted 1 "$(printf '%s' "$S2" | grep -c 'clean -f -d -x -q')"
-close_script() { # id -> the close as the Lead runs it, one script
-  { printf '%s\n' "$GH"
-    printf '%s && %s || exit 1\n' "$(line "$S1" 1)" "$(line "$S1" 2)"
-    printf '%s; if [ $? = 1 ]; then %s || exit 1; fi\n' "$(line "$S1" 3)" "$(line "$S1" 4)"
-    printf '%s\n' "$S2"; } | sed "s/<id>/$1/g"; }
+has close-ha-untracked-never-staged "$HA" 'are never staged: a commit stays in the project'"'"'s history for good'
+before close-ha-post-before-remove "$HA" '4. Fill the template, measure 7 reading `pending resurvey`, and *Post hansei*' '6. Remove `work/<id>/`, in the item worktree'
+# the script's own text: every use of w is "${w:?}" (the only bare "$w" is the guard's emptiness test), no rm -rf, and the order
+CI1="$(tr '\n' ' ' < "$SK_CI" | tr -s ' ')"; W='"${w:?}"'
+ck close-script-only-guarded-w '[ -n "$w"|[ "$w"' "$(grep -v '^#' "$SK_CI" | grep -oE '.{0,6}"\$w[/"]' | sed 's/^ *//' | paste -sd'|' -)"
+ck close-script-no-rm-rf 0 "$(grep -v '^#' "$SK_CI" | grep -c 'rm -rf')"
+ck close-script-every-git-names-worktree 0 "$(grep -v '^#' "$SK_CI" | grep -oE 'git (add|commit|rm|diff|clean) ' | grep -c .)"
+inline_before close-script-id-before-worktree "$CI1" 'case "${1:-}" in' 'w="$(git worktree list --porcelain'
+inline_before close-script-symlink-guard-before-add "$CI1" 'if [ -L "${w:?}/work" ] || [ -L "${w:?}/work/$id" ]' "git -C $W add -- \":(glob)work/\$id/[0-9][0-9]-*.md\""
+inline_before close-script-add-nn-before-add-u "$CI1" "git -C $W add -- \":(glob)work/\$id/[0-9][0-9]-*.md\"" "git -C $W add -u -- \"work/\$id\""
+inline_before close-script-add-before-commit "$CI1" "git -C $W add -u -- \"work/\$id\"" "git -C $W commit -m \"#\$id lead: close\""
+inline_before close-script-commit-staged-only "$CI1" "git -C $W diff --cached --quiet" "git -C $W commit -m \"#\$id lead: close\""
+inline_before close-script-lead-state-before-rm "$CI1" "git -C $W commit -m \"#\$id lead: close\"" "git -C $W rm -r -q -- \"work/\$id\""
+ck close-script-rm-chain 1 "$(printf '%s' "$CI1" | grep -cF "git -C $W rm -r -q -- \"work/\$id\" && git -C $W clean -f -d -x -q -- \"work/\$id\" && [ ! -e \"\${w:?}/work/\$id\" ] && git -C $W commit -m \"#\$id lead: remove work/\"")"
+ck close-script-glob-keeps-one-level 1 "$(grep -cF ':(glob)work/$id/[0-9][0-9]-*.md' "$SK_CI")"
+ck close-no-add-all 0 "$(grep -cF 'git add -A' "$SK" "$HA" "$SK_CI" | awk -F: '{s+=$2} END {print s+0}')"
+ck close-no-force-git-rm 0 "$(grep -cE 'git rm -[a-z]*f' "$SK" "$HA" "$SK_CI" | awk -F: '{s+=$2} END {print s+0}')"
+ck close-no-shell-rm-on-var 0 "$(grep -hoE '(^|[;&|`(] *)rm -[a-z]*r[a-z]* [^`]*' "$SK" "$HA" "$SK_CI" | grep -cE '\$\{?w')"
+close_script() { printf 'bash "%s" %q\n' "$SK_CI" "$1"; }   # the close as the Lead runs it: the script, from the main checkout
 mkclose() { # dir worktree-dir: main checkout + item/12 worktree with work/12 committed
   git init -q -b main "$1" && ( cd "$1" && printf '.DS_Store\n' > .gitignore && echo r > README && git add -A && git commit -qm init \
     && git worktree add -q "$2" -b item/12 && mkdir -p "$2/work/12" && echo a > "$2/work/12/00-lead-state.md" && echo b > "$2/work/12/01-brief-developer.md" \
@@ -431,12 +415,6 @@ git init -q "$CW/work/12/sub"; echo keep > "$CW/work/12/sub/f.md"; h6="$(git -C 
 ck close-nested-repo-nothing-committed "$h6" "$(git -C "$CW" rev-parse HEAD)"
 ck close-nested-repo-rm-staged "D  work/12/00-lead-state.md|D  work/12/01-brief-developer.md" "$(git -C "$CW" status --porcelain -- work/12 | grep '^D' | paste -sd'|' -)"
 ck close-nested-repo-kept keep "$(cat "$CW/work/12/sub/f.md" 2>/dev/null)"
-# 7. why "${w:?}" (L11): step 6.2 run as a separate call, where w is gone, stops at once and touches nothing in the shell's directory
-CM="$T/cl7/main"; CW="$T/cl7/wt/12"; mkclose "$CM" "$CW"; mkdir -p "$CM/work/12"; echo m > "$CM/work/12/00-lead-state.md"; m7="$(git -C "$CM" rev-parse HEAD)"
-( cd "$CM" && unset w && bash -c "$(printf '%s\n' "$S2" | sed 's/<id>/12/g')" ) >"$T/close.out" 2>&1; code=$?
-ck close-split-call-stops "1 1" "$([ $code != 0 ] && echo 1) $(grep -c 'w: parameter null or not set' "$T/close.out")"
-ck close-split-call-main-untouched "m $m7" "$(cat "$CM/work/12/00-lead-state.md" 2>/dev/null) $(git -C "$CM" rev-parse HEAD)"
-ck close-split-call-worktree-untouched "a" "$(cat "$CW/work/12/00-lead-state.md" 2>/dev/null)"
 
 # --- v2 F1 (round 5): the stall/interruption start, taken with hansei.md's own command (*Taking the start*: cut-offs.sh on
 # the stopped transcript, last line's start, cut to minutes), is the last entry before the gap, not the notice.

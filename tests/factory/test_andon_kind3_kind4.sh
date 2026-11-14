@@ -1,45 +1,14 @@
 #!/bin/bash
 # AC-4 (kind 3, role outside its role) and AC-5 (kind 4, slow stage, the 2x test).
-# The Lead follows the written rules of plugins/factory/skills/run/SKILL.md `## Andon`, `### Detection`; these are
-# executable transcriptions of those steps (the only code, the Lead being an agent), run on scratch repos and stage-log fixtures.
-# The text itself is pinned in test_andon_text.sh.
+# Kind 3 and kind 4 are computed by plugins/factory/scripts/andon-detect.sh, which the run skill's `## Andon`, `### Detection` points at
+# (slice 0 of #207 moved the procedure out of the prose; the cases below are unchanged and now run the script). Rule 5.6 and
+# kind 6(b) stay prose, so their transcriptions stay here. The text itself is pinned in test_andon_text.sh.
 . "$(dirname "$0")/lib.sh"
 
 # ---------- kind 3 ----------
-# owner_of <factory.md> <path>: the Owner of the row with the longest matching token, or empty (unowned)
-owner_of() {
-  awk -F'|' -v P="$2" '
-    /^\| / && NF>=4 {
-      cell=$2; owner=$3; gsub(/^ +| +$/,"",owner)
-      s=cell
-      while (match(s, /`[^`]*`/)) {
-        tok=substr(s,RSTART+1,RLENGTH-2); rest=substr(s,RSTART+RLENGTH); s=rest
-        if (tok !~ /[\/.]/) continue
-        if (tok ~ /^[# ]/) continue
-        if (rest ~ /^ *section/) continue
-        m=0
-        if (tok ~ /\/$/) { t=substr(tok,1,length(tok)-1); if (P==t || index(P,tok)==1) m=1 }
-        else if (tok ~ /\*/) { re=tok; gsub(/[.]/,"\\.",re); gsub(/\*/,".*",re); if (P ~ "^" re "$") m=1 }
-        else if (P==tok) m=1
-        if (m && length(tok)>best) { best=length(tok); own=owner }
-      }
-    }
-    END { print own }' "$1"
-}
-ROLES="product-owner architect developer qa-engineer security-reviewer devops docs-writer"
-# kind3 <repo> <factory.md> <base>: prints one line per flagged commit
-kind3() {
-  git -C "$1" log --no-merges --format='%H%x09%s' "$3"..HEAD | while IFS="$(printf '\t')" read -r sha subj; do
-    r="$(printf '%s' "$subj" | sed -nE 's/^#[0-9]+ ([a-z-]+): .*/\1/p')"
-    [ -n "$r" ] || continue
-    case " $ROLES " in *" $r "*) ;; *) continue ;; esac
-    git -C "$1" diff-tree -z --no-commit-id --name-only -r --no-renames "$sha" | while IFS= read -r -d '' p; do
-      case "$p" in *[[:cntrl:]]*) echo "role-outside-role: $(echo $sha | cut -c1-7) $r changed an unclassifiable path (name escaped: $(printf '%q' "$p"))"; continue ;; esac
-      o="$(owner_of "$2" "$p")"
-      [ -n "$o" ] && [ "$o" != "$r" ] && echo "role-outside-role: $(echo $sha | cut -c1-7) $r changed $p (owner $o)"
-    done
-  done
-}
+AD="$PLUGIN/scripts/andon-detect.sh"
+owner_of() { bash "$AD" owner "$1" "$2"; }
+kind3() { bash "$AD" kind3 --in "$1" --table "$2" --base "$3"; }
 mkrepo() { rm -rf "$1"; mkdir -p "$1/docs/agents"; git -C "$1" init -q -b main; cp "$REPO/docs/agents/factory.md" "$1/docs/agents/factory.md"
   echo base > "$1/README.md"; mkdir -p "$1/docs"; git -C "$1" add -A; git -C "$1" commit -qm "base"; git -C "$1" checkout -q -b item/7; }
 cm() { # repo role-or-text paths...  (writes each path, commits with subject)
@@ -167,35 +136,8 @@ ck k6b-semver-differs-kind6 "kind 6: installed 1.4.0, FREEZE line 1.3.0" "$(free
 ck k6b-freeze-line-without-token "not captured (no token on the FREEZE line)" "$(freeze lead lead 'Factory run. FREEZE: unknown' /x/factory/1.3.0)"
 
 # ---------- kind 4 ----------
-# slow <role> <row#> from a stage log + waits: implements the written steps
 # stage rows: "# | Stage | Role | Start | End | Waits" (minutes since 00:00 for Start/End); waits: "id kind held start end"
-slowcheck() { # args: stagefile waitfile row#
-  awk -v ROW="$3" -v WF="$2" '
-    BEGIN { while ((getline l < WF) > 0) { split(l,w," "); wk[w[1]]=w[2]; wh[w[1]]=w[3]; ws[w[1]]=w[4]; we[w[1]]=w[5] } }
-    { n++; num[n]=$1; role[n]=$3; st[n]=$4; en[n]=$5; wl[n]=$6 }
-    function work(i,   k,c,cnt,sorted,a,b,u,x,y,t,tmp,m,j) {
-      # union of the held waits of kinds person limits stalled interrupted andon, cut to the row
-      cnt=0; split(wl[i],c,",")
-      for (k in c) { id=c[k]; if (id=="" || id=="-") continue
-        if (wh[id]!="yes") continue
-        if (wk[id] !~ /^(person|limits|stalled|interrupted|andon)$/) continue
-        a=(ws[id]>st[i])?ws[id]:st[i]; b=(we[id]<en[i])?we[id]:en[i]
-        if (b>a) { cnt++; A[cnt]=a; B[cnt]=b } }
-      for (x=1;x<=cnt;x++) for (y=x+1;y<=cnt;y++) if (A[y]<A[x]) { t=A[x];A[x]=A[y];A[y]=t; t=B[x];B[x]=B[y];B[y]=t }
-      u=0; cur_s=-1; cur_e=-1
-      for (x=1;x<=cnt;x++) { if (A[x]>cur_e) { if (cur_e>=0) u+=cur_e-cur_s; cur_s=A[x]; cur_e=B[x] } else if (B[x]>cur_e) cur_e=B[x] }
-      if (cur_e>=0) u+=cur_e-cur_s
-      return (en[i]-st[i])-u }
-    END {
-      i=ROW; earlier=0
-      for (j=1;j<=n;j++) if (role[j]==role[i] && num[j]<num[i]) { earlier++; e[earlier]=work(j) }
-      if (earlier<3) { print "no baseline: fewer than 3 earlier rows"; exit }
-      for (x=1;x<=earlier;x++) for (y=x+1;y<=earlier;y++) if (e[y]<e[x]) { t=e[x];e[x]=e[y];e[y]=t }
-      m=(earlier%2)?e[(earlier+1)/2]:(e[earlier/2]+e[earlier/2+1])/2
-      own=work(i)
-      if (own > 2*m) print "slow: " own " against median " m " of " earlier " earlier rows"; else print "not flagged"
-    }' "$1"
-}
+slowcheck() { bash "$AD" kind4 --rows "$1" --waits "$2" "$3"; }
 # fixture of the contract: developer rows 1-3 working 30m, 40m, 50m (median 40m)
 mkdev() { # <fourth row duration minutes> <waits column>
   printf '1 Build developer 0 30 -\n2 Build developer 100 140 -\n3 Build developer 200 250 -\n4 Build developer 300 %s %s\n' "$((300 + $1))" "$2" > "$T/sl"; }

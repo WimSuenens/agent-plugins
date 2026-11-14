@@ -74,7 +74,7 @@ has text-step-9-entry "$RUN" 'Entered when the backlog is empty, the budget is r
 has text-closes-with-a3 "$RUN" 'It closes at step 9 with the A3 and the baseline.'
 has text-budget-resumable "$RUN" 'every slice in flight stays resumable with `/factory:run #<slice>`'
 has text-budget-no-new-start "$RUN" 'start nothing new, let each role in hand finish its step'
-has text-no-maximum "$RUN" 'No configured maximum is read or required.'
+has text-no-maximum "$RUN" 'There is no maximum of slices in flight.'   # the run cycle's copy of this was removed as a duplicate (slice 0 of #207)
 has text-old-line-ignored "$RUN" 'A leftover `parallel-limit` line is ignored'
 has text-budget-read-at-start "$RUN" 'factory-config.sh budget'
 ck text-no-dissolve-step "0" "$(grep -c 'The map dissolves' "$RUN")"

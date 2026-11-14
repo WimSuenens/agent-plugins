@@ -201,21 +201,16 @@ for n in 1 2 4 5 6 7; do kept "ac7-protocol-F$n-row" "$PROTO" references/protoco
 ck ac7-qa-done-list-keeps-its-gate-lines 4 "$(printf '%s\n' "$QD" | grep -cE '^- (Every defect has a reproduction|The verdict is recorded|Changed paths checked against|Every acceptance criterion maps to)')"
 
 # =============================================================== AC-8 the fenced section is byte-identical; nothing else changes outside ## Tests
+FX="$REPO/tests/factory/fixtures/fence"   # committed text, not origin/main: a change to the fence needs an edit of the fixture in the same PR
 fence() { awk '/^## Never overridable locally$/ {f=1} /^## Overrides$/ {f=0} f' "$1" | shasum -a 256 | cut -d' ' -f1; }
-bf="$(base references/protocol.md | sed 's|relative to the repo'"'"'s parent for another worktree (`../wt/<id>`)|relative to the main checkout for another worktree (`.claude/worktrees/<id>`)|' > "$T/proto-base.md"; fence "$T/proto-base.md")"  # the one change since the freeze: the worktree location (#109)
-ck ac8-baseline-fenced-section-found 1 "$([ -n "$(awk '/^## Never overridable locally$/ {f=1} f' "$T/proto-base.md")" ] && echo 1 || echo 0)"
-ck ac8-fenced-section-byte-identical "$bf" "$(fence "$PROTO")"
+bf="$(cat "$FX/protocol-never-overridable-locally.md" "$FX/protocol-processes-and-ports.md" "$FX/protocol-shared-resources.md" "$FX/protocol-doors.md" 2>/dev/null | shasum -a 256 | cut -d' ' -f1)"
+ck ac8-baseline-fenced-section-found 1 "$([ -s "$FX/protocol-never-overridable-locally.md" ] && echo 1 || echo 0)"
+ck ac8-fenced-section-byte-identical "$(awk '/^## Never overridable locally$/ {f=1} /^## Overrides$/ {f=0} f' "$FX/protocol-minus-tests.md" | shasum -a 256 | cut -d' ' -f1)" "$(fence "$PROTO")"
 ck ac8-question-E-present 1 "$(grep -c '^> \*\*E\. Data egress\.\*\*' "$PROTO")"
-# the protocol minus its ## Tests section is the baseline protocol, byte for byte
-awk '/^## Tests$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$PROTO" > "$T/proto-minus-tests.md"
-# slice 112 adds one shell line for the integrator; it is the only other change allowed here
-# slice 115 replaces the final ## Memory section with ## Role knowledge (tested in test_role_knowledge.sh); both are cut out here
+# the protocol minus its ## Tests, Memory/Role knowledge sections and the integrator shell line is the committed fixture, byte for byte
 nomem() { awk '/^## (Memory|Role knowledge)$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$1"; }
-# slice 1 of #207 (#196) changes one line of the brief template: the Inputs line names worktrees and home paths in their permitted form
-INP_OLD='    Inputs: <file paths and tracker issue numbers>'
-INP_NEW='    Inputs: <file paths and tracker issue numbers; a worktree as `.claude/worktrees/<id>`, a home path as `~/...` in prose or `"$HOME/..."` in a quoted shell command>'
-inputs_line() { awk -v o="$INP_OLD" -v n="$INP_NEW" '$0==o {print n; next} {print}'; }
-ck ac8-protocol-minus-tests-section-is-baseline "$(nomem "$T/proto-base.md" | inputs_line | slice2_kind1 | shasum -a 256 | cut -d' ' -f1)" "$(nomem "$T/proto-minus-tests.md" | grep -v '^- \*\*integrator\*\*' | shasum -a 256 | cut -d' ' -f1)"
+awk '/^## Tests$/ {skip=1; next} skip && /^## / {skip=0} !skip' "$PROTO" > "$T/proto-minus-tests.md"
+ck ac8-protocol-minus-tests-section-is-baseline "$(shasum -a 256 < "$FX/protocol-minus-tests.md" | cut -d' ' -f1)" "$(nomem "$T/proto-minus-tests.md" | grep -v '^- \*\*integrator\*\*' | shasum -a 256 | cut -d' ' -f1)"
 
 # =============================================================== AC-9 the files agree on whose test to change (script part; the cards are human review)
 for f in $FILES; do

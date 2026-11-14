@@ -71,7 +71,7 @@ The factory decides *what* the destination is and cuts the slices; wayfinding ch
 /factory:obeya [start | stop]        the Obeya view, once opted in (below)
 ```
 
-`/factory:run` is set to `disable-model-invocation: true`: you type it yourself, and a model cannot load it through the Skill tool. A session that has to start the lead without a typed command (a headless or scripted session) reads `plugins/factory/skills/run/SKILL.md` from the plugin root and follows it; everything in it that uses `${CLAUDE_PLUGIN_ROOT}` works from there. This is the working invocation when the skill "cannot be loaded by that name" (#85).
+`/factory:run` is set to `disable-model-invocation: true`: you type it yourself, and a model cannot load it through the Skill tool. A session that has to start the lead without a typed command (a headless or scripted session) reads `plugins/factory/skills/run/SKILL.md` from the plugin root and follows it, and reads the `references/run-*.md` file a line of it names when that line's event happens; everything in it that uses `${CLAUDE_PLUGIN_ROOT}` works from there. This is the working invocation when the skill "cannot be loaded by that name" (#85).
 
 Which model a role runs on, first match wins: the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (set it and every role uses it, overrides included), then the repo's `## Role models` row, then the agent file's `model:`. `inherit` follows the lead, so a lead started on Sonnet runs the inheriting roles on Sonnet too; override them with `opus` to prevent that.
 

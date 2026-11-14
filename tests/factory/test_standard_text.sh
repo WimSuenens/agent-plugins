@@ -3,7 +3,7 @@
 # and contract 39-standard-changes. Checks what the Lead is told, not how it behaves in a session
 # (that is the acceptance demo's human-only list in reviews/qa-39.md).
 . "$(dirname "$0")/lib.sh"
-SK="$PLUGIN/skills/run/SKILL.md"
+SK="$(run_all_file)"
 HA="$PLUGIN/references/hansei.md"
 TP="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
 MK="$REPO/.claude-plugin/marketplace.json"

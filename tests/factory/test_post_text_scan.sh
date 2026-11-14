@@ -2,7 +2,7 @@
 # Slice 1 of #207, the slice-0 leftover: post-text.sh render scans the draft itself, so the closing comment path is script-enforced.
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
-PT="$PLUGIN/scripts/post-text.sh"; RUN="$PLUGIN/skills/run/SKILL.md"
+PT="$PLUGIN/scripts/post-text.sh"; RUN="$(run_all_file)"
 cd "$T" || exit 1
 printf 'Status: done\nAbnormality: none\nSummary: built it\nArtifacts: x\n' >clean.md
 H=/Use; H="${H}rs"   # built here so this file holds no home path itself

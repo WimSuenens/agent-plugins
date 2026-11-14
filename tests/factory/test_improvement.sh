@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 T="$(cd "$T" && pwd -P)"
 IM="$PLUGIN/scripts/improvement.sh"
-SK="$PLUGIN/skills/run/SKILL.md"
+SK="$(run_all_file)"
 PR="$PLUGIN/references/protocol.md"
 HP="/Us""ers"
 mkdir -p "$T/bin" "$T/g"

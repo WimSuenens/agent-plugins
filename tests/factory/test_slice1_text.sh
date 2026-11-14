@@ -3,7 +3,7 @@
 # The behaviour behind each wording is tested in the script tests next to it.
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"; AR="$PLUGIN/agents/architect.md"; HA="$PLUGIN/references/hansei.md"
+RUN="$(run_all_file)"; AR="$PLUGIN/agents/architect.md"; HA="$PLUGIN/references/hansei.md"
 sect() { awk -v h="$2" '$0==h{f=1;print;next} f&&/^## /{exit} f' "$1"; }
 
 # --- #196: briefs name home paths in home-relative form and worktrees repository-relative

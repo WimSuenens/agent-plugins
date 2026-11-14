@@ -6,7 +6,7 @@
 # sections 3.1 and 3.2 before the build.
 . "$(dirname "$0")/lib.sh"
 command -v python3 >/dev/null || { echo "skip: python3 missing"; exit 0; }
-SK="$PLUGIN/skills/run/SKILL.md"; BA="$PLUGIN/references/baseline.md"; A3="$PLUGIN/references/a3.md"; HA="$PLUGIN/references/hansei.md"
+SK="$(run_all_file)"; BA="$PLUGIN/references/baseline.md"; A3="$PLUGIN/references/a3.md"; HA="$PLUGIN/references/hansei.md"
 PY="$REPO/tests/factory/lean_replay.py"; FX="$REPO/tests/factory/fixtures/a3"; BFX="$REPO/tests/factory/fixtures/baseline"
 fblock() { awk -v h="$2" '/^```/{fence=!fence; if(f&&!fence){exit} next} !fence&&/^#{2,3} /{f=($0==h)} f&&fence{print}' "$1"; }
 # a heading's text (fence-aware), up to the next heading of the same or a higher level
@@ -90,7 +90,7 @@ ck ac3-problem-section-extracted 1 "$([ -n "$S4" ] && echo 1 || echo 0)"
 ck ac3-problem-rule-reads-no-tag 0 "$(printf '%s\n' "$S4" | grep -ci 'waste\|tag')"
 ck ac3-section-10-exists 1 "$(grep -c '^## 10\. A3 v2' "$A3")"
 # AC-4: the three places where a tag is optional
-ANDON="$(awk '/^### The comment$/ {f=1} f && /^```$/ {g++; next} f && g==1 {print} g==2 {exit}' "$SK")"
+ANDON="$(awk '/^### The comment$/ {f=1} f && /^```$/ {g++; next} f && g==1 {print} g==2 {exit}' "$(run_section_file 'The comment')")"
 ck ac4-andon-template-last-line "- waste: <type | ->" "$(printf '%s\n' "$ANDON" | grep -v '^$' | tail -1)"
 ck ac4-andon-template-carried-on-before-waste "- carried on: <YYYY-MM-DDTHH:MMZ>" "$(printf '%s\n' "$ANDON" | grep -v '^$' | tail -2 | head -1)"
 ck ac4-andon-template-marker-still-v1 '<!-- factory:andon v1 -->' "$(printf '%s\n' "$ANDON" | sed -n 1p)"
@@ -150,7 +150,7 @@ ck ac13-sample-walk-section-still-there 1 "$(grep -c '^### The line$' "$HA")"
 ck ac13-sample-walk-is-still-one-per-item 1 "$([ "$(grep -c 'One walk per item, done at step 8.3a' "$HA")" -ge 1 ] && echo 1 || echo 0)"
 has ac14-5-whys-accepts-gemba-evidence "$SK" 'gemba <stage> #<item> row <#>'
 has ac14-skill-9-2-names-targeted-walk "$SK" 'The targeted walk'
-S92="$(awk '/^## 9\. Close the run/ {s=1} /^## 10\. |^## Context/ {s=0} s' "$SK")"
+S92="$(run_section '9. Close the run')"
 ck ac17-step-9-2-runs-the-check-script 1 "$([ "$(printf '%s\n' "$S92" | grep -c 'a3-check.sh')" -ge 1 ] && echo 1 || echo 0)"
 ck ac17-step-9-2-posts-v2 1 "$([ "$(printf '%s\n' "$S92" | grep -ci 'v2')" -ge 1 ] && echo 1 || echo 0)"
 has ac17-a3-md-section-9-runs-the-script "$A3" 'a3-check.sh'

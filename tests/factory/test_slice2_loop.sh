@@ -2,7 +2,7 @@
 # Slice 2 of #207 (the improvement loop). One block per item, in the order built. Each block was red before its change.
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
-AD="$PLUGIN/scripts/andon-detect.sh"; SK="$PLUGIN/skills/run/SKILL.md"; PR="$PLUGIN/references/protocol.md"
+AD="$PLUGIN/scripts/andon-detect.sh"; SK="$(run_all_file)"; PR="$PLUGIN/references/protocol.md"
 cd "$T" || exit 1
 
 # ---- item 6 (#211): kind 3 and the tie line ----

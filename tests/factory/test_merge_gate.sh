@@ -4,7 +4,7 @@
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
 MG="$PLUGIN/scripts/merge-gate.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 AG="$PLUGIN/agents/integrator.md"
 PROTO="$PLUGIN/references/protocol.md"
 cd "$T" || exit 1

@@ -3,7 +3,7 @@
 # Two seams: the scripts (factory-config.sh budget and reached, paths.sh overlap) and the standard text.
 . "$(dirname "$0")/lib.sh"
 FC="$PLUGIN/scripts/factory-config.sh"; PS="$PLUGIN/scripts/paths.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 SU="$PLUGIN/skills/setup-factory-skill/SKILL.md"
 TPL="$PLUGIN/skills/setup-factory-skill/assets/factory.md"
 f() { printf '%b' "$2" >"$T/$1"; }

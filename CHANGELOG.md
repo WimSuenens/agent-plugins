@@ -2,6 +2,23 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.1.0 (#207, split before slice 4)
+
+Release: `3.1.0`, a **minor** release: standard text changed (the run skill became a router and nine reference files). No behaviour changed: every rule moved word for word. The `standard` fingerprint changes because the text moved; the `tooling` fingerprint does not. No migration.
+
+Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207) (decision D1: split the run skill before slice 4) and [#187](https://github.com/WimSuenens/agent-plugins/issues/187). Cause: `skills/run/SKILL.md` was 115,665 bytes, and slice 4 adds text to steps 1 to 4.
+
+**What changed for the person who runs the factory:**
+
+- **`skills/run/SKILL.md` is a router (62 KB, was 115 KB).** It keeps the frontmatter, the preamble, steps 0 to 7 whole, step 8 up to the merge question (8.1), *The run cycle*, *The integrator*, *The board*, *Needs you*, *Role tasks*, *Scan before posting*, *Role knowledge* and *Context*. Every other section keeps its heading with one line that says when to read its reference and what it covers.
+- **Nine files `references/run-*.md`, grouped by when they are read:** `run-andon-detect.md` (at every result and stage end), `run-andon.md` (when a detection hits), `run-overrides.md` (overrides, run identity, run start, settle round), `run-close-item.md` (8.2 to 8.11), `run-close-run.md` (step 9), `run-intake.md` (maintenance cycle, idea intake), `run-improve.md` (improvement loop, skill graduation), `run-parallel.md`, `run-interruptions.md`. A name in italics (*Andon*, *Settle round*) is a heading of the router or of the reference its line names.
+- **The fence stays where `protocol.md` says:** F1 (step 8.1 and the sentence on production actions at the end of step 6), F2 (step 7) and F3 (step 6) are unchanged in the router; `protocol.md` and the fence fixtures are untouched.
+- **`baseline.md`:** a new minor starts a new series. The `3.0` series becomes history and its readings indicative; `3.1` starts with no items.
+
+**Tests.** `tests/factory/test_run_split.sh` (new) holds the proofs: no old line lost (against `tests/factory/fixtures/split/run-skill-3.0.0.md`), pointers resolve, five scenarios read through, size. `lib.sh` gains `run_all_file`, `run_section`, `run_section_file`, `run_step8` and `run_andon`; the other tests read the skill through them.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `ae8344ea46c5277776d6f5ad5727fb7bff05a3f58c2df590904e7e7de1a834eb`, tooling `3efd1b41b14caf78dd68f26fd1490eacd0d2748d1da41e63b27c2c2d2b3b66f4`.
+
 ## factory 3.0.0 (#207, slice 3)
 
 Release: major (a project without its flow table can no longer run: `factory-config.sh state` now refuses it)

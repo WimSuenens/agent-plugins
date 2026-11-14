@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 T="$(cd "$T" && pwd -P)"
 MT="$PLUGIN/scripts/maintenance.sh"; IN="$PLUGIN/scripts/integrator.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"; AG="$PLUGIN/agents/integrator.md"
+RUN="$(run_all_file)"; AG="$PLUGIN/agents/integrator.md"
 mkdir -p "$T/bin" "$T/g"
 cp "$REPO/tests/factory/stub-gh/gh" "$T/bin/gh"
 export STUB_GH_DIR="$T/g" PATH="$T/bin:$PATH"

@@ -6,7 +6,7 @@ G="$PLUGIN/scripts/guard-memory.sh"
 RK="$PLUGIN/scripts/role-knowledge.sh"
 PR_="$PLUGIN/references/protocol.md"
 SU="$PLUGIN/skills/setup-factory-skill/SKILL.md"
-SK="$PLUGIN/skills/run/SKILL.md"
+SK="$(run_all_file)"
 T="$(cd "$T" && pwd -P)"
 
 # hook <agent_type> <tool_input json>: exit code of the guard

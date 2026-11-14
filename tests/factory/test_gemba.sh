@@ -4,7 +4,7 @@
 # reviews/qa-60.md under "Unverified". Known text defects are named skips (QA-60 finding Fn), not red checks.
 # The expected rows in fixtures/gemba/expected.tsv were derived by hand from the rule and committed before the readers were written.
 . "$(dirname "$0")/lib.sh"
-HA="$PLUGIN/references/hansei.md"; SK="$PLUGIN/skills/run/SKILL.md"; BA="$PLUGIN/references/baseline.md"; A3="$PLUGIN/references/a3.md"
+HA="$PLUGIN/references/hansei.md"; SK="$(run_all_file)"; BA="$PLUGIN/references/baseline.md"; A3="$PLUGIN/references/a3.md"
 FX="$REPO/tests/factory/fixtures/gemba"; TF="$REPO/tests/factory"
 PA="$TF/gemba_pick.py"; PB="$TF/gemba_pick.awk"; GL="$TF/gemba_line.py"
 command -v python3 >/dev/null || { echo "skip: python3 missing"; exit 0; }
@@ -426,7 +426,7 @@ has g2-section-6-tells-the-person-asks-again "$T/sec6.md" 'tell the person befor
 has g2-section-6-gating-stage-defined "$T/sec6.md" 'concerns a gating stage (QA or security did not run, or a verdict was not what its result said)'
 has g2-section-6-no-new-measure-or-stop-kind "$T/sec6.md" 'This adds no measure and no stop kind.'
 has g2-skill-8-3a-sentence "$SK" 'The walk comes after the approval and cannot itself stop the merge: a difference about a gating stage (QA or security did not run, or a verdict was not what its result said) is told to the person before 8.7 and the merge question is asked again; any other difference goes in the record.'
-ck g2-8-7-is-the-merge-step 1 "$(sed -n '/^## 8\. /,/^## 9\. /p' "$SK" | grep -cE '^7\. .*Merge PR')"
+ck g2-8-7-is-the-merge-step 1 "$(run_step8 | grep -cE '^7\. .*Merge PR')"
 ck g2-still-one-walk-one-line-seven-measures "1 2 3 4 5 6 7" "$(grep -E '^[0-9]+\. ' "$T/layout.txt" | cut -d. -f1 | paste -sd' ' -)"
 ck g2-no-new-andon-kind "7" "$(grep -oE '^- \*\*Kind [0-9]+' "$SK" | grep -oE '[0-9]+' | sort -n | tail -1)"
 ck g2-gate-paragraph-once-in-the-plugin 1 "$(grep -rF 'A difference about a gate' "$PLUGIN" | wc -l | tr -d ' ')"
@@ -467,7 +467,7 @@ has t9-difference-always-gets-a-5-whys "$T/sec6.md" 'A `difference` always gets 
 has t9-nothing-written-until-accepted "$T/sec6.md" '**Nothing is written to the line until a chain is accepted and its comment posted.**'
 has t9-difference-never-changes-nothing "$T/sec6.md" 'A difference never ends as `changes nothing`.'
 has t9-refused-draft-stays "$T/sec6.md" 'the refused draft stays under `## Refused drafts`'
-ck t9-5-whys-section-exists-in-skill 1 "$(grep -c '^### The 5 Whys$' "$SK")"
+ck t9-5-whys-section-exists-in-skill 1 "$(grep -c '^### The 5 Whys$' "$(run_section_file 'The 5 Whys')")"
 ck t9-skill-names-the-section-by-its-title 1 "$(grep -c 'The 5 Whys' "$SK" | sed 's/^[1-9][0-9]*$/1/')"
 # the mechanical part of the refusal, applied to the found sentence and to the chain
 refuse() {  # refuse <found sentence> <chain file> -> REFUSED:<why> | ACCEPTED
@@ -541,7 +541,7 @@ ck t10-control-a-wait-after-approval-breaks-the-sum 1 "$([ $((tot - 51 - 15 - 15
 has t10-hansei-worked-example-sum "$HA" 'Check of line 1: 4h41m = 281m; 51 + 15 + 15 + 18 + 20 = 119m; 281 − 119 = 162m = 2h42m.'
 
 # ---------- T12 (AC-9): the close step is placed once ----------
-ck t12-skill-8-3a-after-8-3-before-8-4 "3 3a 4" "$(sed -n '/^## 8\. /,/^## 9\. /p' "$SK" | grep -oE '^(3a|3|4)\. ' | tr -d '. ' | paste -sd' ' - | sed 's/^3 3a 4.*/3 3a 4/')"
+ck t12-skill-8-3a-after-8-3-before-8-4 "3 3a 4" "$(run_step8 | grep -oE '^(3a|3|4)\. ' | tr -d '. ' | paste -sd' ' - | sed 's/^3 3a 4.*/3 3a 4/')"
 has t12-skill-8-3a-after-the-approval "$SK" 'Do the gemba walk of `hansei.md`, section 6 (after the approval of 8.1 and the totals of 8.3, before the template is filled)'
 has t12-hansei-5-item-3a-same-place "$HA" '3a. Do the gemba walk (section 6), after the approval and after the token totals, before the template is filled; its result is the `gemba` line.'
 ck t12-hansei-5-order-3-3a-4 "3 3a 4" "$(awk '/^## 5\. Close, in order/{f=1;next} /^## 6\./{f=0} f' "$HA" | grep -oE '^(3a|3|4)\. ' | tr -d '. ' | paste -sd' ' - | sed 's/^3 3a 4.*/3 3a 4/')"

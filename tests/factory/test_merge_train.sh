@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 T="$(cd "$T" && pwd -P)"
 MT="$PLUGIN/scripts/merge-train.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 AG="$PLUGIN/agents/integrator.md"
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 

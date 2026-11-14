@@ -7,7 +7,7 @@ CFG="$PLUGIN/scripts/factory-config.sh"
 ST="$PLUGIN/scripts/setup-table.sh"
 MG="$PLUGIN/scripts/merge-gate.sh"
 SETUP="$PLUGIN/skills/setup-factory-skill/SKILL.md"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 BASE="$PLUGIN/references/baseline.md"
 TRIGGERS='Open one-way door|Unresolved research question|More than 3 expected slices|Protected area touched|Contract or interface used by others|New logic or data behaviour|Visual result|Deploy, pipeline or production config'
 cd "$T" || exit 1
@@ -217,7 +217,8 @@ has setup-state-needs-table "$SETUP" 'and the flow table'
 hasnt setup-no-state-2-only "$SETUP" 'accepts a project only when line 1 of `docs/agents/factory.md` is `factory-state: 2`;'
 has run-exit-6 "$RUN" 'exit 6 means no flow table'
 ck run-one-line-only "1" "$(grep -c 'exit 6 means no flow table' "$RUN")"
-ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 115900 ] && echo yes || echo no)"
+# slice 3 added one line and capped the skill at 115,900 bytes; the split adds 18 pointer lines and 9 reference headers (about 8 KB), so the cap on router plus references is 124,000 (the router alone is capped at 70,000 in test_run_split.sh)
+ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 124000 ] && echo yes || echo no)"
 has baseline-major-new-series "$BASE" 'A new major starts a new series exactly as a new minor does'
 ck baseline-no-repo-names "0" "$(grep -c 'check-bump\|release-class' "$BASE")"
 
@@ -298,7 +299,8 @@ ck adr-no-owner-tag-in-consequences "0" "$(sed -n '/^## Consequences/,$p' "$A" |
 
 # --- item 6: the release
 PJ="$PLUGIN/.claude-plugin/plugin.json"
-ck version-3-0-0 "3.0.0" "$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$PJ")"
+# slice 3 was the 3.0.0 major; later releases move the manifest on (3.1.0 is the split of the run skill), so the pin is "3.0.0 or later"
+ck version-3-0-0-or-later "yes" "$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$PJ" | awk -F. '$1 > 3 || ($1 == 3 && ($2 > 0 || $3 >= 0)) {print "yes"}')"
 CL="$REPO/CHANGELOG.md"
 ck changelog-entry "1" "$(grep -c '^## factory 3.0.0 (#207, slice 3)$' "$CL")"
 ck changelog-declares-major "yes" "$(grep -q '^Release: major (.\+)$' "$CL" && echo yes || echo no)"

@@ -3,7 +3,7 @@
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/lib64.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"
+RUN="$(run_all_file)"
 TPL="$PLUGIN/skills/setup-factory-skill/assets/factory.md"
 OPS="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
 SK="$PLUGIN/skills/setup-factory-skill/SKILL.md"

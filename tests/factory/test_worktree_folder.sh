@@ -4,7 +4,7 @@
 . "$(dirname "$0")/lib.sh"
 T="$(cd "$T" && pwd -P)"
 WT="$PLUGIN/scripts/worktree.sh"
-SK="$PLUGIN/skills/run/SKILL.md"
+SK="$(run_all_file)"
 HN="$PLUGIN/references/hansei.md"
 PR_="$PLUGIN/references/protocol.md"
 SU="$PLUGIN/skills/setup-factory-skill/SKILL.md"

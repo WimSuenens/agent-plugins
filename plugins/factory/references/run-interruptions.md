@@ -1,0 +1,13 @@
+# Run skill: interruptions
+
+Read this when a role agent stops mid-task on a usage or session limit, a stall or a connection error, or a resumed run finds one cut off. It is part of the run skill; the text below moved out of `skills/run/SKILL.md` unchanged, and the pointer in the router for any heading says which file holds it.
+
+## Interruptions
+
+A role agent can stop mid-task on a usage or session limit (HTTP 429), often two parallel agents at once.
+
+1. Note the interruption in the lead state's `## Interrupted` section (or the Factory run section, in a frontier round): which role task and agent, when, its last commit, its draft result. In an item, the wait is written to the ledger's Waits table **when it ends** (never open), from the failure notice, with the stopped agent in its `Agent` column (`lead` for yourself): `limits` for a usage limit, `stalled` for no progress (the stream watchdog), `interrupted` for a server or connection error or a machine sleep. The resume, the respawn or the accepted result ends it; the start is the last line's start from `bash "${CLAUDE_PLUGIN_ROOT}/scripts/cut-offs.sh" [--sleep-log -] -- <transcript>` on the stopped agent's transcript, never the file's last entry; `hansei.md` gives the detection rules, the exact sleep-log filter and the rule to copy only UTC sleep times.
+2. **Done, then stopped.** When the agent stalled or failed after writing a complete result with `Status: done` whose commits are all on `item/<id>`, and its role's paths are clean, accept it as a completion after the usual Done-list check: do not resume or respawn it, log the wait as its kind, and put `done, then <kind>` in the Tasks row's Notes (`hansei.md`, *Done, then stopped*).
+3. Otherwise, after the limit resets, **resume the same agent** by messaging its handle to continue. Its context is intact, and its result's **Progress** says where it stood. With no result file yet, its commits on the branch show how far it got.
+4. Only when resuming fails, spawn a fresh agent of that role with the same brief, telling it to continue from the **Next** in its result's Progress and the commits listed there. Update its handle under Running agents.
+5. From the first limit hit on, stop running role agents in parallel for the rest of the item (or round): QA before security, Environment before the build, and one frontier ticket's role work at a time. Record this where step 1 noted the interruption, so a resumed session keeps to it. After a usage-limit hit the start gate behaves as `N = 1` until the slices in flight have closed (*Parallel slices*). A cut-off role keeps its role task open and its card `Running` (*Role tasks*, *A cut-off role loses no Progress*).

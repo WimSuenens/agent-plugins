@@ -5,7 +5,7 @@
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/lib64.sh"
 PS="$SCRIPTS/paths.sh"; PT="$SCRIPTS/post-text.sh"
-RUN="$PLUGIN/skills/run/SKILL.md"; OPS="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
+RUN="$(run_all_file)"; OPS="$PLUGIN/skills/setup-factory-skill/references/issue-tracker-github.factory.md"
 UD="Us""ers"; GH="gh""p_"; TOK="abcdefghijklmnopqrstuvwxyz0123456789"
 fake_setup; cd "$T" || exit 1
 lf() { local n="$1" sh="$2"; shift 2; { echo "# t"; echo; echo "Paths:"; for p in "$@"; do echo "- $p"; done; echo "shared: $sh"; } >"$T/$n"; }

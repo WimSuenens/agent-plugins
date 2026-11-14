@@ -12,9 +12,10 @@ scripts/skill-graduation.sh|plugin.json|searches the manifests of the installed 
 references/a3.md|plugins/factory/|a worked example of an A3, as a target path of a countermeasure
 references/protocol.md|plugins/factory/agents/developer.md|a path example for message files
 references/hansei.md|dependencies of `plugin.json`|the record field context
-skills/run/SKILL.md|(`domain` in `plugin.json`)|the domain search reads the manifests of other plugins
-skills/run/SKILL.md|(`plugins/factory/` is not a prefix of|the overlap rule explains directory prefixes
-skills/run/SKILL.md|shared files `CHANGELOG.md`, `README.md`|the overlap rule names shared files by name
+references/run-improve.md|(`domain` in `plugin.json`)|the domain search reads the manifests of other plugins (moved out of the run skill by the split)
+references/run-parallel.md|(`plugins/factory/` is not a prefix of|the overlap rule explains directory prefixes (moved out of the run skill by the split)
+skills/run/SKILL.md|shared files `CHANGELOG.md`, `README.md`|the code-review trigger table names shared files by name
+references/run-parallel.md|shared files `CHANGELOG.md`, `README.md`|the overlap rule names shared files by name (moved out of the run skill by the split)
 skills/run/SKILL.md|evidence: plugins/factory/skills/run/SKILL.md|a worked A3 example
 agents/architect.md|plugins/factory|a contract example for the paths list
 skills/setup-factory-skill/assets/factory.md|CHANGELOG.md|the ownership row of a project (the project changelog)'

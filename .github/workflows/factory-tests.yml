@@ -1,0 +1,44 @@
+# Runs the factory test suite (bash tests/run.sh) on every pull request and on main, on Linux and on macOS.
+# The macOS job is there because the scripts are written for bash 3.2 and the awk of a Mac.
+name: factory-tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels the older run; a run on main finishes.
+concurrency:
+  group: factory-tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Tests that commit need an identity; it comes from the environment, not from a global git config.
+env:
+  GIT_AUTHOR_NAME: ci
+  GIT_AUTHOR_EMAIL: ci@example.invalid
+  GIT_COMMITTER_NAME: ci
+  GIT_COMMITTER_EMAIL: ci@example.invalid
+
+jobs:
+  tests-linux:
+    name: factory tests (ubuntu)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Run the factory test suite
+        run: bash tests/run.sh
+
+  tests-macos:
+    name: factory tests (macos)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Run the factory test suite
+        run: bash tests/run.sh

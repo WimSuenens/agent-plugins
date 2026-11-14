@@ -58,8 +58,8 @@ bash "$IN" filed-since >/dev/null 2>&1; ck item3-usage-exit-2 2 "$?"
 bash "$IN" filed-since not-a-time >/dev/null 2>&1; ck item3-bad-time-exit-2 2 "$?"
 cd "$T" || exit 1
 # the trigger is written where a reader of the run skill finds it, and the shipped text names neither this repository's label nor its release rules
-has item3-skill-trigger "$SK" 'revisit after two runs, or when a report says nothing new more than once'
-has item3-skill-names-subcommand "$SK" 'intake.sh" filed-since'
+has item3-script-says-provisional "$IN" 'revisit after two runs, or when a report says nothing new more than once'
+has item3-skill-names-the-report-script "$SK" 'stage-report.sh'
 ck item3-script-names-no-repository-label 0 "$(grep -c 'plugin:factory' "$IN")"
 
 # ---- item 2 (#167, D6): kind 1 is blocked or defective input; no kind 8 ----
@@ -87,7 +87,7 @@ has item4-po-two-way "$PO" 'two-way step: ask no question, report it in your res
 has item4-po-intake-rule-kept "$PO" 'When intake triage decided an idea changes the direction'
 has item4-skill-step1 "$SK" 'the product owner creates `docs/direction.md` if it is missing'
 has item4-skill-step2 "$SK" 'the product owner updates `current` and adds one History line'
-has item4-skill-boundary "$SK" 'say so in one line'
+has item4-report-script-says-direction "$PLUGIN/scripts/stage-report.sh" 'direction: docs/direction.md created'
 has item4-glossary-not-the-design-brief "$GL" '**Direction document**'
 has item4-glossary-sentence "$GL" 'not the direction brief that the design plugin writes'
 ck item4-glossary-sentence-in-skill "1" "$(grep -c "not the design plugin's direction brief" "$SK")"
@@ -202,7 +202,8 @@ has review-a3-v3-template-how "$A3S" 'To write a v3 A3, take the template above,
 mkdir -p "$T/we|ird"; cp "$FX/ledger-156.md" "$T/we|ird/ledger.md"
 ck review-path-with-bar "needs-decision #156 row 4 (developer)" "$(bash "$EV" --item 156 --ledger "$T/we|ird/ledger.md" | sed -n 's/^  event: \(needs-decision[^—]*\) — .*/\1/p')"
 # no started line (a run begun before 2.18.0): say what the lead does instead of passing an empty start
-has review-skill-no-started-line "$SK" 'a Factory run section without a `started:` line (a run begun before 2.18.0): use the earliest `started:` line of the ledgers of the run'"'"'s items'
+# a section without a started: line is refused by the scripts (#230); the old fallback prose is gone
+hasnt review-skill-no-started-line-fallback "$SK" 'a Factory run section without a `started:` line (a run begun before 2.18.0)'
 # a list cut at the limit is a lower bound, and the report says so
 jq -n '[range(0;1000) | {number: (. + 1000), title: "t", createdAt: "2026-11-13T10:00:00Z", state: "OPEN", labels: [{name: "inbox"}], body: ""}]' > "$T/big.json"
 cd "$R" || exit 1; printf '%s\n' '| a | b |' '|---|---|' '| `needs-triage` | `inbox` |' > "$R/docs/agents/triage-labels.md"

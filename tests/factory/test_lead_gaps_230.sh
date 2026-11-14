@@ -34,11 +34,12 @@ out="$(bash "$FS" --table "$TBL" --paths "src/auth/session.ts" 2>/dev/null)"
 ck authentication-path-fires "3 Normal" "$(val points) $(val band)"
 out="$(bash "$FS" --table "$TBL" --paths "contracts/" 2>/dev/null)"; ck directory-path-fires "3" "$(val points)"
 # no --paths: today's output, byte for byte (the script as of origin/main is the reference)
-git -C "$REPO" show origin/main:plugins/factory/scripts/flow-size.sh >"$T/flow-size-old.sh" 2>/dev/null
+mkdir -p "$T/oldscripts"; cp "$PLUGIN"/scripts/*.sh "$T/oldscripts/"
+git -C "$REPO" show origin/main:plugins/factory/scripts/flow-size.sh >"$T/oldscripts/flow-size.sh" 2>/dev/null
 for args in "" "$VISUAL" "$NEWLOGIC|$VISUAL" "$PROT|$CONTRACT|$NEWLOGIC"; do
   set --; oldifs="$IFS"; IFS='|'; for a in $args; do set -- "$@" "$a"; done; IFS="$oldifs"
   [ -n "$args" ] || set --
-  ck "no-paths-same-output-[$args]" "$(bash "$T/flow-size-old.sh" --table "$TBL" "$@" 2>&1)" "$(bash "$FS" --table "$TBL" "$@" 2>&1)"
+  ck "no-paths-same-output-[$args]" "$(bash "$T/oldscripts/flow-size.sh" --table "$TBL" "$@" 2>&1)" "$(bash "$FS" --table "$TBL" "$@" 2>&1)"
 done
 # the list is refused, not ignored, when it is empty or only blanks; a missing value is a usage error. Nothing on stdout.
 for bad in "" "   "; do
@@ -52,10 +53,10 @@ P="$T/ext"; mkdir -p "$P/docs/agents"; printf '%s\n' 'protected-paths: deploy/*,
 out="$(cd "$P" && bash "$FS" --table "$TBL" --paths "deploy/prod.yml" 2>/dev/null)"
 ck project-extension-fires "3 $(printf 'protected: project deploy/prod.yml')" "$(val points) $(printf '%s\n' "$out" | grep '^protected: ')"
 out="$(cd "$P" && bash "$FS" --table "$TBL" --paths "docs/readme.md" 2>/dev/null)"; ck project-extension-other-path-nothing "0" "$(val points)"
-# a table without the row cannot derive it
+# a table without the row cannot derive it (the table check already refuses an incomplete table: exit 6)
 grep -v "^| $PROT " "$TBL" >"$T/norow.md"
 bash "$FS" --table "$T/norow.md" --paths "contracts/x.md" >"$T/o" 2>"$T/e"; code=$?
-ck table-without-the-row-refused-exit 2 "$code"; ck table-without-the-row-refused-stdout-empty "" "$(cat "$T/o")"; has table-without-the-row-says-which "$T/e" "$PROT"
+ck table-without-the-row-refused-exit 6 "$code"; ck table-without-the-row-refused-stdout-empty "" "$(cat "$T/o")"; has table-without-the-row-says-why "$T/e" "no complete flow table"
 # the sizing text: expected paths include the contract files the architect stage will write
 ROUTE="$PLUGIN/references/run-route.md"
 has text-route-names-paths-option "$ROUTE" '--paths'

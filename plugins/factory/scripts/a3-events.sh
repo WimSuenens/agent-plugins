@@ -8,7 +8,8 @@
 #   --hansei   the hansei record of the item (its `3. rework:` line).
 #   --comments the item's other comments (stage summaries, resolution, needs-you cards), as one file.
 #   --run-body the body of the run ticket (the map's, or the destination ticket's in the direct route): its Factory run section gives the run list,
-#              printed as `- items closed in this run: #<n> ...` (or `none`) before the last line. Exit 2 when the body has no such section.
+#              printed as `- items closed in this run: #<n> ...` (or `none`) before the last line. Exit 2 when the body has no such section, no `started:` line, or
+#              the section belongs to a closed run (`run-state.sh status`): a closed run's items are never read.
 #   --filed    the output of `intake.sh filed-since <run start> <run end> --state all` (one `<n><TAB><title><TAB><source>` per issue).
 # Prints, in A3 order:
 #   - events: <n>                              (or `none (no event in the records read)`)
@@ -61,6 +62,9 @@ flush
 
 runlist=""
 if [ -n "$runbody" ]; then
+  # a closed run's section is never read: its items belong to the run whose A3 is posted (#230); `run-state.sh start` replaces it at the next run's start
+  [ "$(bash "$(dirname "$0")/run-state.sh" status "$runbody")" != closed ] || { echo "a3-events: $runbody: the Factory run section belongs to a closed run: start the new run first (run-state.sh start)" >&2; exit 2; }
+  bash "$(dirname "$0")/run-state.sh" started "$runbody" >/dev/null || { echo "a3-events: the Factory run section has no \`started:\` line: it is not a section of this run (run-state.sh start)" >&2; exit 2; }
   runlist="$(bash "$(dirname "$0")/run-state.sh" items "$runbody")" || exit 2
   [ -n "$runlist" ] || runlist=none
 fi

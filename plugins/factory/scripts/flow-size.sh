@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Sizing: the points, the band, the steps and the route of a destination or a slice, from the project's own flow table (#207 slice 4).
-# Usage: bash flow-size.sh [--table <factory.md>] [--bands "<bands line>"] [<trigger>...]      (default docs/agents/factory.md)
+# Usage: bash flow-size.sh [--table <factory.md>] [--bands "<bands line>"] [--paths <expected paths>] [<trigger>...]      (default docs/agents/factory.md)
+# --paths is the list of paths the slice is expected to change, one per line (or one line of space-separated paths), contract files the
+# architect stage will write included. The script fires the row `Protected area touched` itself when one of them is protected, judged by
+# `protected-areas.sh` (the one definition, the project's `protected-paths:` line read as the gate reads it); naming that row as well counts once.
+# The lead still names every other row. An empty or blank list is refused (exit 2); a table without the row is refused (exit 2).
 # --bands uses the boundaries a plan recorded at sizing instead of the table's current line (plan-check.sh does this).
 # The table is read through `factory-config.sh table`; no trigger, point or band is written in this script. Each <trigger> is a row name of the
 # table, matched whole or as a unique prefix, ignoring case. The lead says which triggers fired; this script adds them up. No trigger is the lightest path.
@@ -11,24 +15,31 @@
 #   route: direct | map                map when a fired row's Adds name a `map`, otherwise direct
 #   triggers: none                     (only when nothing fired)
 #   trigger: <row> +<points> -- <Adds> one line per fired row, in table order
+#   protected: <area> <path>           with --paths only: one line per expected path that is protected (what fired the row)
 #   person: <who is asked>             `Heavy band: ask before running` (the open-ended band), `one-way door: decision card` (a fired row whose
 #                                      Adds say it stays with the person), both joined by `; ` when both hold, or `no question`
 # Route and the question to the person are read from the Adds column of the table: a row that adds a map says `map` there (and a row that does
 # not never uses the word), and a row that stays with the person says `stays with the person`.
 # The sizing never chooses what the fence reserves: it only reports.
-# Exit: 0 done; 2 usage, the table file is unreadable, or an unknown or ambiguous trigger (nothing on stdout); 6 no or an incomplete flow table.
+# Exit: 0 done; 2 usage, an empty --paths list, the table file is unreadable, or an unknown or ambiguous trigger (nothing on stdout); 6 no or an incomplete flow table.
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 file="docs/agents/factory.md"
 names=()
 bandsover=""
+paths=""; havepaths=0
+usage="usage: flow-size.sh [--table <factory.md>] [--bands <line>] [--paths <expected paths>] [<trigger>...]"
 while [ $# -gt 0 ]; do
   case "$1" in
     --table) [ $# -ge 2 ] || { echo "usage: flow-size.sh [--table <factory.md>] [--bands <line>] [<trigger>...]" >&2; exit 2; }; file="$2"; shift 2 ;;
     --bands) [ $# -ge 2 ] || { echo "usage: flow-size.sh [--table <factory.md>] [--bands <line>] [<trigger>...]" >&2; exit 2; }; bandsover="$2"; shift 2 ;;
+    --paths) [ $# -ge 2 ] || { echo "$usage" >&2; exit 2; }; paths="$2"; havepaths=1; shift 2 ;;
     *) names+=("$1"); shift ;;
   esac
 done
+if [ "$havepaths" = 1 ] && [ -z "$(printf '%s' "$paths" | tr -d '[:space:]')" ]; then
+  echo "flow-size: --paths is empty: name the paths the slice is expected to change, or leave --paths out" >&2; exit 2
+fi
 
 table="$(bash "$here/factory-config.sh" table "$file")"; rc=$?
 if [ "$rc" != 0 ]; then
@@ -66,6 +77,29 @@ ROWS
   fi
   case " $fired " in *" $hit "*) ;; *) fired="$fired $hit" ;; esac
 done
+
+# --paths: the protected paths fire "Protected area touched" (once, even when the lead names it too)
+protlines=""
+if [ "$havepaths" = 1 ]; then
+  # shellcheck disable=SC1091
+  . "$here/protected-areas.sh"
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    a="$(protected_path_area "$p")" && protlines="$protlines"$'\n'"protected: $a $p"
+  done <<PATHS
+$(protected_list_paths "$paths")
+PATHS
+  if [ -n "$protlines" ]; then
+    hit=""; i=0
+    while IFS=$'\037' read -r n _ _; do
+      i=$((i + 1)); [ "$(lc "$n")" = "protected area touched" ] && hit="$i"
+    done <<ROWS
+$rows
+ROWS
+    [ -n "$hit" ] || { echo "flow-size: $file has no \`Protected area touched\` row: the paths cannot be sized" >&2; exit 2; }
+    case " $fired " in *" $hit "*) ;; *) fired="$fired $hit" ;; esac
+  fi
+fi
 
 points=0; route=direct; person="no question"; lines=""; i=0
 while IFS=$'\037' read -r n p a; do
@@ -112,4 +146,5 @@ echo "band: $band"
 echo "bands: $bandsline"
 echo "route: $route"
 if [ -z "$lines" ]; then echo "triggers: none"; else printf '%s\n' "${lines#$'\n'}"; fi
+[ -z "$protlines" ] || printf '%s\n' "${protlines#$'\n'}"
 echo "person: $person"

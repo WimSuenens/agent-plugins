@@ -54,7 +54,7 @@ function emit(key, why) { out[++nf] = "refused: " key " (" why ")" }
 BEGIN {
   nk = split("run|series and release|problem|evidence|waste|gemba (targeted)|5 whys|CHAIN|process item to change|countermeasure|measure targeted|before|after|change|target|items counted|events|issues filed during the run|not detectable from records|still uncertain|other problems seen|other overrides|standard changes proposed|baseline|answer", K, "|")
   split("transport inventory motion waiting overproduction over-processing defects skills", T, " ")
-  skip = ""; nf = 0; firstnum = 0; nwl = 0; whysl = 0; cite = 0; nev = 0; evbad = 0
+  skip = ""; nf = 0; firstnum = 0; nwl = 0; whysl = 0; cite = 0; nev = 0; evbad = 0; evfa = 0
 }
 { sub(/\r$/, "") }
 NR == 1 {
@@ -74,6 +74,7 @@ skip != "" { next }
     cp = index($0, " " EM " cause:")
     ct = (cp > 0) ? trim(substr($0, cp + length(" " EM " cause:"))) : ""
     if (ct == "" || ct == "?") evbad++
+    else if (ct ~ /^false alarm/ && ct !~ /^false alarm \([^()]*[^ ()][^()]*\)$/) evfa++
   }
   if ($0 ~ /^  [0-9]+\. /) {
     if (firstnum == 0) firstnum = NR
@@ -132,6 +133,7 @@ END {
         else if (nev > 0) emit(kname, "count does not match the event lines")
       } else if (v !~ /^[1-9][0-9]*$/ || v + 0 != nev) emit(kname, "count does not match the event lines")
       else if (evbad > 0) emit(kname, "event without a cause")
+      else if (evfa > 0) emit(kname, "false alarm needs a reason in parentheses")
     } else if (k == "issues filed during the run") {
       if (v ~ /^none/) { if (!noneshape(v)) emit(kname, "none needs a reason in parentheses") }
       else if (v !~ /^[1-9][0-9]*: ./) emit(kname, "not in its grammar")

@@ -11,6 +11,7 @@ Issues [#164](https://github.com/WimSuenens/agent-plugins/issues/164), [#166](ht
 **What changed for the person who runs the factory:**
 
 - **The A3 lists what happened.** A3 marker `v3` adds `events`, `issues filed during the run` and `not detectable from records`; `scripts/a3-events.sh` builds them from the ledgers, hansei records, item comments and `intake.sh filed-since`, and the lead adds only the cause of each event. `a3-check.sh` refuses a v3 A3 without them. Rework rounds, `needs-decision` rows, overturned decisions and waits are read from the structure of the records; refusals, withdrawn skips, corrections and person stops by a keyword in free text; the line `not detectable from records` names what no record holds.
+- **A phantom event is a `false alarm (<reason>)`.** `a3-check.sh` accepts that cause and refuses a bare `false alarm`; the count per run is a calibration signal.
 - **Andon kind 1 is blocked or defective input.** A defect in an input that another role or an earlier stage produced, and a `needs-decision` question about it, now open an andon of kind 1. The list of kinds is not shortened and has no kind 8.
 - **New issues at each stage boundary.** `intake.sh filed-since <start> [<end>] [--state open|all] [--line]` counts issues filed since the run start that carry the project's own triage label (read from `docs/agents/triage-labels.md`) or the `factory:improvement` marker; nothing is ingested. Provisional: revisit after two runs, or when a report says nothing new more than once.
 - **`docs/direction.md`.** The product owner creates it once the destination is settled and updates it only when the Destination changes; a line the factory did not write is not overwritten.
@@ -19,7 +20,7 @@ Issues [#164](https://github.com/WimSuenens/agent-plugins/issues/164), [#166](ht
 
 **Tests.** `tests/factory/test_slice2_loop.sh` (new), one block per item, with the real records of the first site run under `tests/factory/fixtures/a3events/`; `test_a3_check.sh` and `test_andon_owner_match.sh` follow the new behaviour.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `05fd75f9e6d050ae890a34f516f7e85ce75aa656380951f3ed6b57358d2406c2`, tooling `c405240919014fd1ed444f103a8322d661291ecdc050061306bf2e6f2022a3cc`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-14: standard `e8ae39e6865e2ba67d150cd5be58b154b7ae37895472d9ff8e8bb1c60ecb03a4`, tooling `0b341aaf86562ca056c0deb11d9619b2c50c897441dc4a1470e6102a28b5089e`.
 
 ## factory 2.17.0 (#214)
 

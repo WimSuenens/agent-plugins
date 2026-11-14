@@ -210,4 +210,23 @@ got="$(STUB_ISSUES="$T/big.json" bash "$IN" filed-since $START $END --line 2>"$T
 ck review-cut-list-stderr 1 "$(grep -c 'cut at 1000' "$T/err")"
 cd "$T" || exit 1
 
+# ---- follow-up: the refusal keyword is a stem, not one word form (found by mutating `refus` to `refuse`: no test went red) ----
+printf '%s\n' 'Open PR check: the refusal was recorded and the contract corrected.' 'Nothing else happened here.' > "$T/forms.md"
+ck follow-refusal-noun "refusal #5 comment line 1" "$(bash "$EV" --item 5 --comments "$T/forms.md" | sed -n 's/^  event: \(refusal[^—]*[0-9]\) — .*/\1/p')"
+printf '%s\n' 'The merge gate refuses it.' > "$T/forms.md"; ck follow-refuses-verb "refusal #5 comment line 1" "$(bash "$EV" --item 5 --comments "$T/forms.md" | sed -n 's/^  event: \(refusal[^—]*[0-9]\) — .*/\1/p')"
+printf '%s\n' 'The skip was withdrawn.' > "$T/forms.md"; ck follow-withdrawn-skip-alone "withdrawn-skip #5 comment line 1" "$(bash "$EV" --item 5 --comments "$T/forms.md" | sed -n 's/^  event: \(withdrawn-skip[^—]*[0-9]\) — .*/\1/p')"
+printf '%s\n' 'A skip was recorded for the security review.' > "$T/forms.md"; ck follow-skip-without-withdrawn-no-event "- events: none (no event in the records read)" "$(bash "$EV" --item 5 --comments "$T/forms.md" | sed -n 1p)"
+
+# ---- follow-up: `false alarm (<reason>)` is a cause; a bare `false alarm` is refused like a blank or `?` ----
+fa() { sed "s/ — cause: the merge approval was asked after the demo/ — cause: $1/" "$A3F/v3-ok.md" > "$T/m.md"; c3 "$T/m.md"; }
+fa 'false alarm (the keyword matched a line that only quotes the word)'; ck follow-false-alarm-with-reason-ok "0 ok v3" "$RC $OUT"
+fa 'false alarm'; ck follow-false-alarm-bare-refused "1 refused: events (false alarm needs a reason in parentheses)" "$RC $OUT"
+fa 'false alarm ()'; ck follow-false-alarm-empty-parens-refused "1 refused: events (false alarm needs a reason in parentheses)" "$RC $OUT"
+fa 'false alarm (  )'; ck follow-false-alarm-blank-parens-refused "1 refused: events (false alarm needs a reason in parentheses)" "$RC $OUT"
+fa 'false alarm: it was fine'; ck follow-false-alarm-colon-refused "1 refused: events (false alarm needs a reason in parentheses)" "$RC $OUT"
+fa 'a false alarm would be wrong here'; ck follow-false-alarm-inside-a-cause-is-a-cause "0 ok v3" "$RC $OUT"
+has follow-standard-false-alarm "$A3S" 'a `false alarm (<reason>)`'
+has follow-standard-calibration "$A3S" 'count of `false alarm` causes per run is a calibration signal (misses and false alarms, #187 decision 8)'
+has follow-standard-bare-refused "$A3S" 'a bare `false alarm` is refused like a blank or `?`'
+
 done_

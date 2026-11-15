@@ -4,7 +4,7 @@
 # What it does, in this order:
 #   1. scans the file (`post-text.sh scan`: home paths and secrets). A hit posts nothing and changes nothing: the scan lines on stderr, exit 1.
 #   2. cuts the file into parts of at most 60,000 bytes (the tracker's limit is 65,536 characters), at a line end, closing and reopening a code fence
-#      at a cut; a single longer line is cut in the middle. Every part starts with
+#      at a cut; only a single line longer than a part is cut in the middle. Every part starts with
 #        <!-- factory:artifact v1 -->
 #        <!-- file: <name> part <k>/<m> -->
 #      and a bold line with the name (`<name>` is the file's base name).
@@ -36,13 +36,15 @@ m="$(LC_ALL=C awk -v cap="$CAP" -v dir="$work" '
   }
   {
     s = $0
+    base = (fence != "") ? length(fence) + 1 : 0
     while (length(s) + 1 > cap - used - 8) {
+      # a whole line goes to the next part when it fits there; only a line longer than a part is cut
+      if (used > base && length(s) + 1 <= cap - 8 - base) { newpart(); base = (fence != "") ? length(fence) + 1 : 0; continue }
       room = cap - used - 8 - 1
-      if (room < 200 && used > 0) { newpart(); continue }
       cut = room
       while (cut > 0 && ord[substr(s, cut + 1, 1)] >= 128 && ord[substr(s, cut + 1, 1)] < 192) cut--
-      if (cut < 1) { newpart(); continue }
-      print substr(s, 1, cut) > f; s = substr(s, cut + 1); newpart()
+      if (cut < 1) { newpart(); base = (fence != "") ? length(fence) + 1 : 0; continue }
+      print substr(s, 1, cut) > f; s = substr(s, cut + 1); newpart(); base = (fence != "") ? length(fence) + 1 : 0
     }
     print s > f; used += length(s) + 1
     if (match(s, /^ ? ? ?(```+|~~~+)/)) {
@@ -69,14 +71,17 @@ done
 
 me="$(gh api user --jq .login 2>/dev/null)" || { echo "post-file: cannot read the login" >&2; exit 3; }
 [ -n "$me" ] || { echo "post-file: cannot read the login" >&2; exit 3; }
-all="$(gh api "repos/{owner}/{repo}/issues/$ticket/comments" --paginate 2>/dev/null | jq -s 'add // []' 2>/dev/null)" || { echo "post-file: cannot read the comments of #$ticket" >&2; exit 3; }
-# ids of our comments for this file, by part number
+gh api "repos/{owner}/{repo}/issues/$ticket/comments" --paginate >"$work/list.json" 2>"$work/err" || { echo "post-file: cannot read the comments of #$ticket ($(head -c 200 "$work/err" | tr '\n' ' '))" >&2; exit 3; }
+all="$(jq -s 'add // []' "$work/list.json" 2>/dev/null)" || { echo "post-file: cannot read the comments of #$ticket" >&2; exit 3; }
+# ids of our comments for this file, by part number (a CRLF body, edited on the web, reads the same)
 ids="$(printf '%s' "$all" | jq -r --arg me "$me" --arg name "$name" '
   .[] | select(.user.login == $me)
-      | select((.body | split("\n") | .[0]) == "<!-- factory:artifact v1 -->")
-      | (.body | split("\n") | .[1]) as $l
+      | (.body | gsub("\r"; "") | split("\n")) as $ls
+      | select($ls[0] == "<!-- factory:artifact v1 -->")
+      | ($ls[1] // "") as $l
       | select($l | startswith("<!-- file: " + $name + " part "))
-      | "\(.id) \($l | capture("part (?<k>[0-9]+)/") | .k)"' 2>/dev/null)"
+      | select($l | test("part [0-9]+/"))
+      | "\(.id) \($l | capture("part (?<k>[0-9]+)/") | .k)"')" || { echo "post-file: cannot read the comments of #$ticket" >&2; exit 3; }
 
 k=1
 while [ "$k" -le "$m" ]; do

@@ -39,6 +39,17 @@ ck push-failure-exit-4 4 "$code"
 ck push-failure-is-reported "1" "$(grep -c '^stage-publish: push failed' "$T/err")"
 bash "$PT" scan "$T/err" >/dev/null 2>&1; ck push-failure-names-no-home-path 0 "$?"
 mv "$T/origin.gone" "$T/origin.git"
+# a stage whose files hold a home path or a secret is not pushed (review of #231): exit 5, the scan lines, the remote unchanged
+before="$(git -C "$T/origin.git" rev-parse item/225)"
+printf 'see /%s/%s/x\n' Users someone > work/225/09-leak.md; git add work; git commit -q -m '#225 developer: leak'
+bash "$SP" push >"$T/out" 2>"$T/err"; code=$?
+ck push-scan-hit-exit-5 5 "$code"
+has push-scan-hit-names-line "$T/err" "09-leak.md:1: home-path"
+hasnt push-scan-never-prints-the-text "$T/err" "someone"
+ck push-scan-hit-remote-unchanged "$before" "$(git -C "$T/origin.git" rev-parse item/225)"
+git reset -q --hard HEAD~1; git reset -q --hard HEAD~1; git cat-file -e "$S2" || exit 1; git reset -q --hard "$S2"
+git commit -q --allow-empty -m '#225 lead: x'
+bash "$SP" push >/dev/null 2>&1; ck push-after-scan-hit-fixed-exit 0 "$?"
 
 # links: permalinks carry the stage's sha
 git remote set-url origin 'https://github.com/example-org/example-repo.git'
@@ -60,6 +71,11 @@ S3="$(git rev-parse HEAD)"
 bash "$SP" links --github example-org/example-repo "$S1^..$S3" >"$T/links" 2>/dev/null
 has links-range-includes-contract "$T/links" "/blob/$S3/contracts/225-x.md"
 has links-range-includes-earlier-file "$T/links" "/blob/$S3/work/225/01-requirement.md"
+printf 'x\n' > 'contracts/a [draft].md'; git add contracts; git commit -q -m '#225 architect: odd name'
+bash "$SP" links --github example-org/example-repo HEAD >"$T/links" 2>/dev/null
+has links-brackets-in-text-escaped "$T/links" '[contracts/a \[draft\].md](https://github.com/example-org/example-repo/blob/'
+has links-brackets-in-url-encoded "$T/links" '/contracts/a%20%5Bdraft%5D.md)'
+git reset -q --hard HEAD~1
 bash "$SP" links --github bad "$S1" >/dev/null 2>&1; ck links-bad-repo-exit-2 2 "$?"
 bash "$SP" links --github example-org/example-repo deadbeefdeadbeef >/dev/null 2>&1; ck links-unknown-rev-exit-2 2 "$?"
 # the permalink still resolves after work/ is removed and the branch is deleted: the commit stays reachable by its sha
@@ -79,6 +95,8 @@ ck append-before-details "1" "$(awk '/blob\//{b=NR} /^<details>/{d=NR} END{print
 ck append-keeps-details-byte-for-byte "$(sed -n '/^<details>/,$p' "$FX/result-226.md" | cksum)" "$(sed -n '/^<details>/,$p' "$T/res.md" | cksum)"
 bash "$SP" append --github example-org/example-repo "$T/res.md" "$S1" >/dev/null 2>&1
 ck append-twice-one-block "1" "$(grep -c '^Files of this stage' "$T/res.md")"
+cp "$T/res.md" "$T/res2.md"; bash "$SP" append --github example-org/example-repo "$T/res2.md" "$S1" >/dev/null 2>&1; bash "$SP" append --github example-org/example-repo "$T/res2.md" "$S1" >/dev/null 2>&1
+ck append-rerun-byte-identical "$(cksum < "$T/res.md")" "$(cksum < "$T/res2.md")"
 bash "$PT" scan "$T/res.md" >/dev/null 2>&1; ck append-result-scans-clean 0 "$?"
 # a long result still splits with the block in part 1
 { sed '/^<\/details>/,$d' "$T/res.md"; awk 'BEGIN{for(i=0;i<1500;i++) printf "line %d of a long details body, long enough to need a split of the closing comment\n", i}'; printf '\n</details>\n'; } > "$T/long.md"
@@ -160,6 +178,26 @@ bash "$PF" 229 big.md >/dev/null 2>&1; ck pf-big-rerun-still-two 2 "$(cnt 229)"
 head -20 big.md > small2.md; cp small2.md big.md
 bash "$PF" 229 big.md >/dev/null 2>&1; ck pf-shrink-to-one-comment 1 "$(cnt 229)"
 ck pf-shrink-part-name "<!-- file: big.md part 1/1 -->" "$(sed -n 2p "$(ls "$GH_STORE"/229/*.md | head -1)")"
+# cuts fall at line ends: every posted line is a whole line of the file (review of #231)
+awk 'BEGIN{for(i=1;i<=900;i++) printf "Row %04d | a table row that is long enough to need more than two hundred bytes of room in the part, so that a cut in the middle of it would be seen: %s\n", i, "0123456789012345678901234567890123456789012345678901234567890123456789"}' > rows.md
+bash "$PF" 235 rows.md >/dev/null 2>&1
+ck pf-rows-every-line-whole 900 "$(cat "$GH_STORE"/235/*.md | grep -c '^Row [0-9]* | a table row .* 0123456789012345678901234567890123456789012345678901234567890123456789$')"
+# a failing comment listing is exit 3 and posts nothing (no duplicate on a failed read)
+mkdir -p bin3
+cat > bin3/gh <<'GH'
+#!/bin/bash
+case "$1 $2" in "api user") echo bot ;; "api repos"*) echo "rate limit" >&2; exit 1 ;; *) echo "posted" >> "${GH_STORE:?}/post3"; exit 0 ;; esac
+GH
+chmod +x bin3/gh
+PATH="$T/bin3:$PATH" bash "$PF" 236 01-requirement.md >/dev/null 2>"$T/err"; ck pf-listing-failure-exit-3 3 "$?"
+ck pf-listing-failure-posts-nothing 0 "$(cat "$GH_STORE/post3" 2>/dev/null | wc -l | tr -d ' ')"
+# an earlier comment with CRLF line ends (edited in the web UI) is still found and replaced
+mkdir -p "$GH_STORE/237"; printf '<!-- factory:artifact v1 -->\r\n<!-- file: 01-requirement.md part 1/1 -->\r\nold\r\n' > "$GH_STORE/237/800.md"; echo bot > "$GH_STORE/237/800.user"
+bash "$PF" 237 01-requirement.md >/dev/null 2>&1
+ck pf-crlf-comment-replaced 1 "$(cnt 237)"
+# a comment that is only the marker line does not break the listing
+mkdir -p "$GH_STORE/238"; printf '<!-- factory:artifact v1 -->' > "$GH_STORE/238/810.md"; echo bot > "$GH_STORE/238/810.user"
+bash "$PF" 238 01-requirement.md >/dev/null 2>&1; ck pf-marker-only-comment-ok-exit 0 "$?"
 # a code fence open at a cut is closed and reopened
 { echo '```'; awk 'BEGIN{for(i=1;i<=1000;i++) printf "code line %04d with enough text to fill the part up quickly, more more more\n", i}'; echo '```'; } > fence.md
 bash "$PF" 230 fence.md >/dev/null 2>&1

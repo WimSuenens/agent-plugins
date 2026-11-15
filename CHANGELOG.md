@@ -10,7 +10,7 @@ Closes [#231](https://github.com/WimSuenens/agent-plugins/issues/231). Refs [#20
 
 **What changed for the person who runs the factory:**
 
-- **The item branch is pushed after each stage** (`stage-publish.sh push`, upstream on the first push). The item's files therefore appear on the project's remote, public or not, earlier than before (before: at the pull request). A failed push is reported in the stage summary and never blocks the item.
+- **The item branch is pushed after each stage** (`stage-publish.sh push`, upstream on the first push). The item's files therefore appear on the project's remote, public or not, earlier than before (before: at the pull request). The files a push would publish are scanned first (home path or secret: nothing is pushed). A failed or refused push is reported in the stage summary and never blocks the item.
 - **Permalinks in the closing comment.** `stage-publish.sh append` lists the files a stage's commits produced as `blob/<sha>/<path>` links before the comment's details. A sha permalink does not depend on the branch, so it still resolves after `work/` is removed and the branch is deleted.
 - **The requirement, the contracts and the QA and security verdicts are readable on the role-task ticket** while the item runs: `post-file.sh <ticket> <file>` scans the file (home path or secret: nothing is posted), cuts it into numbered comments below the 65,536-character limit, marks them `<!-- factory:artifact v1 -->` with the file name, and replaces its own comments on a re-run. The lead runs it; a role never does. The list is fixed.
 - **One line per stage on the slice ticket**: `stage-report.sh --task <n>` starts the summary with `role task: #<n>`.
@@ -18,7 +18,7 @@ Closes [#231](https://github.com/WimSuenens/agent-plugins/issues/231). Refs [#20
 
 **Tests.** `test_work_content_231.sh` (new, written before the scripts); `test_run_split.sh` shape rules cover the new reference.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-15: standard `548f249f46739aa30679e1655f4d19c2cc27fa3d1c8d9a42434d426977e850b7`, tooling `bff8fde1aabaf59e0d11af9a6c3594d18ded63a163cb6263ecb57255ac5627fd`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-15: standard `221bc3266dac263e67ecd01898bcc7db9fd7a07ecf17b87fc597607b96f8b2fc`, tooling `6a0a4b9d0e422fede6e87cb8d6e170f5947e8952cba554dbb21153b82efa86f1`.
 
 ## factory 3.3.0 (#230)
 

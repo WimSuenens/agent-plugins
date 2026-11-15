@@ -18,7 +18,7 @@ Closes [#231](https://github.com/WimSuenens/agent-plugins/issues/231). Refs [#20
 
 **Tests.** `test_work_content_231.sh` (new, written before the scripts); `test_run_split.sh` shape rules cover the new reference.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-15: standard `548f249f46739aa30679e1655f4d19c2cc27fa3d1c8d9a42434d426977e850b7`, tooling `5a8e03e57d111e22e05a98a8d014ae88a56b55a8da7d0f634f38ed741cdc6161`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-15: standard `548f249f46739aa30679e1655f4d19c2cc27fa3d1c8d9a42434d426977e850b7`, tooling `bff8fde1aabaf59e0d11af9a6c3594d18ded63a163cb6263ecb57255ac5627fd`.
 
 ## factory 3.3.0 (#230)
 

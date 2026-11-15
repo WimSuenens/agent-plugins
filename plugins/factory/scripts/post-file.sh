@@ -47,7 +47,7 @@ m="$(LC_ALL=C awk -v cap="$CAP" -v dir="$work" '
     print s > f; used += length(s) + 1
     if (match(s, /^ ? ? ?(```+|~~~+)/)) {
       t = substr(s, RSTART, RLENGTH); gsub(/^ +/, "", t)
-      if (fence == "") { fence = t; fch = substr(t, 1, 1); for (q = 1; q < length(t); q++) fch = fch substr(t, 1, 1); fch = t }
+      if (fence == "") { fence = t; fch = t }
       else if (substr(t, 1, 1) == substr(fence, 1, 1) && length(t) >= length(fence)) { fence = "" }
     }
   }

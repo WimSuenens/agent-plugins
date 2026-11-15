@@ -2,6 +2,24 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.4.0 (#231)
+
+Release: `3.4.0`, a **minor** release: standard text and scripts changed (new `stage-publish.sh` and `post-file.sh`, `stage-report.sh`, a new reference `run-publish.md` and one pointer line in the run skill). The `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration.
+
+Closes [#231](https://github.com/WimSuenens/agent-plugins/issues/231). Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207).
+
+**What changed for the person who runs the factory:**
+
+- **The item branch is pushed after each stage** (`stage-publish.sh push`, upstream on the first push). The item's files therefore appear on the project's remote, public or not, earlier than before (before: at the pull request). The files a push would publish are scanned first (home path or secret: nothing is pushed). A failed or refused push is reported in the stage summary and never blocks the item.
+- **Permalinks in the closing comment.** `stage-publish.sh append` lists the files a stage's commits produced as `blob/<sha>/<path>` links before the comment's details. A sha permalink does not depend on the branch, so it still resolves after `work/` is removed and the branch is deleted.
+- **The requirement, the contracts and the QA and security verdicts are readable on the role-task ticket** while the item runs: `post-file.sh <ticket> <file>` scans the file (home path or secret: nothing is posted), cuts it into numbered comments below the 65,536-character limit, marks them `<!-- factory:artifact v1 -->` with the file name, and replaces its own comments on a re-run. The lead runs it; a role never does. The list is fixed.
+- **One line per stage on the slice ticket**: `stage-report.sh --task <n>` starts the summary with `role task: #<n>`.
+- **Unchanged.** `work/` is still removed before the merge; the protocol's rules about `work/` paths, the fence F1 to F7 and its fixtures are untouched.
+
+**Tests.** `test_work_content_231.sh` (new, written before the scripts); `test_run_split.sh` shape rules cover the new reference.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-15: standard `221bc3266dac263e67ecd01898bcc7db9fd7a07ecf17b87fc597607b96f8b2fc`, tooling `6a0a4b9d0e422fede6e87cb8d6e170f5947e8952cba554dbb21153b82efa86f1`.
+
 ## factory 3.3.0 (#230)
 
 Release: `3.3.0`, a **minor** release: standard text and scripts changed (`flow-size.sh`, `run-state.sh`, `a3-events.sh`, `intake.sh`, a new `stage-report.sh`, the run skill and two references). The `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration.

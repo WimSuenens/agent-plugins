@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # stage-report.sh: the fixed lines of the stage summary at each stage boundary (#230). The lead pastes the output unchanged; nothing is written from memory.
-# Usage: bash stage-report.sh --run-body <run ticket body file> [--ledger <ledger file>]... [--since <UTC of the last boundary>]
+# Usage: bash stage-report.sh --run-body <run ticket body file> [--ledger <ledger file>]... [--since <UTC of the last boundary>] [--task <role-task number>]...
 #   --run-body  the body of the run ticket (the map's, or the destination ticket's in the direct route): its Factory run section gives the run start.
 #   --ledger    the ledger comment of an item of the run, as a file; repeat for each item. Its Waits table gives the waits.
 #   --since     the last boundary (`YYYY-MM-DDTHH:MM:SSZ`); the default is the run start.
+#   --task      the number of a role task of this stage (#231); repeat for each. The summary then starts with `role task: #<n>[, #<m>]`, which the tracker links.
 # Prints, in this order:
+#   role task: #<n>, ...                        only with --task
 #   new issues since <start>: ...               `intake.sh filed-since --run-body <body> --line`, as it prints it (provisional, see intake.sh)
 #   direction: docs/direction.md created <UTC> (<sha>)   only when the newest commit that added docs/direction.md (on HEAD) is at or after --since
 #   waits so far: <n> (<kind> <k>: <m> min; ...)   every row of the ledgers' Waits tables, by kind, in whole minutes; `0` with no rows;
@@ -14,12 +16,13 @@
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 usage() { sed -n '2,/^# Exit/p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
-body=""; since=""; leds=()
+body=""; since=""; leds=(); tasks=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --run-body) body="${2:-}"; shift 2 || usage ;;
     --ledger) [ -n "${2:-}" ] || usage; leds+=("$2"); shift 2 ;;
     --since) since="${2:-}"; shift 2 || usage ;;
+    --task) case "${2:-}" in ''|*[!0-9]*) usage ;; esac; tasks+=("$2"); shift 2 ;;
     *) usage ;;
   esac
 done
@@ -28,10 +31,12 @@ ts='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
 [ -z "$since" ] || printf '%s' "$since" | grep -Eq "$ts" || { echo "stage-report: --since must be YYYY-MM-DDTHH:MM:SSZ" >&2; exit 2; }
 for f in ${leds[@]+"${leds[@]}"}; do [ -f "$f" ] && [ -r "$f" ] || { echo "stage-report: $f: unreadable" >&2; exit 2; }; done
 
+if [ "${#tasks[@]}" -gt 0 ]; then tl=""; for t in "${tasks[@]}"; do tl="${tl:+$tl, }#$t"; done; fi
 start="$(bash "$here/run-state.sh" started "$body")" || exit 2
 issues="$(bash "$here/intake.sh" filed-since --run-body "$body" --line)"; rc=$?
 [ "$rc" = 0 ] || exit "$rc"
 [ -n "$since" ] || since="$start"
+[ -z "${tl:-}" ] || printf 'role task: %s\n' "$tl"
 printf '%s\n' "$issues"
 
 # docs/direction.md: the commit that added it, in UTC

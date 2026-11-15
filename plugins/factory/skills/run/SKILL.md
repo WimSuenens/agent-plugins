@@ -274,6 +274,8 @@ Every two-way door a role decided comes back in its `Decisions`. Show them to th
 
 Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/stage-report.sh" --run-body <run ticket body file> --ledger <ledger file> [--ledger …] [--since <UTC of the last boundary>]` and paste its output into the stage summary unchanged. Do not write those lines yourself and do not reword them. Neither is a question; nothing is ingested or decided by them.
 
+After each role task's `done`, before its stage summary: read `references/run-publish.md` (`stage-publish.sh` pushes the stage and adds its permalinks to the closing comment, `post-file.sh` posts the requirement, the contracts and the QA and security verdicts on the role-task ticket, `stage-report.sh --task <n>` adds the slice-ticket line).
+
 ## 7. Take a one-way door to the person
 
 A role's question that is a two-way door: answer it yourself, or route it to the role that owns it.

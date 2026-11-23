@@ -2,11 +2,11 @@
 
 - board item id: PVTI_lAHOBIbaa84BqOBFzhLPsoo
 - map / run: #146
-- next step: 6 (Requirement: product-owner)
+- next step: 6 (Tests: qa-engineer)
 - open questions: none
 - frozen on: factory 3.4.0
 - ADR number: none
-- code review: pending (decided after the architect's stage)
+- code review: no — trigger: no trigger
 
 ## Running agents
 

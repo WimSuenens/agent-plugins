@@ -5,6 +5,8 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 ## Rules and checks
 
+- Before a PR merges, check the claims list (`docs/agents/docs-claims.md`). When the PR changes a file that a row names as its owner (a `plugins/<p>/skills/**/SKILL.md`, a `plugins/<p>/.claude-plugin/plugin.json`, or another path the list names), reread the rows that name that file, and write `claims: reread <ids>` or `claims: none affected` in the result. When the minimum Claude Code version moves, reread the Claude Code rows (kind `Claude Code`). This adds a check; it lifts no protocol guard.
+
 ## Knowledge
 
 - Factory release entries (`CHANGELOG.md`): the ac19 check in `tests/factory/test_lean_rules.sh` reads the newest `## factory ` entry and greps it for the standard and tooling fingerprints. Compute them with `bash plugins/factory/scripts/fingerprint.sh plugins/factory` after the version bump, and put them in that entry. The release date is `date -u +%F`.

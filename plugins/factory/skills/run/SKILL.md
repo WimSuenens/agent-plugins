@@ -89,6 +89,8 @@ Once the four fields are confirmed the product owner creates `docs/direction.md`
 
 After the four fields are confirmed, when a slice is cut, and when the work reveals what the sizing missed: read `references/run-route.md` (*Sizing*, *The plan*, *Escalation*, *Heavy band*: the table, `flow-size.sh`, the plan fields, who is asked, what the first slice leaves out).
 
+The plan's role path and test depth are the sizing's (`flow-size.sh`, checked by `plan-check.sh`); the floor stays: read `references/run-roles.md` (*Role path and test depth*) when you write the plan or scale it up.
+
 ## 2. Chart the route
 
 With the plan's route `direct` there is no map and no frontier round: steps 2 and 3 are skipped.
@@ -172,6 +174,10 @@ Add the new ticket to the board now: `Kind` slice, `Factory status` `Ready`. A s
 4. Write `work/<id>/00-lead-state.md`: the board item id, the next step, the open questions, the factory release the item is frozen on, the ADR number assigned to this slice (the next free number in `docs/adr/`, or `none`), a **Running agents** list with one line per running role task (`role task #<n>: <role> <agent id>`; the id is what you message to resume it), a **Shared resources** list once the architect's stage is done (see *Environment and shared resources*), and an **Interrupted** list (role task, agent id, since, kind, last commit, the path of its draft result). The sections of the label, findings and abnormalities follow these parts. **The lead state carries no status line**: the board holds the slice's status. The lead state and every brief follow the protocol's path rule (*Messages*): no absolute path under the home directory, only worktree-relative, `.claude/worktrees/<id>` or `~/` paths.
 
 **Worktrees at the old location.** Before step 5.2, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/worktree.sh" legacy`. It lists worktrees beside the repository (`../wt/<name>`, the location before 2.4.0) and exits 10 when it finds any; the setup skill offers to move them. An item that already has one finishes there: its branch, `work/<id>/` and lead state are unchanged, and the close guard finds it by branch. A new item, frontier round or settle round always gets a worktree in `.claude/worktrees`.
+
+Before the roles are briefed, take the role path and the test depth from the plan (a role off the path is a skip: `skip.sh check <role> --reason "<reason>" --plan <plan file> <contract file>...`), put the depth in QA's brief, and when the sizing says `ui self-review: yes` ask QA for the UI critique before any decision card or the demo: read `references/run-roles.md` (*Role path and test depth*, *UI self-review*).
+
+QA's verdict is machine-readable (a light one for the lightest band, one proof item per criterion), and the gate command of step 8.1 also takes `--qa-file <verdict>`, `--plan <plan file>` and `--kind <kind>`: read `references/run-roles.md` (*The light verdict*, *Proof per artefact kind*) when you brief QA and when you run the gate.
 
 On a resumed item, keep what exists and continue from the lead state.
 

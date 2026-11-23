@@ -3,6 +3,7 @@
 # the shipped text (the setup skill, the run skill's one line, baseline.md). Written before the scripts and text it tests.
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
+QAF="$REPO/tests/factory/fixtures/slice5/qa-ok.md"   # a verdict that links its one criterion to a run-log (slice 5: the gate reads it)
 CFG="$PLUGIN/scripts/factory-config.sh"
 ST="$PLUGIN/scripts/setup-table.sh"
 MG="$PLUGIN/scripts/merge-gate.sh"
@@ -137,7 +138,7 @@ LOCAL=$'\n## Local run\n\n- sha: 0123456789ab\n- command: bash tests/run.sh\n- l
 run() { out="$(bash "$MG" check "$@" 2>&1)"; rc=$?; }
 mkdir -p "$T/g/docs/agents"; cd "$T/g" || exit 1
 printf 'factory-state: 2\n' >docs/agents/factory.md
-args=(7 --qa pass --security pass --paths "README.md")
+args=(7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "README.md")
 # it prints which checks it read, in every case
 pr "$PROOF" "$HEAD40" SUCCESS; run "${args[@]}"
 ck checks-read-line "yes" "$(printf '%s\n' "$out" | grep -qx 'checks read: ci=SUCCESS' && echo yes || echo no)"; ck green-check-merges 0 "$rc"
@@ -176,7 +177,7 @@ ck ci-none-green-check-no-local-line "0" "$(printf '%s\n' "$out" | grep -c '^ci:
 # the gate pauses and blocks for the other reasons as before
 pr "$PROOF$LOCAL" "$HEAD40"; run 7 --qa findings --security pass --paths README.md
 ck local-run-does-not-cover-qa 11 "$rc"
-run 7 --qa pass --security pass --touches contract
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --touches contract
 ck local-run-still-pauses-for-contract 10 "$rc"
 # a declared workflow that reported nothing is told to wait, not to declare
 printf 'factory-state: 2\n\nci: workflow .github/workflows/t.yml runs `npm test` on pull requests\n' >docs/agents/factory.md
@@ -218,8 +219,8 @@ hasnt setup-no-state-2-only "$SETUP" 'accepts a project only when line 1 of `doc
 has run-exit-6 "$RUN" 'exit 6 means no flow table'
 ck run-one-line-only "1" "$(grep -c 'exit 6 means no flow table' "$RUN")"
 # slice 3 added one line and capped the skill at 115,900 bytes; the split adds 18 pointer lines and 9 reference headers (about 9.6 KB), so the cap on router plus references was 126,000. Slice 4 adds run-route.md (about 9 KB) and about 2 KB of router and reference lines; the cap is now 137,000, over the real figure of 136,218; #230 adds about 2.4 KB of text and scripts' prose (stage-report, run-state start, --paths) and the cap is 140,000 (the router alone is capped at 70,000 in test_run_split.sh)
-# #231 adds run-publish.md (about 4.5 KB): the cap is 143,000
-ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 143000 ] && echo yes || echo no)"
+# #231 adds run-publish.md (about 4.5 KB): the cap is 143,000; #207 slice 5 adds run-roles.md (about 7 KB) and a few pointer lines: the cap is 152,000
+ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 152000 ] && echo yes || echo no)"
 has baseline-major-new-series "$BASE" 'A new major starts a new series exactly as a new minor does'
 ck baseline-no-repo-names "0" "$(grep -c 'check-bump\|release-class' "$BASE")"
 

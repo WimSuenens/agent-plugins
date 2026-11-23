@@ -13,7 +13,7 @@ ROUTER="$RUN_ROUTER"
 refs="$(run_refs)"
 nrefs="$(printf '%s\n' "$refs" | grep -c .)"
 # run-route.md is new in slice 4 (it holds no moved line): proof A reads the nine moved references only; the rest of the tests read it too
-arefs="$(printf '%s\n' "$refs" | grep -v '/run-route\.md$')"
+arefs="$(printf '%s\n' "$refs" | grep -v '/run-route\.md$' | grep -v '/run-roles\.md$')"
 narefs="$(printf '%s\n' "$arefs" | grep -c .)"
 bytes() { wc -c <"$1" | tr -d ' '; }
 

@@ -92,8 +92,8 @@ plan() { cat >"$T/plan.md" <<'P'
 ## Plan
 
 - route: direct
-- role path: standard
-- test depth: standard
+- role path: product-owner, architect, developer, qa-engineer, runtime-proof
+- test depth: targeted
 - triggers: Open one-way door (+3), Visual result (+1)
 - points: 4
 - band: Normal
@@ -116,8 +116,6 @@ for f in route "role path" "test depth" triggers points band bands reason releas
   out="$(bash "$PC" "$T/p2.md" --table "$TBL" 2>&1)"; code=$?
   ck "plan-missing-$f-refused" "1 missing: $f" "$code $(printf '%s\n' "$out" | head -1)"
 done
-plan; sed -i.bak 's/^- role path: standard/- role path: light/' "$T/plan.md"; bash "$PC" "$T/plan.md" >/dev/null 2>&1; ck plan-role-path-not-variable-yet 1 $?
-plan; sed -i.bak 's/^- test depth: standard/- test depth: targeted/' "$T/plan.md"; bash "$PC" "$T/plan.md" >/dev/null 2>&1; ck plan-test-depth-not-variable-yet 1 $?
 plan; sed -i.bak 's/^- route: direct/- route: shortcut/' "$T/plan.md"; bash "$PC" "$T/plan.md" >/dev/null 2>&1; ck plan-bad-route 1 $?
 plan; sed -i.bak 's/^- points: 4/- points: 5/' "$T/plan.md"; out="$(bash "$PC" "$T/plan.md" --table "$TBL" 2>&1)"; ck plan-points-must-match-triggers "1 points: plan says 5, its triggers add up to 4" "$? $(printf '%s\n' "$out" | head -1)"
 plan; sed -i.bak 's/^- band: Normal/- band: Light/' "$T/plan.md"; out="$(bash "$PC" "$T/plan.md" --table "$TBL" 2>&1)"; ck plan-band-must-match "1 band: plan says Light, the bands line gives Normal" "$? $(printf '%s\n' "$out" | head -1)"
@@ -136,8 +134,8 @@ ck plan-script-makes-no-table-of-its-own 0 "$(grep -c 'mktemp' "$PC")"
 # a Heavy plan says the person is asked
 cat >"$T/heavy.md" <<'P'
 - route: map
-- role path: standard
-- test depth: standard
+- role path: product-owner, architect, developer, qa-engineer, runtime-proof
+- test depth: targeted
 - triggers: Open one-way door (+3), Unresolved research question (+3), Visual result (+1)
 - points: 7
 - band: Heavy

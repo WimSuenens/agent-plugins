@@ -3,6 +3,7 @@
 # and the standard-text seam (always-human list, no-proof rule, revised approval rule).
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
+QAF="$REPO/tests/factory/fixtures/slice5/qa-ok.md"   # a verdict that links its one criterion to a run-log (slice 5: the gate reads it)
 MG="$PLUGIN/scripts/merge-gate.sh"
 RUN="$(run_all_file)"
 AG="$PLUGIN/agents/integrator.md"
@@ -28,49 +29,49 @@ LOG=$'## Proof\n\n```\n$ tool --version\n1.2.3\n```\n'
 run() { out="$(bash "$MG" check "$@" 2>&1)"; rc=$?; }
 
 pr "$PROOF" SUCCESS SUCCESS
-run 7 --qa pass --security pass --paths "src/a.js README.md"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "src/a.js README.md"
 ck all-gates-auto-merge 0 "$rc"; ck all-gates-line "yes" "$(printf '%s\n' "$out" | grep -qx 'gate 7: auto-merge' && echo yes || echo no)"
 pr "$LOG" SUCCESS
-run 7 --qa pass --security pass
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass
 ck log-proof-accepted 0 "$rc"
 
 pr $'## Summary\nonly words\n' SUCCESS
-run 7 --qa pass --security pass
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass
 ck no-proof-blocked 11 "$rc"; ck no-proof-says-why "yes" "$(printf '%s\n' "$out" | grep -q '^reason: no proof in the PR description' && echo yes || echo no)"
 pr $'## Proof\n\n' SUCCESS
-run 7 --qa pass --security pass
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass
 ck empty-proof-blocked 11 "$rc"
 
 pr "$PROOF" SUCCESS FAILURE
-run 7 --qa pass --security pass
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass
 ck red-ci-blocked 11 "$rc"; ck red-ci-says-why "yes" "$(printf '%s\n' "$out" | grep -q '^reason: CI is not green' && echo yes || echo no)"
 pr "$PROOF" PENDING
-run 7 --qa pass --security pass
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass
 ck pending-ci-blocked 11 "$rc"
 pr "$PROOF"
-run 7 --qa pass --security pass
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass
 ck no-ci-blocked 11 "$rc"
 
 pr "$PROOF" SUCCESS
 run 7 --qa findings --security pass
 ck qa-not-pass-blocked 11 "$rc"; ck qa-says-why "yes" "$(printf '%s\n' "$out" | grep -q '^reason: QA verdict is findings' && echo yes || echo no)"
-run 7 --qa pass --security needs-decision
+run 7 --qa pass --qa-file "$QAF" --kind cli --security needs-decision
 ck security-not-pass-blocked 11 "$rc"
 run 7 --qa pass
 ck missing-verdict-blocked 11 "$rc"
 
 # always human
 for t in contract authentication secrets migration door; do
-  run 7 --qa pass --security pass --touches "$t"
+  run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --touches "$t"
   ck "touch-$t-pauses" 10 "$rc"
 done
-run 7 --qa pass --security pass --paths "db/migrations/001_add.sql"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "db/migrations/001_add.sql"
 ck path-migration-pauses 10 "$rc"
-run 7 --qa pass --security pass --paths "app/.env.production"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "app/.env.production"
 ck path-secrets-pauses 10 "$rc"
-run 7 --qa pass --security pass --paths "src/auth/login.js"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "src/auth/login.js"
 ck path-auth-pauses 10 "$rc"
-run 7 --qa pass --security pass --touches contract
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --touches contract
 ck pause-line "yes" "$(printf '%s\n' "$out" | grep -qx 'gate 7: pause' && echo yes || echo no)"
 ck pause-has-script "yes" "$(printf '%s\n' "$out" | grep -qx 'validation script:' && echo yes || echo no)"
 ck pause-script-plain-steps "yes" "$(printf '%s\n' "$out" | grep -q '^1\. ' && echo yes || echo no)"
@@ -79,38 +80,38 @@ ck pause-no-branch-names "0" "$(printf '%s\n' "$out" | grep -c 'item/')"
 
 # blocked wins over pause
 pr $'## Summary\nx\n' SUCCESS
-run 7 --qa pass --security pass --touches contract
+run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --touches contract
 ck blocked-beats-pause 11 "$rc"
 
 # a legitimately skipped security role: accepted with a reason; QA and proof stay mandatory
 pr "$PROOF" SUCCESS
-run 7 --qa pass --security skipped --skip-reason "typo fix" --paths "docs/readme.md"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security skipped --skip-reason "typo fix" --paths "docs/readme.md"
 ck skipped-security-auto-merge 0 "$rc"
-run 7 --qa pass --security skipped --paths "docs/readme.md"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security skipped --paths "docs/readme.md"
 ck skipped-security-needs-reason 11 "$rc"
-run 7 --qa pass --security skipped --skip-reason "   "
+run 7 --qa pass --qa-file "$QAF" --kind cli --security skipped --skip-reason "   "
 ck skipped-security-blank-reason 11 "$rc"
-run 7 --qa pass --security skipped --skip-reason "typo" --paths "src/auth/login.js"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security skipped --skip-reason "typo" --paths "src/auth/login.js"
 ck skipped-security-protected-path-blocked 11 "$rc"
-run 7 --qa pass --security skipped --skip-reason "typo" --touches door
+run 7 --qa pass --qa-file "$QAF" --kind cli --security skipped --skip-reason "typo" --touches door
 ck skipped-security-protected-touch-blocked 11 "$rc"
 run 7 --qa skipped --security pass
 ck skipped-qa-blocked 11 "$rc"
-run 7 --qa pass --security skip --skip-reason "typo"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security skip --skip-reason "typo"
 ck other-security-verdict-blocked 11 "$rc"
 pr $'## Summary\nx\n' SUCCESS
-run 7 --qa pass --security skipped --skip-reason "typo"
+run 7 --qa pass --qa-file "$QAF" --kind cli --security skipped --skip-reason "typo"
 ck skipped-security-no-proof-blocked 11 "$rc"
 pr "$PROOF" SUCCESS
 # shared protected-area definition: the gate pauses on exactly what skip.sh refuses
 for p in contracts/api.md src/oauth/cb.js web/login.ts db/migrate/1.rb config/secrets.yml; do
   printf 'Paths:\n- %s\nshared: none\n' "$p" >"$T/pa.md"
   bash "$PLUGIN/scripts/skip.sh" protected "$T/pa.md" >/dev/null; sk=$?
-  run 7 --qa pass --security pass --paths "$p"
+  run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "$p"
   ck "same-definition-$p" "$sk" "$([ $rc = 10 ] && echo 1 || echo 0)"
 done
 # paths are never glob-expanded
-mkdir -p "$T/g" && : >"$T/g/x.sql"; cd "$T/g" && run 7 --qa pass --security pass --paths "*"; cd "$T"
+mkdir -p "$T/g" && : >"$T/g/x.sql"; cd "$T/g" && run 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "*"; cd "$T"
 ck path-glob-not-expanded 0 "$rc"
 
 run

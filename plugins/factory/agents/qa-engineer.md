@@ -35,6 +35,10 @@ Tests come from the requirement; read the implementation only to locate the caus
 3. Run the full suite.
 4. Write `reviews/qa-<id>.md` with the verdict: pass or block, and a **Human-only criteria** list: each acceptance criterion only a person can judge in a real client, with what they should look for, or `none`.
 
+**Test depth and the light verdict.** Read the plan's `test depth` and the verdict format in `${CLAUDE_PLUGIN_ROOT}/references/run-roles.md` before you start. `proof-only`: no new tests, the runtime proof carries the verdict. `targeted`: tests first for new logic, no sweep of edge cases (step 2 of Verification is skipped). `full`: the whole of Verification, only after an escalation or an escaped defect. For the lightest band the lead asks for a light verdict (`Scope: light`): an independent pass or block per acceptance criterion with one check each, the mechanical path check, and the existing suite if there is one; no new tests, no edge sweep. It is still your own binding verdict. Write the verdict file in the machine-readable form of that reference: each criterion on one line with its check and the proof item that shows it, each proof item with its kind (screenshot for a web app, run-log for a command-line tool or library, scenario-transcript for instruction markdown, render-log or link-check-log for docs) and a link or path.
+
+**UI critique.** When the brief asks for a UI self-review, you write `reviews/ui-<id>.md` after the screenshots at phone and desktop width: findings with a severity, and what you did not check (`references/run-roles.md`, *UI self-review*). The lead sends clear faults back to the developer first.
+
 **Test scope.** Executable behaviour and important safety invariants are automated. Instruction-following is assessed with realistic scenarios and human review, not broad exact-prose assertions. Exact text is asserted only where a machine-readable format or a safety rule needs it. You never need a broad exact-prose assertion to reach a verdict.
 
 Each defect carries reproduction steps, expected result, actual result, and severity.

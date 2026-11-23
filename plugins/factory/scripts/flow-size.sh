@@ -13,6 +13,13 @@
 #   band: <name>                       from the table's `bands:` line, as it stands now
 #   bands: <the bands line>            the lead records it in the plan, so a change of the boundaries applies to new slices only
 #   route: direct | map                map when a fired row's Adds name a `map`, otherwise direct
+#   role path: <role>, <role>, ...     the roles that run, in the canonical order (slice 5): developer, qa-engineer and runtime-proof always (the floor), plus a role
+#                                      each fired row's Adds name (decision card -> product-owner; architect or ADR -> architect; devops; security review ->
+#                                      security-reviewer; docs-writer). The row `$protrow` below adds security-reviewer and depth targeted whatever its Adds say
+#   test depth: proof-only | targeted  the table's `test-depth:` line (targeted when it has none), raised to targeted by a fired row whose Adds say `targeted`.
+#                                      `full` is never derived: it follows an escalation or an escaped defect, and the lead writes it into the plan
+#   ui self-review: yes | no           yes when a fired row's Adds name a `demo` (the self-review comes before the demo, run-roles.md)
+#   floor: protected              only when the protected-area row fired: its security review and depth targeted are the floor, not the table's words
 #   triggers: none                     (only when nothing fired)
 #   trigger: <row> +<points> -- <Adds> one line per fired row, in table order
 #   protected: <area> <path>           with --paths only: one line per expected path that is protected (what fired the row)
@@ -102,10 +109,31 @@ ROWS
   fi
 fi
 
+# the floor row: fired by name or by --paths, it keeps security review and depth targeted even when the project's Adds no longer say so
+phit=""; i=0
+while IFS=$'\037' read -r n _ _; do
+  i=$((i + 1)); [ "$(lc "$n")" = "$protrow" ] && phit="$i"
+done <<ROWS
+$rows
+ROWS
+protfired=0
+[ -n "$phit" ] && case " $fired " in *" $phit "*) protfired=1 ;; esac
+sdepth="$(printf '%s\n' "$table" | sed -n 's/^test-depth:[[:space:]]*//p' | head -1 | tr -d '\r' | awk '{ print $1 }')"
+case "$sdepth" in proof-only | targeted | full) ;; *) sdepth=targeted ;; esac   # no starting depth: the safer one
+depth="$sdepth"; selfreview=no; roles=" developer qa-engineer runtime-proof "
+[ "$protfired" = 1 ] && { roles="$roles security-reviewer "; [ "$depth" = proof-only ] && depth=targeted; }
+
 points=0; route=direct; person="no question"; lines=""; i=0
 while IFS=$'\037' read -r n p a; do
   i=$((i + 1))
   case " $fired " in *" $i "*) ;; *) continue ;; esac
+  printf '%s' "$a" | grep -qiE 'decision card|product.owner|requirement' && roles="$roles product-owner "
+  printf '%s' "$a" | grep -qiE 'architect|(^|[^A-Za-z])ADR([^A-Za-z]|$)' && roles="$roles architect "
+  printf '%s' "$a" | grep -qiE 'devops' && roles="$roles devops "
+  printf '%s' "$a" | grep -qiE 'security review' && roles="$roles security-reviewer "
+  printf '%s' "$a" | grep -qiE 'docs-writer|documentation' && roles="$roles docs-writer "
+  printf '%s' "$a" | grep -qiE 'targeted' && [ "$depth" = proof-only ] && depth=targeted
+  printf '%s' "$a" | grep -qiE '(^|[^a-z])demo([^a-z]|$)' && selfreview=yes
   case "$p" in '' | *[!0-9]*) echo "flow-size: row \"$n\": points \"$p\" is not a whole number" >&2; exit 2 ;; esac
   points=$((points + p))
   lines="$lines"$'\n'"trigger: $n +$p -- $a"
@@ -146,6 +174,14 @@ echo "points: $points"
 echo "band: $band"
 echo "bands: $bandsline"
 echo "route: $route"
+rp=""
+for r in product-owner architect devops developer qa-engineer runtime-proof security-reviewer docs-writer; do
+  case "$roles" in *" $r "*) rp="${rp:+$rp, }$r" ;; esac
+done
+echo "role path: $rp"
+echo "test depth: $depth"
+echo "ui self-review: $selfreview"
+[ "$protfired" = 1 ] && echo "floor: protected"
 if [ -z "$lines" ]; then echo "triggers: none"; else printf '%s\n' "${lines#$'\n'}"; fi
 [ -z "$protlines" ] || printf '%s\n' "${protlines#$'\n'}"
 echo "person: $person"

@@ -2,6 +2,27 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.5.0 (#207 slice 5)
+
+Release: `3.5.0`, a **minor** release: standard text and scripts changed (`flow-size.sh`, `plan-check.sh`, `skip.sh`, `merge-gate.sh`, a new `proof-kind.sh`, a new reference `run-roles.md`, the QA role file, pointer lines in the run skill). The `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration: a plan written under 3.4.0 with `role path: standard` is rewritten with the real values the next time the lead writes the plan.
+
+Closes [#173](https://github.com/WimSuenens/agent-plugins/issues/173). Refs [#187](https://github.com/WimSuenens/agent-plugins/issues/187), [#207](https://github.com/WimSuenens/agent-plugins/issues/207).
+
+**What changed for the person who runs the factory:**
+
+- **The plan sets the role path and the test depth.** `flow-size.sh` prints `role path:` and `test depth:` from the project's own flow table (the fired rows' Adds text, the table's starting depth). `plan-check.sh` refuses a plan that holds less (scaling down happens only at the next slice) and a plan that drops the floor. `skip.sh --plan` agrees with the plan: a role off the path is a recorded skip, a role on it is refused.
+- **The floor is enforced in the scripts**, not only in the table's words: developer, QA and the runtime proof are always on the path; a protected area keeps the security review and a depth of at least `targeted`, and still pauses for the person's merge approval, even if the project's table has lost those words.
+- **Test depth is a dial** for QA: `proof-only`, `targeted`, `full` (only after an escalation or an escaped defect).
+- **A light QA verdict** for the lightest band: an independent, binding pass or block per criterion with one check each, the path check and the existing suite; no new tests, no edge sweep. It is never accepted for a protected area or a higher band.
+- **Proof per artefact kind**: screenshot (web app), run log (command-line tool or library), scenario transcript plus the Human-only list (instruction markdown), render or link-check log (docs). `proof-kind.sh` resolves the kind from the plan or the table.
+- **The merge gate reads the QA verdict file** (`--qa-file`, required): it blocks, naming the criterion, when a criterion has no proof item or one of the wrong kind, and prints what it read.
+- **UI self-review before a decision card or the demo** for a slice with a visual result: the app is started, the main pages are driven, screenshots at phone and desktop width are captured, QA writes a critique with severities and what was not checked, and clear faults go back as rework first. The design plugin's `ux-review` is an optional second opinion.
+- **Unchanged.** The Heavy-band ask rule, the fence F1 to F7 and its fixtures.
+
+**Tests.** `test_slice5_path.sh`, `test_slice5_gate.sh`, `test_slice5_text.sh` (all written before the scripts and text they test); the gate tests of earlier slices pass a verdict file.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-23: standard `1ce3028732ac43f234b9e8a1b7946618fac885964c3fe0c43f21f5b8161fabe8`, tooling `580e08acc87067a1b0cb2c00439e2d56431c1476198b2a6775b5732b326502b5`.
+
 ## factory 3.4.0 (#231)
 
 Release: `3.4.0`, a **minor** release: standard text and scripts changed (new `stage-publish.sh` and `post-file.sh`, `stage-report.sh`, a new reference `run-publish.md` and one pointer line in the run skill). The `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration.

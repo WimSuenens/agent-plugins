@@ -21,7 +21,7 @@ has route-sizing-runs-the-script "$ROUTE" 'scripts/flow-size.sh'
 has route-names-no-trigger-point-or-band "$ROUTE" 'are not repeated anywhere in this plugin'
 ck route-hard-codes-no-trigger-row 0 "$(grep -c 'Open one-way door\|Unresolved research\|Protected area touched\|Visual result\|Light 0\|Heavy 7' "$ROUTE")"
 for f in route "role path" "test depth" triggers points band bands reason release "expected slices" "first slice leaves out"; do has "route-plan-field-$f" "$ROUTE" "- $f: "; done
-has route-role-path-standard-not-variable "$ROUTE" 'read `standard` and are not variable yet'
+has route-role-path-is-derived "$ROUTE" 'are the ones `flow-size.sh` printed, or more'
 has route-plan-on-the-ticket-run-without-waiting "$ROUTE" 'and run it without waiting'
 has route-person-asked-only-two-cases "$ROUTE" 'The person is asked on an open one-way door'
 has route-scale-up-down "$ROUTE" 'You scale down, and change the route to a lighter one, only at the next slice'

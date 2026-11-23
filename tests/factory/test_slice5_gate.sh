@@ -139,4 +139,15 @@ run --qa pass --qa-file "$T/qa-light-off.md" --plan "$T/plan-light.md"; ck light
 run --qa pass --qa-file "$T/qa-md.md" --kind instruction-markdown --paths "contracts/a.md"; ck standard-protected-pauses 10 "$rc"
 # the other blocks are untouched
 run --qa pass --qa-file "$T/qa-md.md" --kind instruction-markdown --security findings 2>/dev/null; ck sec-block-still-blocks 11 "$rc"
+# review of slice 5: a criterion with any status but exactly `pass` blocks (no silent drop), a CRLF file reads, a mis-pasted plan cannot open the skip
+for st in fail Pass pending n/a; do
+  sed "s#^- AC-2: pass#- AC-2: $st#" "$T/qa-md.md" >"$T/qa-st.md"
+  run --qa pass --qa-file "$T/qa-st.md" --kind instruction-markdown
+  ck "status-$st-blocks" 11 "$rc"; ck "status-$st-names-it" 1 "$(reason "^reason: criterion AC-2 is $st in the QA verdict")"
+done
+sed 's/$/\r/' "$T/qa-md.md" >"$T/qa-crlf.md"
+run --qa pass --qa-file "$T/qa-crlf.md" --kind instruction-markdown; ck crlf-verdict-reads 0 "$rc"
+tbl "mobile app with a REST client"; ck pk-client-is-not-cli 3 "$pcode"
+tbl "Webhook service"; ck pk-webhook-is-not-web 3 "$pcode"
+tbl "command line tool"; ck pk-command-line-tool-is-cli "0 kind: cli" "$pcode $(printf '%s\n' "$pout" | head -1)"
 done_

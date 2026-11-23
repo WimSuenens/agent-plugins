@@ -302,6 +302,8 @@ The person's choice is final for this item; a later contradiction from running c
 
 The order below is fixed; [hansei.md](${CLAUDE_PLUGIN_ROOT}/references/hansei.md) holds the record's template and rules.
 
+The merge gate of 8.1 also reads QA's verdict file: its command takes `--qa-file <verdict>` (required) and, as they apply, `--plan <plan file>` and `--kind <kind>`; read `references/run-roles.md` (*Proof per artefact kind*) before you run it.
+
 1. Once delivery and documentation are done, **run the application and capture proof**: browser screenshots for a web application, a run log for a command-line tool or a library. Put it in the PR description under `## Proof`. Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/merge-gate.sh" check <pr> --qa <verdict> --security <verdict> [--skip-reason "<reason>"] --touches <list> --paths "<files>"` (scripts/merge-gate.sh).
    - **`auto-merge`** (exit 0): QA and security pass, CI is green, proof is attached and no one-way door is open (a security review the lead skipped under *Skipping roles* counts as `skipped`, with its `--skip-reason`; QA and the proof are never skipped). No question is asked: stamp `date -u +%FT%TZ` as the merge time (no person touch is written), and go on with the merge train and the clean-up below as if the person had said yes.
    - **`blocked`** (exit 11): a gate is not met (a non-pass verdict, CI not green, or no proof). No proof means no auto-merge. Do not merge; fix the cause or tell the person which reason the script printed.

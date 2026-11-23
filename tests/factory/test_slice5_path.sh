@@ -134,6 +134,8 @@ sk runtime-proof --reason "x" --plan "$T/plan.md"; ck skip-floor-proof-refused 1
 sk security-reviewer --reason "x" --plan "$T/plan.md" --touches authentication
 ck skip-floor-security-protected-refused 1 "$code"
 sk architect --reason "x" --plan "$T/nosuch.md"; ck skip-plan-unreadable 2 "$code"
+printf -- '- route: direct\n' >"$T/plan-norole.md"
+sk architect --reason "x" --plan "$T/plan-norole.md" --touches contracts; ck skip-plan-without-role-path-refused-not-opened 2 "$code"
 # without --plan nothing changes
 sk architect --reason "trivial"; ck skip-without-plan-as-before 0 "$code"; ck skip-without-plan-line "skip ok architect" "$out"
 done_

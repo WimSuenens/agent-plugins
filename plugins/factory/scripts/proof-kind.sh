@@ -29,13 +29,14 @@ if [ -z "$kind" ] && [ -n "$plan" ]; then
 fi
 if [ -z "$kind" ] && [ -n "$table" ]; then
   [ -r "$table" ] || { echo "proof-kind: $table: unreadable" >&2; exit 2; }
-  pt="$(grep -m 1 '^project-type:' "$table" | sed 's/^project-type:[[:space:]]*//' | tr -d '\r' | tr '[:upper:]' '[:lower:]')"
+  pt="$(grep -m 1 '^project-type:' "$table" | sed 's/^project-type:[[:space:]]*//' | tr -d '\r' | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' ' ')"
+  pt=" $pt "   # whole words only: " client " is not " cli "
   case "$pt" in
-    *markdown* | *llm*) kind=instruction-markdown ;;
-    *"static site"* | *web*) kind=web-app ;;
-    *cli* | *"command"*) kind=cli ;;
-    *library*) kind=library ;;
-    *docs* | *documentation*) kind=docs ;;
+    *" markdown "* | *" llm "*) kind=instruction-markdown ;;
+    *" static site "* | *" web "*) kind=web-app ;;
+    *" cli "* | *" command line "*) kind=cli ;;
+    *" library "*) kind=library ;;
+    *" docs "* | *" documentation "*) kind=docs ;;
   esac
 fi
 if [ -z "$kind" ]; then

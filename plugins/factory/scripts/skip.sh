@@ -84,6 +84,7 @@ esac
 case "$reason" in *[![:space:]]*) ;; *) echo "refused: a skip needs a written reason"; exit 1 ;; esac
 if [ -n "$plan" ]; then
   ppath="$(grep -m 1 '^- role path:' "$plan" | sed 's/^- role path:[[:space:]]*//' | tr -d '\r')"
+  [ -n "$ppath" ] || { echo "skip: $plan has no \`- role path:\` line (plan-check.sh says what is wrong with it)" >&2; exit 2; }
   if printf '%s\n' "$ppath" | tr ',' '\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | grep -qx "$role"; then
     echo "refused: $role is on the plan's role path; the plan scales down at the next slice"; exit 1
   fi

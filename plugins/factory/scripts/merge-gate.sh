@@ -134,10 +134,11 @@ check_verdict() {
   scope="$(sed -n 's/^Scope:[[:space:]]*//p' "$f" | head -1 | tr -d '\r' | sed 's/[[:space:]]*$//')"
   [ "$vv" = pass ] || addb "the QA verdict file says ${vv:-nothing}, not pass"
   rows="$(awk -v us="$us" '
+    { sub(/\r$/, "") }
     /^## /{ sec = ($0 ~ /^## Criteria[ \t]*$/) ? "c" : (($0 ~ /^## Proof[ \t]*$/) ? "p" : ""); next }
-    sec == "c" && /^- [^:]+:[ \t]*(pass|block)/ {
+    sec == "c" && /^- [^:]+:/ {
       line = $0; sub(/\r$/, "", line); sub(/^- /, "", line); id = line; sub(/:.*/, "", id); rest = line; sub(/^[^:]+:[ \t]*/, "", rest)
-      st = rest; sub(/[ \t|].*/, "", st); pr = ""; if (match(rest, /\| *proof:.*/)) { pr = substr(rest, RSTART, RLENGTH); sub(/^\| *proof:[ \t]*/, "", pr); gsub(/[ \t]/, "", pr) }
+      st = rest; sub(/[ \t|].*/, "", st); if (st == "") st = "empty"; pr = ""; if (match(rest, /\| *proof:.*/)) { pr = substr(rest, RSTART, RLENGTH); sub(/^\| *proof:[ \t]*/, "", pr); gsub(/[ \t]/, "", pr) }
       print "C" us id us st us pr; next }
     sec == "p" && /^- [^ ]+ \[[^]]*\]:/ {
       line = $0; sub(/\r$/, "", line); sub(/^- /, "", line); id = line; sub(/ .*/, "", id); kd = line; sub(/^[^[]*\[/, "", kd); sub(/\].*/, "", kd)

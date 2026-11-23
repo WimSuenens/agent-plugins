@@ -21,7 +21,7 @@ Closes [#173](https://github.com/WimSuenens/agent-plugins/issues/173). Refs [#18
 
 **Tests.** `test_slice5_path.sh`, `test_slice5_gate.sh`, `test_slice5_text.sh` (all written before the scripts and text they test); the gate tests of earlier slices pass a verdict file.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-23: standard `1ce3028732ac43f234b9e8a1b7946618fac885964c3fe0c43f21f5b8161fabe8`, tooling `580e08acc87067a1b0cb2c00439e2d56431c1476198b2a6775b5732b326502b5`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-23: standard `9645e289e538da9487afb57f0885ad7b22774bd41ed656487f1eab087a0a13a6`, tooling `f3f333df93c20c2b88657b23b4aed879590bb19386d51a79a197965e1fef9cd1`.
 
 ## factory 3.4.0 (#231)
 

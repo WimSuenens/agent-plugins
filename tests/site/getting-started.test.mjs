@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { BASE, REPO, SITE, PLUGINS, realBuild, htmlFiles, serve, launch, skillSources, parseFrontmatter } from "./lib.mjs";
+import { commandsIn, unknownCommands } from "./names.mjs";
 
 let srv, browser, ctx, en, nl;
 const READ = () => {
@@ -36,29 +37,7 @@ before(async () => {
 });
 after(async () => { await ctx?.close(); await browser?.close(); await srv?.close(); });
 
-// Commands: what the page names must exist in the repository.
-export function commandsIn(codeBlocks) {
-  const text = codeBlocks.join("\n");
-  return {
-    slash: [...text.matchAll(/(?:^|[\s`"'(])\/([a-z][a-z0-9-]*):([a-z][a-z0-9-]*)/gm)].map((m) => ({ plugin: m[1], skill: m[2] })),
-    installs: [...text.matchAll(/\binstall\s+([a-z][a-z0-9-]*)@([a-z][a-z0-9-]*)/g)].map((m) => ({ plugin: m[1], marketplace: m[2] })),
-    text,
-  };
-}
-// Plugin names the marketplace lists (upstream plugins are fetched, so they have no folder here).
-export const marketplaceNames = (file = path.join(REPO, ".claude-plugin", "marketplace.json")) => new Set((JSON.parse(fs.readFileSync(file, "utf8")).plugins ?? []).map((p) => p.name));
-export function unknownCommands(codeBlocks, sources = skillSources(PLUGINS), pluginsDir = PLUGINS, listed = marketplaceNames()) {
-  const c = commandsIn(codeBlocks);
-  const bad = [];
-  const names = new Set(sources.map((s) => `${s.plugin}:${s.folder}`));
-  for (const s of sources) { try { names.add(`${s.plugin}:${parseFrontmatter(s.file).name}`); } catch {} }
-  for (const { plugin, skill } of c.slash) if (!names.has(`${plugin}:${skill}`)) bad.push(`/${plugin}:${skill}`);
-  for (const { plugin, marketplace } of c.installs) {
-    if (!listed.has(plugin) && !fs.existsSync(path.join(pluginsDir, plugin))) bad.push(`install ${plugin}`);
-    if (marketplace !== "wimsuenens") bad.push(`marketplace ${marketplace}`);
-  }
-  return bad;
-}
+export { commandsIn, marketplaceNames, unknownCommands } from "./names.mjs";
 
 test("AC-19 English: html lang en, one h1 'Getting started', four h2 steps in the prototype's order, each with code", () => {
   assert.equal(en.lang, "en");

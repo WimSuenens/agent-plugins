@@ -200,7 +200,7 @@ QA cannot decide these; the person (or a reviewer with a real browser) judges th
 - **A see-also slug with no page in the language is dropped, not an error** (AC-13), while a slug that is not in the page tree at all fails the build (AC-4). Cost to undo: a minute.
 - **The tree and contents add no client script** (AC-7), so 156 AC-12 stays true. Rejected: a script-driven collapsible tree. Cost to undo: a script line; an hour.
 - **The architect's contracts (contracts/188-*.md) govern three points where they refine this requirement: the navigation tree comes before `main` in source order (a column beside the reading column from 48rem, the skip link jumping past it), the Dutch Reference link label stays the English "Reference" (`lang="en"`, `hreflang="en"`), and Home's breadcrumb shows only itself. The lead accepted them; AC-5, AC-10, AC-15, AC-16 and AC-25 are worded to match.**
-- **Getting started's commands are checked against the repository** (AC-19), so the page cannot drift from real skill names; deeper drift detection of narrative pages stays deferred.
+- **Getting started's commands are checked against the repository** (AC-19), so the page cannot drift from real skill names. Since 244, every backticked name and path on a hand-written page, in prose as well as in code blocks, is checked too ([244](244-inline-names-check.md)); only behaviour claims in prose stay a reviewer's job (#245).
 
 ## Out of scope
 
@@ -209,7 +209,7 @@ Everything the frame lists as deliberately faked:
 - Narrative pages other than Getting started: the Plugins overview, wayfinding, design, factory, The Lean way, the factory roles, running the factory, the Obeya, toolkit and discover, Credits. The prototype shows them; they come in later slices. The tree lists only pages that exist.
 - The owner's review of the Dutch Getting started is recorded on the slice; the site tracks only `draft` or `reviewed` (AC-21), not who, when or what changed. The wider translation workflow (how drafts are produced per page) is the deferred line.
 - Generated pages stay skills only: no agent, command, hook or factory-reference pages, and no per-skill pages (Reference is still one page).
-- No site search, no performance budgets (deferred until images, larger fonts or more client script), no drift detection of hand-written pages against changed plugins.
+- No site search, no performance budgets (deferred until images, larger fonts or more client script), no drift detection of behaviour claims in hand-written pages (names and paths are checked, see 244; behaviour claims are a reviewer's job, #245).
 
 Beyond the frame, left to later slices: a Dutch Reference, credits for the upstream skills, a third language, a changelog feed.
 

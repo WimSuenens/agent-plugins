@@ -3,6 +3,7 @@
 # Seams: protected-areas.sh (sourced), skip.sh, merge-gate.sh, and one line of standard text in the run skill.
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
+QAF="$REPO/tests/factory/fixtures/slice5/qa-ok.md"   # a verdict that links its one criterion to a run-log (slice 5: the gate reads it)
 PA="$PLUGIN/scripts/protected-areas.sh"; SK="$PLUGIN/scripts/skip.sh"; MG="$PLUGIN/scripts/merge-gate.sh"
 RUN="$(run_all_file)"
 cd "$T" || exit 1
@@ -81,7 +82,7 @@ chmod +x "$T/bin/gh"; export PATH="$T/bin:$PATH"; export PRJSON="$T/pr.json"
 jq -n --arg b $'## Proof\n\n```\nok\n```\n' '{body:$b,statusCheckRollup:[{name:"ci",conclusion:"SUCCESS"}]}' >"$PRJSON"
 for list in "plugins/x/a.md contracts/168-fix.md" "plugins/x/a.md src/oauth/cb.js" "plugins/x/a.md docs/author.md" "plugins/x/a.md"; do
   ( cd "$T" && bash "$SK" check security-reviewer --reason r --paths "$list" plain.md >/dev/null ); s=$?
-  bash "$MG" check 7 --qa pass --security skipped --skip-reason r --paths "$list" >/dev/null 2>&1; g=$?
+  bash "$MG" check 7 --qa pass --qa-file "$QAF" --kind cli --security skipped --skip-reason r --paths "$list" >/dev/null 2>&1; g=$?
   want=0; [ $s = 1 ] && want=11
   ck "skip-and-gate-agree-[$list]" "$want" "$g"
 done

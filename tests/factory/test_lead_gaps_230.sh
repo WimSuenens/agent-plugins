@@ -39,7 +39,7 @@ git -C "$REPO" show origin/main:plugins/factory/scripts/flow-size.sh >"$T/oldscr
 for args in "" "$VISUAL" "$NEWLOGIC|$VISUAL" "$PROT|$CONTRACT|$NEWLOGIC"; do
   set --; oldifs="$IFS"; IFS='|'; for a in $args; do set -- "$@" "$a"; done; IFS="$oldifs"
   [ -n "$args" ] || set --
-  ck "no-paths-same-output-[$args]" "$(bash "$T/oldscripts/flow-size.sh" --table "$TBL" "$@" 2>&1)" "$(bash "$FS" --table "$TBL" "$@" 2>&1)"
+  ck "no-paths-same-output-[$args]" "$(bash "$T/oldscripts/flow-size.sh" --table "$TBL" "$@" 2>&1)" "$(bash "$FS" --table "$TBL" "$@" 2>&1 | grep -v '^role path: \|^test depth: \|^ui self-review: \|^floor: ')"   # slice 5 added these four lines; the rest is today's output
 done
 # the list is refused, not ignored, when it is empty or only blanks; a missing value is a usage error. Nothing on stdout.
 for bad in "" "   "; do

@@ -7,6 +7,10 @@
 # The path list tested is the gate's (merge-gate.sh): the Paths: blocks of the contract files, plus each contract file that sits under a
 #   contracts/ directory (the slice's own contract is in its diff, though not on its own Paths: list), plus --paths (one path per line, so a path with a space stays whole), the pull request's
 #   changed paths, which are the very list the gate gets. Pass --paths once the PR exists; without it the contract files stand in for the diff.
+# --plan <file>: the plan on the ticket (plan-check.sh's fields). The skip and the plan agree: a role that is not on the plan's `role path` is a skip (it still needs
+#   its written reason, which the lead records); a role that is on the path is refused, because the plan scales down only at the next slice. With --plan the plan's
+#   path stands in for the blanket rule on protected slices (a role the plan leaves off may be skipped there), except the floor: security-reviewer is never skipped for
+#   a protected slice, and qa-engineer and runtime-proof never. Without --plan nothing changes.
 # protected: prints "protected: no" (exit 0) or "protected: <why>" (exit 1). A slice is protected when its path list holds a path under
 #   contracts/ or a path the shared definition (protected-areas.sh) marks: contracts, auth/oauth/login, secret or migration, or when the lead declares an area with --touches.
 # check: prints "skip ok <role>" (exit 0) or "refused: <why>" (exit 1). Refused: QA and the runtime proof (never skipped), a missing or
@@ -16,8 +20,8 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=protected-areas.sh
 . "$here/protected-areas.sh"
 cmd="${1:-}"; [ $# -gt 0 ] && shift
-usage() { echo "usage: skip.sh check <role> --reason <text> [--touches <area>]... [--paths \"<file> ...\"] <contract-file>... | skip.sh protected [--touches <area>]... [--paths \"<file> ...\"] <contract-file>..." >&2; exit 2; }
-role=""; reason=""; areas=""; files=(); pr_paths=""
+usage() { echo "usage: skip.sh check <role> --reason <text> [--plan <plan file>] [--touches <area>]... [--paths \"<file> ...\"] <contract-file>... | skip.sh protected [--touches <area>]... [--paths \"<file> ...\"] <contract-file>..." >&2; exit 2; }
+role=""; reason=""; areas=""; files=(); pr_paths=""; plan=""
 case "$cmd" in
   check) role="${1:-}"; [ -n "$role" ] || usage; shift ;;
   protected) ;;
@@ -27,6 +31,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --reason) [ $# -ge 2 ] || usage; reason="$2"; shift 2 ;;
     --paths) [ $# -ge 2 ] || usage; pr_paths="$2"; shift 2 ;;
+    --plan) [ $# -ge 2 ] || usage; plan="$2"; shift 2 ;;
     --touches)
       [ $# -ge 2 ] || usage
       case "$2" in contracts | authentication | secrets | data-migration | one-way-door) areas="$areas $2" ;; *) echo "skip: unknown area: $2" >&2; exit 2 ;; esac
@@ -36,6 +41,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ ${#files[@]} -gt 0 ] || usage
+if [ -n "$plan" ] && [ ! -r "$plan" ]; then echo "skip: $plan: unreadable" >&2; exit 2; fi
 for f in "${files[@]}"; do [ -r "$f" ] || { echo "skip: $f: unreadable" >&2; exit 2; }; done
 
 prot=""
@@ -76,6 +82,15 @@ case "$role" in
   *) echo "skip: unknown role: $role" >&2; exit 2 ;;
 esac
 case "$reason" in *[![:space:]]*) ;; *) echo "refused: a skip needs a written reason"; exit 1 ;; esac
+if [ -n "$plan" ]; then
+  ppath="$(grep -m 1 '^- role path:' "$plan" | sed 's/^- role path:[[:space:]]*//' | tr -d '\r')"
+  [ -n "$ppath" ] || { echo "skip: $plan has no \`- role path:\` line (plan-check.sh says what is wrong with it)" >&2; exit 2; }
+  if printf '%s\n' "$ppath" | tr ',' '\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | grep -qx "$role"; then
+    echo "refused: $role is on the plan's role path; the plan scales down at the next slice"; exit 1
+  fi
+  if [ -n "$prot" ] && [ "$role" = security-reviewer ]; then echo "refused: the slice touches a protected area ($prot)"; exit 1; fi
+  echo "skip ok $role (not on the plan's role path)"; exit 0
+fi
 if [ -n "$prot" ]; then echo "refused: the slice touches a protected area ($prot)"; exit 1; fi
 echo "skip ok $role"
 exit 0

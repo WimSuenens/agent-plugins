@@ -2,6 +2,7 @@
 # #214: six review leftovers of slice 1 of #207 and of #211. One block per item, in the order they were built.
 # shellcheck disable=SC1091
 . "$(dirname "$0")/lib.sh"
+QAF="$REPO/tests/factory/fixtures/slice5/qa-ok.md"   # a verdict that links its one criterion to a run-log (slice 5: the gate reads it)
 PA="$PLUGIN/scripts/protected-areas.sh"; SK="$PLUGIN/scripts/skip.sh"; MG="$PLUGIN/scripts/merge-gate.sh"
 PT="$PLUGIN/scripts/post-text.sh"; AD="$PLUGIN/scripts/andon-detect.sh"; HANSEI="$PLUGIN/references/hansei.md"
 cd "$T" || exit 1
@@ -22,7 +23,7 @@ printf 'factory-state: 2\n' >"$R2/docs/agents/factory.md"   # the branch drops t
 printf 'Paths:\n- infra/main.tf\nshared: none\n' >"$T/infra.md"
 ( cd "$R2" && bash "$SK" protected "$T/infra.md" >/dev/null ); ck item2-skip-sees-line-from-main 1 "$?"
 ( cd "$R2/sub" && bash "$SK" protected "$T/infra.md" >/dev/null ); ck item2-skip-from-subdirectory 1 "$?"
-( cd "$R2" && bash "$MG" check 7 --qa pass --security pass --paths "infra/main.tf" >/dev/null ); ck item2-gate-sees-line-from-main 10 "$?"
+( cd "$R2" && bash "$MG" check 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "infra/main.tf" >/dev/null ); ck item2-gate-sees-line-from-main 10 "$?"
 # where main has no such line the working tree's own line still counts (the branch that introduces it)
 R2b="$T/r2b"; mkdir -p "$R2b/docs/agents"
 ( cd "$R2b" && git init -q -b main . && printf 'factory-state: 2\n' >docs/agents/factory.md && git add -A && git commit -qm base && git update-ref refs/remotes/origin/main HEAD )
@@ -37,14 +38,14 @@ printf 'Paths:\n- plugins/x/a.md\nshared: none\n' >"$T/plain.md"
 ( cd "$T" && bash "$SK" protected --paths "contracts/my notes.md" "$T/plain.md" >/dev/null ); ck item1-skip-space-path-in-contracts 1 "$?"
 ( cd "$T" && bash "$SK" protected --paths $'plugins/x/a.md\ncontracts/my notes.md' "$T/plain.md" >/dev/null ); ck item1-skip-newline-list 1 "$?"
 ( cd "$T" && bash "$SK" protected --paths $'plugins/x/my a.md\ndocs/b c.md' "$T/plain.md" >/dev/null ); ck item1-skip-space-paths-clean 0 "$?"
-bash "$MG" check 7 --qa pass --security pass --paths "contracts/my notes.md" >/dev/null 2>&1; ck item1-gate-space-path-in-contracts 10 "$?"
-bash "$MG" check 7 --qa pass --security pass --paths $'plugins/x/a.md\nsrc/my secrets/k.txt' >/dev/null 2>&1; ck item1-gate-newline-list 10 "$?"
-( cd "$R1" && bash "$MG" check 7 --qa pass --security pass --paths "my docs/page.md" >/dev/null 2>&1 ); ck item1-gate-space-path-protected-by-glob 10 "$?"
-bash "$MG" check 7 --qa pass --security pass --paths "plugins/x/a.md docs/b.md" >/dev/null 2>&1; ck item1-gate-legacy-one-line-list-clean 0 "$?"
+bash "$MG" check 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "contracts/my notes.md" >/dev/null 2>&1; ck item1-gate-space-path-in-contracts 10 "$?"
+bash "$MG" check 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths $'plugins/x/a.md\nsrc/my secrets/k.txt' >/dev/null 2>&1; ck item1-gate-newline-list 10 "$?"
+( cd "$R1" && bash "$MG" check 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "my docs/page.md" >/dev/null 2>&1 ); ck item1-gate-space-path-protected-by-glob 10 "$?"
+bash "$MG" check 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths "plugins/x/a.md docs/b.md" >/dev/null 2>&1; ck item1-gate-legacy-one-line-list-clean 0 "$?"
 
 # review: a newline list is not also split into pieces (a harmless path with a space is not read as its tail)
 ( cd "$R1" && bash "$SK" protected --paths $'plugins/x/my .env.md\nplugins/x/b.md' "$T/plain.md" >/dev/null ); ck review-newline-list-not-split-into-pieces 0 "$?"
-( cd "$R1" && bash "$MG" check 7 --qa pass --security pass --paths $'plugins/x/my .env.md\nplugins/x/b.md' >/dev/null 2>&1 ); ck review-gate-newline-list-not-split-into-pieces 0 "$?"
+( cd "$R1" && bash "$MG" check 7 --qa pass --qa-file "$QAF" --kind cli --security pass --paths $'plugins/x/my .env.md\nplugins/x/b.md' >/dev/null 2>&1 ); ck review-gate-newline-list-not-split-into-pieces 0 "$?"
 
 # --- item 3: render checks Status and Summary first, scans second; scan lines go to stderr
 hp="/Us""ers/bob/work"

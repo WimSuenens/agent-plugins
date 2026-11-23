@@ -8,7 +8,7 @@ Size right after the person confirmed the four fields of step 1, before any map 
 
 List the paths the slice is expected to change, and include the contract files the architect stage will write: pass them as `--paths` (one per line). The script fires the protected-area row itself from `protected-areas.sh`, with the project's own `protected-paths:` line; you still name the other rows, `Contract or interface used by others` among them when the architect will write a contract. An empty list is refused.
 
-Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/flow-size.sh" [--paths "<expected paths>"] "<row>" "<row>" ...` (a whole row name, or a prefix that picks one row; no name is the lightest path). It prints the points, the band, the bands line it used, the steps each fired row adds, the route (`map` when a fired row adds a map, otherwise `direct`) and who is asked. It refuses a name that is not a row. It reads the route and the question to the person from the table's Adds column: a row that adds a map says `map` in its Adds, and a row that does not never uses the word; a row that stays with the person says `stays with the person`. The sizing reports; it never removes a step the table's `floor:` keeps, and one-way doors stay with the person.
+Then run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/flow-size.sh" [--paths "<expected paths>"] "<row>" "<row>" ...` (a whole row name, or a prefix that picks one row; no name is the lightest path). It prints the points, the band, the bands line it used, the role path, the test depth, whether a UI self-review is due, the steps each fired row adds, the route (`map` when a fired row adds a map, otherwise `direct`) and who is asked. It refuses a name that is not a row. It reads the route and the question to the person from the table's Adds column: a row that adds a map says `map` in its Adds, and a row that does not never uses the word; a row that stays with the person says `stays with the person`. The sizing reports; it never removes a step the table's `floor:` keeps, and one-way doors stay with the person.
 
 A change of the table's bands applies to new sizings only: the plan records the bands line it was sized under, and an older plan is never re-banded.
 
@@ -19,8 +19,8 @@ Write the plan as one comment on the destination ticket (a slice: on the slice t
 ```
 ## Plan
 - route: direct | map
-- role path: standard
-- test depth: standard
+- role path: <roles that run, in order, comma separated>
+- test depth: proof-only | targeted | full
 - triggers: <row> (+<points>), ... | none
 - points: <sum>
 - band: <name>
@@ -29,9 +29,10 @@ Write the plan as one comment on the destination ticket (a slice: on the slice t
 - release: factory <version that is running>
 - expected slices: <the expected sequence, one clause each>
 - first slice leaves out: <what the first slice deliberately leaves out, naming the part of any approved ADR> | none
+- artefact: <web-app | cli | library | instruction-markdown | docs>      (optional: the kind of proof the gate wants)
 ```
 
-`role path` and `test depth` read `standard` and are not variable yet. Check the plan with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/plan-check.sh" <plan file> --table docs/agents/factory.md`: it refuses a missing field, points that are not the sum, a band that is not the one the plan's own bands line gives, and a route that is not the table's.
+`role path` and `test depth` are the ones `flow-size.sh` printed, or more (the roles reference of the run skill, *Role path and test depth*: the floor, scaling up, the depth dial). Check the plan with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/plan-check.sh" <plan file> --table docs/agents/factory.md`: it refuses a missing field, points that are not the sum, a band that is not the one the plan's own bands line gives, a route that is not the table's, and a role path or test depth below the sizing's or that drops the floor.
 
 **Who is asked.** The person is asked on an open one-way door (a decision card, step 7, as always) and in the Heavy band (*Heavy band*). Nothing else in the plan waits for the person. Within a slice you may scale up (a row fires that you had not counted: write the changed plan, say so in the stage summary). You scale down, and change the route to a lighter one, only at the next slice.
 

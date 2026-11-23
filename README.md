@@ -249,6 +249,8 @@ A content file is plain Markdown with no front matter; the title comes from the 
 
 A broken page tree or content file fails the build, and the message names the entry or the file. The rules are in the [page tree contract](contracts/188-page-tree.md) and the [wiki components contract](contracts/188-wiki-components.md).
 
+The test run also checks every backticked name and path on a hand-written page, in prose and in code blocks, against this repository: a `/plugin:skill` command must name an existing skill, an `install <plugin>@wimsuenens` target a plugin listed in `.claude-plugin/marketplace.json` or with a folder under `plugins/`, and a `docs/agents/<name>.md` path must appear in some plugin's `SKILL.md`. A name that does not exist fails `tests/site/names.test.mjs` with a line such as `en/getting-started.md: /plugin:no-such`, naming the page and the token; the build itself does not fail on it.
+
 ### Draft Dutch pages
 
 A Dutch page is a draft until its entry says otherwise, and a draft shows a short Dutch notice above the heading. To mark a page reviewed, set `review: { nl: "reviewed" }` on its entry in `pages.mjs`; the notice then disappears. Any other value fails the build. Each build prints the drafts once in its log, as `pages: dutch drafts: ...` (`none` when there are none).

@@ -1,7 +1,7 @@
 # Lead state: #245
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhLSXsQ
-- next step: 6 (docs-writer role task, then QA)
+- next step: 8.6 (close commits, merge)
 - frozen on: factory 3.4.0
 - ADR number: none
 - code review: no — trigger: no trigger
@@ -32,8 +32,9 @@ none
 
 ## Findings
 
-none
+- security round 1 (#270) was blocked: the memory guard refuses reads of another role's role file, and the brief named the docs-writer role file as an input to scan (process object: the brief). Handled with a round 2 task quoting the added line.
+- the tracker scan rejects a literal home-directory pattern inside a result that describes its own scan (process object: tooling).
 
 ## Abnormalities
 
-none
+| A1 | kind 1 blocked-input | security-reviewer #270 | raised, no andon recorded: the lead went on with a round 2 brief without an andon comment; told to the person at close |

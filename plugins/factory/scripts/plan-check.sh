@@ -13,22 +13,56 @@
 # Output: the first failure as `missing: <field>` or `<field>: <what is wrong>` (exit 1); otherwise `plan ok` and, as they apply,
 #   tell the person in the stage summary: the first slice leaves out: <list>     (decision 16: an approved ADR is never contradicted unseen)
 #   ask the person before running: Heavy band                                     (the open-ended last band of the plan's bands line)
-# Exit: 0 ok; 1 the plan is wrong; 2 usage, or the plan or the table file is unreadable.
+# Release (#207 slice 6, decision 14): the plan records the release it was written under (`release: factory <version>`).
+#   plan-check.sh release <plan file> <plugin root>   prints `same` or `release-crossed`: the plan's release against the `release:` line of fingerprint.sh for the plugin root.
+#   plan-check.sh <plan file> --release <plugin root> a plan written under another release is not checked against the table (its rows, bands and role names may differ):
+#       it prints `release-crossed`, then `plan written under factory <old>; running <new>`, and exits 0 once every field is present. The resume question follows (run-route.md).
+#       A plan written under the running release is checked as before.
+# Exit: 0 ok; 1 the plan is wrong; 2 usage, or the plan or the table file is unreadable (`release`: or the plugin root is not a factory plugin root).
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+usage() { echo "usage: plan-check.sh <plan file> [--table <factory.md>] [--release <plugin root>] | plan-check.sh release <plan file> <plugin root>" >&2; exit 2; }
+mode=check
+if [ "${1:-}" = release ]; then mode=release; shift; fi
 plan="${1:-}"; shift 2>/dev/null
-table="docs/agents/factory.md"
-while [ $# -gt 0 ]; do
-  case "$1" in --table) [ $# -ge 2 ] || { echo "usage: plan-check.sh <plan file> [--table <factory.md>]" >&2; exit 2; }; table="$2"; shift 2 ;; *) echo "usage: plan-check.sh <plan file> [--table <factory.md>]" >&2; exit 2 ;; esac
-done
-[ -n "$plan" ] && [ -r "$plan" ] || { echo "usage: plan-check.sh <plan file> [--table <factory.md>]" >&2; exit 2; }
+table="docs/agents/factory.md"; relroot=""
+if [ "$mode" = release ]; then
+  relroot="${1:-}"; [ $# -eq 1 ] || usage
+else
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --table) [ $# -ge 2 ] || usage; table="$2"; shift 2 ;;
+      --release) [ $# -ge 2 ] || usage; relroot="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+fi
+[ -n "$plan" ] && [ -r "$plan" ] || usage
 
 get() { grep -m 1 "^- $1:" "$plan" | sed "s/^- $1:[[:space:]]*//" | tr -d '\r' | sed 's/[[:space:]]*$//'; }
 fail() { echo "$1"; exit 1; }
 
+# the release the plan was written under, and the one running (fingerprint.sh is the one reader of a plugin root's release)
+plan_rel() { get release | sed 's/^factory[[:space:]]*//'; }
+cur_rel=""
+if [ -n "$relroot" ]; then
+  cur_rel="$(bash "$here/fingerprint.sh" "$relroot" 2>/dev/null | sed -n 's/^release: //p')"
+  [ -n "$cur_rel" ] || { echo "plan-check: $relroot: not a factory plugin root" >&2; exit 2; }
+fi
+if [ "$mode" = release ]; then
+  [ -n "$(get release)" ] || fail "missing: release"
+  if [ "$(plan_rel)" = "$cur_rel" ]; then echo same; else echo release-crossed; fi
+  exit 0
+fi
+
 for f in route "role path" "test depth" triggers points band bands reason release "expected slices" "first slice leaves out"; do
   [ -n "$(get "$f")" ] || fail "missing: $f"
 done
+if [ -n "$relroot" ] && [ "$(plan_rel)" != "$cur_rel" ]; then
+  echo "release-crossed"
+  echo "plan written under factory $(plan_rel); running $cur_rel"
+  exit 0
+fi
 route="$(get route)"
 case "$route" in direct | map) ;; *) fail "route: \"$route\" is neither direct nor map" ;; esac
 

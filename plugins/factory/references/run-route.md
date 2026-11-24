@@ -47,6 +47,15 @@ The route is `direct` when no fired row adds a map. There is no map and no front
 3. **Slices.** Cut each slice straight from the destination's **Done when**, as step 4's *No one-way doors* paragraph does (the four-part frame, **Under test** taken from the Done-when outcomes), without `/wayfinding:beachhead`. Take the order from `start-gate.sh` (`order:`), which prints the integrator's advice; the integrator advises and does not choose the route.
 4. **The board.** Slice tickets are added as in step 4. The destination ticket gets no map card.
 
+## Resume after a release change
+
+Read this when a run resumes (step 0) and the plugin release is not the one the plan was written under (#187 decision 14). Check each open slice's plan, and the destination's, before anything is started: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/plan-check.sh" release "<plan file>" "${CLAUDE_PLUGIN_ROOT}"` prints `same` or `release-crossed`. On `same` nothing changes and nothing is asked. On `release-crossed`, ask the person one question, once for the run, however many slices are open, in plain words: *This run was planned under factory <old>; factory <new> is running. Do you want to finish under the original plan (the default), or re-size under the new table?*
+
+- **Finish under the original plan** (the default, taken when the person does not choose): nothing is re-sized. A plan from an older release is not checked against the new table (`plan-check.sh <plan> --release "${CLAUDE_PLUGIN_ROOT}"` prints `release-crossed` and exits 0; the old rows, bands and role names may no longer exist, and a 3.4.0 plan with `role path: standard` is not an error here). The slice's hansei is marked `release crossed` and kept outside the baseline sections (`hansei.md`, *The plan section*; `baseline.md`, section 5).
+- **Re-size under the new table**: size as in *Sizing* and write a new plan comment under the running release. It is the first plan for the hansei from then on, and the slice's hansei is `same`.
+
+Record the answer in one line on the run ticket. Never ask a second time: a run is asked once, and a further release change during the same run applies the answer already given.
+
 ## Escalation
 
 When work reveals a one-way door, a failed assumption or an unknown the sizing missed, stop starting slices (roles in hand finish their step) and chart a map for what is now foggy: invoke `/wayfinding:wayfinder` with the destination and the finding. Say it to the person in one line: `Escalated to a map: <what the work found>.` The map now identifies the run: copy the Factory run section into the map's body unchanged (the same `started`, `closed in this run` and `baseline`), put `Factory run: moved to #<map>` in its place on the destination ticket, and write the changed plan (route `map`, the reason). A session that resumes from the destination ticket and finds that pointer follows it: `run-state.sh` exits 4 and names the map, and the map's body holds the run. A frontier round for the doors found follows (step 3). A contradicted **Under test** line still triggers the resurvey, as before.

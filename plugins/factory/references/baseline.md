@@ -12,7 +12,7 @@ The **Factory baseline** is one issue in the project's own tracker, titled exact
 - **A reason text copied into the body** (section 4 `<reasons>`, R3, and the `plugin:` text of the calibration line, the record's free text) is written in a **code span**, cut first, then neutralised: cut to 120 characters (section 4), newline to a space, each backtick to `'`, each `@` to `(at)` and each `<` to `(lt)`, then placed in backticks. The same applies in the A3. A text cut at 120 characters ends with `…`. One code span per reason text (the `; ` between reasons is outside the spans). In the calibration line the `factory ` before the text, the item number and the link are the standard's own text and outside the span. Text the standard writes itself (`no items in series`, `(schema v<n>)`) is not a reason text and is not in a code span.
 - **No clock in the body.** The body has no "updated at" line, so recomputing it from the same sources gives the same text.
 - **Never in `WimSuenens/agent-plugins`.** Every command acts on the project's own repository. None names `--repo`.
-- **No script.** The Lead reads the comments and writes the page. A reader who takes the records the body names, the A3 answer lines, the override statuses on main and the rules below reproduces every figure and label.
+- **No script computes a figure.** The Lead reads the comments and writes the page; the one script it calls (`hansei-plan.sh carry`, section 6, item 6) compares two fingerprints and prints a label. A reader who takes the records the body names, the A3 answer lines, the override statuses on main and the rules below reproduces every figure and label.
 
 The commands (*Find baseline*, *Create baseline*, *Pin baseline*, *Read baseline*, *Edit baseline*, *Find records*, *Find A3s*) are in `## Factory operations` of the project's tracker doc, next to *Find hansei* and *Post hansei*.
 
@@ -98,6 +98,15 @@ Given a section's items (`n` of them, after section 3 and 5), every item is in e
 2. A **section** is one series plus one key, holding every item of that series with that key and **no partial override** (no `from` or `until` entry). An item with a partial override is a **during-item**: it is in **no section**, named in its series block under `not in any section` (`#<id> <url> (<name> in force for part of the item)`), and counted in no reading.
 3. Sections of a series are written reference first, then by the close order of their first item.
 4. An item is in one series and one section only.
+5. An item whose record's `release:` line (`### Plan` section) reads `release crossed` is in **no section**, like a during-item: named under `not in any section` as `#<id> <url> (release crossed)` and counted in no reading (#187 decision 14: it finished under a plan from another release, so its figures are not the series' normal).
+
+### Band sections
+
+Each series block also carries a section per band, written after its whole-item-override sections and only when at least one item of the series has a plan. A band section is the reference section's items split by the record's band: the items of the series that are in the reference section (section 6), grouped by the `band:` line of the record's `### Plan` section (`references/hansei.md`), one `#### Band <name>` heading each, in the order Light, Normal, Heavy, then any other name, using the band names of the plans. A band section reads the field list of section 4 and its `items:` line like any section. The record's band is the plan's sizing; the same item is also in its whole-item-override section.
+
+- An item whose `### Plan` section reads `- plan: no plan`, or has no such section (older records), is in no band section; it is named `not in any band section` in the series block, as `#<id> <url> (no plan)`.
+- An item that is `release crossed` is in no section at all (section 5, item 5), so it is in no band section.
+- A band with no item is not written. The sections of a band are never compared with another band's: the integrator reads lead time, waiting time and rework per band from the same records (`agents/integrator.md`).
 
 ## 6. Series, history, the reference section
 
@@ -106,6 +115,7 @@ Given a section's items (`n` of them, after section 3 and 5), every item is in e
 3. The **current series** is the series of the session's release: the `release:` line of `bash "<plugin root>/scripts/fingerprint.sh" "<plugin root>"`, read at step 0 and written into the label at step 5, cut to `M.N`. It is the first block of the body, even with no item (`0 items`, every figure `not captured (no items in series)`, its `standard` and `tooling` lines `not captured (no items in series)`).
 4. Every other series is **history**, newest `M.N` first (compared as numbers). Its heading reads `replaced <YYYY-MM-DD> by <M.N>`: the series of the first readable release record, created after the last record of this series, whose series differs (the date is that comment's `created_at` in UTC). When no such record exists: `replaced by <the session's M.N> (first item pending)`, with no date. All sections of a history series read `history (series replaced)`.
 5. A patch or a tooling-only change never resets the baseline, and a minor release never leaves the old series off the issue.
+6. **Carry-over** (#187 decision 13). A new minor starts a new series. The older series is the reference for the new one only while the `standard` fingerprint is unchanged: compare the older series' `standard:` line with the current one through `bash "<plugin root>/scripts/hansei-plan.sh" carry <older standard> "<plugin root>"` (it reads the current standard through `fingerprint.sh`). `reference (standard unchanged)`: the older series' figures stay the reading the next experiment is measured against, until the new series has items of its own. `indicative (standard changed)`: the current series block shows the older series' figures marked *indicative*, good for sizing and for choosing a problem, and **never the "before" reading of an experiment**: an experiment is measured against the new series only. The current block carries one line for it, `- previous series: <M.N> (reference (standard unchanged) | indicative (standard changed))`, written only when an older series exists on the issue.
 
 **The reference section** is the section of the current series the next experiment is measured against.
 
@@ -135,7 +145,9 @@ What normal looks like for this project, per factory release. Derived by the Lea
 - releases: factory <semver>[, <semver> …]
 - standard: <64 hex>
 - tooling: <64 hex>[, <64 hex> …]
-- not in any section: <none | #<id> <url> (<name> in force for part of the item); …>
+- not in any section: <none | #<id> <url> (<name> in force for part of the item | release crossed); …>
+- not in any band section: <none | #<id> <url> (no plan); …>   (optional line; only when the series has a band section, section 5, *Band sections*)
+- previous series: <M.N> (<reference (standard unchanged) | indicative (standard changed)>)   (optional line; only when an older series exists, section 6, item 6)
 - records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line; a series holding v3 and v5 with no v4 cannot arise from release series, since a 1.2.x series holds v3 and v4 at most and a 1.3.x series v4 and v5 at most, so it has no form; only when the series holds more than one schema, naming them in ascending order)
 
 #### Section — whole-item overrides: <none | name, name> — <reference | history: … | other: …>

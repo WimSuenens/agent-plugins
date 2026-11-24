@@ -15,6 +15,11 @@
 #   measure in-flight <n>                                              (Running, Waiting on you and Blocked slices)
 #   measure skipped <n> roles in <n> slices                            (roles the lead skipped; slice field "skipped": [<role>, ...])
 #   measure rework skipped|full <mean rounds>|not captured            (Done slices, with and without skips; slice field "rework_rounds")
+#   measure band <band> n <k> lead-time <dur> agent-working <dur> waiting <dur> role-tasks <mean> rework <mean>     (#207 slice 6; Done slices grouped by band, one line per group that has a Done slice)
+#       Groups, in order: Light, Normal, Heavy, any other band name, `no plan` (Done slices with no "band"), `release crossed` (slices with "release_crossed": true, kept apart from the bands).
+#       Slice fields, read from the hansei record and the ledger by the lead: "band", "lead_minutes" (the hansei lead time: total), "agent_working_minutes", "waiting_minutes" (the item-held waits: person, limits,
+#       stalled, interrupted, andon), "role_tasks" (rows of the ledger's Tasks table), "rework_rounds", "release_crossed". Durations are medians, <h>h<m>m like the other measures; role-tasks and rework are means (one decimal);
+#       a value no slice of the group carries is `not captured`. The lead time includes waits on usage limits: read it beside agent-working, never alone.
 # A slice in flight or merge-ready holds its paths until it is merged. Overlap is decided by paths.sh overlap.
 # Exit: 0 plan printed; 2 usage, jq missing, unreadable or malformed snapshot.
 
@@ -158,4 +163,19 @@ jq -r '
   | "measure skipped \([$sk[] | (.skipped | length)] | add // 0) roles in \($sk | length) slices",
     "measure rework skipped \(mean([$s[] | select(.status == "Done" and ((.skipped // []) | length) > 0 and (.rework_rounds | type) == "number") | .rework_rounds]))",
     "measure rework full \(mean([$s[] | select(.status == "Done" and ((.skipped // []) | length) == 0 and (.rework_rounds | type) == "number") | .rework_rounds]))"
+' "$2"
+# measures per band: the Done slices grouped by band, medians of the durations and means of the counts
+jq -r '
+  def med(a): if (a | length) == 0 then "not captured" else (a | sort) as $s | ($s | length) as $n
+    | (if $n % 2 == 1 then $s[($n - 1) / 2] else (($s[$n / 2 - 1] + $s[$n / 2]) / 2 + 0.5 | floor) end)
+    | "\(. / 60 | floor)h\(. % 60)m" end;
+  def mean(a): if (a | length) == 0 then "not captured" else ((a | add) / (a | length) * 10 | round / 10 | tostring | if test("\\.") then . else . + ".0" end) end;
+  def nums(f): [.[] | f | select(type == "number")];
+  def grp: if (.release_crossed // false) then "release crossed" elif (.band // "") != "" then .band else "no plan" end;
+  ["Light", "Normal", "Heavy"] as $known
+  | [.slices[] | select(.status == "Done")] as $d
+  | ($d | map(grp) | unique) as $names
+  | (($known | map(select(. as $k | $names | index($k)))) + ($names | map(select(. as $k | ($known + ["no plan", "release crossed"]) | index($k) | not))) + ($names | map(select(. == "no plan"))) + ($names | map(select(. == "release crossed")))) as $order
+  | $order[] as $g | [$d[] | select(grp == $g)] as $m
+  | "measure band \($g) n \($m | length) lead-time \(med($m | nums(.lead_minutes))) agent-working \(med($m | nums(.agent_working_minutes))) waiting \(med($m | nums(.waiting_minutes))) role-tasks \(mean($m | nums(.role_tasks))) rework \(mean($m | nums(.rework_rounds)))"
 ' "$2"

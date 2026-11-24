@@ -4,7 +4,7 @@ One entry per item, newest first. Entries are grouped by plugin. The factory is 
 
 ## factory 3.7.0 (bundle B of #207)
 
-Release: `3.7.0`, a **minor** release: standard text changed (the architect and QA role files and the Done list of every role file, `run-roles.md`, the run skill's *Role tasks*, *Role knowledge* and review step). The `standard` fingerprint changes; tooling is unchanged. No migration. The protocol is unchanged, so the fence F1 to F7 and its fixtures are untouched. The run skill stays under its 70,000-byte cap.
+Release: `3.7.0`, a **minor** release: standard text changed (the architect and QA role files and the Done list of every role file, `run-roles.md`, the protocol's *Role knowledge*, one pointer line in the run skill's step 5). The `standard` fingerprint changes; tooling is unchanged. No migration. The fence F1 to F7 and its fixtures are untouched (only the unpinned *Role knowledge* of the protocol changes). The run skill stays under its 70,000-byte cap.
 
 Closes [#249](https://github.com/WimSuenens/agent-plugins/issues/249), [#251](https://github.com/WimSuenens/agent-plugins/issues/251), [#241](https://github.com/WimSuenens/agent-plugins/issues/241), [#242](https://github.com/WimSuenens/agent-plugins/issues/242). Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207).
 
@@ -15,7 +15,7 @@ Closes [#249](https://github.com/WimSuenens/agent-plugins/issues/249), [#251](ht
 - **The stale-text search** covers a changed figure in digit and word form and statements that name only part of what the change now covers; the contract lists its search terms.
 - **The Summary limit** (at most 10 lines, bullets included) is a counted line in `run-roles.md` with a one-line pointer in each role file's Done list.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `1873aa2ee7a6a78eb90172abb8181ae55efd09918ededfae294f7c11c1c529c2`, tooling `d7f68666596dec7fe9a4c17666d84a70c0ac1daa6af62c646effe42076d6e7f9`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `672cac99f2c1e61a2957f8e9e76ff083ca28e4545b0715c7b838126e4a38cbda`, tooling `d7f68666596dec7fe9a4c17666d84a70c0ac1daa6af62c646effe42076d6e7f9`.
 
 ## factory 3.6.0 (bundle A of #207)
 

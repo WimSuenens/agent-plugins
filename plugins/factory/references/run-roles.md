@@ -70,3 +70,7 @@ Before you brief QA, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/ci-steps.sh"` in t
 ## Summary limit
 
 The Summary field of a result, bullets included, is at most 10 lines; detail goes in Progress or Artifacts. Count the lines before you hand back: the lead's render step refuses a longer Summary and the role is resumed to shorten it. A role calls no lead script for this (the protocol's *Shell* is unchanged); the count is by eye or with `wc -l` on the lines between `Summary:` and the next field.
+
+## Fresh or resumed
+
+The first task of a role in a new slice gets a fresh agent, never one that worked on an earlier slice. Resume an agent only for a rework in the same slice, and only below 200,000 tokens of peak context (provisional). Read the peak before resuming: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/token-spend.sh" <the agent's transcript>`, the `peak` figure (the largest single-message context). At or above the number, spawn a fresh agent: the brief, the feedback and the committed result carry the task on. This is what the run skill's sentence "one agent per role" means: there is one agent per role in each slice and never a second in the same slice. Project knowledge lives in the repository and the role files, not in the agent's context. After the next two runs, read the peak per role task and move the number.

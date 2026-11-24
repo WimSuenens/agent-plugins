@@ -15,23 +15,22 @@ pin b249-qa-static-read-not-run "$AG/qa-engineer.md" "before the stage ends, as 
 pin b249-qa-no-schema-no-line "$AG/qa-engineer.md" "where the contract defines no schema this line does not apply"
 pin b249-architect-public-operations-explicit "$AG/architect.md" "Every operation the slice contract names public carries an explicit statement that no authentication is required"
 
-# ---- #251 agent context across slices
-has b251-fresh-agent-first-task "$RUN" "**Fresh or resumed.** The first task of a role in a new slice gets a fresh agent"
-has b251-resume-only-rework-same-slice "$RUN" "Resume an agent only for a rework in the same slice"
-has b251-number-named "$RUN" "below 200,000 tokens of peak context"
-has b251-number-provisional "$RUN" "(provisional)"
-has b251-how-the-lead-reads-peak "$RUN" 'token-spend.sh" <the agent'"'"'s transcript>`, the `peak` figure'
-has b251-knowledge-in-repo "$RUN" "Project knowledge lives in the repository and the role files, not in the agent's context."
-has b251-revisit-trigger "$RUN" "After the next two runs, read the peak per role task and move the number."
-has b251-one-agent-per-role-per-slice "$RUN" "there is one agent per role in each slice and never a second in the same slice"
-hasnt b251-old-sentence-gone "$RUN" "there is one agent per role and never a second."
+# ---- #251 agent context across slices (the router's Role tasks and Role knowledge are byte-pinned by test_run_split.sh: the rule lives in run-roles.md)
+has b251-router-points-to-rule "$RUN" "read \`references/run-roles.md\` (*Fresh or resumed*)"
+has b251-fresh-agent-first-task "$RR" "The first task of a role in a new slice gets a fresh agent"
+has b251-resume-only-rework-same-slice "$RR" "Resume an agent only for a rework in the same slice"
+has b251-number-named "$RR" "below 200,000 tokens of peak context (provisional)"
+has b251-how-the-lead-reads-peak "$RR" 'token-spend.sh" <the agent'"'"'s transcript>`, the `peak` figure'
+has b251-knowledge-in-repo "$RR" "Project knowledge lives in the repository and the role files, not in the agent's context."
+has b251-revisit-trigger "$RR" "After the next two runs, read the peak per role task and move the number."
+has b251-one-agent-per-role-per-slice "$RR" "there is one agent per role in each slice and never a second in the same slice"
+has b251-protocol-role-knowledge "$PROTO" "There is exactly one agent per role in each slice"
 ck b251-router-within-cap 1 "$([ "$(wc -c < "$RUN")" -le 70000 ] && echo 1 || echo 0)"
 
 # ---- #241 the stale-text search
 pin b241-digit-and-word-form "$AG/architect.md" "a changed figure is searched in its digit and its word form"
 pin b241-partial-statement "$AG/architect.md" "a statement that names only part of what the change now covers (one kind where there are now two, one language where there are now two) is searched for as well"
 pin b241-search-terms-listed "$AG/architect.md" "The contract lists its search terms next to its list of stale texts, so a reviewer can see which spellings were tried."
-has b241-lead-search-points-to-architect "$RUN" "spellings as in the architect's Done list"
 
 # ---- #242 the Summary limit
 has b242-rule-stated-once "$RR" "The Summary field of a result, bullets included, is at most 10 lines; detail goes in Progress or Artifacts"

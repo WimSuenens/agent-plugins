@@ -300,7 +300,7 @@ It is **filled by a script, never by hand**: the lead saves the slice's plan com
 - **As run** (`route`, `role path`, `test depth`, `actual triggers`) is the latest plan's, so a scale-up written during the slice shows in the difference between `fired triggers` and `actual triggers`, and between the two points.
 - **`release`** is `same`, or `release crossed (factory <old> to <new>)` when the first plan was written under another release than the one running (`plan-check.sh release`). A crossed record keeps the plan's own fields, reads `actual points` as `not captured (release crossed)`, and is kept outside the baseline's sections (`references/baseline.md`, section 5).
 - **An item run without a plan** (older plans, a run begun before the plan existed) has the section `### Plan`, a blank line and `- plan: no plan`. It is marked, not failed, and it is in no band section.
-- **The check** before posting: `bash "<plugin root>/scripts/hansei-plan.sh" check <record file> --plan <latest plan file>` for a slice that has a plan (every field present and not empty, `release` reading `same` or `release crossed`), or without `--plan` for an item with none (`ok (no plan)`). On `refused:` fix the section with `fields`, never by hand.
+- **The check** before posting: `bash "<plugin root>/scripts/hansei-plan.sh" check <record file> --plan <latest plan file>` for a slice that has a plan (every field present and not empty, the points whole numbers, `release` reading `same` or `release crossed`), or `--no-plan` for an item with none (`ok (no plan)`); one of the two is always given, so `no plan` cannot pass by omission. On `refused:` fix the section with `fields`, never by hand.
 
 ### Value grammar
 

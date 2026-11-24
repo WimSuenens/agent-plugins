@@ -44,6 +44,9 @@ fail() { echo "$1"; exit 1; }
 
 # the release the plan was written under, and the one running (fingerprint.sh is the one reader of a plugin root's release)
 plan_rel() { get release | sed 's/^factory[[:space:]]*//'; }
+# a patch release changes no table and no standard text that sizing reads (baseline.md section 6, item 1): only MAJOR.MINOR is compared; a name that is not a semver is compared whole
+mm() { case "$1" in [0-9]*.[0-9]*.[0-9]*) printf '%s' "$1" | cut -d. -f1,2 ;; *) printf '%s' "$1" ;; esac; }
+crossed() { [ "$(mm "$(plan_rel)")" != "$(mm "$cur_rel")" ]; }
 cur_rel=""
 if [ -n "$relroot" ]; then
   cur_rel="$(bash "$here/fingerprint.sh" "$relroot" 2>/dev/null | sed -n 's/^release: //p')"
@@ -51,18 +54,22 @@ if [ -n "$relroot" ]; then
 fi
 if [ "$mode" = release ]; then
   [ -n "$(get release)" ] || fail "missing: release"
-  if [ "$(plan_rel)" = "$cur_rel" ]; then echo same; else echo release-crossed; fi
+  if crossed; then echo release-crossed; else echo same; fi
   exit 0
 fi
 
-for f in route "role path" "test depth" triggers points band bands reason release "expected slices" "first slice leaves out"; do
-  [ -n "$(get "$f")" ] || fail "missing: $f"
-done
-if [ -n "$relroot" ] && [ "$(plan_rel)" != "$cur_rel" ]; then
+# a plan from another release is not checked against this release's table: it needs the fields the hansei record reads, not the ones a later release added
+if [ -n "$relroot" ] && crossed; then
+  for f in route "role path" "test depth" triggers points band release; do
+    [ -n "$(get "$f")" ] || fail "missing: $f"
+  done
   echo "release-crossed"
   echo "plan written under factory $(plan_rel); running $cur_rel"
   exit 0
 fi
+for f in route "role path" "test depth" triggers points band bands reason release "expected slices" "first slice leaves out"; do
+  [ -n "$(get "$f")" ] || fail "missing: $f"
+done
 route="$(get route)"
 case "$route" in direct | map) ;; *) fail "route: \"$route\" is neither direct nor map" ;; esac
 

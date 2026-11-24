@@ -15,7 +15,7 @@ Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207), [#187](http
 - **One question after a release change.** When a run resumes and the plan was written under another release, the lead asks once: finish under the original plan (the default) or re-size under the new table. `plan-check.sh release` prints `same` or `release-crossed`; a plan from an older release (a 3.4.0 plan with `role path: standard`, for example) is reported as `release-crossed`, not as an error. The hansei of a crossed slice is marked `release crossed` and kept outside the baseline sections.
 - **The integrator measures per band.** `integrator.sh plan` prints `measure band` lines (lead time, agent working time, waiting time, role-task count and rework per band). The lead time includes waits on usage limits and is not usable alone; it still only advises and does not choose the route.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `61e934bd2b27111aa810ddf83768265870a42cc72f610d3de440f85c29ebbcfb`, tooling `27d3da6c06d2dabc957f7c45d1c221ae8e455dcd484d6f99b17e67ac7932d463`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `d9467fb5f2ac9138c5042fe7f2224bdac37ef5be048062850eccca482bf5e27f`, tooling `3a6d4bd2d7d1eeaa99cbc4153849040218c77855e1b871b36a4e8c3faf48f0ef`.
 
 ## factory 3.7.0 (bundle B of #207)
 

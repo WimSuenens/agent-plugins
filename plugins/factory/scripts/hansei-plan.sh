@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # The plan fields of the hansei record, the check that a record holds them, and the baseline's carry-over comparison (#187 decisions 8, 13, 14; #207 slice 6).
 # Usage: bash hansei-plan.sh fields <latest plan file> [--first <plan file>] --root <plugin root> [--table <factory.md>]    (default docs/agents/factory.md)
-#        bash hansei-plan.sh check <record file | -> [--plan <plan file>]
+#        bash hansei-plan.sh check <record file | -> --plan <plan file> | --no-plan
 #        bash hansei-plan.sh carry <64 hex standard of the older series> <plugin root>
 # fields: prints the record's `### Plan` section from the plan comments on the ticket (the plan files are the comments' text). The estimate is the sizing: points, triggers
 #   and band of the --first plan (the first plan comment; after a re-size under a new table, the re-size plan; default the latest). Route, role path and test depth are the
 #   latest plan's (what ran); `actual triggers` are the latest plan's, and `actual points` is re-added from the table through flow-size.sh with the latest plan's own bands line,
 #   never read from the plan's `points:` line. The lead adds nothing by hand. `release:` is `same`, or `release crossed (factory <old> to <new>)` when the first plan was
 #   written under another release (plan-check.sh release); `actual points` then reads `not captured (release crossed)`, because the table of another release is not the plan's.
-# check: the record's `### Plan` section. With --plan (the slice has a plan) every field is present and not empty, `release:` reads same or release crossed;
-#   without --plan the section may read only `- plan: no plan` (an item run without a plan). Prints `ok`, `ok (no plan)` or `refused: <field> (<reason>)` per finding.
+# check: the record's `### Plan` section. The lead says which: --plan <file> (the slice has a plan: every field is present and not empty, points are whole numbers, the route and
+#   the test depth are values of the plan, `release:` reads same or release crossed) or --no-plan (the item ran without a plan: the section reads only `- plan: no plan`). Neither, or both,
+#   is a usage error, so `no plan` cannot pass by omission. Prints `ok`, `ok (no plan)` or `refused: <field> (<reason>)` per finding.
 # carry: `reference (standard unchanged)` when the older series' standard fingerprint equals the one fingerprint.sh prints for the plugin root, else `indicative (standard changed)`.
 #   A tooling-only change is not a change of the standard.
 # Exit: 0 printed (check: ok); 1 a plan is wrong, or check refused; 2 usage, an unreadable file, or the root is not a factory plugin root.
@@ -78,10 +79,11 @@ NAMES
     ;;
   check)
     rec="${1:-}"; shift 2>/dev/null
-    plan=""
+    plan=""; noplan=0
     while [ $# -gt 0 ]; do
-      case "$1" in --plan) [ $# -ge 2 ] || usage; plan="$2"; shift 2 ;; *) usage ;; esac
+      case "$1" in --plan) [ $# -ge 2 ] || usage; plan="$2"; shift 2 ;; --no-plan) noplan=1; shift ;; *) usage ;; esac
     done
+    { [ -n "$plan" ] && [ "$noplan" = 0 ]; } || { [ -z "$plan" ] && [ "$noplan" = 1 ]; } || usage
     [ -n "$rec" ] && { [ "$rec" = - ] || [ -r "$rec" ]; } || usage
     sec="$(cat "$rec" | tr -d '\r' | awk '/^### Plan[[:space:]]*$/ { on = 1; next } /^### / { on = 0 } on')"
     has_sec="$(cat "$rec" 2>/dev/null | tr -d '\r' | grep -c '^### Plan[[:space:]]*$')"
@@ -91,6 +93,7 @@ NAMES
       if [ -n "$plan" ]; then echo "refused: plan (the slice has a plan; the record says no plan)"; exit 1; fi
       echo "ok (no plan)"; exit 0
     fi
+    if [ "$noplan" = 1 ]; then echo "refused: plan (the record holds plan fields; the slice has no plan)"; exit 1; fi
     bad=0
     old_ifs="$IFS"; IFS='|'
     for f in $FIELDS; do
@@ -99,9 +102,13 @@ NAMES
       if [ -z "$line" ]; then echo "refused: $f (missing)"; bad=1; continue; fi
       v="$(printf '%s' "$line" | sed "s/^- $f:[[:space:]]*//" | sed 's/[[:space:]]*$//')"
       if [ -z "$v" ]; then echo "refused: $f (empty)"; bad=1; continue; fi
-      if [ "$f" = release ]; then
-        case "$v" in same | "release crossed"*) ;; *) echo "refused: release (\"$v\" is neither same nor release crossed)"; bad=1 ;; esac
-      fi
+      case "$f" in
+        "estimated points") case "$v" in *[!0-9]*) echo "refused: $f (\"$v\" is not a whole number)"; bad=1 ;; esac ;;
+        "actual points") case "$v" in *[!0-9]*) case "$v" in "not captured ("*")") ;; *) echo "refused: $f (\"$v\" is not a whole number or not captured (...))"; bad=1 ;; esac ;; esac ;;
+        route) case "$v" in direct | map) ;; *) echo "refused: route (\"$v\" is neither direct nor map)"; bad=1 ;; esac ;;
+        "test depth") case "$v" in proof-only | targeted | full) ;; *) echo "refused: test depth (\"$v\" is not proof-only, targeted or full)"; bad=1 ;; esac ;;
+        release) case "$v" in same | "release crossed"*) ;; *) echo "refused: release (\"$v\" is neither same nor release crossed)"; bad=1 ;; esac ;;
+      esac
     done
     IFS="$old_ifs"
     [ "$bad" = 0 ] && { echo ok; exit 0; }

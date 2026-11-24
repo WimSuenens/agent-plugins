@@ -171,11 +171,11 @@ jq -r '
     | "\(. / 60 | floor)h\(. % 60)m" end;
   def mean(a): if (a | length) == 0 then "not captured" else ((a | add) / (a | length) * 10 | round / 10 | tostring | if test("\\.") then . else . + ".0" end) end;
   def nums(f): [.[] | f | select(type == "number")];
-  def grp: if (.release_crossed // false) then "release crossed" elif (.band // "") != "" then .band else "no plan" end;
-  ["Light", "Normal", "Heavy"] as $known
-  | [.slices[] | select(.status == "Done")] as $d
-  | ($d | map(grp) | unique) as $names
-  | (($known | map(select(. as $k | $names | index($k)))) + ($names | map(select(. as $k | ($known + ["no plan", "release crossed"]) | index($k) | not))) + ($names | map(select(. == "no plan"))) + ($names | map(select(. == "release crossed")))) as $order
+  # a group key is a kind and a name, so a band named like a synthetic group stays a group of its own; the kind sorts the groups (known bands, other bands, no plan, release crossed)
+  def grp: if (.release_crossed // false) then "4:release crossed" elif ((.band // "") | tostring) != "" then (((.band | tostring) as $b | if ["Light", "Normal", "Heavy"] | index($b) then "1:" + (["Light", "Normal", "Heavy"] | index($b) | tostring) + ":" else "2:0:" end) + (.band | tostring)) else "3:no plan" end;
+  [.slices[] | select(.status == "Done")] as $d
+  | ($d | map(grp) | unique) as $order
   | $order[] as $g | [$d[] | select(grp == $g)] as $m
-  | "measure band \($g) n \($m | length) lead-time \(med($m | nums(.lead_minutes))) agent-working \(med($m | nums(.agent_working_minutes))) waiting \(med($m | nums(.waiting_minutes))) role-tasks \(mean($m | nums(.role_tasks))) rework \(mean($m | nums(.rework_rounds)))"
+  | ($g | sub("^[0-9]:([0-9]:)?"; "")) as $gn
+  | "measure band \($gn) n \($m | length) lead-time \(med($m | nums(.lead_minutes))) agent-working \(med($m | nums(.agent_working_minutes))) waiting \(med($m | nums(.waiting_minutes))) role-tasks \(mean($m | nums(.role_tasks))) rework \(mean($m | nums(.rework_rounds)))"
 ' "$2"

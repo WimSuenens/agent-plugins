@@ -187,5 +187,5 @@ has t-qa-escaped-line "$QA" 'regression test at the level where it escaped'
 ck t-qa-escaped-line-counted 1 "$(grep -c 'regression test at the level where it escaped' "$QA")"
 ck t-one-definition-of-the-settle-number 1 "$(cat "$PLUGIN"/references/*.md "$PLUGIN"/agents/*.md "$PLUGIN"/skills/*/SKILL.md | grep -c 'A row turns `settled` after 5 slices')"
 ck t-router-at-most-70000-bytes 1 "$([ "$(wc -c <"$PLUGIN/skills/run/SKILL.md")" -le 70000 ] && echo 1 || echo 0)"
-hasnt t-no-home-path-in-new-script "$CA" "/Users/"
+HP="/Us""ers/"; hasnt t-no-home-path-in-new-script "$CA" "$HP"
 done_

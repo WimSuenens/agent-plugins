@@ -15,7 +15,7 @@ Closes [#249](https://github.com/WimSuenens/agent-plugins/issues/249), [#251](ht
 - **The stale-text search** covers a changed figure in digit and word form and statements that name only part of what the change now covers; the contract lists its search terms.
 - **The Summary limit** (at most 10 lines, bullets included) is a counted line in `run-roles.md` with a one-line pointer in each role file's Done list.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `672cac99f2c1e61a2957f8e9e76ff083ca28e4545b0715c7b838126e4a38cbda`, tooling `d7f68666596dec7fe9a4c17666d84a70c0ac1daa6af62c646effe42076d6e7f9`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `9e471d06d9e7453fc37d3312a6a1f3c03b0fa4ce74e55a38363b8cf643555753`, tooling `d7f68666596dec7fe9a4c17666d84a70c0ac1daa6af62c646effe42076d6e7f9`.
 
 ## factory 3.6.0 (bundle A of #207)
 

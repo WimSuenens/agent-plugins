@@ -2,15 +2,20 @@
 # The path lists of the contracts of a slice, and the overlap rule that lets two slices run at the same time.
 # Usage: bash paths.sh list <contract-file>...
 #        bash paths.sh overlap <file>... -- <file>...
-#        bash paths.sh check [--ignore <prefix>]... <contract-file>...      (names on stdin, one per line)
+#        bash paths.sh check [--ignore <prefix>]... [--own-role-files [--in <dir>] [--base <ref>] [--head <ref>]] <contract-file>...      (names on stdin, one per line)
 # A list is the union of the "Paths:" blocks of the files, read outside code fences: a line "Paths:", then "- <path>" lines, then a "shared:" line.
 # list: prints "path <p>" or "shared <s>" per entry ("shared none" is not printed).
 # overlap: prints "overlap: no", "overlap: yes <p> <q>" or "overlap: yes shared <s>" (the first pair found, in list order).
 # check: prints "off-list: <name>" for each stdin name that is not on the list; a name under an --ignore prefix is skipped.
+#        --own-role-files: a role's OWN knowledge files (`docs/agents/roles/<role>.md`, `docs/agents/skills/<role>/`) are on the list for the commits that role makes
+#        (role from the commit subject; the one definition is role-files.sh, shared with andon-detect.sh): commits <base>..<head> as there (default dir = the current
+#        directory, head = HEAD, base = the merge base with origin/main). A symlink, another role's file and a path another commit touched are judged like any other name.
+#        overlap ignores a list entry that is some role's knowledge file (each slice keeps its own; the guard hook, not this check, keeps roles out of each other's files).
 # Rules: overlap is checked in the order path/path, path/other list's shared entry, shared/shared; ASCII case is folded.
 # Exit: 0 ok / no overlap / none off-list; 1 overlap / at least one off-list; 2 usage, a file without a Paths: block or without a shared: line; 3 a malformed entry (named by line number).
 # See contracts/64-parallel-slices.md sections 1 and 2 in the repo that hosts the factory.
 
+. "$(dirname "${BASH_SOURCE[0]}")/role-files.sh"
 PATHS=()
 SHARED=()
 
@@ -148,6 +153,16 @@ load_all() {
   return 0
 }
 
+# drop_role_files: PATHS and SHARED lose the entries that are some role's knowledge file or folder (overlap only)
+drop_role_files() {
+  local keep=() p
+  for p in "${PATHS[@]}"; do
+    if rf_any_name "$p"; then continue; fi
+    keep[${#keep[@]}]="$p"
+  done
+  PATHS=("${keep[@]}")
+}
+
 # covers <p> <q>: p equals q, or p is a directory prefix of q (ASCII case folded)
 covers() {
   local p q
@@ -183,9 +198,11 @@ case "$cmd" in
       exit 2
     fi
     load_all "${a[@]}" || exit $?
+    drop_role_files
     pa=("${PATHS[@]}")
     sa=("${SHARED[@]}")
     load_all "${b[@]}" || exit $?
+    drop_role_files
     pb=("${PATHS[@]}")
     sb=("${SHARED[@]}")
     for p in "${pa[@]}"; do
@@ -228,14 +245,24 @@ case "$cmd" in
   check)
     ign=()
     files=()
+    own=0; rrepo=.; rbase=""; rhead=HEAD
     while [ $# -gt 0 ]; do
       case "$1" in
+        --own-role-files) own=1; shift ;;
+        --in) [ $# -ge 2 ] || { echo "paths: --in needs a directory" >&2; exit 2; }; rrepo="$2"; shift 2 ;;
+        --base) [ $# -ge 2 ] || { echo "paths: --base needs a ref" >&2; exit 2; }; rbase="$2"; shift 2 ;;
+        --head) [ $# -ge 2 ] || { echo "paths: --head needs a ref" >&2; exit 2; }; rhead="$2"; shift 2 ;;
         --ignore) [ $# -ge 2 ] || { echo "paths: --ignore needs a prefix" >&2; exit 2; }; ign[${#ign[@]}]="$2"; shift 2 ;;
         *) files[${#files[@]}]="$1"; shift ;;
       esac
     done
     [ ${#files[@]} -ge 1 ] || { echo "usage: paths.sh check [--ignore <prefix>]... <contract-file>..." >&2; exit 2; }
     load_all "${files[@]}" || exit $?
+    allowed=""
+    if [ "$own" = 1 ]; then
+      [ -n "$rbase" ] || rbase="$(git -C "$rrepo" merge-base origin/main "$rhead")" || { echo "paths: no merge base with origin/main (pass --base)" >&2; exit 2; }
+      allowed="$(rf_allowed "$rrepo" "$rbase" "$rhead")" || exit 2
+    fi
     rc=0
     while IFS= read -r name || [ -n "$name" ]; do
       [ -n "$name" ] || continue
@@ -244,6 +271,7 @@ case "$cmd" in
         case "$(fold "$name")" in "$(fold "$i")"*) skip=1 ;; esac
       done
       [ "$skip" = 1 ] && continue
+      if [ -n "$allowed" ] && printf '%s\n' "$allowed" | grep -Fxq -e "$name"; then continue; fi
       on=0
       for p in "${PATHS[@]}"; do
         covers "$p" "$name" && on=1

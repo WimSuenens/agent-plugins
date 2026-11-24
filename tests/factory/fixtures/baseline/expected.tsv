@@ -83,3 +83,17 @@ S3cal	line	- #124 https://example.invalid/shop/issues/124#issuecomment-9124 — 
 S3cal	line	- #125 https://example.invalid/shop/issues/125#issuecomment-9125 — factory `zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz…`
 S3cal	absent	@
 S3cal	absent	<b>
+W	line	#### Band Light
+W	line	#### Band Normal
+W	absent	#### Band Heavy
+W	line	- items: 1 items: #203 https://example.invalid/shop/issues/203#issuecomment-9203
+W	line	- items: 2 items: #201 https://example.invalid/shop/issues/201#issuecomment-9201; #202 https://example.invalid/shop/issues/202#issuecomment-9202
+W	line	- not in any section: #206 https://example.invalid/shop/issues/206#issuecomment-9206 (release crossed)
+W	line	- not in any band section: #204 https://example.invalid/shop/issues/204#issuecomment-9204 (no plan); #205 https://example.invalid/shop/issues/205#issuecomment-9205 (no plan)
+W	line	- previous series: 3.7 (indicative (standard changed))
+W2	line	- previous series: 3.7 (reference (standard unchanged))
+W3	absent	#### Band
+W3	absent	not in any band section
+W3	absent	previous series
+A	absent	#### Band
+A	absent	previous series

@@ -219,8 +219,8 @@ hasnt setup-no-state-2-only "$SETUP" 'accepts a project only when line 1 of `doc
 has run-exit-6 "$RUN" 'exit 6 means no flow table'
 ck run-one-line-only "1" "$(grep -c 'exit 6 means no flow table' "$RUN")"
 # slice 3 added one line and capped the skill at 115,900 bytes; the split adds 18 pointer lines and 9 reference headers (about 9.6 KB), so the cap on router plus references was 126,000. Slice 4 adds run-route.md (about 9 KB) and about 2 KB of router and reference lines; the cap is now 137,000, over the real figure of 136,218; #230 adds about 2.4 KB of text and scripts' prose (stage-report, run-state start, --paths) and the cap is 140,000 (the router alone is capped at 70,000 in test_run_split.sh)
-# #231 adds run-publish.md (about 4.5 KB): the cap is 143,000; #207 slice 5 adds run-roles.md (about 7 KB) and a few pointer lines: the cap is 152,000; bundle B (3.7.0) adds about 0.8 KB of rules and pointers: the cap is 154,000
-ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 154000 ] && echo yes || echo no)"
+# #231 adds run-publish.md (about 4.5 KB): the cap is 143,000; #207 slice 5 adds run-roles.md (about 7 KB) and a few pointer lines: the cap is 152,000; bundle B (3.7.0) adds about 0.8 KB of rules and pointers: the cap is 154,000; slice 6 (3.8.0) adds about 5 KB (the plan section, band sections, the resume question): the cap is 158,000
+ck run-size-cap "yes" "$([ "$(wc -c <"$RUN" | tr -d ' ')" -le 158000 ] && echo yes || echo no)"
 has baseline-major-new-series "$BASE" 'A new major starts a new series exactly as a new minor does'
 ck baseline-no-repo-names "0" "$(grep -c 'check-bump\|release-class' "$BASE")"
 

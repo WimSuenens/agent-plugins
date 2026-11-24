@@ -2,6 +2,21 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.8.0 (slice 6 of #207)
+
+Release: `3.8.0`, a **minor** release: standard text changed (`hansei.md`, `baseline.md`, `run-route.md`, `run-close-item.md`, `agents/integrator.md`, one pointer in the run skill's step 0) and tooling changed (`hansei-plan.sh` is new; `plan-check.sh` and `integrator.sh` learned new modes). The `standard` fingerprint changes, and so does `tooling`. No migration. The fence F1 to F7 and its fixtures are untouched. The run skill stays under its 70,000-byte cap.
+
+Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207), [#187](https://github.com/WimSuenens/agent-plugins/issues/187).
+
+**What changed for the person who runs the factory:**
+
+- **The hansei record carries the plan.** A trailing `### Plan` section holds estimated points, fired triggers, band, route, role path, test depth, the actual triggers and actual points (re-added from the project's table by `hansei-plan.sh fields`, never by hand) and whether the release crossed. An item run without a plan reads `no plan` and is not failed. `hansei-plan.sh check` refuses a record that lacks a field. The record stays v5.
+- **The baseline has a section per band** (Light, Normal, Heavy) beside the series per minor, and the carry-over rule: a new minor starts a new series; the older series stays the reference only while the `standard` fingerprint is unchanged, otherwise its figures show as *indicative* and are never the "before" reading of an experiment (`hansei-plan.sh carry`).
+- **One question after a release change.** When a run resumes and the plan was written under another release, the lead asks once: finish under the original plan (the default) or re-size under the new table. `plan-check.sh release` prints `same` or `release-crossed`; a plan from an older release (a 3.4.0 plan with `role path: standard`, for example) is reported as `release-crossed`, not as an error. The hansei of a crossed slice is marked `release crossed` and kept outside the baseline sections.
+- **The integrator measures per band.** `integrator.sh plan` prints `measure band` lines (lead time, agent working time, waiting time, role-task count and rework per band). The lead time includes waits on usage limits and is not usable alone; it still only advises and does not choose the route.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `499c91e8dec3b416812a402b00964fb6a870797582a58063fdf498016f83552e`, tooling `3a6d4bd2d7d1eeaa99cbc4153849040218c77855e1b871b36a4e8c3faf48f0ef`.
+
 ## factory 3.7.0 (bundle B of #207)
 
 Release: `3.7.0`, a **minor** release: standard text changed (the architect and QA role files and the Done list of every role file, `run-roles.md`, the protocol's *Role knowledge*, one pointer line in the run skill's step 5). The `standard` fingerprint changes; tooling is unchanged. No migration. The fence F1 to F7 and its fixtures are untouched (only the unpinned *Role knowledge* of the protocol changes). The run skill stays under its 70,000-byte cap.

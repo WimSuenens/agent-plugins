@@ -8,7 +8,7 @@ FX="$REPO/tests/factory/fixtures/split"
 OLD="$FX/run-skill-3.0.0.md"      # plugins/factory/skills/run/SKILL.md of origin/main at 19d1df3 (factory 3.0.0), before the split
 ALLOW="$FX/allowed-missing.txt"   # old lines that may be missing from router and references (a line a pointer replaced, or slice 4 changed); verbatim, one per line
 ADDOK="$T/added-all.txt"          # lines slice 4 (factory 3.2.0), #230 (3.3.0) and #231 (3.4.0) added to the router and the moved references: the only additions besides pointers, stubs and headers
-cat "$FX/slice4-added.txt" "$FX/slice230-added.txt" "$FX/slice231-added.txt" "$FX/bundle-a-added.txt" >"$ADDOK"
+cat "$FX/slice4-added.txt" "$FX/slice230-added.txt" "$FX/slice231-added.txt" "$FX/bundle-a-added.txt" "$FX/slice6-added.txt" >"$ADDOK"
 ROUTER="$RUN_ROUTER"
 refs="$(run_refs)"
 nrefs="$(printf '%s\n' "$refs" | grep -c .)"
@@ -46,7 +46,7 @@ num() { printf '%s\n' "$sum" | sed -n "s/.*$1=\([0-9]*\).*/\1/p"; }
 ck a1-no-old-line-lost 0 "$(num lost)"
 ck a2-no-line-added-but-pointers-stubs-headers 0 "$(num added)"
 ck a2b-every-pinned-slice4-line-is-present "$(num slice4allow)" "$(num slice4)"
-ck a3-allow-list-is-explicit-and-small "yes" "$([ "$(num allowlist)" -le 12 ] && echo yes || echo no)"
+ck a3-allow-list-is-explicit-and-small "yes" "$([ "$(num allowlist)" -le 13 ] && echo yes || echo no)"
 ck a4-title-and-trigger-line-per-reference "$((narefs * 2))" "$(num headers)"
 # the two directions together: a pointer line is the only thing that may differ, and every reference starts with title, blank, trigger
 for r in $refs; do

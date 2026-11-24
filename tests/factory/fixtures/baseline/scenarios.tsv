@@ -24,3 +24,6 @@ R2	1.1.0	x5v5alt	-
 R3	1.1.0	x5v5alt2	-
 S	1.1.0	x5v5,x5v5dup,x5v5none	-
 T	1.1.0	x5,x5v5	-
+W	3.8.0	w0,w1,w2,w3,w4,w5,w6	-	5e8a0c2e4b6d8f0a1c3e5b7d9f2a4c6e8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f7a
+W2	3.8.0	w0b,w1	-	5e8a0c2e4b6d8f0a1c3e5b7d9f2a4c6e8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f7a
+W3	3.8.0	w4,w5	-	-

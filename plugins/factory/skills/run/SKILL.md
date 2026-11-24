@@ -34,6 +34,7 @@ A **run** is one cycle over the map's standing backlog (*The run cycle*). A **ma
 - **An idea, or nothing** → start a new run at step 1.
 - **`#<map>`**, or the destination ticket of a direct run (the run ticket) → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
 - **`#<slice>`** of a map this factory runs → read `work/<id>/00-lead-state.md` in its worktree and continue that item at the step it names. Find the role tasks (*Find role task*) and the ledger (*Find ledger*) before creating or posting anything.
+- **A resumed plan written under another release** → read `references/run-route.md` (*Resume after a release change*: one question, then continue).
 
 Whichever entry applies, run the checks of `## Andon`, *Run start*, before step 1 or the next item starts. On a resumed run they include the FREEZE check. They also include the baseline check of `references/baseline.md`: *Find baseline* and act on its result (section 2), then the repair check (section 8.2).
 

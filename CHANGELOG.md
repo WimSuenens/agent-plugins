@@ -15,6 +15,8 @@ Closes [#249](https://github.com/WimSuenens/agent-plugins/issues/249), [#251](ht
 - **The stale-text search** covers a changed figure in digit and word form and statements that name only part of what the change now covers; the contract lists its search terms.
 - **The Summary limit** (at most 10 lines, bullets included) is a counted line in `run-roles.md` with a one-line pointer in each role file's Done list.
 
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `1873aa2ee7a6a78eb90172abb8181ae55efd09918ededfae294f7c11c1c529c2`, tooling `d7f68666596dec7fe9a4c17666d84a70c0ac1daa6af62c646effe42076d6e7f9`.
+
 ## factory 3.6.0 (bundle A of #207)
 
 Release: `3.6.0`, a **minor** release: standard text and scripts changed (new `role-files.sh`, `ledger.sh` and `ci-steps.sh`; `paths.sh`, `andon-detect.sh`, `post-text.sh`, `stage-publish.sh` and `close-item.sh`; the protocol's *Role knowledge*, the QA, security and product-owner role files, `hansei.md`, `run-roles.md`, `run-close-item.md`, `run-parallel.md`). The `standard` fingerprint changes. No migration. The run skill (the router) is unchanged; the fence F1 to F7 and its fixtures are untouched.

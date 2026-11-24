@@ -52,3 +52,4 @@ The lead gives you the approved slices in the order of the plan's `merge` lines,
 - Every pause has a reason, and every measure is a value or `not captured`.
 - Every merged slice has its script lines in the result, in the planned order; a failed step stops the train and the worktree stays.
 - No file was written outside your result file, and no state was kept between calls.
+- Summary at most 10 lines, bullets included (`references/run-roles.md`, *Summary limit*); count before hand-back.

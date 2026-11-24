@@ -38,3 +38,4 @@ Set up the infrastructure the build and its tests run against, so each role can 
 - Environment: every resource it set up is listed in the result, and a role can reach it from its documented address.
 - Delivery: a clean checkout deploys to test with one pipeline run, rollback has run successfully in test, and the runbook lists monitoring and alerts for every new component.
 - Teardown: every listed resource is gone, and nothing else was touched.
+- Summary at most 10 lines, bullets included (`references/run-roles.md`, *Summary limit*); count before hand-back.

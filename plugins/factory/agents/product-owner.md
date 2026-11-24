@@ -48,3 +48,4 @@ One-way doors are the person's to decide; you frame them.
 - Every acceptance criterion can be turned into a test by qa-engineer without a clarifying question.
 - Every **Under test** line of the frame maps to an acceptance criterion.
 - Every ambiguity found while writing is resolved, listed as an open question with a named owner, or written up as a decision card.
+- Summary at most 10 lines, bullets included (`references/run-roles.md`, *Summary limit*); count before hand-back.

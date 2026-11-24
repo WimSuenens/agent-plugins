@@ -29,3 +29,4 @@ User and operational docs, `README.md`, and one changelog entry per item: a line
 - Every contract has a reference entry.
 - Setup, run, and deploy steps have been executed exactly as documented.
 - A newcomer can hand over the system from the docs alone.
+- Summary at most 10 lines, bullets included (`references/run-roles.md`, *Summary limit*); count before hand-back.

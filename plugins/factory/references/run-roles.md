@@ -66,3 +66,7 @@ When the sizing says `ui self-review: yes`, before a decision card that shows a 
 ## The QA brief carries the CI steps
 
 Before you brief QA, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/ci-steps.sh"` in the item worktree: it reads the workflow the project's `ci:` line names and prints the `run:` steps of the jobs a pull request runs (or `none`). Paste the output into QA's `Inputs` as it is. QA runs each step that needs no secret and no network, reports each result or the reason it was skipped, and a hand back without them is incomplete (`agents/qa-engineer.md`, *Done*). Read QA's verdict for those results before you accept `done`.
+
+## Summary limit
+
+The Summary field of a result, bullets included, is at most 10 lines; detail goes in Progress or Artifacts. Count the lines before you hand back: the lead's render step refuses a longer Summary and the role is resumed to shorten it. A role calls no lead script for this (the protocol's *Shell* is unchanged); the count is by eye or with `wc -l` on the lines between `Summary:` and the next field.

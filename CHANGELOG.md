@@ -2,6 +2,19 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.7.0 (bundle B of #207)
+
+Release: `3.7.0`, a **minor** release: standard text changed (the architect and QA role files and the Done list of every role file, `run-roles.md`, the run skill's *Role tasks*, *Role knowledge* and review step). The `standard` fingerprint changes; tooling is unchanged. No migration. The protocol is unchanged, so the fence F1 to F7 and its fixtures are untouched. The run skill stays under its 70,000-byte cap.
+
+Closes [#249](https://github.com/WimSuenens/agent-plugins/issues/249), [#251](https://github.com/WimSuenens/agent-plugins/issues/251), [#241](https://github.com/WimSuenens/agent-plugins/issues/241), [#242](https://github.com/WimSuenens/agent-plugins/issues/242). Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207).
+
+**What changed for the person who runs the factory:**
+
+- **Conformance before the build.** QA's Tests stage checks each response shape and status a test reads against the contract's schema (a static read; no schema, no line). The architect's contract states explicitly that each public operation needs no authentication.
+- **A fresh agent for each new slice.** A role's first task in a new slice gets a fresh agent; an agent is resumed only for a rework in the same slice and only below 200,000 tokens of peak context (provisional; revisit after the next two runs). Project knowledge lives in the repository and the role files.
+- **The stale-text search** covers a changed figure in digit and word form and statements that name only part of what the change now covers; the contract lists its search terms.
+- **The Summary limit** (at most 10 lines, bullets included) is a counted line in `run-roles.md` with a one-line pointer in each role file's Done list.
+
 ## factory 3.6.0 (bundle A of #207)
 
 Release: `3.6.0`, a **minor** release: standard text and scripts changed (new `role-files.sh`, `ledger.sh` and `ci-steps.sh`; `paths.sh`, `andon-detect.sh`, `post-text.sh`, `stage-publish.sh` and `close-item.sh`; the protocol's *Role knowledge*, the QA, security and product-owner role files, `hansei.md`, `run-roles.md`, `run-close-item.md`, `run-parallel.md`). The `standard` fingerprint changes. No migration. The run skill (the router) is unchanged; the fence F1 to F7 and its fixtures are untouched.

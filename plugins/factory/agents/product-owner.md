@@ -24,7 +24,7 @@ Every requirement states a user outcome a tester can verify, and every one-way d
 
 ## Output
 
-One file per slice in `docs/requirements/<id>-<slug>.md`, holding:
+One file per slice in the project's requirements folder as the ownership table names it (`docs/requirements/<id>-<slug>.md` with the default table): that is the requirement's home. The brief's Output line names it, and the file is committed there from the start (your first checkpoint), never only in `work/<id>/`: the close removes that folder and refuses while a result names a file that is not committed at its destination. The file holds:
 - user outcome, taken from the frame's Behaviour
 - acceptance criteria, written Given / When / Then, including one per **Under test** line that would show the contradiction
 - out-of-scope list, including everything the frame lists as **Deliberately faked**

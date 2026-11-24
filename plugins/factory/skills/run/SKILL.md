@@ -179,6 +179,8 @@ Before the roles are briefed, take the role path and the test depth from the pla
 
 QA's verdict is machine-readable (a light one for the lightest band, one proof item per criterion), and the gate command of step 8.1 also takes `--qa-file <verdict>`, `--plan <plan file>` and `--kind <kind>`: read `references/run-roles.md` (*The light verdict*, *Proof per artefact kind*) when you brief QA and when you run the gate.
 
+Before you create a role task, read `references/run-roles.md` (*Fresh or resumed*): a role's first task in a new slice gets a fresh agent, and a resume has a context limit.
+
 On a resumed item, keep what exists and continue from the lead state.
 
 **Done when** the worktree, the folder, the lead state (with its label and its findings and abnormalities sections) and the ledger exist, the item-start checks ran, and the board shows `Ready` (it turns `Running` with the first role task).

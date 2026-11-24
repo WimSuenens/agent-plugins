@@ -200,7 +200,7 @@ An override is a local countermeasure the lead wrote under `## Overrides` in `do
 
 ## Role knowledge
 
-There is exactly one agent per role, shipped in the plugin; project knowledge is data the agent reads and never creates a second agent.
+There is exactly one agent per role, shipped in the plugin, and one live agent of it in each slice; project knowledge is data the agent reads and never creates a second agent, and a new slice starts a fresh agent (`references/run-roles.md`, *Fresh or resumed*).
 Each role has, in the project under version control, a role file `docs/agents/roles/<your role>.md` and a skills folder `docs/agents/skills/<your role>/`. Read both at the start of every task, when they exist. They hold craft, patterns, gotchas and style learned in this role in this project, and the skills you use; write what you learn there, and finish every task by consolidating them: merge duplicates, drop stale notes.
 The changed-paths check and the overlap check allow a role's own role file and skills folder, for the commits that role makes (`scripts/role-files.sh` is the one definition; a symlink there never counts; another role's file still flags): a contract does not list them, and `paths.sh check --own-role-files` skips them and nothing else. The role-knowledge guard is unchanged, and security does not review role-knowledge content (it cannot read other roles' files); the lead accepts that.
 Read no other role's file or folder: a hook refuses a read of another role's role file or skills folder. Shared project documents stay readable under the ownership table and the brief's inputs (contracts, requirements, the glossary, decisions). Ask the lead for what you need from another role.

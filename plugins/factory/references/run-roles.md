@@ -66,3 +66,11 @@ When the sizing says `ui self-review: yes`, before a decision card that shows a 
 ## The QA brief carries the CI steps
 
 Before you brief QA, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/ci-steps.sh"` in the item worktree: it reads the workflow the project's `ci:` line names and prints the `run:` steps of the jobs a pull request runs (or `none`). Paste the output into QA's `Inputs` as it is. QA runs each step that needs no secret and no network, reports each result or the reason it was skipped, and a hand back without them is incomplete (`agents/qa-engineer.md`, *Done*). Read QA's verdict for those results before you accept `done`.
+
+## Summary limit
+
+The Summary field of a result, bullets included, is at most 10 lines; detail goes in Progress or Artifacts. The `Summary:` line itself is the first of the 10, and a blank line inside the field counts. Count the lines before you hand back, from the `Summary:` line up to but not including the next field line (`Artifacts:`): the lead's render step refuses a longer Summary and the role is resumed to shorten it. A role calls no lead script for this (the protocol's *Shell* is unchanged).
+
+## Fresh or resumed
+
+The first task of a role in a new slice gets a fresh agent, never one that worked on an earlier slice. Resume an agent only for a rework in the same slice, and only below 200,000 tokens of peak context (provisional). Read the peak before resuming: `bash "${CLAUDE_PLUGIN_ROOT}/scripts/token-spend.sh" <the agent's transcript>`, the `peak` figure (the largest single-message context). At or above the number, or when the figure cannot be read (a non-zero exit of the script), the agent counts as over the limit: spawn a fresh agent, and the brief, the feedback and the committed result carry the task on. The rule is for a rework task. A resume of the same task after an interruption (`run-interruptions.md`) or an andon (`run-andon.md`) is not a rework and is exempt: the agent keeps its task. So there is one live agent per role in each slice, and a fresh agent replaces an over-limit one; this is what the run skill's sentence "one agent per role" means. Find the transcript of an agent as `hansei.md` does for the token measure. Project knowledge lives in the repository and the role files, not in the agent's context. After the next two runs, read the peak per role task and move the number.

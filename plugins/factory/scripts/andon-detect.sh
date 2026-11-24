@@ -25,7 +25,8 @@
 # Exit: 0 done (hits or none); 2 usage or an unreadable input; 3 no ownership table.
 # bash 3.2 compatible; needs git and awk.
 
-ROLES="product-owner architect developer qa-engineer security-reviewer devops docs-writer"
+. "$(dirname "${BASH_SOURCE[0]}")/role-files.sh"   # the one definition of a role's own knowledge files
+ROLES="$RF_ROLES"
 
 usage() { sed -n '2,/^# bash 3.2/p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
@@ -88,13 +89,8 @@ kind3() {
     case " $ROLES " in *" $r "*) ;; *) continue ;; esac
     git -C "$repo" diff-tree -z --no-commit-id --name-only -r --no-renames "$sha" | while IFS= read -r -d '' p; do
       case "$p" in *[[:cntrl:]]*) echo "role-outside-role: ${sha:0:7} $r changed an unclassifiable path (name escaped: $(printf '%q' "$p"))"; continue ;; esac
-      # a role maintains its own role file and skills folder (protocol, *Role knowledge*): that path is never flagged, nothing else is excused
-      # ... unless it is a symlink (mode 120000), which can point anywhere: a symlink is judged like any other path
-      case "$p" in
-        "docs/agents/roles/$r.md" | "docs/agents/skills/$r/"*)
-          m="$(git --literal-pathspecs -C "$repo" ls-tree "$sha" -- "$p" 2>/dev/null | cut -c1-6)"
-          [ "$m" = 120000 ] || continue ;;
-      esac
+      # a role maintains its own role file and skills folder (protocol, *Role knowledge*): that path is never flagged, a symlink excepted (role-files.sh)
+      ! rf_own_commit_path "$repo" "$sha" "$r" "$p" || continue
       o="$(owner_of "$table" "$p")"
       case "$o" in "ambiguous owner: "*)
         # the committing role is one of the tied owners: the path is its own by the table, so there is nothing to report

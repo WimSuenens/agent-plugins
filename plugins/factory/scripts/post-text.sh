@@ -68,10 +68,15 @@ case "$cmd" in
     HOMEP=(
       '(^|[^A-Za-z0-9_.~-])/Us''ers/[^/ '"$(printf '\t')"']+'
       '(^|[^A-Za-z0-9_.~-])/ho''me/[^/ '"$(printf '\t')"']+'
-      '(^|[^A-Za-z0-9_.~-])/ro''ot/'
       '[A-Za-z]:[\\/][Uu]sers[\\/][^\\/ '"$(printf '\t')"']+'
     )
-    HOMEC=("/Us""ers/someone/x" "/ho""me/someone/x" "/ro""ot/x" 'C:\Us''ers\someone')
+    HOMEC=("/Us""ers/someone/x" "/ho""me/someone/x" 'C:\Us''ers\someone')
+    # the literal value of the host's $HOME (not empty, not `/`): a guest account's folder (the root account's, say) is a host path only when it is the host's home (#252)
+    hh="${HOME%/}"
+    if [ -n "$hh" ]; then
+      HOMEP[${#HOMEP[@]}]="(^|[^A-Za-z0-9_.~-])$(printf '%s' "$hh" | sed 's/[][\\.^$*+?(){}|/]/\\&/g')(\$|[^A-Za-z0-9_.~-])"
+      HOMEC[${#HOMEC[@]}]="$hh/x"
+    fi
     i=0
     while [ $i -lt ${#SP[@]} ]; do
       if ! printf '%s\n' "${CAN[$i]}" | LC_ALL=C grep -Eq -e "${SP[$i]}"; then

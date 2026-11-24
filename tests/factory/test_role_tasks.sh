@@ -208,10 +208,10 @@ has ac13-run-caps-65536-via-60000 "$RUN" '60,000 bytes'
 printf 'plain text\nnothing here\n' >"$T/clean.md"; bash "$PT" scan "$T/clean.md"; ck ac18-clean-text-exit-0 0 "$?"
 printf 'line one\nsee /%s/someone/Projects/x here\nend\n' "$UD" >"$T/hp.md"
 out="$(bash "$PT" scan "$T/hp.md")"; rc=$?; ck ac18-home-path-exit-1 1 "$rc"; ck ac18-home-path-names-line-not-text "scan: hp.md:2: home-path" "$out"
-for p in "/$HM/alice/work" "C:\\$UD\\bob\\x" "C:/$UD/bob/x" "/ro""ot/.ssh/id" "file:///$UD/zed/a.md" "(/$UD/q/f)" "\"/$UD/q/f\""; do
+for p in "/$HM/alice/work" "C:\\$UD\\bob\\x" "C:/$UD/bob/x" "file:///$UD/zed/a.md" "(/$UD/q/f)" "\"/$UD/q/f\""; do
   printf 'x %s y\n' "$p" >"$T/hp2.md"; bash "$PT" scan "$T/hp2.md" >/dev/null; ck "ac18-home-path-variant [$p]" 1 "$?"
 done
-for p in "~/.claude/plugins/x" "worktree-relative/$UD/x" '$HOME/x' "../wt/64/x" "see the /$UD folder" "/usr/local/bin/x"; do
+for p in "/ro""ot/.ssh/id" "~/.claude/plugins/x" "worktree-relative/$UD/x" '$HOME/x' "../wt/64/x" "see the /$UD folder" "/usr/local/bin/x"; do
   printf 'x %s y\n' "$p" >"$T/ok.md"; bash "$PT" scan "$T/ok.md" >/dev/null; ck "ac18-not-a-home-path [$p]" 0 "$?"
 done
 tok() { printf 'tok %s end\n' "$1" >"$T/tok.md"; bash "$PT" scan "$T/tok.md"; echo $?; }

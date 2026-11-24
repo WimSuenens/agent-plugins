@@ -62,3 +62,7 @@ When the sizing says `ui self-review: yes`, before a decision card that shows a 
 3. Write `reviews/ui-<id>.md`: one line per finding, `- <severity> | <page> | <what is wrong> | <what to change>`, severity `blocker`, `major` or `minor`; then `Not checked:` with what was not looked at (a remembered choice, keyboard use, another browser, a width), or `none`.
 4. Clear faults (`blocker`, `major`) go back to the developer as rework first, and the capture and the critique are redone. `minor` findings go on the card or demo as they are.
 5. The decision card or the demo carries the screenshots, the critique and what was not checked.
+
+## The QA brief carries the CI steps
+
+Before you brief QA, run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/ci-steps.sh"` in the item worktree: it reads the workflow the project's `ci:` line names and prints the `run:` steps of the jobs a pull request runs (or `none`). Paste the output into QA's `Inputs` as it is. QA runs each step that needs no secret and no network, reports each result or the reason it was skipped, and a hand back without them is incomplete (`agents/qa-engineer.md`, *Done*). Read QA's verdict for those results before you accept `done`.

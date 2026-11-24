@@ -84,7 +84,7 @@ $list
 EOF3
     if [ "$hit" = 1 ]; then
       cat "$err.scan" >&2; rm -f "$err.scan"
-      echo "stage-publish: push refused: a file of this stage has a home path or a secret; fix the file, commit, push again" >&2
+      echo "stage-publish: push refused: a file of this stage has a home path or a secret (file and line above); fix the line, commit, push again; do not use a plain \`git push\`, it skips this scan for every file; if the hit is a false positive, file an issue" >&2
       exit 5
     fi
     rm -f "$err.scan"

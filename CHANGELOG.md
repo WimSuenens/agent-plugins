@@ -2,6 +2,22 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.6.0 (bundle A of #207)
+
+Release: `3.6.0`, a **minor** release: standard text and scripts changed (new `role-files.sh`, `ledger.sh` and `ci-steps.sh`; `paths.sh`, `andon-detect.sh`, `post-text.sh`, `stage-publish.sh` and `close-item.sh`; the protocol's *Role knowledge*, the QA, security and product-owner role files, `hansei.md`, `run-roles.md`, `run-close-item.md`, `run-parallel.md`). The `standard` fingerprint changes. No migration. The run skill (the router) is unchanged; the fence F1 to F7 and its fixtures are untouched.
+
+Closes [#250](https://github.com/WimSuenens/agent-plugins/issues/250), [#252](https://github.com/WimSuenens/agent-plugins/issues/252), [#253](https://github.com/WimSuenens/agent-plugins/issues/253), [#243](https://github.com/WimSuenens/agent-plugins/issues/243), [#254](https://github.com/WimSuenens/agent-plugins/issues/254). Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207).
+
+**What changed for the person who runs the factory:**
+
+- **A role's own knowledge files no longer flag.** `paths.sh check --own-role-files` allows a role's own role file and skills folder for the commits that role makes (one definition, `role-files.sh`, also used by the andon detector); a symlink, another role's file and a mixed commit's other files still flag. The overlap check ignores role-knowledge entries. The guard hook is unchanged.
+- **The home-path scan matches the host's home only**: the guest root account's folder in a provisioning script passes; the host's own home shapes and the literal `$HOME` are still refused. A refused push says to fix the line, not to use a plain `git push`, and to file an issue for a false positive.
+- **`ledger.sh` edits the ledger body safely**: add a task, wait or touch, or set a wait's end, by table heading and column header; keeps a `.bak`; refuses an edit that makes any table lose a row.
+- **The requirement survives the close**: `close-item.sh` lists the files the item folder holds and refuses while an artifact a result names outside the folder is not committed at its destination. The product owner's text names the requirements folder as the requirement's home.
+- **The QA brief names the offline CI steps**: `ci-steps.sh` prints the pull-request workflow's `run:` steps; QA runs those that need no secret and no network and reports each, and a hand back without them is incomplete.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `00e4478fca79ccdbcafd647f610920829cf92d19d2e2d012e749a81a83a67e62`, tooling `d7f68666596dec7fe9a4c17666d84a70c0ac1daa6af62c646effe42076d6e7f9`.
+
 ## factory 3.5.0 (#207 slice 5)
 
 Release: `3.5.0`, a **minor** release: standard text and scripts changed (`flow-size.sh`, `plan-check.sh`, `skip.sh`, `merge-gate.sh`, a new `proof-kind.sh`, a new reference `run-roles.md`, the QA role file, pointer lines in the run skill). The `standard` fingerprint changes, the `tooling` fingerprint changes too. No migration: a plan written under 3.4.0 with `role path: standard` is rewritten with the real values the next time the lead writes the plan.

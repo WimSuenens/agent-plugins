@@ -26,16 +26,18 @@ if [ -d "${w:?}/work/$id" ]; then
     [ -f "$res" ] || continue
     line="$(grep -m 1 '^Artifacts:' "$res" | tr -d '\r' | sed -e 's/^Artifacts:[[:space:]]*//')"
     old_ifs="$IFS"; IFS=','
+    set -f
     for a in $line; do
       IFS="$old_ifs"
       a="$(printf '%s' "$a" | sed -e 's/^[[:space:]]*//' -e 's/`//g' -e 's/[[:space:]].*$//')"
       case "$a" in
-        '' | none | None | - | '#'* | http://* | https://* | *'*'* | *'?'* | work/*) continue ;;
-        /* | ../* | */../* | .. | '~'* ) echo "close: $(basename "$res") names an artifact outside the worktree (malformed): $a" >&2; missing=1; continue ;;
+        '' | none | None | - | '#'* | http://* | https://* | *'*'* | *'?'*) continue ;;
+        /* | ../* | */../* | */.. | .. | '~'* ) echo "close: $(basename "$res") names an artifact outside the worktree (malformed): $a" >&2; missing=1; continue ;;
+        work/*) continue ;;
       esac
       git -C "${w:?}" cat-file -e "HEAD:${a%/}" 2>/dev/null || { echo "close: $a is named by $(basename "$res") but is not committed at its destination; its owning role files it before the close" >&2; missing=1; }
     done
-    IFS="$old_ifs"
+    IFS="$old_ifs"; set +f
   done
   [ "$missing" = 0 ] || exit 1
 fi

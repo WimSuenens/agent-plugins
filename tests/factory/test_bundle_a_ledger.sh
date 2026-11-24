@@ -85,6 +85,9 @@ bash "$LG" add-wait bad.md nope.md --kind person --agent - --start a --end b --h
 ck missing-table-no-output "no" "$([ -e nope.md ] && echo yes || echo no)"
 # a cell with a pipe is refused
 bash "$LG" add-touch body.md nope.md --time t --kind demo --what 'a | b' >/dev/null 2>&1; ck pipe-in-cell-refused 2 "$?"
+# a backslash in a cell stays one line and unchanged
+bash "$LG" add-task body.md bs.md --task '#50' --stage Build --role developer --agents a --waits - --peak 1 --result done --notes 'fixed C:\new\path' >/dev/null
+ck backslash-kept "| 3 | #50 | Build | developer | a | - | 1 | done | fixed C:\new\path |" "$(grep '^| 3 |' bs.md)"
 # the text names the script
 has hansei-names-script "$PLUGIN/references/hansei.md" 'scripts/ledger.sh'
 has hansei-no-hand-edit "$PLUGIN/references/hansei.md" 'never by hand'

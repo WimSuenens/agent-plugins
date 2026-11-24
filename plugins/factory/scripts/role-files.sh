@@ -49,7 +49,8 @@ rf_own_commit_path() {
 rf_allowed() { # <repo> <base> <head>
   local repo="$1" base="$2" head="$3" tmp
   tmp="$(mktemp)" || return 2
-  git -C "$repo" log --no-merges --format='%H%x09%s' "$base".."$head" | while IFS="$(printf '\t')" read -r sha subj; do
+  log="$(git -C "$repo" log --no-merges --format='%H%x09%s' "$base".."$head")" || { rm -f "$tmp"; echo "role-files: git log $base..$head failed" >&2; return 2; }
+  [ -z "$log" ] || printf '%s\n' "$log" | while IFS="$(printf '\t')" read -r sha subj; do
     r="$(rf_role_of_subject "$subj")"
     git -C "$repo" diff-tree -z --no-commit-id --name-only -r --no-renames "$sha" | while IFS= read -r -d '' p; do
       rf_any_name "$p" || continue

@@ -16,7 +16,7 @@ Closes [#250](https://github.com/WimSuenens/agent-plugins/issues/250), [#252](ht
 - **The requirement survives the close**: `close-item.sh` lists the files the item folder holds and refuses while an artifact a result names outside the folder is not committed at its destination. The product owner's text names the requirements folder as the requirement's home.
 - **The QA brief names the offline CI steps**: `ci-steps.sh` prints the pull-request workflow's `run:` steps; QA runs those that need no secret and no network and reports each, and a hand back without them is incomplete.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `00e4478fca79ccdbcafd647f610920829cf92d19d2e2d012e749a81a83a67e62`, tooling `7da22ad5ccdfc5b4dd039baf5a859c9ac7365218e32aec4c3f0ad889500b96c0`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `00e4478fca79ccdbcafd647f610920829cf92d19d2e2d012e749a81a83a67e62`, tooling `d7f68666596dec7fe9a4c17666d84a70c0ac1daa6af62c646effe42076d6e7f9`.
 
 ## factory 3.5.0 (#207 slice 5)
 

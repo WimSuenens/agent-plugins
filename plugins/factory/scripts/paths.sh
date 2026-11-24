@@ -161,6 +161,12 @@ drop_role_files() {
     keep[${#keep[@]}]="$p"
   done
   PATHS=("${keep[@]}")
+  keep=()
+  for p in "${SHARED[@]}"; do
+    if rf_any_name "$p"; then continue; fi
+    keep[${#keep[@]}]="$p"
+  done
+  SHARED=("${keep[@]}")
 }
 
 # covers <p> <q>: p equals q, or p is a directory prefix of q (ASCII case folded)

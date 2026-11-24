@@ -41,6 +41,9 @@ mk e; res e "docs/requirements/5-y.md"; mkdir -p e-wt/docs/requirements; echo r 
 run e >/dev/null; ck present-untracked-refused 1 "$?"
 # absolute or parent-escaping destinations are refused as malformed, not followed
 mk f; res f "../outside.md"; run f >/dev/null; ck parent-escape-refused 1 "$?"
+# a glob in the Artifacts line is skipped, not expanded; a traversal after work/ is refused
+mk g; res g "docs/*.md"; mkdir -p g/docs; echo x >g/docs/zz.md; run g >/dev/null; ck glob-not-expanded 0 "$?"
+mk h; res h "work/5/../../docs/requirements/9-x.md"; run h >/dev/null; ck work-traversal-refused 1 "$?"
 # the product owner text names the requirement's home and commit from the start
 has po-output-home "$PLUGIN/agents/product-owner.md" 'committed there from the start'
 has close-text-names-check "$PLUGIN/references/run-close-item.md" 'refuses while an artifact'

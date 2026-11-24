@@ -88,7 +88,8 @@ esac
 
 tmp="$(mktemp)" || exit 2
 trap 'rm -f "$tmp"' EXIT
-awk -v CMD="$cmd" -v HEAD="$heading" -v FIRST="$first" -v NCOLS="$ncols" -v ROW="$row" -v TASK="$task" -v ID="$id" -v END_="$end" '
+LG_ROW="$row" LG_TASK="$task" LG_ID="$id" LG_END="$end" awk -v CMD="$cmd" -v HEAD="$heading" -v FIRST="$first" -v NCOLS="$ncols" '
+  BEGIN { ROW = ENVIRON["LG_ROW"]; TASK = ENVIRON["LG_TASK"]; ID = ENVIRON["LG_ID"]; END_ = ENVIRON["LG_END"] }
   function trim(x) { gsub(/^[ \t]+|[ \t]+$/, "", x); return x }
   function cell(l, k,   p, m) { m = split(l, p, "|"); return trim(p[k + 1]) }
   function ncells(l,   p) { return split(l, p, "|") - 2 }
@@ -140,6 +141,7 @@ awk -v CMD="$cmd" -v HEAD="$heading" -v FIRST="$first" -v NCOLS="$ncols" -v ROW=
           if (same) dup = 1
         }
       }
+      if (dup) print "ledger: already there, nothing added" > "/dev/stderr"
       if (!dup) { for (x = n; x >= k; x--) L[x + 1] = L[x]; L[k] = nr; n++ }
     }
     for (i = 1; i <= n; i++) print L[i]

@@ -88,5 +88,5 @@ ck own-has-versions "yes" "$(printf '%s\n' "$own" | grep -q '^bash --version | h
 # text
 has qa-done-ci "$PLUGIN/agents/qa-engineer.md" 'a hand back without them is incomplete'
 has qa-done-names-script "$PLUGIN/agents/qa-engineer.md" 'scripts/ci-steps.sh'
-has router-names-script "$PLUGIN/skills/run/SKILL.md" 'scripts/ci-steps.sh'
+has run-roles-names-script "$PLUGIN/references/run-roles.md" 'scripts/ci-steps.sh'
 done_

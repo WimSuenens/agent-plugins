@@ -302,6 +302,25 @@ It is **filled by a script, never by hand**: the lead saves the slice's plan com
 - **An item run without a plan** (older plans, a run begun before the plan existed) has the section `### Plan`, a blank line and `- plan: no plan`. It is marked, not failed, and it is in no band section.
 - **The check** before posting: `bash "<plugin root>/scripts/hansei-plan.sh" check <record file> --plan <latest plan file>` for a slice that has a plan (every field present and not empty, the points whole numbers, `release` reading `same` or `release crossed`), or `--no-plan` for an item with none (`ok (no plan)`); one of the two is always given, so `no plan` cannot pass by omission. On `refused:` fix the section with `fields`, never by hand.
 
+### Escaped defects
+
+A defect found after a QA pass is two things, not a note: a regression test and a calibration signal (`references/run-close-item.md`, *Escaped defect*). The signal is one line per defect, printed by `bash "<plugin root>/scripts/escaped-defect.sh" <defect issue> --table docs/agents/factory.md`, and goes into the record of the slice during which the defect was found, in a section after `### Plan` that is left out when there is none. Measure 4 keeps its line (the baseline reads it); this section is what `calibration.sh` counts.
+
+```
+### Escaped defects
+
+- escaped defect: #<n> from #<slice>; level <level>; row <row> (<fired | not fired | not captured: no hansei record on #<slice>>); regression test <path | missing>
+- escaped defect: #<n> from #<slice>; level <level>; no trigger fired: row missing; regression test <path | missing>
+```
+
+### Calibration
+
+The lead runs `calibration.sh` at the hansei, after the record is in its final state: `bash "<plugin root>/scripts/calibration.sh" --table docs/agents/factory.md <record file>...`, the records of the last slices saved to files, oldest first, this one last (the last 5 are read). It prints the median of (actual points minus estimated points) per band, the misses and false alarms per table row, the share of slices with findings per role and band, the escaped-defect signals, and at most one proposal. A record without the plan fields of slice 6 is skipped and counted, a release-crossed one too.
+
+- **The script proposes, the lead decides.** A row change is proposed only when at least 3 slices agree, one row at a time; never for the floor's row (`Protected area touched`), and never for a row that is `settled` unless the lead names a reason with `--reopen "<row>: <reason>"`. Once the lead changes the table, a change of the table is recorded in the hansei: the change and its reason are a line in the lead state's `## Findings` before the record is built. It stays inside the fence: calibration changes rows and bands, never the floor.
+- **`settled`.** A row turns `settled` after 5 slices read without a miss or a false alarm on it, the row fired in at least one, and no band median 2 points or more away from zero; `calibration.sh` prints a `settle:` line for it, and the lead sets the status. The number 5 is provisional: revisit it after two runs.
+- **A change is an experiment** when it is meant to be measured: `references/a3.md`, section 11.
+
 ### Value grammar
 
 Every value slot (`<dur>`, `<n>`, `<fpy>`, `<tok>`, a version, a hash) holds exactly one of:

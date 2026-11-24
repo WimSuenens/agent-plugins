@@ -2,6 +2,19 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.9.0 (slice 7 of #207, closes the plan of #187)
+
+Release: `3.9.0`, a **minor** release: standard text changed (`hansei.md`, `a3.md`, `run-improve.md`, `run-close-item.md`, `agents/qa-engineer.md`) and tooling changed (`calibration.sh` and `escaped-defect.sh` are new; `a3-check.sh` learned one optional line). The `standard` fingerprint changes, so a new series starts and the 3.8 figures are indicative, not the "before" of an experiment (`references/baseline.md`, section 6).
+
+Refs [#207](https://github.com/WimSuenens/agent-plugins/issues/207), [#187](https://github.com/WimSuenens/agent-plugins/issues/187).
+
+**What changed for the person who runs the factory:**
+
+- **Calibration.** `calibration.sh` reads the hansei records of the last 5 slices and prints the median of (actual minus estimated points) per band, the misses and false alarms per table row, the share of slices with findings per role and band, and at most one proposed row change, only when 3 slices agree. It never proposes a change to the floor's row or to a `settled` row without a stated reason, and it never writes the table: the lead decides and records the change in the hansei. A row turns `settled` after 5 slices without a miss or a false alarm (the number is provisional).
+- **Experiments per row or band.** A calibration experiment is measured over the next 3 slices of its band against the baseline's reading of the same band. The run A3 reports it in an optional `calibration experiments` line (`a3-check.sh` checks it) and marks it not clean when the `standard` fingerprint changed.
+- **Escaped defects.** A defect found after a QA pass becomes a regression test at the level where it escaped and a calibration signal for the trigger that should have caught it. `escaped-defect.sh <issue>` prints the signal line for the hansei's new `### Escaped defects` section and the row it counts against, or `no trigger fired: row missing`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-24: standard `9fe3d533889fdb7c2e9ff2f1a169b13e81e1c5573750ce204e52950c6f6eee47`, tooling `2936696d8b1ed88a3165204fd9219a2eb8d86b161401c00d49b326e107569d2b`.
+
 ## factory 3.8.0 (slice 6 of #207)
 
 Release: `3.8.0`, a **minor** release: standard text changed (`hansei.md`, `baseline.md`, `run-route.md`, `run-close-item.md`, `agents/integrator.md`, one pointer in the run skill's step 0) and tooling changed (`hansei-plan.sh` is new; `plan-check.sh` and `integrator.sh` learned new modes). The `standard` fingerprint changes, and so does `tooling`. No migration. The fence F1 to F7 and its fixtures are untouched. The run skill stays under its 70,000-byte cap.

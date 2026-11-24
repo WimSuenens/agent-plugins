@@ -52,9 +52,9 @@ function notcaptured(v,   r) {
 function emit(key, why) { out[++nf] = "refused: " key " (" why ")" }
 
 BEGIN {
-  nk = split("run|series and release|problem|evidence|waste|gemba (targeted)|5 whys|CHAIN|process item to change|countermeasure|measure targeted|before|after|change|target|items counted|events|issues filed during the run|not detectable from records|still uncertain|other problems seen|other overrides|standard changes proposed|baseline|answer", K, "|")
+  nk = split("run|series and release|problem|evidence|waste|gemba (targeted)|5 whys|CHAIN|process item to change|countermeasure|measure targeted|before|after|change|target|items counted|events|issues filed during the run|not detectable from records|calibration experiments|still uncertain|other problems seen|other overrides|standard changes proposed|baseline|answer", K, "|")
   split("transport inventory motion waiting overproduction over-processing defects skills", T, " ")
-  skip = ""; nf = 0; firstnum = 0; nwl = 0; whysl = 0; cite = 0; nev = 0; evbad = 0; evfa = 0
+  skip = ""; nf = 0; firstnum = 0; nwl = 0; whysl = 0; cite = 0; nev = 0; evbad = 0; evfa = 0; nexp = 0
 }
 { sub(/\r$/, "") }
 NR == 1 {
@@ -69,6 +69,7 @@ skip != "" { next }
     cnt["CHAIN"]++
     if (cnt["CHAIN"] == 1) first["CHAIN"] = NR
   }
+  if (index($0, "  experiment: ") == 1) { nexp++; expl[nexp] = $0 }
   if (index($0, "  event: ") == 1) {
     nev++
     cp = index($0, " " EM " cause:")
@@ -106,12 +107,13 @@ END {
       for (j = 0; j < cnt[k]; j++) emit(kname, "not part of v1")
       continue
     }
-    isv3 = (k == "events" || k == "issues filed during the run" || k == "not detectable from records")
+    isv3 = (k == "events" || k == "issues filed during the run" || k == "not detectable from records" || k == "calibration experiments")
     if (isv3 && !v3) {
       for (j = 0; j < cnt[k]; j++) emit(kname, "not part of v" ver)
       continue
     }
     if (k == "CHAIN" && !multi) continue
+    if (k == "calibration experiments" && cnt[k] == 0) continue   # the line may be left out when the run has no experiment (references/a3.md section 11)
     if (cnt[k] == 0) { emit(kname, "missing"); continue }
     if (cnt[k] > 1) emit(kname, "repeated")
     if (k != "5 whys" && k != "CHAIN" && val[k] == "") emit(kname, "blank")
@@ -137,6 +139,18 @@ END {
     } else if (k == "issues filed during the run") {
       if (v ~ /^none/) { if (!noneshape(v)) emit(kname, "none needs a reason in parentheses") }
       else if (v !~ /^[1-9][0-9]*: ./) emit(kname, "not in its grammar")
+    } else if (k == "calibration experiments") {
+      if (v ~ /^none/) {
+        if (!noneshape(v)) emit(kname, "none needs a reason in parentheses")
+        else if (nexp > 0) emit(kname, "count does not match the experiment lines")
+      } else if (v !~ /^[1-9][0-9]*$/ || v + 0 != nexp) emit(kname, "count does not match the experiment lines")
+      else for (e = 1; e <= nexp; e++) {
+        np = split(expl[e], sg, " " EM " ")
+        if (sg[1] !~ /^  experiment: (row|band) [^ ]/) { emit(kname, "experiment must name row <name> or band <name>"); continue }
+        if (sg[2] !~ /^before: [+-]?[0-9]+(\.[0-9]+)? \([0-9]+ of [0-9]+ slices, band [^()]+\)$/) { emit(kname, "experiment without a before reading"); continue }
+        if (sg[3] !~ /^to measure: [0-3] of 3 slices$/) { emit(kname, "experiment without the slices still to measure"); continue }
+        if (sg[4] !~ /^clean: (yes|no \(standard changed\))$/) emit(kname, "experiment without clean: yes or no (standard changed)")
+      }
     } else if (k == "not detectable from records") {
       if (v ~ /^none/ && !noneshape(v)) emit(kname, "none needs a reason in parentheses")
     }

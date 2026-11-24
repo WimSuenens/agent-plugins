@@ -188,6 +188,19 @@ def parse(c):
     r.tooling = head.get('tooling')
     r.ovr = head.get('active overrides', 'none')
     r.f = {}  # field -> (kind, state)
+    # hansei.md "The plan section" (3.8.0): the trailing `### Plan` section. READING: a record with no such section, or `- plan: no plan`, has no band;
+    # `release:` reading `release crossed...` puts the item in no section (baseline.md section 5, item 5); a band is the value of the `- band:` line.
+    r.band, r.crossed = None, False
+    pm = re.search(r'^### Plan[ \t]*$(.*?)(?=^### |\Z)', body, re.M | re.S)
+    if pm:
+        pl = {}
+        for ln in pm.group(1).split('\n'):
+            m3 = re.match(r'^- ([a-z ]+): (.*)$', ln)
+            if m3 and m3.group(1) not in pl:
+                pl[m3.group(1)] = m3.group(2).strip()
+        if pl.get('band'):
+            r.band = pl['band']
+        r.crossed = pl.get('release', '').startswith('release crossed')
     if r.version not in (3, 4, 5):
         return r
     mm = re.search(r'^1\. lead time: (.*)$', body, re.M)
@@ -282,7 +295,7 @@ def main_overrides(path):
     return out
 
 
-def baseline(records, session, mainpath, a3s):
+def baseline(records, session, mainpath, a3s, cur_std=None):
     notes_drop = {}
     for a in a3s:
         for ln in a['body'].split('\n'):
@@ -419,22 +432,43 @@ def baseline(records, session, mainpath, a3s):
         for r in its:
             for nme in r.partial:
                 nis.append('#%d %s (%s in force for part of the item)' % (r.item, r.url, nme))
+            if r.crossed:
+                nis.append('#%d %s (release crossed)' % (r.item, r.url))
         L.append('- not in any section: ' + ('; '.join(nis) if nis else 'none'))
         vs = sorted({r.version for r in its})
         if len(vs) > 1:
             # #60 baseline.md section 7: every schema the series holds, ascending; one form per set (v3 and v5 alone: READING, the text shows three forms)
             L.append('- records: schema ' + ', '.join('v%d' % v for v in vs[:-1]) + ' and v%d' % vs[-1] + ' read together')
+        refkey = frozenset(adopted_names)
+        # band sections (baseline.md section 5, Band sections): the current series only; the reference section's items split by band
+        bands = []
+        refits = [r for r in its if not r.partial and not r.crossed and r.key == refkey]
+        if cur_flag:
+            for r in refits:
+                if r.band and r.band not in bands:
+                    bands.append(r.band)
+            seen = list(bands)
+            bands.sort(key=lambda b: (['Light', 'Normal', 'Heavy'].index(b) if b in ['Light', 'Normal', 'Heavy'] else 3, seen.index(b)))
+            if bands:
+                nb = ['#%d %s (no plan)' % (r.item, r.url) for r in refits if not r.band]
+                L.append('- not in any band section: ' + ('; '.join(nb) if nb else 'none'))
+        # carry-over (section 6, item 6): the lead runs hansei-plan.sh carry with the older series' standard; the replay is given the current standard
+        if cur_flag and cur_std:
+            older = [m for m in series_std if m != mn and tuple(int(x) for x in m.split('.')) < tuple(int(x) for x in mn.split('.'))]
+            if older:
+                pm_ = max(older, key=lambda x: tuple(int(y) for y in x.split('.')))
+                same = series_std[pm_] == cur_std
+                L.append('- previous series: %s (%s)' % (pm_, 'reference (standard unchanged)' if same else 'indicative (standard changed)'))
         keys = []
         for r in its:
-            if not r.partial and r.key not in keys:
+            if not r.partial and not r.crossed and r.key not in keys:
                 keys.append(r.key)
-        refkey = frozenset(adopted_names)
         if cur_flag:
             if refkey in keys:
                 keys.remove(refkey)
             keys.insert(0, refkey)  # the reference section is written first, even with no item
         for k in keys:
-            sits = [r for r in its if not r.partial and r.key == k]
+            sits = [r for r in its if not r.partial and not r.crossed and r.key == k]
             kn = ', '.join(sorted(k, key=lambda x: (x not in adopted_names, adopted_names.index(x) if x in adopted_names else 0, x))) if k else 'none'
             if not cur_flag:
                 lab = 'history (series replaced)'
@@ -473,6 +507,12 @@ def baseline(records, session, mainpath, a3s):
             L.append('#### Section — whole-item overrides: %s — %s' % (kn, lab))
             L.append(items_line(sits))
             L += fields(sits, 'series' if (not sits and cur_flag and k == refkey and not its) else 'section')
+        for b in bands:
+            bits = [r for r in refits if r.band == b]
+            L.append('')
+            L.append('#### Band %s' % b)
+            L.append(items_line(bits))
+            L += fields(bits, 'section')
         return L
 
     out.append('## Current')
@@ -637,7 +677,7 @@ def main(argv):
         recs = [json.loads(l) for l in open(argv[2]) if l.strip()]
         main_path = argv[4] if len(argv) > 4 else None
         a3s = [json.loads(l) for l in open(argv[5]) if l.strip()] if len(argv) > 5 else []
-        sys.stdout.write(baseline(recs, argv[3], main_path, a3s))
+        sys.stdout.write(baseline(recs, argv[3], main_path, a3s, argv[6] if len(argv) > 6 else None))
     elif cmd in ('a3problem', 'a3classify', 'a3change'):
         L = json.load(open(argv[2]))
         r = {'a3problem': a3problem, 'a3classify': a3classify, 'a3change': a3change}[cmd](L)

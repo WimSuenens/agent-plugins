@@ -102,7 +102,7 @@ Given a section's items (`n` of them, after section 3 and 5), every item is in e
 
 ### Band sections
 
-Each series block also carries a section per band, written after its whole-item-override sections and only when at least one item of the series has a plan. A band section is the reference section's items split by the record's band: the items of the series that are in the reference section (section 6), grouped by the `band:` line of the record's `### Plan` section (`references/hansei.md`), one `#### Band <name>` heading each, in the order Light, Normal, Heavy, then any other name, using the band names of the plans. A band section reads the field list of section 4 and its `items:` line like any section. The record's band is the plan's sizing; the same item is also in its whole-item-override section.
+The current series block also carries a section per band (a history series has no reference section, so it has none), written after its whole-item-override sections and only when at least one item of the reference section has a plan. A band section is the reference section's items split by the record's band: the items of the series that are in the reference section (section 6), grouped by the `band:` line of the record's `### Plan` section (`references/hansei.md`), one `#### Band <name>` heading each, in the order Light, Normal, Heavy, then any other name, using the band names of the plans. A band section reads the field list of section 4 and its `items:` line like any section. The record's band is the plan's sizing; the same item is also in its whole-item-override section.
 
 - An item whose `### Plan` section reads `- plan: no plan`, or has no such section (older records), is in no band section; it is named `not in any band section` in the series block, as `#<id> <url> (no plan)`.
 - An item that is `release crossed` is in no section at all (section 5, item 5), so it is in no band section.
@@ -146,9 +146,9 @@ What normal looks like for this project, per factory release. Derived by the Lea
 - standard: <64 hex>
 - tooling: <64 hex>[, <64 hex> …]
 - not in any section: <none | #<id> <url> (<name> in force for part of the item | release crossed); …>
+- records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line; a series holding v3 and v5 with no v4 cannot arise from release series, since a 1.2.x series holds v3 and v4 at most and a 1.3.x series v4 and v5 at most, so it has no form; only when the series holds more than one schema, naming them in ascending order)
 - not in any band section: <none | #<id> <url> (no plan); …>   (optional line; only when the series has a band section, section 5, *Band sections*)
 - previous series: <M.N> (<reference (standard unchanged) | indicative (standard changed)>)   (optional line; only when an older series exists, section 6, item 6)
-- records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line; a series holding v3 and v5 with no v4 cannot arise from release series, since a 1.2.x series holds v3 and v4 at most and a 1.3.x series v4 and v5 at most, so it has no form; only when the series holds more than one schema, naming them in ascending order)
 
 #### Section — whole-item overrides: <none | name, name> — <reference | history: … | other: …>
 - items: <n> items: #<id> <url>; #<id> <url> …

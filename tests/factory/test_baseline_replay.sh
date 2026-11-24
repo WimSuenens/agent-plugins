@@ -28,14 +28,14 @@ mkjson() {  # mkjson <names, comma separated> -> a JSON array of comments, in th
 }
 run_sc() {  # run_sc <scenario> -> $T/out-<scenario>.md
   row="$(grep -E "^$1	" "$FX/scenarios.tsv")"
-  rel="$(echo "$row" | cut -f2)"; names="$(echo "$row" | cut -f3)"; mainf="$(echo "$row" | cut -f4)"
+  rel="$(echo "$row" | cut -f2)"; names="$(echo "$row" | cut -f3)"; mainf="$(echo "$row" | cut -f4)"; cstd="$(echo "$row" | cut -f5)"; [ -n "$cstd" ] && [ "$cstd" != "-" ] || cstd=""
   mkjson "$names" > "$T/c-$1.json"
   jq -c "$filt" "$T/c-$1.json" > "$T/r-$1.jsonl"
   jq -c "$filt_a3" "$T/c-$1.json" > "$T/a-$1.jsonl"
   [ "$mainf" = "-" ] && mp="-" || mp="$FX/$mainf"
-  python3 -I "$PY" body "$T/r-$1.jsonl" "$rel" "$mp" "$T/a-$1.jsonl" > "$T/out-$1.md"
+  python3 -I "$PY" body "$T/r-$1.jsonl" "$rel" "$mp" "$T/a-$1.jsonl" $cstd > "$T/out-$1.md"
 }
-for s in A B C D E1 E2 F1 F2 G I J K L M N S3 S3e S3p S3cal P Q R R2 R3 S T; do run_sc "$s"; done
+for s in W W2 W3 A B C D E1 E2 F1 F2 G I J K L M N S3 S3e S3p S3cal P Q R R2 R3 S T; do run_sc "$s"; done
 
 # --- Find records returns the lead's own markers by first line only (AC-2: C39 and C49 are never returned)
 ck ac2-find-records-A "x2 x5 x5d x5e x5f x5c" "$(jq -r '.id' "$T/r-A.jsonl" | while read -r i; do grep -E "	$i	" "$FX/comments.tsv" | cut -f1; done | paste -sd' ' -)"

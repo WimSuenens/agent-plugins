@@ -34,8 +34,13 @@ done
 for f in "${files[@]}"; do [ -r "$f" ] || { echo "calibration: cannot read $f" >&2; exit 2; }; done
 given=${#files[@]}
 if [ "$given" -gt 5 ]; then files=("${files[@]:$((given - 5))}"); fi
+# an empty file is no record: counted as a record without plan fields, and not handed to awk (it has no first line to start a record on)
+nonempty=(); empty=0
+for f in "${files[@]}"; do if [ -s "$f" ]; then nonempty+=("$f"); else empty=$((empty + 1)); fi; done
+[ ${#nonempty[@]} -ge 1 ] || nonempty=(/dev/null)
+files=("${nonempty[@]}")
 
-REOPEN="$reopen" awk -v given="$given" -v tablefile="$table" '
+REOPEN="$reopen" awk -v given="$given" -v empty="$empty" -v tablefile="$table" '
 function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
 function lc(s) { return tolower(s) }
 # names(<triggers line>, <set array>): fills set[name]=1 from "A (+3), B, C (+2)"; splits on the " (+n)" terminator, as hansei-plan.sh does
@@ -60,17 +65,17 @@ function fin(   i, n, r) {
     if (r in F) firedn[i]++
     if ((r in A) && !(r in F)) mflag[i] = 1
     if ((r in F) && !(r in A)) fflag[i] = 1
-    if (r in ESC) mflag[i] = 1
     if (mflag[i]) miss[i]++
     if (fflag[i]) fa[i]++
     mflag[i] = 0; fflag[i] = 0
   }
   for (i = 1; i <= nroles; i++) if (rw[i] > 0) { fnd[band, i]++ }
+  for (e = 1; e <= npe; e++) if (!((pe_i[e] SUBSEP pe_fr[e]) in EM_)) { EM_[pe_i[e], pe_fr[e]] = 1; miss[pe_i[e]]++ }
   esig += nsig; ereg += nreg; emiss += nmiss
 }
 function startrec() {
-  cur = FILENAME; isplan = 0; est = ""; act = ""; fired = ""; actrig = ""; band = ""; rel = ""; nsig = 0; nreg = 0; nmiss = 0
-  delete ESC; for (i = 1; i <= nroles; i++) rw[i] = 0
+  cur = FILENAME; isplan = 0; est = ""; act = ""; fired = ""; actrig = ""; band = ""; rel = ""; nsig = 0; nreg = 0; nmiss = 0; npe = 0
+  for (i = 1; i <= nroles; i++) rw[i] = 0
 }
 BEGIN {
   # the table
@@ -80,7 +85,7 @@ BEGIN {
     n = split(line, c, "|")
     if (n < 6) continue
     name = trim(c[2])
-    if (name == "Trigger" || name ~ /^-+$/ || name == "") continue
+    if (name == "Trigger" || name ~ /^:?-+:?$/ || name == "") continue
     row[++nrow] = name; status[nrow] = trim(c[6])
   }
   close(tablefile)
@@ -92,7 +97,7 @@ BEGIN {
 FNR == 1 { fin(); startrec() }
 {
   sub(/\r$/, "")
-  if ($0 ~ /^### /) { insec = ($0 == "### Plan"); if (insec) isplan = 1 }
+  if ($0 ~ /^### /) { insec = ($0 ~ /^### Plan[ \t]*$/); if (insec) isplan = 1 }
   if ($0 ~ /^- plan: no plan/) { isplan = 0 }
   if ($0 ~ /^3\. rework: feedback briefs /) {
     s = $0; sub(/^3\. rework: feedback briefs /, "", s); sub(/;.*$/, "", s)
@@ -113,14 +118,17 @@ FNR == 1 { fin(); startrec() }
     if (s ~ /; regression test /) { t = s; sub(/^.*; regression test /, "", t); if (t != "missing" && t != "") nreg++; sub(/; regression test .*$/, "", s) }
     if (s ~ /no trigger fired: row missing$/) nmiss++
     else if (s ~ /; row /) {
-      sub(/^.*; row /, "", s); sub(/ \((fired|not fired|not captured[^)]*)\)$/, "", s)
-      for (i = 1; i <= nrow; i++) if (lc(row[i]) == lc(s)) ESC[row[i]] = 1
+      st = s; sub(/^.*; row /, "", s); sub(/ \((fired|not fired|not captured[^)]*)\)$/, "", s)
+      fr = st; sub(/^.*from #/, "", fr); sub(/;.*$/, "", fr)
+      # a miss only when the row did not fire; it belongs to the slice the defect escaped from, once per slice and row, whichever record carries the line
+      if (st ~ / \(not fired\)$/) for (i = 1; i <= nrow; i++) if (lc(row[i]) == lc(s)) { npe++; pe_i[npe] = i; pe_fr[npe] = fr }
     }
   }
 }
 END {
   if (bad) exit 2
   fin()
+  noplan += empty
   eff = given > 5 ? 5 : given
   printf "slices read: %d of %d given%s\n", nread, given, (given > 5 ? " (the last 5)" : "")
   if (noplan + crossed == 0) print "skipped: 0"

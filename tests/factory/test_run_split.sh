@@ -20,7 +20,7 @@ bytes() { wc -c <"$1" | tr -d ' '; }
 # ---- A. no rule lost; nothing added except pointer lines, stub headings and the three header lines of a reference
 ck a0-fixture-is-the-old-skill 115665 "$(bytes "$OLD")"
 ck a0-references-exist yes "$([ "$nrefs" -ge 5 ] && echo yes || echo no)"
-ck a0-slice4-added-lines-are-few yes "$([ "$(grep -c . "$ADDOK")" -le 36 ] && echo yes || echo no)"  # slice 4, #230 and #231 together (#231 adds the reference run-publish.md: 14 lines)
+ck a0-slice4-added-lines-are-few yes "$([ "$(grep -c . "$ADDOK")" -le 35 ] && echo yes || echo no)"  # slice 4, #230 and #231 together (#231 adds the reference run-publish.md: 14 lines)
 # shellcheck disable=SC2086
 rep="$(awk -v allow="$ALLOW" -v addok="$ADDOK" -v nref="$narefs" '
   BEGIN { while ((getline l < allow) > 0) if (l != "") { ok[l]++; nallow++ }

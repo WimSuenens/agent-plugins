@@ -113,7 +113,7 @@ END {
       continue
     }
     if (k == "CHAIN" && !multi) continue
-    if (k == "calibration experiments" && cnt[k] == 0) continue   # the line may be left out when the run has no experiment (references/a3.md section 11)
+    if (k == "calibration experiments" && cnt[k] == 0) { if (nexp > 0) emit(kname, "experiment lines without a calibration experiments line"); continue }   # the line may be left out when the run has no experiment (references/a3.md section 11)
     if (cnt[k] == 0) { emit(kname, "missing"); continue }
     if (cnt[k] > 1) emit(kname, "repeated")
     if (k != "5 whys" && k != "CHAIN" && val[k] == "") emit(kname, "blank")

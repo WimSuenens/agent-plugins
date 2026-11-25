@@ -97,7 +97,7 @@ mkrec d1.md Normal 3 "$OWD (+3)" "$OWD (+3)" 3 0 same "$SIG"; mkrec d2.md Normal
 out="$(cal d1.md d2.md)"
 echo "$out" | grep -qx 'escaped defects: 2 signals; 1 with a regression test; row missing 1' && ck cal-escaped-counted 1 1 || ck cal-escaped-counted "escaped defects: 2 signals; 1 with a regression test; row missing 1" "$out"
 echo "$out" | grep -qx "row $CON: misses 1, false alarms 0" && ck cal-escaped-is-a-miss-on-its-row 1 1 || ck cal-escaped-is-a-miss-on-its-row "row $CON: misses 1, false alarms 0" "$out"
-for i in 1 2 3; do mkrec dd$i.md Normal 3 "$OWD (+3)" "$OWD (+3)" 3 0 same "- escaped defect: #5$i from #$i; level unit; row $CON (fired); regression test t.sh"; done
+for i in 1 2 3; do mkrec dd$i.md Normal 3 "$OWD (+3)" "$OWD (+3)" 3 0 same "- escaped defect: #5$i from #$i; level unit; row $CON (not fired); regression test t.sh"; done
 echo "$(cal dd1.md dd2.md dd3.md)" | grep -q "^proposal: raise $CON by 1 point" && ck cal-three-escaped-signals-propose 1 1 || ck cal-three-escaped-signals-propose "proposal: raise $CON" "$(cal dd1.md dd2.md dd3.md | grep proposal)"
 
 # ---- escaped-defect.sh: the signal line and the row it counts against
@@ -160,6 +160,19 @@ withexp 1 "$EXP1"; sed 's/^<!-- factory:a3 v3 -->/<!-- factory:a3 v2 -->/' "$T/e
 echo "$OUT" | grep -qx 'refused: calibration experiments (not part of v2)' && ck a3-experiment-line-not-in-v2 1 1 || ck a3-experiment-line-not-in-v2 "refused: calibration experiments (not part of v2)" "$OUT"
 withexp 1 "$EXP1"; awk '/^- calibration experiments:/ {c=$0; next} {print} /^- baseline:/ {print c}' "$T/e.md" | grep -v '^  experiment:' >"$T/e3.md"; c3 "$T/e3.md"
 echo "$OUT" | grep -q 'refused: calibration experiments (out of order)\|refused: still uncertain (out of order)' && ck a3-experiment-order 1 1 || ck a3-experiment-order "an out of order refusal" "$OUT"
+
+# review fixes: a fired row is no miss; one miss per slice the defect escaped from; orphan experiment lines; empty record; heading with a trailing space
+mkrec h1.md Normal 3 "$OWD (+3)" "$OWD (+3)" 3 0 same "- escaped defect: #60 from #3; level unit; row $CON (fired); regression test t.sh"
+echo "$(cal h1.md)" | grep -qx "row $CON: misses 0, false alarms 0" && ck cal-fired-signal-is-no-miss 1 1 || ck cal-fired-signal-is-no-miss "row $CON: misses 0" "$(cal h1.md | grep "row $CON")"
+mkrec h2.md Normal 3 "$OWD (+3)" "$OWD (+3)" 3 0 same "- escaped defect: #61 from #3; level unit; row $CON (not fired); regression test t.sh
+- escaped defect: #62 from #3; level unit; row $CON (not fired); regression test t.sh"
+echo "$(cal h2.md)" | grep -qx "row $CON: misses 1, false alarms 0" && ck cal-one-miss-per-escaped-from-slice 1 1 || ck cal-one-miss-per-escaped-from-slice "row $CON: misses 1" "$(cal h2.md | grep "row $CON")"
+: >empty.md; out="$(cal empty.md n1.md)"
+echo "$out" | grep -qx 'skipped: 1 (no plan fields 1, release crossed 0)' && ck cal-empty-file-counted 1 1 || ck cal-empty-file-counted "skipped: 1 (no plan fields 1, release crossed 0)" "$out"
+sed 's/^### Plan$/### Plan /' n1.md >sp.md; echo "$(cal sp.md)" | grep -qx 'slices read: 1 of 1 given' && ck cal-plan-heading-trailing-space 1 1 || ck cal-plan-heading-trailing-space "slices read: 1 of 1 given" "$(cal sp.md | head -1)"
+grep -v '^- calibration experiments:' "$T/e.md" >/dev/null; withexp 1 "$EXP1"; grep -v '^- calibration experiments:' "$T/e.md" >"$T/e4.md"; c3 "$T/e4.md"
+ck a3-orphan-experiment-lines-refused "1 refused: calibration experiments (experiment lines without a calibration experiments line)" "$RC $OUT"
+bash "$ED" Trigger >/dev/null 2>&1; mkdef 46 "$(printf 'x\n\nescaped from: #7\nescaped at level: unit\nshould have fired: Trigger\n')"; bash "$ED" 46 --table "$TBL" >/dev/null 2>&1; ck ed-header-cell-is-not-a-row 1 $?
 
 # ---- the text (one definition per rule, in the existing references)
 has t-hansei-calibration-section "$HA" '### Calibration'

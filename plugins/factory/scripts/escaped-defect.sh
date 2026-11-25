@@ -39,7 +39,7 @@ if [ "$(printf '%s' "$want" | tr '[:upper:]' '[:lower:]')" = none ]; then
   echo "counts against: none (row missing)"
   exit 0
 fi
-row="$(awk -F'|' -v w="$(printf '%s' "$want" | tr '[:upper:]' '[:lower:]')" '/^\|/ { s = $2; gsub(/^[ \t]+|[ \t]+$/, "", s); if (tolower(s) == w) { print s; exit } }' "$table")"
+row="$(awk -F'|' -v w="$(printf '%s' "$want" | tr '[:upper:]' '[:lower:]')" '/^\|/ { if (split($0, c, "|") < 6) next; s = $2; gsub(/^[ \t]+|[ \t]+$/, "", s); if (s == "Trigger" || s ~ /^:?-+:?$/) next; if (tolower(s) == w) { print s; exit } }' "$table")"
 [ -n "$row" ] || { echo "refused: should have fired ($want is not a row of the table; write none when no row fits)"; exit 1; }
 state="not captured: no hansei record on #$from"
 if sj="$(gh issue view "$from" --json comments 2>/dev/null)"; then

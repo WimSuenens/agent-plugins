@@ -110,7 +110,7 @@ echo "       large destination, map route, Heavy band: $LARGE bytes (the small s
 echo "       escalation direct to map: reads the small set first ($SMALL), then wayfinder and beachhead: $ESC bytes in all"
 ck walk-light-item-reads-fewer-bytes-than-today yes "$([ "$SMALL" -lt "$TODAY" ] && echo yes || echo no)"
 ck walk-light-item-never-reads-the-wayfinding-skills yes "$([ "$SMALL" -lt $((SMALL + WAY)) ] && echo yes || echo no)"
-# the slack grew from 2000 to 3500 in #230: run-overrides.md (read at run start) and run-close-run.md gained about 1.4 KB
-ck walk-heavy-item-reads-at-most-run-route-more-than-today yes "$([ "$LARGE" -le $((TODAY + $(bytes "$ROUTE") + (rb - $(old run/SKILL.md)) + 3500)) ] && echo yes || echo no)"
+# the slack grew from 2000 to 3500 in #230 and to 5000 in slice 7 (calibration text in the close-item and improve references): run-overrides.md (read at run start) and run-close-run.md gained about 1.4 KB
+ck walk-heavy-item-reads-at-most-run-route-more-than-today yes "$([ "$LARGE" -le $((TODAY + $(bytes "$ROUTE") + (rb - $(old run/SKILL.md)) + 5000)) ] && echo yes || echo no)"
 ck walk-escalation-set-equals-large-set yes "$([ "$ESC" = "$LARGE" ] && echo yes || echo no)"
 done_

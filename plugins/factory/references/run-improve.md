@@ -12,6 +12,8 @@ Every finding (an andon, repeated rework, a research result) is classified with 
 
 **The next cycle measures it.** At run start, report each applied improvement: write the current reading of each traced measure as `{"<measure>": <value>}` to a scratch file and run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/improvement.sh" report <file>`. It prints before and after per improvement, with `not captured` where it was not measured. Show the lines to the person; an improvement that did not move its measure is the next finding, classified as above.
 
+**A calibration experiment** is the same loop for the flow table: `calibration.sh` proposes at most one row change, the lead decides at the hansei and records it, and the change is measured over the next 3 slices of its band against the band's baseline reading (`references/hansei.md`, *Calibration*; `references/a3.md`, section 11).
+
 The andon, the A3 and the baseline work as before; this section only says where a finding goes and what happens to its countermeasure.
 
 ## Skill graduation

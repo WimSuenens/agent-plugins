@@ -1,0 +1,9 @@
+### Series 3.10
+#### Runs — discipline: off
+- runs: 3 runs: #310 https://example.invalid/issues/310#issuecomment-310; #311 https://example.invalid/issues/311#issuecomment-311; #312 https://example.invalid/issues/312#issuecomment-312
+- not counted: none
+- run timing: raw 3h00m (3 of 3 runs); adjusted not captured (3 of 3 runs: lite; scan skipped); blocked: person 25m (3 of 3 runs), limits 5m (3 of 3 runs), stalled not captured (3 of 3 runs: lite; scan skipped), interrupted 0m (1 of 3 runs, 2 not captured)
+- guardrails: first-pass yield 3 of 3 items passed first time (3 runs); rework per item 0 (3 of 3 items; 3 runs)
+
+#### Runs — discipline: on
+- none (no run in series)

@@ -2,6 +2,19 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.9.1 (#276)
+
+Release: `3.9.1`, a **patch** release: one script changed (`post-text.sh`, the scan that `stage-publish.sh`, `post-file.sh`, `intake.sh` and `improvement.sh` use). Standard text is unchanged, so the `standard` fingerprint is too; `tooling` changes. No migration.
+
+Closes [#276](https://github.com/WimSuenens/agent-plugins/issues/276).
+
+**What changed for the person who runs the factory:**
+
+- **CI stack traces no longer block a push.** The home-path rule no longer flags the home folder of the GitHub-hosted runner account (`runner`, on Linux and macOS runners), so a proof log copied from a GitHub Actions run passes the scan. Every other account is still refused, as is a name that only starts with `runner`, and so is the host's own home folder, even when the factory itself runs on a runner. The exempt account is fixed in the factory; a project cannot extend it.
+- **The scan reads bytes, whatever the locale.** A line with bytes that are not UTF-8 no longer hides its home path or secret (under a UTF-8 locale the scan used to report it clean), and a file with a NUL byte now gets its hits reported with line and kind instead of one garbled line.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-27: standard `fdd9ae1468220ce3e3c8c21e828dbe7ea5fe1bb8304f1fb98f94966ecc97aac3`, tooling `947a13659bc8b183327486e15c9f62bbed8d372a47d3a17e8c4f0c3885bc2b59`.
+
 ## factory 3.9.0 (slice 7 of #207, closes the plan of #187)
 
 Release: `3.9.0`, a **minor** release: standard text changed (`hansei.md`, `a3.md`, `run-improve.md`, `run-close-item.md`, `agents/qa-engineer.md`) and tooling changed (`calibration.sh` and `escaped-defect.sh` are new; `a3-check.sh` learned one optional line). The `standard` fingerprint changes, so a new series starts and the 3.8 figures are indicative, not the "before" of an experiment (`references/baseline.md`, section 6).

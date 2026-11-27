@@ -7,6 +7,11 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 ## Knowledge
 
+- **Run-level figures over item records (#286).** Partition by the item windows, do not dedupe: item waits count only for minutes with an item in flight, run-level rows only for minutes with none, so a minute held in two records still counts once. Bound an item by two instants that live in a record that survives the merge (ledger `started:` and the `approval` touch).
+- **A figure keyed on a comment's own `created_at`** cannot be computed before the post: compute at a stamp, post, then recompute with `created_at` and edit only when the line differs.
+- **`cut-offs.sh --since` filters gaps by start**, so a gap that began before the window is lost: drop `--since` and clip in the consumer.
+- **Version bumps of a marker**: grep the tests for the old "unknown version" case too (`v4` was the skipped example in `test_a3_check.sh`), and keep the sentences other tests pin while adding the new version beside them.
+
 ## Skills used
 
 ## Migrated memory

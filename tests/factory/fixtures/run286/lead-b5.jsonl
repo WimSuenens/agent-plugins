@@ -1,0 +1,17 @@
+{"type":"user","timestamp":"2026-12-01T10:00:30Z","message":{"content":"/factory:run"}}
+{"type":"assistant","timestamp":"2026-12-01T10:01:00Z","message":{"id":"a1113","content":[{"type":"text","text":"working"}]}}
+{"type":"assistant","timestamp":"2026-12-01T10:30:00Z","message":{"id":"a28195","content":[{"type":"text","text":"working"}]}}
+{"type":"assistant","timestamp":"2026-12-01T11:59:00Z","message":{"id":"a24560","content":[{"type":"text","text":"working"}]}}
+{"type":"user","timestamp":"2026-12-01T12:04:00Z","message":{"content":"go on"}}
+{"type":"assistant","timestamp":"2026-12-01T12:05:30Z","message":{"id":"a17036","content":[{"type":"text","text":"working"}]}}
+{"type":"assistant","timestamp":"2026-12-01T12:05:40Z","isApiErrorMessage":true,"error":"rate_limit","message":{"id":"e16712","model":"<synthetic>","content":[{"type":"text","text":"You've hit your session limit"}]}}
+{"type":"user","timestamp":"2026-12-01T12:20:00Z","message":{"content":"continue"}}
+{"type":"assistant","timestamp":"2026-12-01T12:20:10Z","message":{"id":"a15117","content":[{"type":"text","text":"working"}]}}
+{"type":"assistant","timestamp":"2026-12-01T12:30:20Z","message":{"id":"a29413","content":[{"type":"text","text":"working"}]}}
+{"type":"user","timestamp":"2026-12-01T12:40:00Z","isMeta":true,"message":{"role":"user","content":"Your response above was cut off mid-stream and only your next message is delivered. Write the complete response again from the start."}}
+{"type":"assistant","timestamp":"2026-12-01T12:41:30Z","message":{"id":"a24405","content":[{"type":"text","text":"working"}]}}
+{"type":"assistant","timestamp":"2026-12-01T13:00:05Z","message":{"id":"a22868","content":[{"type":"text","text":"working"}]}}
+{"type":"assistant","timestamp":"2026-12-01T13:05:00Z","isApiErrorMessage":true,"error":"server_error","message":{"id":"e13022","model":"<synthetic>","content":[{"type":"text","text":"API Error: Your computer went to sleep mid-response."}]}}
+{"type":"user","timestamp":"2026-12-01T13:07:00Z","message":{"content":"continue"}}
+{"type":"assistant","timestamp":"2026-12-01T13:07:59Z","message":{"id":"a32720","content":[{"type":"text","text":"working"}]}}
+{"type":"assistant","timestamp":"2026-12-01T13:50:00Z","message":{"id":"a28264","content":[{"type":"text","text":"working"}]}}

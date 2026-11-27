@@ -12,7 +12,7 @@ Closes [#276](https://github.com/WimSuenens/agent-plugins/issues/276).
 
 - **CI stack traces no longer block a push.** The home-path rule no longer flags the home folder of the GitHub-hosted runner account (`runner`, on Linux and macOS runners), so a proof log copied from a GitHub Actions run passes the scan. Every other account is still refused, as is a name that only starts with `runner`, and so is the host's own home folder, even when the factory itself runs on a runner. The exempt account is fixed in the factory; a project cannot extend it.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-27: standard `fdd9ae1468220ce3e3c8c21e828dbe7ea5fe1bb8304f1fb98f94966ecc97aac3`, tooling `408e19f178eb4b03d022c83d2172115a373c891533edd25bb3dcdf8236db4f45`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-27: standard `fdd9ae1468220ce3e3c8c21e828dbe7ea5fe1bb8304f1fb98f94966ecc97aac3`, tooling `89bdb6cca26ad5697bf21d84587844aeb092704dc099b083e2edfd2d1b6589bd`.
 
 ## factory 3.9.0 (slice 7 of #207, closes the plan of #187)
 

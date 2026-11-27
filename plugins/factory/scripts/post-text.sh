@@ -5,6 +5,7 @@
 #        bash post-text.sh elide <in> <out> <ref> [--max <bytes>]
 #        bash post-text.sh split <in> <outdir>
 # scan: prints "scan: <basename>:<line>: home-path | secret | work-path" per hit; it never prints the text itself.
+#       A home path is a user folder or the host's own $HOME; the GitHub-hosted runner account's folder is none (#276), unless it is $HOME.
 #       --needs-you also flags a path under work/<n>, work/frontier-<n>, work/settle-<n> and a branch item/<n>, frontier/<n> or settle/<n>.
 #       A canary self-check runs first; a canary that does not hit prints "scan: self-check failed (<name>)" on stderr and exits 2.
 # render: checks Status and a Summary of at most 10 lines first (exit 3), then scans the draft (a hit: the scan lines on stderr, no output file, exit 1; the self-check failing: exit 2); then writes the marker, Status, Abnormality and Summary visible, every other field of the draft inside one <details>, byte for byte.
@@ -71,12 +72,13 @@ case "$cmd" in
       '[A-Za-z]:[\\/][Uu]sers[\\/][^\\/ '"$(printf '\t')"']+'
     )
     HOMEC=("/Us""ers/someone/x" "/ho""me/someone/x" 'C:\Us''ers\someone')
-    # the GitHub-hosted runner account names no person: its home folder (CI stack traces in proof logs) is not a home path for the two
-    # generic shapes above; any other account, a name that only starts with it, and the host's own $HOME below are still refused (#276).
-    # Fixed here on purpose: a project cannot widen this list.
+    # the GitHub-hosted runner account names no person: its home folder (CI stack traces in proof logs) is not a home path for the
+    # shapes above; any other account, a name that only starts with it, and the host's own $HOME below are still refused (#276).
+    # Fixed here on purpose: a project cannot add an account. The rewrite keeps the rules' left boundary and leaves a word in place of
+    # the folder, so it neither hides an account around it nor makes a folder inside it look like a new home path.
     CI_ACCOUNT=runner
-    CI_EXEMPT='s#/(Us''ers|ho''me)/'"$CI_ACCOUNT"'($|[^A-Za-z0-9_.~-])#@\2#g'
-    NGEN=2   # HOMEP[0] and HOMEP[1] are the generic shapes the exemption applies to
+    CI_EXEMPT='s#(^|[^A-Za-z0-9_.~-])/(Us''ers|ho''me)/'"$CI_ACCOUNT"'($|[^A-Za-z0-9_.~-])#\1CIHOME\3#g'
+    HOST_HOME_RULE=${#HOMEP[@]}   # the index of the $HOME rule below: the one rule the exemption never applies to
     # the literal value of the host's $HOME (not empty, not `/`): a guest account's folder (the root account's, say) is a host path only when it is the host's home (#252)
     hh="${HOME%/}"
     if [ -n "$hh" ]; then
@@ -110,11 +112,8 @@ case "$cmd" in
       hits=""
       i=0
       for p in "${HOMEP[@]}"; do
-        if [ $i -lt $NGEN ]; then
-          hits="$hits$(LC_ALL=C sed -E "$CI_EXEMPT" "$f" | LC_ALL=C grep -En -e "$p" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
-        else
-          hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
-        fi
+        x="$CI_EXEMPT"; [ $i = "$HOST_HOME_RULE" ] && x=''
+        hits="$hits$(LC_ALL=C sed -E "$x" "$f" | LC_ALL=C grep -En -e "$p" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
         i=$((i + 1))
       done
       for p in "${SP[@]}"; do

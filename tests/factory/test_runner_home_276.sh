@@ -20,6 +20,12 @@ printf 'cd %s/runner.bak/x\n' "$HM" >p2.log; bash "$PT" scan p2.log >/dev/null; 
 # another account is still refused, also on a line that holds a runner path too
 printf 'cd %s/alice/x\n' "$HM" >o1.log; bash "$PT" scan o1.log >/dev/null; ck other-account-refused 1 "$?"
 printf 'cp %s/runner/work/a %s/alice/b\n' "$HM" "$HM" >o2.log; out="$(bash "$PT" scan o2.log)"; ck other-account-beside-runner-refused-rc 1 "$?"; ck other-account-beside-runner-line "scan: o2.log:1: home-path" "$out"
+printf 'cd %s/bob/x\n' "$US" >o4.log; bash "$PT" scan o4.log >/dev/null; ck other-mac-account-refused 1 "$?"
+# an account whose name is the home directory's own name, with the runner path inside it, is still refused (the exemption needs the same left boundary as the rule)
+printf 'cd %s/home/runner/x\n' "$HM" >o5.log; bash "$PT" scan o5.log >/dev/null; ck account-home-holding-runner-path-refused 1 "$?"
+printf 'cd %s/Users/runner/x\n' "$US" >o6.log; bash "$PT" scan o6.log >/dev/null; ck account-users-holding-runner-path-refused 1 "$?"
+# a folder named home inside the runner's home is not another account's home
+printf 'at %s/runner/home/alice/x\n' "$HM" >ci4.log; bash "$PT" scan ci4.log; ck home-folder-inside-runner-home-passes 0 "$?"
 printf 'C:\\%s\\bob\\x\n' "${US#/}" >o3.log; bash "$PT" scan o3.log >/dev/null; ck windows-home-refused 1 "$?"
 # the host's own home is refused even when it is the runner's folder (the factory running inside CI)
 ( HOME="$HM/runner"; bash "$PT" scan ci.log >/dev/null ); ck runner-as-host-home-refused 1 "$?"

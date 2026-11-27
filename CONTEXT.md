@@ -131,6 +131,9 @@ _Avoid_: Obeya (alone, when the room or the discipline is meant), daily stand-up
 
 **Run waits** — the table in the map's Factory run section for waits that belong to no item (a question between items, a limit, a stall or an interruption of the Lead). Waits inside an item stay in its ledger. See [0025](docs/adr/0025-a-whole-run-block-is-computed-from-the-item-ledgers-and-a-run-waits-table.md).
 
+**Runs section** — the part of a baseline series block that reads whole runs, not items: one run is one sample, split by whether the Obeya discipline was on or off, each figure a median with how many runs it came from. Runs are compared within one series only; a stopped run is named but not counted. Its source is each run's A3. See [0026](docs/adr/0026-the-run-level-reading-is-its-own-a3-block-and-baseline-runs-section.md).
+_Avoid_: run baseline (the baseline is one issue)
+
 **Lens** — a view that reads the repo and the tracker and holds no truth of its own: edit the source and the view follows. The Obeya room is one.
 _Avoid_: report, store
 

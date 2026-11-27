@@ -149,9 +149,18 @@ for m in $MUTS; do
   ck "c2-v4-same-v3-refusals-$m" "$w" "$RC $(printf '%s\n' "$OUT" | grep -vE '^refused: (run timing|discipline|run compared|guardrails) ')"
   ck "c2-v3-fixture-is-refused-$m" 1 "${w%% *}"
 done
-# the suite's out-of-order v3 fixture (not detectable moved after baseline) gives `still uncertain (out of order)` as v3; as v4 the four lines then
-# sit before `not detectable` in the file, so an order check over all keys flags `run timing` and no longer `still uncertain`.
-skip c2-v4-same-v3-refusals-not-detectable-after-baseline "QA-286 open question Q1: AC-C2 and the out-of-order rule disagree on this fixture; lead to decide"
+# the suite's out-of-order v3 fixture (test_slice2_loop.sh item1-out-of-order: not detectable moved after baseline). Contract 286-a3-v4-and-runs
+# section 3, the two order tracks (QA-286 Q1, option B): the v3 track flags `still uncertain` as at v3; the v4 track flags `run timing`, now before
+# its start position (the moved `not detectable` line). The four lines stay where they are.
+mvnd() { awk '/^- not detectable from records:/ { n = $0; next } { print } /^- baseline:/ { print n }' "$1"; }
+mvnd "$V3" > "$T/ooo3.md"; c4 "$T/ooo3.md"; w="$RC $OUT"
+ck c2-out-of-order-v3 "1 refused: still uncertain (out of order)" "$w"
+mvnd "$V4" > "$T/ooo4.md"; c4 "$T/ooo4.md"
+ck c2-out-of-order-v4-two-tracks "1 refused: run timing (out of order)|refused: still uncertain (out of order)" "$RC $(printf '%s\n' "$OUT" | paste -sd'|' -)"
+ck c2-v4-same-v3-refusals-not-detectable-after-baseline "$w" "$RC $(printf '%s\n' "$OUT" | grep -vE '^refused: (run timing|discipline|run compared|guardrails) ')"
+# the v4 track's upper bound: guardrails after the first line of `still uncertain`; the v3 track sees no change
+awk -v g="$(grep '^- guardrails: ' "$V4")" '/^- guardrails: / { next } { print } /^- answer: / { print g }' "$V4" > "$T/m.md"; c4 "$T/m.md"
+ck c1-guardrails-after-answer "1 refused: guardrails (out of order)" "$RC $OUT"
 
 # ---------- the standard text (a3.md): sections 4 to 7 unchanged (AC-C2), the v4 subsection, the check's header ----------
 s47() { awk '/^## 4\. / { on = 1 } /^## 8\. / { on = 0 } on'; }

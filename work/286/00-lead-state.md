@@ -41,5 +41,5 @@ none
 | Id | Raised (UTC) | Kind | Raised by | Paused agent | Resumed (UTC) | Andon comment | Override |
 |---|---|---|---|---|---|---|---|
 | A1 | 2026-11-27T23:17Z | 6 version-drift | lead | - | 2026-11-27T23:17Z | https://github.com/WimSuenens/agent-plugins/issues/286#issuecomment-7230030646 | none |
-| A2 | 2026-11-27T23:50Z | 1 blocked-input | qa-engineer | - | RESUMED2 | URL2 | none |
-| A3 | 2026-11-27T23:50Z | 1 blocked-input | qa-engineer | - | RESUMED3 | URL3 | none |
+| A2 | 2026-11-27T23:50Z | 1 blocked-input | qa-engineer | - | 2026-11-27T23:51Z | https://github.com/WimSuenens/agent-plugins/issues/286#issuecomment-7230460127 | none |
+| A3 | 2026-11-27T23:50Z | 1 blocked-input | qa-engineer | - | 2026-11-27T23:51Z | https://github.com/WimSuenens/agent-plugins/issues/286#issuecomment-7230460399 | none |

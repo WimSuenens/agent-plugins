@@ -71,6 +71,12 @@ case "$cmd" in
       '[A-Za-z]:[\\/][Uu]sers[\\/][^\\/ '"$(printf '\t')"']+'
     )
     HOMEC=("/Us""ers/someone/x" "/ho""me/someone/x" 'C:\Us''ers\someone')
+    # the GitHub-hosted runner account names no person: its home folder (CI stack traces in proof logs) is not a home path for the two
+    # generic shapes above; any other account, a name that only starts with it, and the host's own $HOME below are still refused (#276).
+    # Fixed here on purpose: a project cannot widen this list.
+    CI_ACCOUNT=runner
+    CI_EXEMPT='s#/(Us''ers|ho''me)/'"$CI_ACCOUNT"'($|[^A-Za-z0-9_.~-])#@\2#g'
+    NGEN=2   # HOMEP[0] and HOMEP[1] are the generic shapes the exemption applies to
     # the literal value of the host's $HOME (not empty, not `/`): a guest account's folder (the root account's, say) is a host path only when it is the host's home (#252)
     hh="${HOME%/}"
     if [ -n "$hh" ]; then
@@ -102,8 +108,14 @@ case "$cmd" in
       fi
       b="$(basename "$f")"
       hits=""
+      i=0
       for p in "${HOMEP[@]}"; do
-        hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
+        if [ $i -lt $NGEN ]; then
+          hits="$hits$(LC_ALL=C sed -E "$CI_EXEMPT" "$f" | LC_ALL=C grep -En -e "$p" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
+        else
+          hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
+        fi
+        i=$((i + 1))
       done
       for p in "${SP[@]}"; do
         hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ secret/')"$'\n'

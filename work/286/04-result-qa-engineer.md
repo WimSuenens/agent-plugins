@@ -2,8 +2,8 @@
 Status: working
 Abnormality: none
 Progress:
-  Done: brief read and checked (author and marker match)
-  Next: read requirement and contracts, write targeted tests under tests/factory/
+  Done: brief checked (81bffa6); run-timing and run-state tests (2bb4031); a3-check v4 tests and Runs expectations (756f44f); Runs replay (5c2247f); pins moved and text pins (5f03c47)
+  Next: validate the new tests against a throwaway reference build in the scratchpad, then write the result
 Summary: in progress
 Artifacts: none yet
 Decisions: none

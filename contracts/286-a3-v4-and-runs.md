@@ -93,7 +93,12 @@ A run whose section had no `started:` line:
 
 Unchanged for v1, v2 and v3: every fixture of the suite gives the same stdout and exit as on `main` (AC-C1). For a v4 A3 every v3 check runs as for v3 (so a v3 refusal fixture with the marker set to v4 and the four lines added gives the same `refused:` lines for the v3 keys, AC-C2), plus the checks below. Output and exits as today: `ok v4` exit 0; one `refused: <key> (<reason>)` per finding in template order, exit 1; `skipped: A3 marker v<n> (version not known)` exit 3 for any version other than 1 to 4 (so `v5` now exits 3, and `v4` no longer does); exit 2 usage. The header comment lists v4.
 
-Key order: the four keys sit after `calibration experiments` and before `still uncertain` in the template order the script checks. Refusals (exact reason texts):
+Key order: the four keys sit after `calibration experiments` and before `still uncertain` in the template order the script checks, and every refusal is printed in that template order. **The order is checked in two tracks** (QA-286 Q1; so AC-C2 holds as written, also for an `out of order` refusal):
+
+- *v3 track.* The order check of the v1 to v3 keys runs exactly as on `main`, over those keys alone: a v4 key never moves the previous position, so a v3 key is `out of order` in a v4 A3 exactly when it is in the same A3 at v3.
+- *v4 track.* The four keys, in their order. Its start position is the previous position the v3 track holds after `calibration experiments` (the first line of the last v3 key it checked before `still uncertain`). A present key of the four is `out of order` when its first line is before the previous position (the start position, or the first line of the previous present key of the four), or after the first line of the first key present after the four in template order (`still uncertain`, else the next present one; none present, no upper bound). As in the v3 track, the previous position then moves to the key's own first line, also when it was refused; a missing key leaves it.
+
+Search terms for other texts stating the order rule: `out of order`, `template order`, `fixed order` (over `plugins/`, `docs/factory/`, `README.md`, `CONTEXT.md`); only `a3-check.sh` states it (lines 5 and 120 on `main`), and `a3.md`'s *Fixed lines, fixed order* stays true. Refusals (exact reason texts):
 
 | Key | Reason | When |
 |---|---|---|
@@ -114,6 +119,15 @@ Key order: the four keys sit after `calibration experiments` and before `still u
 Only the first `run timing` reason that applies is printed (grammar first). The check reads nothing but its argument, as today.
 
 **Worked example.** The §2.5 block inserted into the suite's `tests/factory/fixtures/a3/v3-ok.md` with the marker set to v4 → `ok v4`, exit 0. The same with `- discipline: maybe` → `refused: discipline (not off or on)`, exit 1. With `run timing` and `discipline` swapped → `refused: discipline (out of order)` (the second key found before the first), exit 1. With `blocked: person 1h05m, limits 15m, stalled 0m` (interrupted left out) → `refused: run timing (not in its grammar)`. With `adjusted 2h50m` → `refused: run timing (adjusted is not raw less the blocked minutes)`. With `run compared: none (first run)` → `refused: run compared (reason not in the table)`. The marker `v5` → `skipped: A3 marker v5 (version not known)`, exit 3.
+
+**Worked example, the two order tracks.** The suite's out-of-order fixture is `v3-ok.md` with `- not detectable from records:` moved to directly after `- baseline:`; as v3 it gives `refused: still uncertain (out of order)`, exit 1 (as on `main`). The same move in `tests/factory/fixtures/a3/v4-ok.md` (the four lines stay where they are) gives, exit 1:
+
+```
+refused: run timing (out of order)
+refused: still uncertain (out of order)
+```
+
+`run timing` is before the start position (the moved `not detectable` line); `still uncertain` is refused by the v3 track as at v3. Without the `run timing` line, the v3 keys' `refused:` lines equal the v3 output (AC-C2). `v4-ok.md` with `- guardrails:` moved to after `- answer:` → `refused: guardrails (out of order)` only, exit 1 (after the first line of `still uncertain`; the v3 track sees no change).
 
 ## 4. Seam: the baseline's Runs section (`references/baseline.md`)
 
@@ -142,7 +156,7 @@ Every series block (the current one, even with `0 items`, and each history one) 
 
 - `runs`: the **counted** runs in `created_at` order; `- runs: 0 runs` when none is counted.
 - `not counted`: one entry per v4 A3 of that half that is not counted, in `created_at` order: `run stopped #<map> <A3 url>` when its `run` line reads `run stopped` (AC-C4; it wins over the next), else `run timing not captured (\`<reason>\`) #<map> <A3 url>` when its `run timing` line is a whole-line `not captured` (AC-B2; the reason cut and neutralised in a code span, section 1). `none` when every run is counted.
-- `<Rr>` (R1 over runs, `j` counted runs): `<median> (<k> of <j> runs)` with `, <m> not captured` before the `)` when `m > 0` (a slot such as `stalled not captured (lite)` is not captured for that run); `not captured (<m> of <j> runs: <reasons>)` when `k = 0`; `not captured (no counted run)` for every slot when `j = 0`. Medians of minutes round half up to the whole minute and are written as `<dur>` (section 4, R1).
+- `<Rr>` (R1 over runs, `j` counted runs): `<median> (<k> of <j> runs)` with `, <m> not captured` before the `)` when `m > 0` (a slot such as `stalled not captured (lite)` is not captured for that run); `not captured (<m> of <j> runs: <reasons>)` when `k = 0`, where `<reasons>` are the runs' reasons for that slot (the text inside the slot's `not captured (…)`), copied as written, **each distinct reason once**, in the order it first appears (runs in `created_at` order), **separated by `; `** (`m` still counts runs, not reasons); `not captured (no counted run)` for every slot when `j = 0`. Medians of minutes round half up to the whole minute and are written as `<dur>` (section 4, R1).
 - `<G1>` (R2 over the items of the counted runs): `<P> of <N> items passed first time (<j> runs)`, with `, <C> not captured` after `time` when `C > 0`, where `P`, `N`, `C` add up the `p`, `n`, `c` of the runs' A3 lines (a run reading `first-pass yield not captured (<c> of <n> items)` adds `0`, `n`, `c`); `not captured (<C> of <N> items; <j> runs)` when `P = 0` and `C = N`.
 - `<G2>` (R1 over the items of the counted runs): the median of every value listed in the runs' `rework per item` slots, `<median> (<K> of <N> items; <j> runs)` with `, <M> not captured` after `items` when `M > 0`; a half kept as `.5`; `not captured (<M> of <N> items; <j> runs)` when `K = 0`.
 - When `j = 0`: `- guardrails: not captured (no counted run)`.
@@ -161,6 +175,14 @@ Series 3.10 with one v4 A3 (the §2.5 block, `run: #278 — closed`, `https://ex
 #### Runs — discipline: on
 - none (no run in series)
 ```
+
+**Worked example, `<reasons>`.** Two counted `off` runs, both closed under `--lite`: `#278` with `raw 4h00m; adjusted not captured (lite); blocked: person 1h05m, limits 15m, stalled not captured (lite), interrupted not captured (lite)` and `#301` with `raw 2h00m; adjusted not captured (lite); blocked: person 25m, limits 5m, stalled not captured (lite), interrupted not captured (lite)`. The line reads (`lite` once, not `lite; lite`):
+
+```
+- run timing: raw 3h00m (2 of 2 runs); adjusted not captured (2 of 2 runs: lite); blocked: person 45m (2 of 2 runs), limits 10m (2 of 2 runs), stalled not captured (2 of 2 runs: lite), interrupted not captured (2 of 2 runs: lite)
+```
+
+The separator, for a slot with two reasons: three runs whose `stalled` slots read `not captured (lite)`, `not captured (scan skipped)`, `not captured (lite)` give `stalled not captured (3 of 3 runs: lite; scan skipped)`. (`scan skipped` is illustrative: this release writes `lite` as the only slot reason; the `not captured` grammar of §3 admits others.)
 
 A history series, or a current series with no v4 A3, ends with both headings each followed by `- none (no run in series)`. AC-C6's post-merge reading is the first block above with this repo's own values (`1 of 1 runs`, raw and adjusted equal to the A3's).
 
@@ -187,7 +209,7 @@ A history series, or a current series with no v4 A3, ends with both headings eac
 | A1 | the sandbox A3 starts `<!-- factory:a3 v4 -->`, has the four lines with `discipline: off`, and `a3-check.sh` prints `ok v4` | §2, §3 |
 | B2 | `a3-check.sh` accepts the second block of §2.5; the Runs section shows `not counted: run timing not captured (\`run section has no started: line\`) #<map> <url>` | §3, §4.2 |
 | C1 | `ok v4` for a valid v4 fixture; `refused: <key> (…)` for each control of AC-C1 with the reasons of §3; v1–v3 fixtures unchanged; `v5` exits 3 | §3 |
-| C2 | `a3.md` sections 4–7 byte-identical to `main`; each v3 refusal fixture as v4 plus the four lines gives the same v3 `refused:` lines | §2, §3 |
+| C2 | `a3.md` sections 4–7 byte-identical to `main`; each v3 refusal fixture as v4 plus the four lines gives the same v3 `refused:` lines, the out-of-order fixture included (the two order tracks, §3) | §2, §3 |
 | C3 | a Runs section replayed from v4 A3 fixtures alone, reading only the five lines; no v1–v3 A3 read; `- none (no run in series)` for an empty half | §4 |
 | C4 | a `run stopped` v4 A3 is named under `not counted` and is in no median and no `j` | §4.2 |
 | C5 | the #62 body as a fixture: *Find baseline* finds it before and after; first line unchanged; every earlier section and figure present; only Runs blocks added | §4.4 |

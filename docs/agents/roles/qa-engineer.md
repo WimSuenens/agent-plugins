@@ -15,6 +15,9 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 - Helpers shared by two site test files go in a non-`.test.mjs` module (`oracle.mjs`, `oracle-agents.mjs`): importing one test file from another registers its tests and hooks again.
 - Run the site suite as `node --test --test-concurrency=1 tests/site/*.test.mjs` (a directory argument runs nothing; the whole suite takes about 4 minutes). A loader written as a plain `.mjs` is tested directly by `import()` for exact messages, and through `PLUGINS_DIR` builds for the page.
 - A worktree has no `apps/site/node_modules` until `npm ci` there; a throwaway reference worktree can symlink it.
+- Order refusals across A3 versions (286): when a new version inserts keys in the middle of the template order, a fixture that moves an old key changes which key is flagged `out of order`. A "same refused lines as the old version" criterion cannot hold for that fixture. Check this on the reference build and ask; do not pin it.
+- Before the build, a refusal check that expects `exit 2` passes vacuously, because an unknown subcommand also exits 2 with usage. Pair it with a positive check of the same subcommand, and say so in the result.
+- An awk helper that moves a key line up must read that line first (`-v g="$(grep …)"`). Capturing it while streaming finds it empty when the target line comes earlier.
 - `paths.sh check` takes the contract glob as a quoted literal prefix argument; an unquoted `contracts/<id>-*.md` is expanded by the shell and every contract then reads as off-list.
 
 ## Skills used

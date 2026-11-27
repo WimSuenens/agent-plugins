@@ -127,6 +127,10 @@ _Avoid_: dashboard (it shows no number of its own and writes nothing)
 **Obeya discipline** — the opt-in working practice of #66, apart from the Obeya room: event-driven checkpoints, of which discovery readiness before building is new (the decision card, andon, item close and run close already exist). Switched per project by its own line `obeya-discipline: on|off`, off when absent. The run-level timing that judges it is not part of the switch: every run captures it. See [0024](docs/adr/0024-the-obeya-discipline-has-its-own-opt-in-line.md).
 _Avoid_: Obeya (alone, when the room or the discipline is meant), daily stand-up
 
+**Whole-run block** — a minute in which the whole run stands still: every item in flight waits (held), or no item is in flight and the run itself waits. Four kinds, reported apart: the person, a usage limit, a stall, an interruption; an andon is not one. Computed at run close, never stored; the **adjusted run duration** is the run's duration less these minutes. See [0025](docs/adr/0025-a-whole-run-block-is-computed-from-the-item-ledgers-and-a-run-waits-table.md).
+
+**Run waits** — the table in the map's Factory run section for waits that belong to no item (a question between items, a limit, a stall or an interruption of the Lead). Waits inside an item stay in its ledger. See [0025](docs/adr/0025-a-whole-run-block-is-computed-from-the-item-ledgers-and-a-run-waits-table.md).
+
 **Lens** — a view that reads the repo and the tracker and holds no truth of its own: edit the source and the view follows. The Obeya room is one.
 _Avoid_: report, store
 

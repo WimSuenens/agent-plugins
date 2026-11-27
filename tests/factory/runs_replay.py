@@ -102,7 +102,7 @@ def slot_fig(runs, key):
             reasons.append(re.match(NC, s).group(1))
     k, m = len(vals), len(reasons)
     if k == 0:
-        # READING: the reasons of a k = 0 slot, each once, in run order, joined by '; ' (the contract names no separator: QA-286 open question Q2)
+        # the reasons of a k = 0 slot, each distinct one once, in first-seen run order, joined by '; ' (contract 286-a3-v4-and-runs section 4.2; fixture E5)
         seen = []
         for x in reasons:
             if x not in seen:

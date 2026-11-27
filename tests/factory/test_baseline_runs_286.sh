@@ -48,7 +48,7 @@ EOF
   done
 }
 # each v4 A3 built for the replay passes the check (once the check knows v4): the fixtures are A3s the standard can post
-for n in c278 c300 c301 c302 c303 c240; do
+for n in c278 c300 c301 c302 c303 c240 c310 c311 c312; do
   mkjsonl "$n" > /dev/null
   OUT="$(/bin/bash "$PLUGIN/scripts/a3-check.sh" "$T/body-$n.md" 2>/dev/null)"; RC=$?; ck "fixture-$n-passes-a3-check" "0 ok v4" "$RC $OUT"
 done

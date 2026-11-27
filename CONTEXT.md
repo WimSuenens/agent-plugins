@@ -124,6 +124,9 @@ _Avoid_: queue, backlog (the backlog is the tracker's)
 **Obeya room** — the opt-in, read-only web application a project owner starts with one command to see the project's direction, decisions, board, andon and intake queue in one place. A lens over the project, not a store. See [0019](docs/adr/0019-the-obeya-is-a-lens-and-holds-no-truth.md), [0020](docs/adr/0020-the-obeya-is-a-nuxt-4-container-image-on-ghcr.md), [0021](docs/adr/0021-the-obeya-stays-read-only-until-write-back-and-its-auth-are-decided.md).
 _Avoid_: dashboard (it shows no number of its own and writes nothing)
 
+**Obeya discipline** — the opt-in working practice of #66, apart from the Obeya room: event-driven checkpoints, of which discovery readiness before building is new (the decision card, andon, item close and run close already exist). Switched per project by its own line `obeya-discipline: on|off`, off when absent. The run-level timing that judges it is not part of the switch: every run captures it. See [0024](docs/adr/0024-the-obeya-discipline-has-its-own-opt-in-line.md).
+_Avoid_: Obeya (alone, when the room or the discipline is meant), daily stand-up
+
 **Lens** — a view that reads the repo and the tracker and holds no truth of its own: edit the source and the view follows. The Obeya room is one.
 _Avoid_: report, store
 

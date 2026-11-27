@@ -1,0 +1,9 @@
+### Series 3.10
+#### Runs — discipline: off
+- runs: 1 runs: #278 https://example.invalid/issues/278#issuecomment-278
+- not counted: run stopped #300 https://example.invalid/issues/300#issuecomment-300
+- run timing: raw 4h00m (1 of 1 runs); adjusted 2h40m (1 of 1 runs); blocked: person 1h05m (1 of 1 runs), limits 15m (1 of 1 runs), stalled 0m (1 of 1 runs), interrupted 0m (1 of 1 runs)
+- guardrails: first-pass yield 1 of 2 items passed first time (1 runs); rework per item 0.5 (2 of 2 items; 1 runs)
+
+#### Runs — discipline: on
+- none (no run in series)

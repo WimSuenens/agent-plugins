@@ -1,0 +1,5 @@
+# scenario	A3s (Find A3s order: created_at ascending)	series with a block on the page	what it shows
+E1	c278,c300	3.10	the contract's worked example (286-a3-v4-and-runs section 4.3): AC-C4, run stopped not counted
+E2	c250,c278,c300,c301,c302	3.10	AC-B2 (not captured named, not counted), AC-C3 (a v3 A3 is never read for runs; the on half)
+E3	c278,c300,c303	3.10	two counted runs: medians round half up, guardrails added up over items (R2) and median over items (R1)
+E4	c240,c278	3.10,3.9	a series with no v4 A3 shows both halves as none; an A3 whose series has no block is skipped and named

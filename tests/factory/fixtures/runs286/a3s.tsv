@@ -1,0 +1,9 @@
+# name	marker	map	run state	series	created_at	run timing	discipline	guardrails
+# One v4 A3 per line (v3 rows carry the marker only). The test builds each body from tests/factory/fixtures/a3/v4-ok.md with these values.
+c278	v4	278	closed	3.10	2026-12-01T14:00:27Z	raw 4h00m; adjusted 2h40m; blocked: person 1h05m, limits 15m, stalled 0m, interrupted 0m	off	first-pass yield 1 of 2 items passed first time; rework per item 0, 1 (2 of 2 items)
+c300	v4	300	run stopped	3.10	2026-12-03T09:00:00Z	raw 1h00m; adjusted 1h00m; blocked: person 0m, limits 0m, stalled 0m, interrupted 0m	off	first-pass yield 0 of 1 items passed first time; rework per item 4 (1 of 1 items)
+c301	v4	301	closed	3.10	2026-12-04T09:00:00Z	not captured (run section has no started: line)	off	first-pass yield 1 of 1 items passed first time; rework per item 0 (1 of 1 items)
+c302	v4	302	closed	3.10	2026-12-05T09:00:00Z	raw 2h00m; adjusted 1h50m; blocked: person 10m, limits 0m, stalled 0m, interrupted 0m	on	first-pass yield 1 of 1 items passed first time; rework per item 2 (1 of 1 items)
+c303	v4	303	closed	3.10	2026-12-06T09:00:00Z	raw 3h01m; adjusted 2h01m; blocked: person 30m, limits 20m, stalled 10m, interrupted 0m	off	first-pass yield 2 of 3 items passed first time, 1 not captured; rework per item 1, 3 (2 of 3 items, 1 not captured)
+c250	v3	250	closed	3.10	2026-11-30T09:00:00Z	-	-	-
+c240	v4	240	closed	3.8	2026-11-20T09:00:00Z	raw 1h00m; adjusted 1h00m; blocked: person 0m, limits 0m, stalled 0m, interrupted 0m	off	first-pass yield 1 of 1 items passed first time; rework per item 0 (1 of 1 items)

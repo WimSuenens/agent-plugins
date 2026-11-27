@@ -31,6 +31,8 @@ cmd="${1:-}"
 [ $# -gt 0 ] && shift
 case "$cmd" in
   scan)
+    # bytes, not characters: under a UTF-8 locale a line that is not UTF-8 makes cut, sed and awk fail and its hits vanish
+    export LC_ALL=C
     needs=0
     if [ "${1:-}" = "--needs-you" ]; then needs=1; shift; fi
     [ $# -ge 1 ] || usage
@@ -72,18 +74,20 @@ case "$cmd" in
       '[A-Za-z]:[\\/][Uu]sers[\\/][^\\/ '"$(printf '\t')"']+'
     )
     HOMEC=("/Us""ers/someone/x" "/ho""me/someone/x" 'C:\Us''ers\someone')
+    HOMEX=(1 1 0)   # per rule above: 1 when the runner exemption below applies (the two Unix shapes, never the Windows one)
     # the GitHub-hosted runner account names no person: its home folder (CI stack traces in proof logs) is not a home path for the
-    # shapes above; any other account, a name that only starts with it, and the host's own $HOME below are still refused (#276).
+    # Unix shapes above; any other account, a name that only starts with it, and the host's own $HOME below are still refused (#276).
     # Fixed here on purpose: a project cannot add an account. The rewrite keeps the rules' left boundary and leaves a word in place of
-    # the folder, so it neither hides an account around it nor makes a folder inside it look like a new home path.
+    # the folder, so it neither hides an account around it nor makes a folder inside it look like a new home path. It runs until
+    # nothing is left to rewrite, not with g: a match uses up its right boundary, which is the left boundary of a runner path next to it.
     CI_ACCOUNT=runner
-    CI_EXEMPT='s#(^|[^A-Za-z0-9_.~-])/(Us''ers|ho''me)/'"$CI_ACCOUNT"'($|[^A-Za-z0-9_.~-])#\1CIHOME\3#g'
-    HOST_HOME_RULE=${#HOMEP[@]}   # the index of the $HOME rule below: the one rule the exemption never applies to
+    CI_EXEMPT='s#(^|[^A-Za-z0-9_.~-])/(Us''ers|ho''me)/'"$CI_ACCOUNT"'($|[^A-Za-z0-9_.~-])#\1CIHOME\3#'
     # the literal value of the host's $HOME (not empty, not `/`): a guest account's folder (the root account's, say) is a host path only when it is the host's home (#252)
     hh="${HOME%/}"
     if [ -n "$hh" ]; then
       HOMEP[${#HOMEP[@]}]="(^|[^A-Za-z0-9_.~-])$(printf '%s' "$hh" | sed 's/[][\\.^$*+?(){}|/]/\\&/g')(\$|[^A-Za-z0-9_.~-])"
       HOMEC[${#HOMEC[@]}]="$hh/x"
+      HOMEX[${#HOMEX[@]}]=0
     fi
     i=0
     while [ $i -lt ${#SP[@]} ]; do
@@ -110,18 +114,22 @@ case "$cmd" in
       fi
       b="$(basename "$f")"
       hits=""
+      # -a: a NUL byte must not turn the file into one "Binary file matches" line without a line number
       i=0
       for p in "${HOMEP[@]}"; do
-        x="$CI_EXEMPT"; [ $i = "$HOST_HOME_RULE" ] && x=''
-        hits="$hits$(LC_ALL=C sed -E "$x" "$f" | LC_ALL=C grep -En -e "$p" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
+        if [ "${HOMEX[$i]}" = 1 ]; then
+          hits="$hits$(sed -E -e ':a' -e "$CI_EXEMPT" -e 'ta' "$f" | grep -aEn -e "$p" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
+        else
+          hits="$hits$(grep -aEn -e "$p" "$f" | cut -d: -f1 | sed 's/$/ home-path/')"$'\n'
+        fi
         i=$((i + 1))
       done
       for p in "${SP[@]}"; do
-        hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ secret/')"$'\n'
+        hits="$hits$(grep -aEn -e "$p" "$f" | cut -d: -f1 | sed 's/$/ secret/')"$'\n'
       done
       if [ "$needs" = 1 ]; then
         for p in '(^|[^A-Za-z0-9_])work/([0-9]|frontier-[0-9]|settle-[0-9])' '(^|[^A-Za-z0-9_])(item|frontier|settle)/[0-9]+'; do
-          hits="$hits$(LC_ALL=C grep -En -e "$p" "$f" | cut -d: -f1 | sed 's/$/ work-path/')"$'\n'
+          hits="$hits$(grep -aEn -e "$p" "$f" | cut -d: -f1 | sed 's/$/ work-path/')"$'\n'
         done
       fi
       # one line per (line number, kind), ordered by line number then home-path, secret, work-path

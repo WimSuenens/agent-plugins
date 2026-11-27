@@ -26,6 +26,11 @@ printf 'cd %s/home/runner/x\n' "$HM" >o5.log; bash "$PT" scan o5.log >/dev/null;
 printf 'cd %s/Users/runner/x\n' "$US" >o6.log; bash "$PT" scan o6.log >/dev/null; ck account-users-holding-runner-path-refused 1 "$?"
 # a folder named home inside the runner's home is not another account's home
 printf 'at %s/runner/home/alice/x\n' "$HM" >ci4.log; bash "$PT" scan ci4.log; ck home-folder-inside-runner-home-passes 0 "$?"
+# two runner paths one separator apart both pass (a PATH line, a command with two arguments)
+printf 'PATH=%s/runner:%s/runner/bin\nls %s/runner %s/runner/work\n' "$HM" "$HM" "$HM" "$HM" >ci5.log; bash "$PT" scan ci5.log; ck adjacent-runner-paths-pass 0 "$?"
+# a Windows user folder is never exempt, with either slash (the Windows hosted account has another name)
+printf 'C:%s/runner/x\n' "$US" >o7.log; bash "$PT" scan o7.log >/dev/null; ck windows-forward-slash-runner-refused 1 "$?"
+printf 'C:\\%s\\runner\\x\n' "${US#/}" >o8.log; bash "$PT" scan o8.log >/dev/null; ck windows-backslash-runner-refused 1 "$?"
 printf 'C:\\%s\\bob\\x\n' "${US#/}" >o3.log; bash "$PT" scan o3.log >/dev/null; ck windows-home-refused 1 "$?"
 # the host's own home is refused even when it is the runner's folder (the factory running inside CI)
 ( HOME="$HM/runner"; bash "$PT" scan ci.log >/dev/null ); ck runner-as-host-home-refused 1 "$?"

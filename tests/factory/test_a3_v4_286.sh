@@ -40,7 +40,7 @@ for k in 'run timing' discipline 'run compared' guardrails; do
 done
 awk '/^- run timing: / { r = $0; next } { print } /^- discipline: / { print r }' "$V4" > "$T/m.md"; c4 "$T/m.md"
 ck c1-run-timing-and-discipline-swapped "1 refused: discipline (out of order)" "$RC $OUT"
-awk '/^- guardrails: / { g = $0; next } /^- run timing: / { print g } { print }' "$V4" > "$T/m.md"; c4 "$T/m.md"
+awk -v g="$(grep '^- guardrails: ' "$V4")" '/^- guardrails: / { next } /^- run timing: / { print g } { print }' "$V4" > "$T/m.md"; c4 "$T/m.md"
 ck c1-guardrails-first-refused 1 "$RC"; ck c1-guardrails-first-out-of-order 1 "$([ "$(printf '%s\n' "$OUT" | grep -c '(out of order)$')" -ge 1 ] && echo 1 || echo 0)"
 
 # ---------- discipline ----------

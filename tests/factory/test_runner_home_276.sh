@@ -22,8 +22,8 @@ printf 'cd %s/alice/x\n' "$HM" >o1.log; bash "$PT" scan o1.log >/dev/null; ck ot
 printf 'cp %s/runner/work/a %s/alice/b\n' "$HM" "$HM" >o2.log; out="$(bash "$PT" scan o2.log)"; ck other-account-beside-runner-refused-rc 1 "$?"; ck other-account-beside-runner-line "scan: o2.log:1: home-path" "$out"
 printf 'cd %s/bob/x\n' "$US" >o4.log; bash "$PT" scan o4.log >/dev/null; ck other-mac-account-refused 1 "$?"
 # an account whose name is the home directory's own name, with the runner path inside it, is still refused (the exemption needs the same left boundary as the rule)
-printf 'cd %s/home/runner/x\n' "$HM" >o5.log; bash "$PT" scan o5.log >/dev/null; ck account-home-holding-runner-path-refused 1 "$?"
-printf 'cd %s/Users/runner/x\n' "$US" >o6.log; bash "$PT" scan o6.log >/dev/null; ck account-users-holding-runner-path-refused 1 "$?"
+printf 'cd %s/runner/x\n' "$HM$HM" >o5.log; bash "$PT" scan o5.log >/dev/null; ck account-home-holding-runner-path-refused 1 "$?"
+printf 'cd %s/runner/x\n' "$US$US" >o6.log; bash "$PT" scan o6.log >/dev/null; ck account-users-holding-runner-path-refused 1 "$?"
 # a folder named home inside the runner's home is not another account's home
 printf 'at %s/runner/home/alice/x\n' "$HM" >ci4.log; bash "$PT" scan ci4.log; ck home-folder-inside-runner-home-passes 0 "$?"
 # two runner paths one separator apart both pass (a PATH line, a command with two arguments)

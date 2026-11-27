@@ -191,12 +191,13 @@ has item1-skill-runs-script "$SK" 'scripts/a3-events.sh'
 # ---- code review of slice 2 ----
 BL="$PLUGIN/references/baseline.md"
 # a v3 A3 is read like v1 and v2 wherever the standard reads A3 markers
-has review-baseline-reads-v3-answers "$BL" 'an A3 of marker v1, v2 or v3 is read; any other version is skipped and named'
-has review-a3-resume-reads-v3 "$A3S" 'when its marker is v2 or v3, rewrite the comment with *Edit A3*'
+has review-baseline-reads-v3-answers "$BL" 'an A3 of marker v1, v2, v3 or v4 is read; any other version is skipped and named'   # #286 adds v4
+has review-a3-resume-reads-v3 "$A3S" 'when its marker is v2, v3 or v4'   # #286 adds v4 (contract 286-a3-v4-and-runs section 5)
 has review-a3-resume-v3-events-recomputed "$A3S" 'a v3 A3'"'"'s events lines are recomputed by `a3-events.sh`, never copied'
-has review-a3-section9-v3 "$A3S" 'section 2 for v2, section 2.2 on top of it for v3, section 2.1 for v1) and prints `ok v1`, `ok v2` or `ok v3`'
-has review-a3-section9-skipped "$A3S" 'for a marker that is not v1, v2 or v3 (exit 3)'
-has review-a3check-header-skipped "$AC" 'a version not 1, 2 or 3'
+has review-a3-section9-v3 "$A3S" 'prints `ok v1`, `ok v2`, `ok v3` or `ok v4`'   # #286 adds v4
+has review-a3-section9-v4 "$A3S" 'section 2.3 on top of section 2.2 for v4'
+has review-a3-section9-skipped "$A3S" 'for a marker that is not v1, v2, v3 or v4 (exit 3)'
+has review-a3check-header-skipped "$AC" 'a version not 1, 2, 3 or 4'
 has review-a3-v3-template-how "$A3S" 'To write a v3 A3, take the template above, change its marker to `<!-- factory:a3 v3 -->` and insert these lines'
 # a path with a bar in it is read whole
 mkdir -p "$T/we|ird"; cp "$FX/ledger-156.md" "$T/we|ird/ledger.md"

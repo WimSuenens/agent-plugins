@@ -1,7 +1,7 @@
 # Lead state: #286
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhMhYU0
-- next step: 6, brief the product-owner (Requirement)
+- next step: 6, read the product-owner result (#287); then release-class.sh and the architect brief
 - open questions: none
 - frozen on: factory 3.9.1 (map FREEZE line says 3.9.0; see A1)
 - ADR number: none (ADRs 0024 to 0026 already landed in the frontier round)
@@ -9,7 +9,7 @@
 
 ## Running agents
 
-none
+- role task #287: product-owner a2b9b64258dc7f2f1
 
 ## Shared resources
 

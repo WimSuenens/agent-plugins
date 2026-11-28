@@ -34,8 +34,8 @@ ck ac7-overlap-flow-efficiency "75%" "$(rp pct 45 60)"
 LAY="$(fblock "$HA" '### Layout')"; WEX="$(fblock "$HA" '### Worked example')"
 subs() { awk '/^1\. lead time: /{f=1; print; next} f && /^2\. first-pass yield/{exit} f{print}'; }
 ck ac8-layout-sub-lines "1. lead time: total <dur>; agent working <dur>; waiting for the person <dur>; waiting on limits <dur>; stalled <dur>; interrupted <dur>; andon <dur>|   - flow efficiency: <pct>%|   - per stage: <stage> <working>m / <waiting>m; …" "$(printf '%s\n' "$LAY" | subs | paste -sd'|' -)"
-ck ac8-marker-still-v5 '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$LAY" | sed -n 1p)"
-ck ac8-worked-example-marker-still-v5 '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$WEX" | sed -n 1p)"
+ck ac8-marker-v6 '<!-- factory:hansei v6 -->' "$(printf '%s\n' "$LAY" | sed -n 1p)"
+ck ac8-worked-example-marker-v6 '<!-- factory:hansei v6 -->' "$(printf '%s\n' "$WEX" | sed -n 1p)"
 ck ac9-worked-example-measure-1-line-unchanged "1. lead time: total 4h41m; agent working 2h42m; waiting for the person 51m; waiting on limits 15m; stalled 15m; interrupted 18m; andon 20m" "$(printf '%s\n' "$WEX" | grep '^1\. lead time:')"
 ck ac9-worked-example-still-seven-measures "1 2 3 4 5 6 7" "$(printf '%s\n' "$WEX" | grep -E '^[0-9]+\. ' | cut -d. -f1 | paste -sd' ' -)"
 ck ac6-worked-example-flow-efficiency "   - flow efficiency: $(rp pct 162 281)" "$(printf '%s\n' "$WEX" | grep '^   - flow efficiency:')"
@@ -51,7 +51,7 @@ has ac8-versions-paragraph-keeps-v5 "$HA" 'Release 2.3.0 keeps v5'
 for r in 'not captured (total is 0m)' 'not captured (agent working not captured)' 'not captured (no task row)' 'not captured (task times not readable)'; do has "ac6-7-standard-names-$r" "$HA" "$r"; done
 has ac7-standard-names-merge-approval-stage "$HA" 'Merge approval'
 ck ac6-standard-says-half-up 1 "$([ "$(grep -ci 'half up\|half-up' "$HA")" -ge 1 ] && echo 1 || echo 0)"
-ck ac8-no-schema-bump-no-v6 0 "$(grep -c 'factory:hansei v6 -->' "$HA" "$SK" "$BA" | awk -F: '{s+=$2} END {print s+0}')"
+ck ac8-no-schema-bump-past-v6 0 "$(grep -c 'factory:hansei v7 -->' "$HA" "$SK" "$BA" | awk -F: '{s+=$2} END {print s+0}')"
 # header fields: the layout names no new header key (the measure-1 sub-lines are the only change; test_gemba compares the rest with main)
 ck ac8-layout-header-keys-unchanged "series|plugin|standard|tooling|context|active overrides|abnormalities|stage-log cross-check|gemba" "$(printf '%s\n' "$LAY" | sed -n '/^## Hansei/,/^### Measures/p' | grep -E '^- [a-z -]+:' | sed -E 's/^- ([a-z -]+):.*/\1/' | paste -sd'|' -)"
 

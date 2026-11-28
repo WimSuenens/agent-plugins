@@ -243,7 +243,7 @@ has ac23-findings-table "$HA" '| Role | Round | Id | Severity | Text |'
 has ac23-andon-row "$HA" 'There is no row for the lead'"'"'s or the person'"'"'s steps (`Start item`, `Open PR`, `Acceptance demo`, `Merge approval`, `Andon A<n>`)'
 has ac23-paused-note "$HA" 'A paused task'"'"'s `Notes` read `paused by A<n>` and its `Waits` list the andon wait, since the slow-stage test subtracts only the waits a row lists.'
 has ac23-five-kinds "$HA" 'Kind of a wait: five kinds.'
-has ac24-marker-v5 "$HA" '<!-- factory:hansei v5 -->'   # #60: v4 -> v5; the v3 and v4 reading is pinned in test_baseline_a3.sh and test_gemba.sh
+has ac24-marker-v6 "$HA" '<!-- factory:hansei v6 -->'   # #309: v5 -> v6 (#60: v4 -> v5); the v3 and v4 reading is pinned in test_baseline_a3.sh and test_gemba.sh
 has ac24-abnormalities-line "$HA" '- abnormalities: <none | <n> (<kind name> <count>, …): A<k> <URL | raised, no andon recorded>; …>'
 has ac24-active-overrides-line "$HA" '- active overrides: <none | <name> (since YYYY-MM-DD; whole item | from <YYYY-MM-DDTHH:MMZ> | until <YYYY-MM-DDTHH:MMZ>); …>'
 has ac24-honesty "$HA" 'A row with no comment reads `A<k> raised, no andon recorded`. Never a count that leaves a raised abnormality out.'

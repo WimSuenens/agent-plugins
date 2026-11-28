@@ -201,7 +201,7 @@ def parse(c):
         if pl.get('band'):
             r.band = pl['band']
         r.crossed = pl.get('release', '').startswith('release crossed')
-    if r.version not in (3, 4, 5):
+    if r.version not in (3, 4, 5, 6):
         return r
     mm = re.search(r'^1\. lead time: (.*)$', body, re.M)
     if mm:
@@ -312,7 +312,7 @@ def baseline(records, session, mainpath, a3s, cur_std=None):
     series_std = {}
     readable_rel = []  # all readable release records (series M.N) for the "replaced by" rule
     for r in recs:
-        if r.version not in (3, 4, 5):
+        if r.version not in (3, 4, 5, 6):
             skipped.append('skipped: #%s %s (schema v%d)' % (r.item if r.item else '?', r.url, r.version) if r.item else 'skipped: #? %s (schema v%d)' % (r.url, r.version))
             continue
         if r.item is None:
@@ -339,14 +339,14 @@ def baseline(records, session, mainpath, a3s, cur_std=None):
         elif r.standard != series_std[r.mn]:
             excluded.append('excluded: #%d %s (standard differs under %s; the declared release step was skipped, see andon kind 6)' % (r.item, r.url, r.mn))
             continue
-        if r.version in (4, 5) and r.ov_list_v3:
+        if r.version in (4, 5, 6) and r.ov_list_v3:
             # S3: an `active overrides` line outside the extent grammar is skipped and named; the key it carried is not used
             skipped.append('skipped: #%d %s (active overrides line not in its grammar)' % (r.item, r.url))
             continue
         if r.version == 3 and r.ov_list_v3:
             excluded.append('excluded: #%d %s (override extent not recorded, schema v3)' % (r.item, r.url))
             continue
-        if r.version == 5:
+        if r.version in (5, 6):
             # #60 baseline.md section 3 item 7: exactly one `- gemba: ` line in the header block; the content is never read
             hdr = r.body.split('\n### Measures', 1)[0].split('\n')
             ng = len([ln for ln in hdr if ln.startswith('- gemba: ')])

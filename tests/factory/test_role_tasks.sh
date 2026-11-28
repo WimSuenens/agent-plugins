@@ -54,8 +54,7 @@ Progress:
   Next: none
 Summary: Built the four scripts.
 Second line of the summary.
-Artifacts:
-  plugins/factory/scripts/board.sh
+Artifacts: plugins/factory/scripts/board.sh
 Decisions: field type is text / numbers rejected / half a day
 Open questions: none
 Missing: none
@@ -115,10 +114,10 @@ has ac11-run-fields-in-details "$RUN" 'every other field is inside one `<details
 has ac11-ops-close-after-comment "$OPS" 'after the closing comment, never before'
 
 # ---------- AC-13: size ----------
-mkbig() { # mkbig <file> <bytes of Artifacts text>
-  { printf 'Status: done\nAbnormality: none\nSummary: A very large result.\nProgress:\n  Done: x\n  Next: none\nArtifacts:\n'
+mkbig() { # mkbig <file> <bytes of Progress text>   (#310: the bulk sits in Progress; Artifacts is one line of paths)
+  { printf 'Status: done\nAbnormality: none\nSummary: A very large result.\nProgress:\n  Done: x\n  Next: none\n'
     yes '  plugins/factory/some/long/path/to/a/file-name-that-goes-on.sh -- a line of artifact text number 0123456789' | head -c "$2"
-    printf '\nDecisions: d\nOpen questions: none\n'; } >"$1"
+    printf '\nArtifacts: plugins/factory/scripts/board.sh\nDecisions: d\nOpen questions: none\n'; } >"$1"
 }
 mkbig "$T/big.md" 150000
 ck ac13-big-result-is-over-150000-bytes "yes" "$([ "$(wc -c <"$T/big.md")" -gt 150000 ] && echo yes || echo no)"
@@ -153,7 +152,7 @@ ck ac13-join-of-part-bodies-equals-the-original "$(shasum -a 256 <"$T/orig-body.
 bash "$PT" split "$T/c1.md" "$T/parts1" >"$T/n.out"; ck ac13-normal-result-one-comment 1 "$(cat "$T/n.out")"
 ck ac13-normal-result-part-equals-render "$(shasum -a 256 <"$T/c1.md")" "$(shasum -a 256 <"$T/parts1/part-1.md")"
 # an inline 100,000-character diff is posted as a link
-{ printf 'Status: done\nAbnormality: none\nSummary: S\nArtifacts:\n  see the diff\n```diff\n'; yes '+ added line of a very large diff that goes on and on and on' | head -c 100000; printf '\n```\nDecisions: d\n'; } >"$T/diffdraft.md"
+{ printf 'Status: done\nAbnormality: none\nSummary: S\nProgress:\n  see the diff\n```diff\n'; yes '+ added line of a very large diff that goes on and on and on' | head -c 100000; printf '\n```\nDecisions: d\n'; } >"$T/diffdraft.md"
 bash "$PT" render "$T/diffdraft.md" "$T/diffc.md"
 n="$(bash "$PT" elide "$T/diffc.md" "$T/diffe.md" "https://github.com/fixt/shop/commit/abc1234")"
 ck ac13-elide-counts-one-block 1 "$n"
@@ -170,7 +169,7 @@ printf 'a\n````\n```\n%s\n```\n````\nb\n' "$(yes xxxxxxxxxx | head -50)" >"$T/e4
 ck ac13-nested-fence-text-after-kept "b" "$(tail -1 "$T/e4o.md")"
 printf 'a\n```\nnever closed\n%s\n' "$(yes xxxxxxxxxx | head -50)" >"$T/e5.md"; ck ac13-unclosed-fence-handled 1 "$(bash "$PT" elide "$T/e5.md" "$T/e5o.md" ref --max 100)"
 # multi-byte text: no part over the cap in bytes, every part valid UTF-8, a very long line is cut on a character boundary
-{ printf 'Status: done\nAbnormality: none\nSummary: Unicode\nArtifacts:\n'; python3 -I -c "print('é€😀' * 50000)"; python3 -I -c "
+{ printf 'Status: done\nAbnormality: none\nSummary: Unicode\nProgress:\n'; python3 -I -c "print('é€😀' * 50000)"; python3 -I -c "
 for i in range(3000): print('ligne %d: ' % i + 'çàéü' * 6)"; } >"$T/u.md"
 bash "$PT" render "$T/u.md" "$T/uc.md" && mu="$(bash "$PT" split "$T/uc.md" "$T/uparts")"
 ck ac13-unicode-split-exit-0 0 "$?"
@@ -195,7 +194,7 @@ ck ac13-overlong-line-join-has-exactly-k-minus-1-added-newlines "$((kpieces - 1)
 ck ac13-overlong-line-join-minus-the-added-newlines-is-the-original "$(tr -d '\n' <"$T/lo.txt" | shasum -a 256 | cut -d' ' -f1)" "$(tr -d '\n' <"$T/lj2.txt" | shasum -a 256 | cut -d' ' -f1)"
 ck ac13-ordinary-split-reports-nothing "" "$(bash "$PT" split "$T/bige.md" "$T/parts3" 2>&1 >/dev/null)"
 # Status and Summary alone over the cap: exit 4
-{ printf 'Status: done\nAbnormality: none\nSummary: '; for i in 1 2 3 4 5 6 7 8 9; do head -c 7000 /dev/zero | tr '\0' 's'; printf '\n'; done; printf 'Artifacts: a\n'; } >"$T/sum.md"
+{ printf 'Status: done\nAbnormality: none\nSummary: '; for i in 1 2 3 4 5 6 7 8 9; do head -c 7000 /dev/zero | tr '\0' 's'; printf '\n'; done; printf 'Artifacts: a\nProgress:\n'; } >"$T/sum.md"   # #310: the bulk sits in Progress
 head -c 80000 /dev/zero | tr '\0' 'z' >>"$T/sum.md"; printf '\n' >>"$T/sum.md"
 bash "$PT" render "$T/sum.md" "$T/sumc.md" && bash "$PT" split "$T/sumc.md" "$T/sparts" >/dev/null 2>&1; ck ac13-status-summary-over-cap-exit-4 4 "$?"
 # resumed split: the text names the rule
@@ -298,7 +297,7 @@ has ac9-run-spawn-prompt-copies-no-brief "$RUN" 'It copies no brief text.'
 has ac9-run-card-three-fields "$RUN" '*Add to board*, then *Set status* three times: `Factory status` `Running`, `Kind` `role task`, `Role`.'
 ck ac9-run-create-order-scan-create-link-add-spawn 1 "$(awk '/^\*\*Create and spawn\*\*/{f=1} f&&/^1\. /{a=NR} f&&/^2\. /{b=NR} f&&/^3\. /{c=NR} f&&/^4\. /{d=NR} f&&/^5\. /{e=NR; exit} END{print (a<b && b<c && c<d && d<e)?1:0}' "$RUN")"
 has ac15-run-rework-new-subissue "$RUN" 'as a **new** sub-issue under the same parent: title `rework <k>: <one line>`'
-has ac15-run-rework-body-feedback-template "$RUN" 'then the protocol'"'"'s feedback template (`Source`, `Findings`, `Re-verify`)'
+has ac15-run-rework-body-feedback-template "$RUN" 'then the protocol'"'"'s feedback template (`Source`, `Overturns`, `Findings`, `Re-verify`'   # #309 adds Overturns
 has ac15-run-earlier-tasks-unedited "$RUN" 'The earlier task issues stay closed and unedited; a finding is never written into one of them or into a file.'
 has ac15-run-source-lead "$RUN" 'A `Source: lead` feedback is a rework task whose body says so.'
 has ac15-run-rework-rounds-count-in-ledger-or-fields "$RUN" '`Rework rounds`'

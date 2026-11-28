@@ -395,7 +395,7 @@ has o1-pending-resurvey-reason-text "$BA" 'or `pending resurvey` for measure 7, 
 has o2-cut-120-then-ellipsis "$BA" 'each cut to its **first 120 characters followed by `…`**'
 has o3-empty-section-text-every-field "$BA" '`not captured (no items in series)` for a series with no item, `not captured (no items in section)` for a section with none. Written for every field alike'
 has o3-empty-reference-section-line "$BA" 'When it holds no item it is written with `0 items` and `not captured (no items in section)` figures.'
-has o4-records-line-in-template "$BA" '- records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line; a series holding v3 and v5 with no v4 cannot arise from release series, since a 1.2.x series holds v3 and v4 at most and a 1.3.x series v4 and v5 at most, so it has no form; only when the series holds more than one schema, naming them in ascending order)'
+has o4-records-line-in-template "$BA" '- records: schema v3 and v4 read together | schema v4 and v5 read together | schema v3, v4 and v5 read together   (optional line; a series holding v3 and v5 with no v4 cannot arise from release series, since a 1.2.x series holds v3 and v4 at most and a 1.3.x series v4 and v5 at most, so it has no form; nor can v6 share a series with an older schema, since v6 begins at release 3.12.0, whose standard starts a new series; only when the series holds more than one schema, naming them in ascending order)'
 has o4-records-line-rule "$BA" 'The optional `- records:` line is written as one of the three forms shown, after `not in any section`, only when the series'"'"' records include more than one schema.'
 has o4-releases-marker-only-in-empty-series "$BA" 'In the **empty current series** the `releases:` line is `factory <the session'"'"'s semver> (the session'"'"'s release)`; in a series with records it lists the records'"'"' releases only, and the marker is not added.'
 has o4-section3-item6-names-the-line "$BA" 'the series block carries the `- records:` line when the series holds more than one schema (section 7).'
@@ -421,7 +421,7 @@ has f2-a3-section5-last-paragraph "$A3" 'A commit made after the stamp makes tha
 LAB="$(block_after "$HA" '### `## Label`')"
 ck v4-label-line-between-tooling-and-wayfinding "tooling|overrides at start|wayfinding" "$(printf '%s\n' "$LAB" | sed -nE 's/^- (tooling|overrides at start|wayfinding): .*/\1/p' | paste -sd'|' -)"
 has v4-label-never-changed "$HA" 'Like the rest of the label it is never changed afterwards.'
-has v5-reads-v3-v4-and-v5 "$HA" '**Which versions the standard reads.** v3, v4 and v5.'
+has v5-reads-v3-v4-v5-and-v6 "$HA" '**Which versions the standard reads.** v3, v4, v5 and v6.'   # #309
 has v4-v3-list-excluded "$HA" 'a list leaves each override'"'"'s extent unrecorded, so the item is excluded from the baseline'
 has v4-no-measure-changes "$HA" 'no measure changes, so v3 and v4 measures may be compared'
 ext='^([a-z0-9]+(-[a-z0-9]+)* \(since [0-9]{4}-[0-9]{2}-[0-9]{2}; (whole item|from [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z|until [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z)\)(; )?)+$|^none$'
@@ -432,7 +432,7 @@ ck v4-fixture-override-line-from-hansei-md 1 "$(exline "- active overrides: repl
 ck v4-grammar-rejects-v3-entry 0 "$(exline "- active overrides: replay-before-build (since 2026-11-08)" | grep -Ec "$ext")"
 ck v4-grammar-rejects-bad-time 0 "$(exline "- active overrides: x (since 2026-11-08; from 15:02)" | grep -Ec "$ext")"
 ck v4-hansei-md-has-the-worked-line 1 "$(grep -cF 'replay-before-build (since 2026-11-07; whole item); fixtures-first (since 2026-11-08; from 2026-11-08T15:02Z); old-rule (since 2026-11-05; until 2026-11-08T15:30Z)' "$HA")"
-has v5-marker-prose-is-v5 "$HA" 'The body'"'"'s **first line** is exactly `<!-- factory:hansei v5 -->`.'
+has v6-marker-prose-is-v6 "$HA" 'The body'"'"'s **first line** is exactly `<!-- factory:hansei v6 -->`.'   # #309
 hasnt v5-marker-prose-no-v4 "$HA" 'The body'"'"'s **first line** is exactly `<!-- factory:hansei v4 -->`.'
 ck v4-no-v3-marker-in-template 0 "$(block_after "$HA" '### Layout' | grep -c 'hansei v3')"
 
@@ -467,7 +467,7 @@ has r3-calibration-plugin-text-is-a-reason-text "$BA" 'and the `plugin:` text of
 has r3-calibration-prefix-outside-span "$BA" 'In the calibration line the `factory ` before the text, the item number and the link are the standard'"'"'s own text and outside the span.'
 has r3-calibration-skeleton-line "$BA" '- #<id> <url> — factory `<the plugin line after "factory ">`'
 has r3-cut-ends-with-ellipsis "$BA" 'A text cut at 120 characters ends with `…`. One code span per reason text'
-has r3-v4-skip-line "$BA" 'A v4 or v5 record whose `active overrides` line is outside the extent grammar is skipped whole, because that line carries the item'"'"'s key: `skipped: #<id> <url> (active overrides line not in its grammar)`; it is in no section and no reading, and is never read as key `none`.'
+has r3-v4-skip-line "$BA" 'A v4, v5 or v6 record whose `active overrides` line is outside the extent grammar is skipped whole, because that line carries the item'"'"'s key: `skipped: #<id> <url> (active overrides line not in its grammar)`; it is in no section and no reading, and is never read as key `none`.'
 # Edit baseline: the compare with Read baseline now comes first, then the marker stop
 el="$(grep -F -- '- **Edit baseline**' "$TP")"
 ck r3-edit-names-read-baseline-before-the-stop 1 "$(a="${el%%\*Read baseline\**}"; b="${el%%first line is not the marker*}"; [ ${#a} -lt ${#b} ] && echo 1 || echo 0)"

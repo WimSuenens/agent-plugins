@@ -82,11 +82,13 @@ Result (role → lead):
       Done: <steps finished, with their commits>
       Next: <the step in hand, then what follows>
     Summary: <at most 10 lines>
-    Artifacts: <paths>
+    Artifacts: <repository paths, separated by ", ", or none>
     Decisions: <one line per two-way door you decided: chosen / rejected / cost to undo, or none>
     Open questions: <list, or none>
     Missing: <inputs, when blocked>
     Decision card: <path, when needs-decision>
+
+`Artifacts:` is one line: repository paths relative to the repository root, separated by a comma and one space, and nothing else (no note, no parenthesis, no sentence; a path may be wrapped in backticks). With no artifact it reads `none`. The lead's `post-text.sh render` refuses any other form and sends the result back, and the close reads each entry as a path that must be committed at its destination.
 
 Write your result file as soon as you start, with `Status: working`, and update **Progress** at every checkpoint commit. When you are cut off, a resumed or fresh agent reads it and continues from **Next**. Fill in the other fields when you stop, whatever the status.
 
@@ -94,9 +96,12 @@ Feedback (lead → role), the body of a rework task after its marker line (a rew
 
     # Feedback: <role> — <id>
     Source: qa | security | architect | lead
+    Overturns: none | <role> — <the decision, in the words the role listed it under Decisions>
     Findings:
     1. <location> — <severity> — <required fix>
     Re-verify: <what>
+
+`Overturns:` is mandatory in every feedback: `none`, or one line per two-way decision the task overturns, naming the role that decided it and the decision in that role's own words from its `Decisions`. A task that overturns two decisions has two lines. `Source` says only who routed the work: a `Source: lead` task overturns nothing unless an `Overturns:` line names a decision. Hansei measure 3 counts these lines.
 
 Question (role → lead):
 
@@ -128,7 +133,7 @@ For every role that starts processes, when the item runs against real infrastruc
 
 Sort every decision you meet with the `/wayfinding:reversibility` door vocabulary.
 
-- A **two-way door** inside your authority: decide it without waiting, and list it under `Decisions` in your result. List every one; the lead does the filtering. The lead or the person may overturn it later through a feedback brief with `Source: lead`; apply that in your next round like any other finding.
+- A **two-way door** inside your authority: decide it without waiting, and list it under `Decisions` in your result. List every one; the lead does the filtering. The lead or the person may overturn it later through a feedback brief whose `Overturns:` line names it; apply that in your next round like any other finding.
 - A **one-way door**, or anything outside your authority: write a question to the lead. The lead routes one-way doors to the product-owner, who turns them into a decision card for the person.
 
 ## Andon

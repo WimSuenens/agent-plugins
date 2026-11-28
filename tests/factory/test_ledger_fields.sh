@@ -88,7 +88,7 @@ has_rec ac23-record-rework-line "3. rework: feedback briefs product-owner 0, arc
 has_rec ac23-record-touches-line "6. person's touches: decision cards 1; demos 0; approvals 1; overturns 1; other 0"
 has_rec ac26-record-gemba-names-row-1-requirement "- gemba: row 1 Requirement (product-owner);"
 has_rec ac23-record-peak-developer "peak context 141210"
-has_rec ac23-record-marker-stays-v5 "<!-- factory:hansei v5 -->"
+has_rec ac23-record-marker-v6 "<!-- factory:hansei v6 -->"   # #309: v5 -> v6
 has ac23-hansei-text-states-end-moves "$HA" "A row's End is the sub-issue's \`closed_at\`"
 has ac23-hansei-text-says-it-is-the-one-definition-that-moved "$HA" 'it is the one definition that moved'
 has ac23-hansei-text-agent-working-rule "$HA" 'Agent working = Duration less the union of the intervals of the waits named in `Waits` that are `Held item: yes`'

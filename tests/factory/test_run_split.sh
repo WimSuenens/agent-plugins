@@ -6,9 +6,10 @@
 . "$(dirname "$0")/lib.sh"
 FX="$REPO/tests/factory/fixtures/split"
 OLD="$FX/run-skill-3.0.0.md"      # plugins/factory/skills/run/SKILL.md of origin/main at 19d1df3 (factory 3.0.0), before the split
-ALLOW="$FX/allowed-missing.txt"   # old lines that may be missing from router and references (a line a pointer replaced, or slice 4 changed); verbatim, one per line
+ALLOW="$T/allowed-all.txt"        # old lines that may be missing from router and references (a line a pointer replaced, or slice 4 changed); verbatim, one per line
+cat "$FX/allowed-missing.txt" "$FX/slice309-replaced.txt" >"$ALLOW"   # #309/#310: the three run-skill lines slice309-added.txt replaces, line for line
 ADDOK="$T/added-all.txt"          # lines slice 4 (factory 3.2.0), #230 (3.3.0), #231 (3.4.0), slices 6, 7 and #286 (3.10.0) added to the router and the moved references: the only additions besides pointers, stubs and headers
-cat "$FX/slice4-added.txt" "$FX/slice230-added.txt" "$FX/slice231-added.txt" "$FX/bundle-a-added.txt" "$FX/slice6-added.txt" "$FX/slice7-added.txt" "$FX/slice286-added.txt" >"$ADDOK"
+cat "$FX/slice4-added.txt" "$FX/slice230-added.txt" "$FX/slice231-added.txt" "$FX/bundle-a-added.txt" "$FX/slice6-added.txt" "$FX/slice7-added.txt" "$FX/slice286-added.txt" "$FX/slice309-added.txt" >"$ADDOK"
 ROUTER="$RUN_ROUTER"
 refs="$(run_refs)"
 nrefs="$(printf '%s\n' "$refs" | grep -c .)"
@@ -20,7 +21,7 @@ bytes() { wc -c <"$1" | tr -d ' '; }
 # ---- A. no rule lost; nothing added except pointer lines, stub headings and the three header lines of a reference
 ck a0-fixture-is-the-old-skill 115665 "$(bytes "$OLD")"
 ck a0-references-exist yes "$([ "$nrefs" -ge 5 ] && echo yes || echo no)"
-ck a0-slice4-added-lines-are-few yes "$([ "$(grep -c . "$ADDOK")" -le 51 ] && echo yes || echo no)"  # slice 4, #230 and #231 together (#231 adds the reference run-publish.md: 14 lines); #286 adds 17 (session line and sentence, the run template's 4 lines and sentence, step 9.0 and 9.2 a to e, Run identity reworded: its #230 line moved to slice286-added.txt)
+ck a0-slice4-added-lines-are-few yes "$([ "$(grep -c . "$ADDOK")" -le 54 ] && echo yes || echo no)"  # #309/#310 add 3 (each replaces one line, slice309-replaced.txt); slice 4, #230 and #231 together (#231 adds the reference run-publish.md: 14 lines); #286 adds 17 (session line and sentence, the run template's 4 lines and sentence, step 9.0 and 9.2 a to e, Run identity reworded: its #230 line moved to slice286-added.txt)
 # shellcheck disable=SC2086
 rep="$(awk -v allow="$ALLOW" -v addok="$ADDOK" -v nref="$narefs" '
   BEGIN { while ((getline l < allow) > 0) if (l != "") { ok[l]++; nallow++ }
@@ -46,7 +47,7 @@ num() { printf '%s\n' "$sum" | sed -n "s/.*$1=\([0-9]*\).*/\1/p"; }
 ck a1-no-old-line-lost 0 "$(num lost)"
 ck a2-no-line-added-but-pointers-stubs-headers 0 "$(num added)"
 ck a2b-every-pinned-slice4-line-is-present "$(num slice4allow)" "$(num slice4)"
-ck a3-allow-list-is-explicit-and-small "yes" "$([ "$(num allowlist)" -le 15 ] && echo yes || echo no)"  # #286: step 9.0 and 9.2 reworded (contract 286-run-timing section 5.2)
+ck a3-allow-list-is-explicit-and-small "yes" "$([ "$(num allowlist)" -le 18 ] && echo yes || echo no)"  # #309/#310: the three lines of slice309-replaced.txt; #286: step 9.0 and 9.2 reworded (contract 286-run-timing section 5.2)
 ck a4-title-and-trigger-line-per-reference "$((narefs * 2))" "$(num headers)"
 # the two directions together: a pointer line is the only thing that may differ, and every reference starts with title, blank, trigger
 for r in $refs; do
@@ -88,9 +89,11 @@ sec() { awk -v n="$2" '/^```/ {fence=!fence; if (on) print; next} !fence && /^##
 # steps 0 to 5 changed in slice 4 (sizing, the direct route, the beachhead, the start gate): their new lines are pinned in test_slice4_text.sh and listed in fixtures/split/slice4-added.txt
 # step 6 without its last subsection: *Report at each stage boundary* became a script call in #230 (pinned in test_lead_gaps_230.sh)
 nrep() { awk '/^### Report at each stage boundary/ {skip=1; next} /^### / {skip=0} !skip'; }
-ck "f-section-unchanged-in-router: 6. Run the stages (without the report)" "$(sec "$OLD" "6. Run the stages" | nrep | cksum)" "$(sec "$ROUTER" "6. Run the stages" | nrep | cksum)"
+# #309/#310 reworded three lines of step 6 and Role tasks in place: undo309 maps each back to the line it replaced, so any other change still shows
+undo309() { awk -v a="$FX/slice309-added.txt" -v r="$FX/slice309-replaced.txt" 'BEGIN { while ((getline l < a) > 0) { n++; nw[l] = n } while ((getline l < r) > 0) old[++m] = l } ($0 in nw) { print old[nw[$0]]; next } { print }'; }
+ck "f-section-unchanged-in-router: 6. Run the stages (without the report)" "$(sec "$OLD" "6. Run the stages" | nrep | cksum)" "$(sec "$ROUTER" "6. Run the stages" | nrep | undo309 | cksum)"
 for h in "The run cycle" "The integrator" "7. Take a one-way door to the person" "The board" "Role tasks" "Scan before posting" "Role knowledge" "Context"; do
-  ck "f-section-unchanged-in-router: $h" "$(sec "$OLD" "$h" | cksum)" "$(sec "$ROUTER" "$h" | cksum)"
+  ck "f-section-unchanged-in-router: $h" "$(sec "$OLD" "$h" | cksum)" "$(sec "$ROUTER" "$h" | undo309 | cksum)"
 done
 f81() { awk '/^1\. Once delivery and documentation are done/ {on=1} /^(2\. Complete the ledger|After the approval of 8\.1)/ {on=0} on' "$1"; }
 ck f1-step-8-1-unchanged-in-router "$(f81 "$OLD" | cksum)" "$(f81 "$ROUTER" | cksum)"

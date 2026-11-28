@@ -8,10 +8,15 @@
 #       A home path is a user folder or the host's own $HOME; the GitHub-hosted runner account's folder is none (#276), unless it is $HOME.
 #       --needs-you also flags a path under work/<n>, work/frontier-<n>, work/settle-<n> and a branch item/<n>, frontier/<n> or settle/<n>.
 #       A canary self-check runs first; a canary that does not hit prints "scan: self-check failed (<name>)" on stderr and exits 2.
-# render: checks Status and a Summary of at most 10 lines first (exit 3), then scans the draft (a hit: the scan lines on stderr, no output file, exit 1; the self-check failing: exit 2); then writes the marker, Status, Abnormality and Summary visible, every other field of the draft inside one <details>, byte for byte.
+# render: checks Status and a Summary of at most 10 lines first (exit 3), then scans the draft (a hit: the scan lines on stderr, no output file, exit 1; the self-check failing: exit 2),
+#         then checks the `Artifacts:` line, when there is one (exit 3, one stderr line per bad entry, no output file): `none`, or repository paths separated by `, `
+#         and nothing else (an entry may be wrapped in backticks). Refused: an empty value, an entry with a space, tab, comma, parenthesis, semicolon, `*` or `?`,
+#         an absolute, `~` or `..` path, a `#n` reference, a URL, `-`, `None` or `none` inside a list, and a second non-blank line (close-item.sh reads the first
+#         line only). The check runs after the scan so a refused entry is never echoed with a secret in it. Every entry it accepts is read by close-item.sh
+#         as the same path. Then it writes the marker, Status, Abnormality and Summary visible, every other field of the draft inside one <details>, byte for byte.
 # elide: replaces each fenced block over --max bytes (default 20000) by one line naming <ref>; prints the number of blocks elided.
 # split: writes part-1.md .. part-<m>.md (each at most 60000 bytes) into <outdir> and prints <m>; an over-long line is cut (one newline added) and reported on stderr.
-# Exit: scan 0 clean, 1 a hit, 2 usage or a file unreadable; render 0, 1 a scan hit, 3 no Status or Summary or Summary over 10 lines; elide 0; split 0, 4 Status and Summary alone exceed the cap.
+# Exit: scan 0 clean, 1 a hit, 2 usage or a file unreadable; render 0, 1 a scan hit, 3 no Status or Summary or Summary over 10 lines, or an `Artifacts:` line outside its grammar; elide 0; split 0, 4 Status and Summary alone exceed the cap.
 # No network; no write outside the named output paths.
 # See contracts/64-role-tasks.md sections 5, 6 and 9 in the repo that hosts the factory.
 
@@ -148,8 +153,18 @@ case "$cmd" in
     out="$2"
     [ -f "$draft" ] && [ -r "$draft" ] || { echo "render: $(basename "$draft"): unreadable" >&2; exit 2; }
     tmpf="$(mktemp)" || exit 2
-    trap 'rm -f "$tmpf"' EXIT
-    LC_ALL=C awk '
+    errf="$(mktemp)" || { rm -f "$tmpf"; exit 2; }
+    trap 'rm -f "$tmpf" "$errf"' EXIT
+    LC_ALL=C awk -v errf="$errf" '
+      # okpath: one entry of the Artifacts list is a repository path (backticks already taken off)
+      function okpath(p) {
+        if (p == "" || p == "-" || p == "none" || p == "None") return 0
+        if (p ~ /[ \t,();*?`]/) return 0
+        if (p ~ /^[\/~#]/) return 0
+        if (p ~ /:\/\//) return 0
+        if (p ~ /(^|\/)\.\.(\/|$)/) return 0
+        return 1
+      }
       function flush(   i, t) {
         if (cur == "") return
         t = txt
@@ -172,6 +187,21 @@ case "$cmd" in
         if (!("Status" in body) || !("Summary" in body)) exit 3
         n = split(body["Summary"], sl, "\n")
         if (n > 10) exit 3
+        if ("Artifacts" in body) {
+          na = split(body["Artifacts"], al, "\n")
+          v = al[1]; sub(/^Artifacts:/, "", v); sub(/\r$/, "", v); gsub(/^[ \t]+|[ \t]+$/, "", v)
+          if (v == "") print "Artifacts is empty; write none" > errf
+          else if (v != "none") {
+            ne = split(v, ent, ", ")
+            for (j = 1; j <= ne; j++) {
+              p = ent[j]
+              if (p ~ /^`[^`]+`$/) p = substr(p, 2, length(p) - 2)
+              if (!okpath(p)) print "Artifacts entry is not a repository path: " ent[j] > errf
+            }
+          }
+          for (j = 2; j <= na; j++) { l = al[j]; sub(/\r$/, "", l); if (l ~ /[^ \t]/) print "Artifacts continues on a second line: " l > errf }
+          close(errf)
+        }
         print "<!-- factory:result v1 -->"
         print body["Status"]
         if ("Abnormality" in body) print body["Abnormality"]
@@ -198,6 +228,13 @@ case "$cmd" in
     fi
     # the closing comment is scanned after it is checked: a hit writes nothing, and the scan lines go to stderr
     bash "${BASH_SOURCE[0]}" scan "$draft" >&2 || exit $?
+    # the Artifacts line is reported after the scan passed, so no entry is echoed with a secret in it
+    if [ -s "$errf" ]; then
+      b="$(basename "$draft")"
+      while IFS= read -r l; do echo "render: $b: $l" >&2; done <"$errf"
+      echo "render: $b: write Artifacts: as repository paths separated by \", \", or none" >&2
+      exit 3
+    fi
     cat "$tmpf" >"$out" || exit 2
     exit 0
     ;;

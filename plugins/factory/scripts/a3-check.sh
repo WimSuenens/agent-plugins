@@ -53,9 +53,9 @@ function notcaptured(v,   r) {
   return (length(r) >= 1 && length(r) <= 80)
 }
 function emit(key, why) { out[++nf] = "refused: " key " (" why ")" }
-# slotlen: the length of a <dur> (or, when nc, a `not captured (<1 to 80 chars, no parentheses>)`) at the start of s; 0 when there is none
-function slotlen(s, nc) {
-  if (nc && match(s, /^not captured \([^()]*\)/)) return (RLENGTH >= 16 && RLENGTH <= 95) ? RLENGTH : 0
+# slotlen: the length of a <dur> (or, when allownc, a `not captured (<1 to 80 chars, no parentheses>)`) at the start of s; 0 when there is none
+function slotlen(s, allownc) {
+  if (allownc && match(s, /^not captured \([^()]*\)/)) return (RLENGTH >= 16 && RLENGTH <= 95) ? RLENGTH : 0
   if (match(s, /^[1-9][0-9]*h[0-5][0-9]m/)) return RLENGTH
   if (match(s, /^[1-5][0-9]m/)) return RLENGTH
   if (match(s, /^[0-9]m/)) return RLENGTH

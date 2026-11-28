@@ -22,6 +22,7 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 - `paths.sh check` takes the contract files as arguments (`contracts/<id>-*.md` unquoted, expanded by the shell); a quoted glob exits 2 `unreadable`. The `docs/requirements/<id>-` ignore is a prefix; `reviews/qa-<id>.md` is an exact name, so a separate `reviews/qa-<id>-scenario.md` flags off-list: keep proof transcripts as sections inside the verdict file.
 - The merge gate needs every `## Criteria` line to link a proof item of the artefact's kind (instruction-markdown: `scenario-transcript`) and status `pass`; post-merge criteria go under `Human-only criteria:`, not under `## Criteria`.
 - A split allow-file change (test_run_split.sh): a line an earlier slice pinned and this slice rewords moves out of the earlier `sliceN-added.txt` into this slice's file, or `a2b` fails; the `a0` and `a3` caps both move.
+- Regression test for a security finding: kill-check with `FACTORY_ROOT=<git archive of the pre-fix commit>/plugins/factory` (lib.sh honours it), once per rework commit; controls (in-grammar input, the contract's worked example) must stay green on the old build too. A no-echo check greps stderr for the bad text and for other fields of the line.
 
 ## Skills used
 

@@ -11,7 +11,7 @@ Summary:
 - `${CLAUDE_SESSION_ID}`: unset in this session and no skill loaded, so substitution is not observable here; it is on the Human-only list.
 - CI step 1: bash 3.2.57, BWK awk, BSD sed, git 2.39.5, jq 1.8.1, en_NZ.UTF-8. Step 2 `bash tests/run.sh`: red only in four test_lean_rules checks (ac17 README and reference, ac19 two fingerprints), waiting on Documentation.
 - Run-size cap: 160,432 bytes built, cap 162,000 stays. paths.sh check: no off-list path.
-Artifacts: reviews/qa-286.md (verdict, with the P1 scenario and P2 targeted transcripts as sections), tests/factory/fixtures/split/slice286-added.txt, tests/factory/fixtures/split/slice230-added.txt, tests/factory/fixtures/split/allowed-missing.txt, tests/factory/test_run_split.sh, tests/factory/test_slice3_table.sh, docs/agents/roles/qa-engineer.md
+Artifacts: reviews/qa-286.md, tests/factory/fixtures/split/slice286-added.txt, tests/factory/fixtures/split/slice230-added.txt, tests/factory/fixtures/split/allowed-missing.txt, tests/factory/test_run_split.sh, tests/factory/test_slice3_table.sh, docs/agents/roles/qa-engineer.md
 Decisions:
 - the reworded #230 Run identity line moved from slice230-added.txt to slice286-added.txt / rejected: keep it in both (a2b fails) / cost to undo: two fixture lines
 - a3 allow-list cap raised 13 to 15 besides a0 (the brief named a0 only) / rejected: none possible, the two LOST lines must be allowed / cost to undo: one number

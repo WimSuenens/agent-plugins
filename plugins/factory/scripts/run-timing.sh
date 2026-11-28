@@ -7,7 +7,7 @@
 # --close: the close instant, YYYY-MM-DDTHH:MMZ or YYYY-MM-DDTHH:MM:SS[.fff]Z (the A3 comment's created_at, or the close stamp).
 # Every time is cut to the minute. The run window is [started, close); an item is in flight from its ledger's `started:` to the time of the last
 #   `approval` row of its Person's touches (the close when it has none), clipped to the run window.
-# gaps: the run-close scan. Each line of cut-offs.sh output (<basename> <kind> <start> <end | open> <markers>), clipped to the run window and with
+# gaps: the run-close scan. Each line of cut-offs.sh output (<basename> <kind> <start> <end | open> <markers>; markers ^[a-z_:-]+(,[a-z_:-]+)*$), clipped to the run window and with
 #   every item's in-flight window removed, prints one line per stretch left: <kind>\t<start>\t<end>\tfound at close: <markers> (times
 #   YYYY-MM-DDTHH:MMZ); each is one `run-state.sh add-run-wait`. A line that leaves nothing is named on stderr (`inside items: …` or
 #   `outside the run: …`).
@@ -169,7 +169,7 @@ fi >= 2 && fi <= nled + 1 {
 fi == nled + 2 {
   if ($0 == "") next
   n = split($0, g, "\t")
-  if (n != 5 || g[2] !~ /^(limits|stalled|interrupted)$/ || tmin(g[3]) < 0 || (g[4] != "open" && tmin(g[4]) < 0)) { if (!cbad) cbad = $0; next }
+  if (n != 5 || g[2] !~ /^(limits|stalled|interrupted)$/ || tmin(g[3]) < 0 || (g[4] != "open" && tmin(g[4]) < 0) || g[5] !~ /^[a-z_:-]+(,[a-z_:-]+)*$/) { if (!cbad) cbad = $0; next }
   ng++; gb[ng] = g[1]; gk[ng] = g[2]; graw[ng] = g[3]; gs[ng] = tmin(g[3]); ge[ng] = (g[4] == "open") ? -2 : tmin(g[4]); gm[ng] = g[5]
   next
 }

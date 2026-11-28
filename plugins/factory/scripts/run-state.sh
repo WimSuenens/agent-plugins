@@ -11,6 +11,7 @@
 #   Reads the `- <field>: <value>` line inside the body's `## Factory run` section (up to the next `## ` heading) and nowhere else. The body is
 #   the run ticket's: the map's in the map route, the destination ticket's in the direct route; the section has the same shape in both.
 #   `items` prints the item numbers of the `closed in this run` line (`#30 #29`), empty when it says none.
+#   `lead-sessions` prints the value as is (`none yet`, or the ids with their `, `); an id not ^[A-Za-z0-9-]{1,64}$ is exit 2 (security-286 L2).
 # moved: prints `#<n>` from a `Factory run: moved to #<n>` line (what an escalation leaves on the destination ticket), exit 3 when there is none.
 # ticket: prints `#<n>` of the run ticket: the destination ticket in the direct route (no map exists), the map in the map route.
 # status: prints `closed` when the section belongs to a run whose A3 is posted (it has an `- A3: https://...` line, or its step reads `9 (run closed`), else `open`.
@@ -27,8 +28,8 @@
 #   (#286; references/hansei.md section 8). Times are YYYY-MM-DDTHH:MMZ or YYYY-MM-DDTHH:MM:SSZ, written cut to the minute; n is the largest R
 #   number plus 1. A row with the same kind, start and end is not added again (the body is printed unchanged). --what: no `|`, no newline, not empty.
 #   Neither writes to the tracker: the lead scans the printed body and posts it (`gh issue edit --body-file`). Neither reads docs/agents/factory.md.
-# Exit: 0 printed; 1 the body has no Factory run section; 2 usage, an unknown field, or an unreadable file (add-session: a bad id; add-run-wait: a kind
-#       not in the four, a time not in the format, end before start, a bad --what); 3 the section has no such line (or `moved`: no pointer; add-session:
+# Exit: 0 printed; 1 the body has no Factory run section; 2 usage, an unknown field, or an unreadable file (lead-sessions: an id not in its format;
+#       add-session: a bad id; add-run-wait: a kind not in the four, a time not in the format, end before start, a bad --what); 3 the section has no such line (or `moved`: no pointer; add-session:
 #       neither `FREEZE:` nor `started:`; add-run-wait: no `### Run waits` table with the exact header);
 #       4 the run moved to a map (the body says `Factory run: moved to #<n>`): read that ticket's body; 8 start: the section belongs to an open run;
 #       add-session, add-run-wait: the section belongs to a closed run. On a non-zero exit nothing is printed on stdout.
@@ -212,6 +213,11 @@ case "$field" in a3) key="A3" ;; freeze) key="FREEZE" ;; lead-sessions) key="lea
 line="$(printf '%s\n' "$sec" | grep -m 1 "^- $key:")"
 [ -n "$line" ] || { echo "run-state: the Factory run section has no \`$key:\` line" >&2; exit 3; }
 val="$(printf '%s\n' "$line" | sed "s/^- $key:[[:space:]]*//; s/[[:space:]]*\$//")"
+if [ "$field" = lead-sessions ] && [ "$val" != "none yet" ]; then
+  # the bad id is named by its place, never echoed: the value may hold shell syntax or a path
+  pos="$(printf '%s\n' "$val" | awk -F', ' '{ for (i = 1; i <= NF; i++) if ($i !~ /^[A-Za-z0-9-]+$/ || length($i) > 64) { print i " of " NF; exit } }')"
+  [ -z "$pos" ] || { echo "run-state: lead sessions: id $pos not in its format (^[A-Za-z0-9-]{1,64}\$)" >&2; exit 2; }
+fi
 if [ "$field" = items ]; then
   [ "$val" = none ] && exit 0
   printf '%s\n' "$val" | grep -oE '(^|, )#[0-9]+' | tr -d ', ' | tr '\n' ' ' | sed 's/ $//'; echo

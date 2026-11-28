@@ -2,8 +2,8 @@
 Status: working
 Abnormality: none
 Progress:
-  Done: brief checked (WimSuenens, marker qa-engineer 4)
-  Next: L1 and L2 regression tests; re-pin 9.2 b and c; full suite; verdict update
+  Done: brief checked (WimSuenens, marker qa-engineer 4); 9.2 b and c re-pinned (bc7e206); L1 and L2 tests, red on e271040, green now
+  Next: full suite, verdict update
 Summary:
 Artifacts:
 Decisions:

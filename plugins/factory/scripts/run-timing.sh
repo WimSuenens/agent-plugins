@@ -18,7 +18,7 @@
 #   Not captured, all or nothing: `- run timing: not captured (<reason>)` (gaps: the reason on stderr).
 # A pure function of its arguments: reads no clock, writes no file, calls no network and reads no line of docs/agents/factory.md.
 # Exit: 0 printed; 1 the body has no Factory run section; 2 usage, an unreadable file, a time not in the format, close before started, a cut-offs
-#       line not in its format, a ledger whose item is not an item of the run; 4 the run moved to a map; 5 not captured (line: the line on stdout).
+#       line not in its format (stderr names it by its line number, `line <k>`, never echoes it), a ledger whose item is not an item of the run; 4 the run moved to a map; 5 not captured (line: the line on stdout).
 
 usage() { sed -n '2,/^# Exit/p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 [ $# -ge 1 ] || usage
@@ -169,7 +169,7 @@ fi >= 2 && fi <= nled + 1 {
 fi == nled + 2 {
   if ($0 == "") next
   n = split($0, g, "\t")
-  if (n != 5 || g[2] !~ /^(limits|stalled|interrupted)$/ || tmin(g[3]) < 0 || (g[4] != "open" && tmin(g[4]) < 0) || g[5] !~ /^[a-z_:-]+(,[a-z_:-]+)*$/) { if (!cbad) cbad = $0; next }
+  if (n != 5 || g[2] !~ /^(limits|stalled|interrupted)$/ || tmin(g[3]) < 0 || (g[4] != "open" && tmin(g[4]) < 0) || g[5] !~ /^[a-z_:-]+(,[a-z_:-]+)*$/) { if (!cbad) cbad = "line " FNR; next }
   ng++; gb[ng] = g[1]; gk[ng] = g[2]; graw[ng] = g[3]; gs[ng] = tmin(g[3]); ge[ng] = (g[4] == "open") ? -2 : tmin(g[4]); gm[ng] = g[5]
   next
 }

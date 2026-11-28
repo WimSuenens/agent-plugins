@@ -53,8 +53,10 @@ Contract change proposals arrive as questions; answer each with accept or reject
 - Every acceptance criterion maps to a contract or an ADR.
 - Every contract carries a worked example.
 - Every ADR records the rejected alternatives.
-- When a contract changes a rule, a name or a figure, the repo was searched (`grep -rn`) for every other text that states it, and the contract's `Paths:` and the feedback to the developer list each one; a changed figure is searched in its digit and its word form, and a statement that names only part of what the change now covers (one kind where there are now two, one language where there are now two) is searched for as well.
+- When a contract changes a rule, a name or a figure, the repo was searched (`grep -rn`) for every other text that states it, and the contract's `Paths:` and the feedback to the developer list each one; a changed figure is searched in its digit and its word form, and a statement that names only part of what the change now covers (one kind where there are now two, one language where there are now two) is searched for as well. Each sentence of the stale-text table is also searched over the test suite, and every hit becomes a pin row.
+- For every standard file the slice changes, the release contract lists the tests that guard that file's whole content (allow-files, size caps, line caps), beside its sentence pins: they are found by searching the test suite for the file's path or name, not for a sentence.
 - Every contract names its seams and expected behaviour, so QA can prepare the test from it.
+- A claim about every fixture, file or case of the suite is checked against the suite before hand-back, or named unverified in the contract.
 - The contract lists its search terms next to its list of stale texts, so a reviewer can see which spellings were tried.
 - Where the contract defines network operations, every operation the slice contract names public carries an explicit statement that no authentication is required (in an OpenAPI document, an empty security entry).
 - Summary at most 10 lines, bullets included (`references/run-roles.md`, *Summary limit*); count before hand-back.

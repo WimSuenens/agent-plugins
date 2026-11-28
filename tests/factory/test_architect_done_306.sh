@@ -13,9 +13,10 @@ item() { done_of "$AR" | grep -F -- "$1"; }
 # ---- #306 a claim over the whole suite is checked or named unverified
 pin a306-claim-over-the-suite-checked "A claim about every fixture, file or case of the suite is checked against the suite before hand-back, or named unverified in the contract."
 
-# ---- #307 the pin table is built from the stale-text table, in the existing search item (not a second item)
+# ---- #307 the pin table is built from the stale-text table: its own item, right after the repo search item (not a copy of it)
 pin a307-stale-sentences-searched-in-tests "Each sentence of the stale-text table is also searched over the test suite, and every hit becomes a pin row."
-ck a307-extends-the-search-item 1 "$(item 'Each sentence of the stale-text table is also searched over the test suite' | grep -cF 'the repo was searched (`grep -rn`) for every other text that states it')"
+ck a307-own-item "- Each sentence of the stale-text table is also searched over the test suite, and every hit becomes a pin row." "$(item 'Each sentence of the stale-text table is also searched over the test suite')"
+ck a307-follows-the-search-item 1 "$(done_of "$AR" | grep -B1 -F -- '- Each sentence of the stale-text table' | head -n1 | grep -cF 'the repo was searched (`grep -rn`) for every other text that states it')"
 
 # ---- #308 whole-content guards per changed file of standard work, found by path or name
 pin a308-whole-content-guards-listed "For every file of standard work the slice changes (the run skill, the references, the agent files), the release contract lists the tests that guard that file's whole content (allow-files, size caps, line caps), beside its pin table"

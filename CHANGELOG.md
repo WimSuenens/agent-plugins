@@ -19,7 +19,7 @@ Closes [#306](https://github.com/WimSuenens/agent-plugins/issues/306), [#307](ht
 
 **Unverified.** Nothing ran in a live factory session. Whether the three rules prevent a second architect round shows only at the next release contract.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `c919ae69e4bb85dd92085c33da75e8d5d5eb2ad02aafa578bef5cc6149b207d4`, tooling `0ea7c2e5079fc7d2a42b5442ce45da8512d11162695360b0143ace84536a806a`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `f07e18759e303d904d0674076b4d188c237b6a87ce71b4bda7dea30f33726cd6`, tooling `0ea7c2e5079fc7d2a42b5442ce45da8512d11162695360b0143ace84536a806a`.
 
 ## factory 3.10.0 (#286)
 

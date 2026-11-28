@@ -54,7 +54,8 @@ Contract change proposals arrive as questions; answer each with accept or reject
 - Every acceptance criterion maps to a contract or an ADR.
 - Every contract carries a worked example.
 - Every ADR records the rejected alternatives.
-- When a contract changes a rule, a name or a figure, the repo was searched (`grep -rn`) for every other text that states it, and the contract's `Paths:` and the feedback to the developer list each one; a changed figure is searched in its digit and its word form, and a statement that names only part of what the change now covers (one kind where there are now two, one language where there are now two) is searched for as well. Each sentence of the stale-text table is also searched over the test suite, and every hit becomes a pin row.
+- When a contract changes a rule, a name or a figure, the repo was searched (`grep -rn`) for every other text that states it, and the contract's `Paths:` and the feedback to the developer list each one; a changed figure is searched in its digit and its word form, and a statement that names only part of what the change now covers (one kind where there are now two, one language where there are now two) is searched for as well.
+- Each sentence of the stale-text table is also searched over the test suite, and every hit becomes a pin row.
 - For every file of standard work the slice changes (the run skill, the references, the agent files), the release contract lists the tests that guard that file's whole content (allow-files, size caps, line caps), beside its pin table: they are found by searching the test suite for the file's path or name, not for a sentence.
 - Every contract names its seams and expected behaviour, so QA can prepare the test from it.
 - A claim about every fixture, file or case of the suite is checked against the suite before hand-back, or named unverified in the contract.

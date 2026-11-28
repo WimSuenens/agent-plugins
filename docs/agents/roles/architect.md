@@ -12,6 +12,7 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 - **`cut-offs.sh --since` filters gaps by start**, so a gap that began before the window is lost: drop `--since` and clip in the consumer.
 - **"Same refusals as the old version" plus inserted keys (#286)**: a single-pass order check (`prev` over all keys) changes the old keys' `out of order` result once new keys sit between them. Check the suite's out-of-order fixture against the equality before promising it; keep the old keys' order in their own track and seed the new keys' track from it, with an upper bound at the next old key.
 - **Pin search per sentence, not per term list**: cut every stale-text sentence to its distinctive phrase and `git grep -nF` it over `tests/` on `origin/main`; a term list missed `when its marker is v2 or v3` (#286). Also flag soft pins: an `if grep … then ck else skip` check turns into a skip, not a failure, when the text goes.
+- **Validation exits on untrusted fields (#286 L1, L2)**: name the bad value by its place (`id 2 of 3`, `line <k>`), never echo it on stderr; give every new exit a not-captured reason the Lead writes, and say how the Lead quotes a field it pastes into a command (`--what '<what>'` is safe only because the grammar admits no `'`).
 - **Version bumps of a marker**: grep the tests for the old "unknown version" case too (`v4` was the skipped example in `test_a3_check.sh`), and keep the sentences other tests pin while adding the new version beside them.
 
 ## Skills used

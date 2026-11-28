@@ -13,6 +13,7 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 - factory plugin scripts (awk inside single quotes): an apostrophe in an awk comment ends the shell quote (`awk: syntax error`, then bash errors on the rest); a `fail()` function called from END needs `exit code`, a bare `exit` there returns 0; `awk -v x="$text"` turns `\n` in the text into a newline, so pass free text as `X="$text" awk '... ENVIRON["X"] ...'`; tests grep scripts for `(gh|curl|wget|nc|jq) ` outside comments, so never name an awk variable `nc`. Time arithmetic stays in awk (days-from-civil), never `date -d/-j`.
 - factory standard text: `test_run_split.sh` checks every line of the router and the moved `references/run-*.md` against the 3.0.0 skill plus one QA allow-file per slice (`tests/factory/fixtures/split/*-added.txt`, `allowed-missing.txt`); any added or reworded line there fails it until QA adds the slice's file, so name it for QA at the start of the build. Text pins are `grep -F`: write the bare form (`run-state.sh add-session`) beside the quoted command. In `skills/run/SKILL.md` a `${CLAUDE_...}` in prose is substituted too, so never write one where the literal text is meant.
+- factory scripts that feed text to the tracker or to a command the lead writes: check every field against a closed grammar and, on failure, name the bad value by position on stderr, never echo it. `test_release64` ac45 scans every changed file (also `reviews/`, `work/`) for home-shaped paths, so write probe paths as `~/...` or `/x/...`.
 
 ## Skills used
 

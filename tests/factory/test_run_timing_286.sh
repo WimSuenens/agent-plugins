@@ -144,4 +144,30 @@ if command -v python3 >/dev/null; then
 else
   skip b7-generated-runs "python3 missing"
 fi
+
+# ---------- security L1 (contract 286-run-timing section 3, section 6 row B5 (L1)): the markers column has a grammar ----------
+# a cut-offs line whose markers fall outside ^[a-z_:-]+(,[a-z_:-]+)*$ is refused, exit 2, named by its line number, its text never echoed
+l1() { # l1 <name> <markers> : lead.tsv plus one bad 4th line
+  cp "$FX/lead.tsv" "$T/l1.tsv"; printf '%s.jsonl\tlimits\t2026-12-01T13:50:00Z\t2026-12-01T13:55:00Z\t%s\n' "$SID" "$2" >> "$T/l1.tsv"
+  rt gaps --run-body "$FX/run.md" --close "$CLOSE" --ledger "$FX/l41.md" --ledger "$FX/l42.md" -- "$T/l1.tsv"
+  ck "l1-$1-exit-2-nothing-on-stdout" "2|" "$RC|$OUT"
+  ck "l1-$1-stderr-names-line-4" "run-timing: a cut-offs line not in its format: line 4" "$ERR"
+  ck "l1-$1-stderr-never-echoes-the-line" 0 "$(printf '%s\n' "$ERR" | grep -cF -e "$2" -e "$SID" -e '13:50')"
+}
+l1 command-substitution-and-at '$(id) @who'
+l1 path '/x'
+l1 upper-case 'Api-Error'
+l1 empty-element 'silent-gap,'
+l1 quote "a'b"
+# the line number counts from 1 in the cut-offs input: a bad first line is line 1
+{ printf '%s.jsonl\tstalled\t2026-12-01T09:52:10.000Z\t2026-12-01T10:14:05.000Z\t$(id)\n' "$SID"; tail -n +2 "$FX/lead.tsv"; } > "$T/l1first.tsv"
+rt gaps --run-body "$FX/run.md" --close "$CLOSE" --ledger "$FX/l41.md" --ledger "$FX/l42.md" -- "$T/l1first.tsv"
+ck l1-first-line-is-line-1 "2|run-timing: a cut-offs line not in its format: line 1" "$RC|$ERR"
+# controls: markers in the grammar pass (the fixed vocabulary of cut-offs.sh, joined by ,), so the refusals above are the grammar's
+cp "$FX/lead.tsv" "$T/l1ok.tsv"; printf '%s.jsonl\tlimits\t2026-12-01T13:50:00Z\t2026-12-01T13:55:00Z\tcut-mid-stream,api-error:rate_limit\n' "$SID" >> "$T/l1ok.tsv"
+rt gaps --run-body "$FX/run.md" --close "$CLOSE" --ledger "$FX/l41.md" --ledger "$FX/l42.md" -- "$T/l1ok.tsv"
+ck l1-control-two-markers-pass 0 "$RC"
+ck l1-control-section-3-example-unchanged "$(printf 'stalled\t2026-12-01T10:00Z\t2026-12-01T10:10Z\tfound at close: silent-gap\nlimits\t2026-12-01T13:40Z\t2026-12-01T14:00Z\tfound at close: api-error:rate_limit')" \
+  "$(/bin/bash "$RT" gaps --run-body "$FX/run.md" --close "$CLOSE" --ledger "$FX/l41.md" --ledger "$FX/l42.md" -- "$FX/lead.tsv" 2>/dev/null)"
+
 done_

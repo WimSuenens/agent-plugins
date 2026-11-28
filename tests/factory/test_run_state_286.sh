@@ -94,4 +94,24 @@ rs add-session "$FX/run25.md" "$SID2"; printf '%s\n' "$OUT" > "$T/resumed.md"
 ck b1-resumed-started-unchanged "2026-12-01T10:00:00Z" "$(bash "$RS" started "$T/resumed.md" 2>/dev/null)"
 ck fields-read-as-before "9|none|#41 #42|1a2b3c4 (3.10.0)|not yet" "$(for f in step in-flight items freeze baseline; do bash "$RS" "$f" "$FX/run.md" 2>/dev/null; done | paste -sd'|' -)"
 ck status-open-with-table "open" "$(bash "$RS" status "$FX/run.md" 2>/dev/null)"
+
+# ---------- security L2 (contract 286-run-timing section 2.4, section 6 row B4 (L2)): lead-sessions checks each id ----------
+ls2() { # ls2 <name> <value> <want exit|stdout|stderr>
+  sed "s#^- lead sessions: .*#- lead sessions: $2#" "$FX/run25.md" > "$T/ls2.md"
+  local o rc e; o="$(bash "$RS" lead-sessions "$T/ls2.md" 2>"$T/ls2.err")"; rc=$?; e="$(cat "$T/ls2.err")"
+  ck "l2-$1" "$3" "$rc|$o|$e"
+}
+ls2 path-second-of-two "$SID, ../../x" '2||run-state: lead sessions: id 2 of 2 not in its format (^[A-Za-z0-9-]{1,64}$)'
+ls2 command-first-of-three '$(touch pwned), abc, def' '2||run-state: lead sessions: id 1 of 3 not in its format (^[A-Za-z0-9-]{1,64}$)'
+ls2 too-long "$SID, $(printf 'a%.0s' $(seq 1 65))" '2||run-state: lead sessions: id 2 of 2 not in its format (^[A-Za-z0-9-]{1,64}$)'
+ls2 underscore 'abc_def' '2||run-state: lead sessions: id 1 of 1 not in its format (^[A-Za-z0-9-]{1,64}$)'
+ls2 control-none-yet 'none yet' '0|none yet|'
+ls2 control-two-valid "$SID, $SID2" "0|$SID, $SID2|"
+ls2 control-64-chars "$(printf 'a%.0s' $(seq 1 64))" "0|$(printf 'a%.0s' $(seq 1 64))|"
+# an empty value prints an empty line, exit 0, as before
+grep -v '^- lead sessions:' "$FX/run25.md" | sed "s#^- FREEZE: \(.*\)#- FREEZE: \1\\
+- lead sessions:#" > "$T/ls2e.md"
+o="$(bash "$RS" lead-sessions "$T/ls2e.md" 2>/dev/null)"; rc=$?
+ck l2-control-empty-value "1|0|" "$(grep -c '^- lead sessions:$' "$T/ls2e.md")|$rc|$o"
+
 done_

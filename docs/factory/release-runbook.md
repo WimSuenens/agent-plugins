@@ -350,6 +350,36 @@ git push origin factory-v2.3.0
 
 **Rollback.** There is nothing to roll back in a project: the A3 v2 lines and the derived sub-lines are additions, and the 2.2.0 text skips the one and does not read the other. To put the plugin back on the 2.2.0 text, publish a new version above 2.3.0 whose content is the 2.2.0 text, as the *Release 2.0.0* section describes for its own rollback; installs follow the version string.
 
+## Release 3.10.0 (slice #286, run-level timing)
+
+**Minor release 3.10.0, no migration.** Standard work and tooling changed, so the baseline starts a new `3.10` series (`references/baseline.md`, section 6). Nothing in a project has to change. A run that is already open when 3.10.0 is installed closes with `run timing: not captured (run section has no Run waits table)`: it is named in the baseline's Runs section, not counted. New runs post an A3 v4 (`<!-- factory:a3 v4 -->`). A 3.9.x session that reads a v4 A3 skips it as an unknown version, so it does not see that A3's run lines. Settle a run under the release that posted its A3.
+
+**Release checks** (read-only; on the branch after `git fetch origin main`, in the item/286 worktree):
+
+1. `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills` exit 0. The manifest's `domain` warning is not from this release: the field is on `main` too.
+2. `bash scripts/check-bump.sh` prints `pass: minor bump needed, 3.9.1 -> 3.10.0`, exit 0.
+3. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 3.10.0`. The two fingerprints are kept on the last line of the 3.10.0 entry in [CHANGELOG.md](../../CHANGELOG.md), not repeated here. Any change under `plugins/factory/` after that entry is written is a forgotten fingerprint.
+4. `bash tests/run.sh` prints `ALL PASSED` with no named skip.
+
+**Tag (the Lead, after the person approved the merge).** Tags on origin run from `factory-v1.0.0` to `factory-v3.9.1` (`git ls-remote --tags origin 'factory-v*'`). `factory-v3.10.0` must not exist before the merge. In the item/286 worktree, with `<pr>` the number of the item/286 pull request:
+
+```
+git fetch origin main
+bash scripts/check-bump.sh        # expect exit 0
+gh pr merge <pr> --merge
+printf '%s' "3.10.0" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' && echo semver-ok
+git ls-remote --tags origin factory-v3.10.0        # must print nothing, else the tag exists: stop
+git fetch origin main
+git tag factory-v3.10.0 "$(gh pr view <pr> --json mergeCommit --jq .mergeCommit.oid)"
+git push origin factory-v3.10.0
+```
+
+**Post-merge checks.** `git ls-remote --tags origin 'factory-v*'` lists `refs/tags/factory-v3.10.0`, and `git show factory-v3.10.0:plugins/factory/.claude-plugin/plugin.json` shows `"version": "3.10.0"`. The two post-merge checks that only a live run shows are in [CHANGELOG.md](../../CHANGELOG.md) under *3.10.0*, *Unverified*: the before-reading (AC-C6) and the live baseline (AC-C5). Do not move or delete a published tag.
+
+**Frozen install.** `claude plugin list --json`, read on 2026-11-28, reports `factory@wimsuenens` at version 3.9.1 with user scope: the frozen install of this run. Merging and tagging 3.10.0 changes nothing on this machine until the freeze ends. Then `claude plugin marketplace update wimsuenens` brings the release in, and the person restarts running sessions: an open session keeps the skill text it read at start.
+
+**Rollback.** A run's timing lines and the Runs section are additions. The 3.9.x text does not read a v4 A3 for runs and does not know the Run waits table, so nothing in a project has to be undone. To put the plugin back on the 3.9.1 text, publish a new version above 3.10.0 whose content is the 3.9.1 text, as the *Release 2.0.0* section describes for its own rollback; installs follow the version string.
+
 ## Obeya image (slice #124, [ADR 0020](../adr/0020-the-obeya-is-a-nuxt-4-container-image-on-ghcr.md))
 
 The Obeya app ships as `ghcr.io/wimsuenens/obeya:<semver>`, built for `linux/amd64` and `linux/arm64` by `.github/workflows/obeya-image.yml`. The app is versioned apart from the plugin: a plugin release does not rebuild the image.

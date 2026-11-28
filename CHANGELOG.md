@@ -2,6 +2,31 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.10.0 (#286)
+
+Release: `3.10.0`, a **minor** release: standard text changed (`skills/run/SKILL.md` and the references `a3.md`, `baseline.md`, `hansei.md`, `run-close-run.md`, `run-overrides.md` and `run-route.md`) and tooling changed (`a3-check.sh` and `run-state.sh` changed; `run-timing.sh` is new). Both fingerprints change, so the baseline starts a new `3.10` series. No migration: A3 v1 to v3 comments, earlier records and the baseline marker `v1` stay valid. Restart Claude Code sessions after updating: a session keeps the factory skill text it read when it started.
+
+Closes [#286](https://github.com/WimSuenens/agent-plugins/issues/286). Refs [#278](https://github.com/WimSuenens/agent-plugins/issues/278) (the map). Contracts: [286-run-timing](contracts/286-run-timing.md), [286-a3-v4-and-runs](contracts/286-a3-v4-and-runs.md), [286-release](contracts/286-release.md).
+
+**What changed for the person who runs the factory:**
+
+- **Run timing is always on.** Every run writes `started:` however it is entered. The Factory run section gains a `lead sessions` line (the Claude Code sessions that ran the lead) and a `### Run waits` table for the waits that no item owns: the person's questions and approvals, usage limits, stalls and interruptions. No line of `docs/agents/factory.md` turns this off (ADR 0024).
+- **The run's timing is computed by a script.** `scripts/run-timing.sh` has two subcommands. `gaps` finds the limit, stall and interruption stretches outside every item's in-flight window, for the run-close scan. `line` prints the A3's `run timing` line from the run body and the item ledgers: raw run time, adjusted run time, and the time blocked by the person, limits, stalls and interruptions. The Lead pastes its output and computes no figure by hand (ADR 0025).
+- **`run-state.sh` has three additions.** `add-session` records a session id on the `lead sessions` line, `add-run-wait` appends a row to the Run waits table, and `lead-sessions` reads the line back. `start` writes the new section shape.
+- **The A3 is v4.** A new A3 posts `<!-- factory:a3 v4 -->`: the v3 lines plus four run lines, `run timing`, `discipline`, `run compared` and `guardrails`. `discipline` reads `off` in this release, because the obeya-discipline line is not read yet. `a3-check.sh` accepts v4, still reads v1 to v3 as before, and skips and names any other version (ADR 0026).
+- **The baseline has a Runs section.** The Factory baseline gains a Runs section per series, read from the `run timing` and `guardrails` lines of the A3s of counted runs. A run that the person stopped is named there and left out of the medians. The baseline marker stays `<!-- factory:baseline v1 -->` (ADR 0026).
+
+**Tests.** `tests/factory/test_run_timing_286.sh`, `test_run_state_286.sh`, `test_a3_v4_286.sh`, `test_baseline_runs_286.sh` and `test_run_text_286.sh` (new; their fixtures sit under `tests/factory/fixtures/runs286/`) check the figures against known answers, the refusals of the new script arguments, and the A3 v4 lines. The pins of earlier tests that named v1 to v3 move to v4. `bash tests/run.sh` prints `ALL PASSED` for this release.
+
+**Unverified.** Nothing ran in a live factory session; the checks are offline and on a sandbox scenario. What only real use shows:
+
+- the before-reading (AC-C6): the first run started on 3.10.0 must post a v4 A3 with `discipline: off` and `run compared: none (no run with discipline off in series 3.10)`, and the baseline's series 3.10 must list that run in its Runs section;
+- whether `${CLAUDE_SESSION_ID}` is substituted in a real Claude Code session (it was unset in the test environment). If the router's `Session:` line shows no id, the step-0 fallback fills it; check the `lead sessions` line at the first run;
+- that a real Lead asks no question and sets no line to get the timing (AC-A1, AC-B4);
+- that the first run close keeps the live Factory baseline's sections and figures (AC-C5).
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `0c646b0dd548a2099fbbd37563e23d9befab95293c38ca249f82a3d9c6d8a1d3`, tooling `0ea7c2e5079fc7d2a42b5442ce45da8512d11162695360b0143ace84536a806a`.
+
 ## factory 3.9.1 (#276)
 
 Release: `3.9.1`, a **patch** release: one script changed (`post-text.sh`, the scan that `stage-publish.sh`, `post-file.sh`, `intake.sh` and `improvement.sh` use). Standard text is unchanged, so the `standard` fingerprint is too; `tooling` changes. No migration.

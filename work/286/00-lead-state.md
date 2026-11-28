@@ -1,7 +1,8 @@
 # Lead state: #286
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhMhYU0
-- next step: 6, read #297 (QA verdict) and #298 (security verdict) on PR #296; then rework or Documentation, Delivery, proof, merge gate
+- next step: 6, read #298 (security verdict); then Documentation (docs-writer), Delivery, proof, merge gate
+- note for hansei: the #295 Tasks row was added locally and not posted; a later fresh fetch overwrote it; restored at 08:22Z with ledger.sh check (no row lost)
 - open questions: Q2-Q5 of the requirement, with the architect; Q1 answered by the lead (before-reading = first run on the release that ships #286)
 - frozen on: factory 3.9.1 (map FREEZE line says 3.9.0; see A1)
 - ADR number: none (ADRs 0024 to 0026 already landed in the frontier round)
@@ -9,9 +10,8 @@
 
 ## Running agents
 
-- role task #297: qa-engineer a4cb57d80345b169a (Verification)
 - role task #298: security-reviewer a200379227a3f66a0 (Verification)
-- done: #294 qa-engineer a36614bf99ac4b102; #295 developer aeae65205fd37d8ea; #287 product-owner a2b9b64258dc7f2f1; #290 architect a6d3501c285e72806; #292 qa-engineer aecd70759aed3ab72; #293 architect ad17d6e3f1cc4966c
+- done: #297 qa-engineer a4cb57d80345b169a (pass); #294 qa-engineer a36614bf99ac4b102; #295 developer aeae65205fd37d8ea; #287 product-owner a2b9b64258dc7f2f1; #290 architect a6d3501c285e72806; #292 qa-engineer aecd70759aed3ab72; #293 architect ad17d6e3f1cc4966c
 
 ## Shared resources
 
@@ -19,8 +19,7 @@ none yet
 
 ## Interrupted
 
-- #297 qa-engineer a4cb57d80345b169a: limits since 2026-11-28T00:11Z; last commit none of its own; draft work/286/12-result-qa-engineer.md not written yet
-- #298 security-reviewer a200379227a3f66a0: limits since 2026-11-28T00:11Z; last commit 9fa381c; draft work/286/13-result-security-reviewer.md (working)
+- #298 security-reviewer a200379227a3f66a0: limits 00:11Z-08:13Z (W6), held for QA 08:13Z-08:21Z (W7), resumed 08:21Z; last commit 9fa381c; draft work/286/13-result-security-reviewer.md (working)
 - from the limit hit on: no parallel role agents for the rest of this item (QA before security)
 
 ## Label

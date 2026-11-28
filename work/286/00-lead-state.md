@@ -1,7 +1,7 @@
 # Lead state: #286
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhMhYU0
-- next step: 6, read #302; then security re-verify (L1/L2) + verdict line 31; push; Documentation
+- next step: 6, read #303; push; Documentation (docs-writer: CHANGELOG 3.10.0 with fingerprints, README:177, reference.md:84, release runbook); then proof, merge gate
 - deferred: a `gaps` exit 2 at close gets no not-captured reason; it is an andon for the Lead (architect round-3 question, lead decision)
 - note for hansei: the #295 Tasks row was added locally and not posted; a later fresh fetch overwrote it; restored at 08:22Z with ledger.sh check (no row lost)
 - open questions: Q2-Q5 of the requirement, with the architect; Q1 answered by the lead (before-reading = first run on the release that ships #286)
@@ -11,8 +11,8 @@
 
 ## Running agents
 
-- role task #302: qa-engineer a4cb57d80345b169a (resumed; rework 3: L1/L2 regression tests, allow-file, suite)
-- done: #301 developer a1e45ef048f11aceb; #300 architect ad17d6e3f1cc4966c; #299 developer a1e45ef048f11aceb (L1, L2 fixed); #298 security-reviewer a200379227a3f66a0 (pass, L1 L2 low); #297 qa-engineer a4cb57d80345b169a (pass); #294 qa-engineer a36614bf99ac4b102; #295 developer aeae65205fd37d8ea; #287 product-owner a2b9b64258dc7f2f1; #290 architect a6d3501c285e72806; #292 qa-engineer aecd70759aed3ab72; #293 architect ad17d6e3f1cc4966c
+- role task #303: security-reviewer a200379227a3f66a0 (resumed; rework 4: re-verify L1/L2, verdict line 31)
+- done: #302 qa-engineer a4cb57d80345b169a (pass round 2); #301 developer a1e45ef048f11aceb; #300 architect ad17d6e3f1cc4966c; #299 developer a1e45ef048f11aceb (L1, L2 fixed); #298 security-reviewer a200379227a3f66a0 (pass, L1 L2 low); #297 qa-engineer a4cb57d80345b169a (pass); #294 qa-engineer a36614bf99ac4b102; #295 developer aeae65205fd37d8ea; #287 product-owner a2b9b64258dc7f2f1; #290 architect a6d3501c285e72806; #292 qa-engineer aecd70759aed3ab72; #293 architect ad17d6e3f1cc4966c
 
 ## Shared resources
 

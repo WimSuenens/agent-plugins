@@ -66,6 +66,9 @@ _Avoid_: checksum, hash (without saying which files it covers)
 **Hansei record** — the one comment the Lead leaves on an item's slice ticket, in the project's own tracker, at the person's merge approval: a marker with a schema version, the release and both fingerprints, and the seven measures, each with a value or "not captured". Its doors measure is filled in the same comment after the resurvey.
 _Avoid_: retro, report, post-mortem
 
+**Overturn** — a rework task undoing a two-way decision that a role listed under `Decisions` in its result. It is counted per decision, and only when the rework task names the decision it undoes; who routed the task (its `Source`) does not make it one. A rework task that passes on a security finding, a contract update or a test task overturns nothing.
+_Avoid_: reversal, any `Source: lead` rework
+
 **Stage log** — in factory 1.x, the Lead's timed account of an item in its lead state: one row per stage with UTC start and end, the agents that worked it, waits for the person or on limits, and the person's touches. The hansei record was computed from it, and it went with `work/<id>/` at close. From 2.0.0 its data lives in the **Ledger** and the role-task sub-issues; the name survives only in the hansei header key `stage-log cross-check` and in the 1.x worked examples.
 _Avoid_: timeline, audit log
 

@@ -16,9 +16,11 @@ Closes [#309](https://github.com/WimSuenens/agent-plugins/issues/309) and [#310]
 
 **Tests.** `tests/factory/test_overturns_artifacts_309.sh` (new) covers both issues: the 3.9.1 case (three `Source: lead` tasks with `Overturns: none` read 0), two lines adding 2, a missing line refused, `a3-events.sh` on a v6 record, the baseline reading v6 and skipping v7, and `render` on a valid list, `none`, a prose clause and a parenthetical note, with the valid drafts' output compared byte for byte to 3.11.0's. Pins on the v5 marker and the old measure-3 sentence move to v6 and the new sentence; the fence fixtures `protocol-doors.md` and `protocol-minus-tests.md` follow the protocol. Drafts in `test_role_tasks.sh` that carried bulk text under `Artifacts:` now carry it under `Progress:`. `bash tests/run.sh` prints `ALL PASSED` for this release.
 
+**Old texts confirmed, not changed.** Contracts, requirements, reviews, the release runbook and ADR 0008 that name `hansei v5` or a `Source: lead` overturn record earlier slices and stay as written; an overturn is still routed with `Source: lead`, it is only no longer counted by it.
+
 **Unverified.** Nothing ran in a live factory session. Whether roles write a one-line `Artifacts:` first time, and whether the lead writes the `Overturns:` line on every rework task, shows only at the next run.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `e8b86c6f16b132519547929078ada00c6514b4508e72ca3795f20763a9c002da`, tooling `57316882b863f8e676f556d3c09d088063008b49ce0f2e0de335724ddd3b5852`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `e8b86c6f16b132519547929078ada00c6514b4508e72ca3795f20763a9c002da`, tooling `f8489dd2a304a9272c353f7755442be417467b7385b19c99127a6787291ec6cf`.
 
 ## factory 3.11.0 (#306)
 

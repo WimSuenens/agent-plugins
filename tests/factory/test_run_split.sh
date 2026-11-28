@@ -47,7 +47,7 @@ num() { printf '%s\n' "$sum" | sed -n "s/.*$1=\([0-9]*\).*/\1/p"; }
 ck a1-no-old-line-lost 0 "$(num lost)"
 ck a2-no-line-added-but-pointers-stubs-headers 0 "$(num added)"
 ck a2b-every-pinned-slice4-line-is-present "$(num slice4allow)" "$(num slice4)"
-ck a3-allow-list-is-explicit-and-small "yes" "$([ "$(num allowlist)" -le 18 ] && echo yes || echo no)"  # #286: step 9.0 and 9.2 reworded (contract 286-run-timing section 5.2)
+ck a3-allow-list-is-explicit-and-small "yes" "$([ "$(num allowlist)" -le 18 ] && echo yes || echo no)"  # #309/#310: the three lines of slice309-replaced.txt; #286: step 9.0 and 9.2 reworded (contract 286-run-timing section 5.2)
 ck a4-title-and-trigger-line-per-reference "$((narefs * 2))" "$(num headers)"
 # the two directions together: a pointer line is the only thing that may differ, and every reference starts with title, blank, trigger
 for r in $refs; do

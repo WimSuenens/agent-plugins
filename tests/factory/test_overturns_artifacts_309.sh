@@ -80,6 +80,9 @@ out="$(bash "$OV" r8.md 2>&1 >/dev/null)"; rc=$?
 ck ac2-no-role-rc 3 "$rc"
 ck ac2-no-role-names-line 1 "$(printf '%s' "$out" | grep -c 'r8.md:4: ')"
 bash "$OV" nothere.md >/dev/null 2>&1; ck ov-unreadable-rc 2 "$?"
+# a line quoted inside the findings is not counted (only the head before `Findings:` is read)
+{ cat r1.md; echo "Overturns: architect — quoted in a finding"; } >r9.md
+ck ov-findings-text-not-counted 0 "$(bash "$OV" r9.md 2>/dev/null)"
 
 # ============================================================ #309: a3-events.sh reads v6
 rec6() { # rec6 <file> <n>

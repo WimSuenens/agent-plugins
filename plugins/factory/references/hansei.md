@@ -142,6 +142,8 @@ At close, before the cross-check (section 5, step 2), complete the ledger's Wait
 2. For each line, find a logged wait for the same agent (`lead` for a session transcript) whose interval overlaps or touches the line's. A line of any kind that overlaps or touches a logged `andon` wait of the same agent **is that wait** (a `TaskStop` writes a `[Request interrupted by user]` entry and the pause leaves a silent gap, and both belong to the andon, not to a stall): keep the wait's kind `andon` and its Start and End (your own clock) and add no wait. **Otherwise, when there is one**, it is the same wait: set its Start to the line's start when they differ (the line is the better clock), keep its End and its kind unless the line's kind is the stronger (`limits`, `interrupted`, `stalled`, in that order). **When there is none**, add a wait: the line's kind, the agent, Start and End from the line (cut to minutes; an `open` end takes the End of that agent's last Tasks row), `Held item` as for any wait, and `What` `found at close: <markers>`.
 3. Apply *The Lead's own wait stops a role's* to the result.
 
+The Lead's gaps outside every item go to the run's Run waits table (section 8).
+
 A wait found at close carries no `~`: its times are recorded clocks. When the script fails for a transcript (exit 3 or 4), the cross-check names it: `cut-offs not captured (transcript <basename> unreadable)`, and that role's spend reads `not captured` (`--require-end` exits with the same code). A role agent's transcript holds only this item's work, and your window is cut by `--since`/`--until`, so no further filter is needed.
 
 ### The lite record
@@ -151,6 +153,7 @@ Under `measurement: lite` (`factory-config.sh measurement`) the record is the sh
 - Cut-offs are not scanned and token spend is not totalled unless the person asks (`factory-config.sh analysis --asked`). Measure 5 and the `stalled` and `interrupted` parts of measure 1 then read `not captured (lite)`; the sub-lines of measure 1 are left out.
 - The `gemba` line reads `not captured (lite)` unless the person asks for the walk.
 - Everything else (header, `abnormalities`, measures 2, 3, 6 and 7, and the `skipped` roles noted in the ledger) is filled as under full.
+- The run's timing (section 8) is written under lite as under full: the Run waits table, `lead sessions` and the A3's `run timing` line, with `stalled`, `interrupted` and `adjusted` not captured as section 8 says.
 
 `not captured (lite)` is the honest value: the figure was not computed, never `0`.
 
@@ -759,3 +762,25 @@ not-captured := "not captured (" reason ")"      reason: 1 to 80 characters, no 
 | a frontier-round role task | `Tokens` and `Minutes` both `not captured (frontier round keeps no ledger)` |
 
 A ledger that cannot be read gives `not captured (ledger comment missing)` for `Hours`, `Person touches` and the waits-dependent `Minutes`; the values from the sub-issues alone (`Rework rounds`, `Tokens`) are still computed.
+
+## 8. The run's waits and run timing
+
+The run's own timing (ADRs 0024 and 0025): how long the run took (raw), how long without the minutes in which the whole run stood still (adjusted), and how many of those minutes each kind caused. The item records are unchanged; this section adds what belongs to no item.
+
+**Always written.** The Run waits table, the `lead sessions` line of the Factory run section and the A3's `run timing` line are written on every run, whatever `docs/agents/factory.md` says (`obeya`, `obeya-discipline`, `measurement` or any other line). None of them depends on a line of docs/agents/factory.md. No question is put to the person to get them.
+
+**The table.** The Factory run section (`skills/run/SKILL.md`, step 2) ends with a `### Run waits` table, header exactly `| # | Kind | Agent | Start | End | What |` (no `Held item` column: whether a wait held the run is computed, never stored). `#` is `R1`, `R2` … counting up in the run; `Kind` is `person`, `limits`, `stalled` or `interrupted` (never `andon`: an andon is no block); `Agent` is always `lead`; `Start` and `End` are UTC cut to the minute; `What` has no `|` and no newline. A row is written when its wait **ends**, never open, with `bash "<plugin root>/scripts/run-state.sh" add-run-wait <body file> --kind <kind> --start <UTC> --end <UTC> --what <text>`; scan the printed body (*Scan before posting*) and post it with `gh issue edit <run ticket> --body-file`. The same row twice is not added again. A section without the table (an open run begun under an older release) gets no table and no row (`add-run-wait` exits 3).
+
+**Person rows.** A `person` row for every question, card, task request or approval you put to the person that belongs to no item: at least `which slice next?` (step 4, when you ask), `close the run now?` (step 9.0), the run-start `keep, promote or drop` lines, the release-crossed question (`references/run-route.md`), and, in a frontier round, its decision cards, task requests and the round's `merge and clean up?`. Start: `date -u` when the question is put; End: `date -u` when the answer is read. `What` names the question (`which slice next?`, `close the run now?`, `decision card on #<n>: <topic>`). Write it whether or not an item is in flight; the computation reads it only for minutes with no item in flight. A question about an item stays in that item's ledger only. The questions asked after the A3 is posted (9.3, 9.4) fall after the close instant and need no row.
+
+**Limits, stalls and interruptions** of your own session outside items are found by the run-close scan (`references/run-close-run.md`, step 9.2), never logged during the run. **Lead gaps and items**: the part of a Lead gap inside an item's in-flight window belongs to that item's ledger (*Cut-offs at close*, unchanged); only its minutes outside every item's window become Run waits rows. A gap that crosses a window edge is cut into the parts outside.
+
+**`lead sessions`.** The ids of your sessions that ran this run, in the order they started (`run-state.sh add-session`, step 0). They name the transcripts the run-close scan reads.
+
+**In flight.** An item is in flight from its ledger's `- started:` line to the time of the last `approval` row of its *Person's touches* table, or to the run's close when it has none (still in flight, or the run stopped), clipped to the run window `[started, close)`. Both instants are in the ledger comment, which survives the merge, so the reading can be counted again by hand from the ledgers, the Run waits table, the section's `started:` and the A3's `created_at`.
+
+**The computation.** Every time is cut to the minute. The run window is the minutes from the section's `started:` to the close (the A3 comment's `created_at`); raw is its length. A minute with at least one item in flight is **blocked** when every item in flight has a held wait over it (`Held item` `yes`, kind `person`, `limits`, `stalled` or `interrupted`; an `andon` row or a `Held item: no` row never makes an item held); Run waits rows are not read for it. A minute with no item in flight is blocked when a Run waits row covers it; ledger rows are not read for it. A blocked minute counts once, to the first kind among its waits in the order person, limits, stalled, interrupted. Adjusted is raw less the blocked minutes. `bash "<plugin root>/scripts/run-timing.sh" line --run-body <body file> --close <UTC> [--lite] --ledger <file> …` computes it and prints the A3's line; paste that line, never compute a figure by hand.
+
+**Not captured.** The whole line reads `- run timing: not captured (<reason>)` when the section has no `started:` line (`run section has no started: line`: a start is never invented), no Run waits table (`run section has no Run waits table`), an item of the run has no ledger (`ledger of #<n> missing`) or a ledger without `started:` or out of its grammar, or a Run waits row is out of its grammar; `run-timing.sh line` prints these. The run-close scan adds three, written by you: `lead transcript <basename> unreadable` (`cut-offs.sh` exit 3), `jq missing` (exit 4) and `no lead session recorded` (the `lead sessions` line reads `none yet` or is absent).
+
+**Lite.** Pass `--lite` when an item of the run closed without its close scan (its record's measure 1 reads `stalled not captured (lite)`): its ledger lacks the stalls and interruptions only that scan finds. Then `stalled`, `interrupted` and `adjusted` read `not captured (lite)`; `raw`, `person` and `limits` are measured. The run-close scan itself runs under lite as under full.

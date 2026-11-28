@@ -1,7 +1,9 @@
 # Lead state: #286
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhMhYU0
-- next step: 8.1, waiting on the person: merge gate paused (contract); needs-you asked 2026-11-28T09:20Z on #286; on yes, 8.2 onward (run-close-item.md)
+- next step: 8.6 close commits (close-item.sh), 8.7 merge train, 8.8 resurvey, 8.9 measure 7, 8.10 baseline
+- hansei: https://github.com/WimSuenens/agent-plugins/issues/286#issuecomment-7237216443
+- notes for the A3: measure 3 counts every Source: lead rework as an overturn (3 here, none was an overturn); the Waits cells of #297/#298 had to gain W9 at close (the Lead's own limit wait)
 - skipped: devops (not on the plan's role path; Delivery is the merge train's release hook) — skip.sh ok
 - deferred: a `gaps` exit 2 at close gets no not-captured reason; it is an andon for the Lead (architect round-3 question, lead decision)
 - note for hansei: the #295 Tasks row was added locally and not posted; a later fresh fetch overwrote it; restored at 08:22Z with ledger.sh check (no row lost)
@@ -32,7 +34,7 @@ none yet
 - overrides at start: none
 - wayfinding: bb9268f0245b (plugin list)
 - mattpocock-skills: 1.3.1 (plugin list)
-- lead sessions: 08dd4c6d-fe39-42ec-832c-6d3426a4617e
+- lead sessions: a8ee6b9d-7a0c-4099-8d0c-5a6173dc729a, 08dd4c6d-fe39-42ec-832c-6d3426a4617e
 
 ## Findings
 

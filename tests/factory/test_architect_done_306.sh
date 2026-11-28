@@ -17,8 +17,17 @@ pin a306-claim-over-the-suite-checked "A claim about every fixture, file or case
 pin a307-stale-sentences-searched-in-tests "Each sentence of the stale-text table is also searched over the test suite, and every hit becomes a pin row."
 ck a307-extends-the-search-item 1 "$(item 'Each sentence of the stale-text table is also searched over the test suite' | grep -cF 'the repo was searched (`grep -rn`) for every other text that states it')"
 
-# ---- #308 whole-content guards per changed standard file, found by path or name
-pin a308-whole-content-guards-listed "For every standard file the slice changes, the release contract lists the tests that guard that file's whole content (allow-files, size caps, line caps), beside its sentence pins"
+# ---- #308 whole-content guards per changed file of standard work, found by path or name
+pin a308-whole-content-guards-listed "For every file of standard work the slice changes (the run skill, the references, the agent files), the release contract lists the tests that guard that file's whole content (allow-files, size caps, line caps), beside its pin table"
 pin a308-found-by-path-not-sentence "found by searching the test suite for the file's path or name, not for a sentence"
+
+# ---- the terms the three items use are defined once, in the Output section
+output_of() { awk '/^## Output$/ {f=1; next} f && /^## / {f=0} f' "$AR"; }
+def() { # def <name> <fixed string>, in the Output section of the architect
+  if output_of | grep -qF -- "$2"; then echo "ok   $1"; passed=$((passed + 1)); else echo "FAIL $1: '$2' not in the Output section of ${AR#$REPO/}"; fail=1; fi
+}
+def terms-release-contract "A slice that changes the release (a new version) also gets a **release contract**"
+def terms-stale-text-table "the **stale-text table** (the list of stale texts: every other text that states a rule, a name or a figure the slice changes, with where it sits and which role changes it)"
+def terms-pin-table "the **pin table** (one **pin row** per test check that pins a sentence the slice changes: the test, the check, the text now and the text after)"
 
 done_

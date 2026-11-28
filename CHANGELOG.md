@@ -4,7 +4,7 @@ One entry per item, newest first. Entries are grouped by plugin. The factory is 
 
 ## factory 3.11.0 (#306)
 
-Release: `3.11.0`, a **minor** release: standard text changed (the Done list of `agents/architect.md`). The `standard` fingerprint changes, so the baseline starts a new `3.11` series; tooling is unchanged. No migration.
+Release: `3.11.0`, a **minor** release: standard text changed (the Output section and the Done list of `agents/architect.md`). The `standard` fingerprint changes, so the baseline starts a new `3.11` series; tooling is unchanged. No migration.
 
 Closes [#306](https://github.com/WimSuenens/agent-plugins/issues/306), [#307](https://github.com/WimSuenens/agent-plugins/issues/307), [#308](https://github.com/WimSuenens/agent-plugins/issues/308), the three lessons of the 3.9.1 run on the architect's contract. Built as one slice because all three change the same list.
 
@@ -12,13 +12,14 @@ Closes [#306](https://github.com/WimSuenens/agent-plugins/issues/306), [#307](ht
 
 - **Claims about the whole suite are checked.** A contract claim about every fixture, file or case of the test suite is run against the suite before the architect hands back, or the contract names it unverified so QA tests it first (#306).
 - **The pin table comes from the stale-text table.** Each sentence the architect lists as stale text is also searched over the test suite, and every hit becomes a row of the pin table, so the two tables cannot drift apart (#307).
-- **Whole-file guards are named up front.** For every standard file the slice changes, the release contract lists the tests that guard the file's whole content (allow-files, size caps, line caps) beside its sentence pins. The architect finds them by searching the test suite for the file's path or name, not for a sentence (#308).
+- **Whole-content guards are named up front.** For every file of standard work the slice changes, the release contract lists the tests that guard the file's whole content (allow-files, size caps, line caps) beside its pin table. The architect finds them by searching the test suite for the file's path or name, not for a sentence (#308).
+- **The release contract is defined.** The architect's Output section now says what a release contract holds: the version and release class, the stale-text table (the list of stale texts) and the pin table, one pin row per test check that pins a changed sentence.
 
-**Tests.** `tests/factory/test_architect_done_306.sh` (new) pins the three rules in the architect's Done list. The release pin of `test_slice6_text.sh` moves to `3.11.0`; no text pin moved, because the earlier pins of the search item are substrings of the extended item. No allow-file or cap guards `agents/architect.md` beyond the release-step scan of `test_release_split.sh`, whose allowed hit is unchanged. `bash tests/run.sh` prints `ALL PASSED` for this release.
+**Tests.** `tests/factory/test_architect_done_306.sh` (new) pins the three rules in the architect's Done list and the definitions in its Output section. The release pin of `test_slice6_text.sh` moves to `3.11.0`; no text pin moved, because the earlier pins of the search item are substrings of the extended item. No allow-file or cap guards `agents/architect.md` beyond the release-step scan of `test_release_split.sh`, whose allowed hit is unchanged. `bash tests/run.sh` prints `ALL PASSED` for this release.
 
 **Unverified.** Nothing ran in a live factory session. Whether the three rules prevent a second architect round shows only at the next release contract.
 
-Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `01de67fb28f8663549863c88eee045536a8fb5240e2507b452fba2127fcfd083`, tooling `0ea7c2e5079fc7d2a42b5442ce45da8512d11162695360b0143ace84536a806a`.
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `c919ae69e4bb85dd92085c33da75e8d5d5eb2ad02aafa578bef5cc6149b207d4`, tooling `0ea7c2e5079fc7d2a42b5442ce45da8512d11162695360b0143ace84536a806a`.
 
 ## factory 3.10.0 (#286)
 

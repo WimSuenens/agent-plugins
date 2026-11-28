@@ -54,6 +54,6 @@ has integrator-not-usable-alone "$IA" "is not a usable measure on its own"
 has integrator-advisory "$IA" "never choose the route"
 
 # the release
-has version-3-11-0 "$PLUGIN/.claude-plugin/plugin.json" '"version": "3.11.0"'
+has version-3-12-0 "$PLUGIN/.claude-plugin/plugin.json" '"version": "3.12.0"'
 has changelog-3-8-0 "$REPO/CHANGELOG.md" "## factory 3.8.0"
 done_

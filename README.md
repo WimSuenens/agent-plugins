@@ -128,7 +128,7 @@ Slices run in parallel whenever their path lists do not overlap, with no count l
 
 ### Measurement: the hansei record
 
-Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v5 -->` (`v4` at 1.2.0, `v3` at 1.1.0, `v2` at 1.0.0), and it holds:
+Every item the factory runs leaves one **hansei record** in the project where it ran, never in this repo. At the person's merge approval the lead posts one comment on the slice ticket. Its first line is the marker `<!-- factory:hansei v6 -->` (`v5` at 1.3.0, `v4` at 1.2.0, `v3` at 1.1.0, `v2` at 1.0.0), and it holds:
 
 - the release, the two fingerprints (`standard` for the standard work, `tooling` for `hooks/` and `scripts/`), the dependency versions as context, the active overrides (each by name and start date, or `none`), the abnormalities (a count per kind, and a link to each andon comment), a cross-check of the ledger's Tasks table (its header key keeps the 1.x name `stage-log cross-check`), and from 1.3.0 the gemba line below;
 - seven measures in a fixed order: lead time, first-pass yield, rework, escaped defects, tokens per role, the person's touches, and doors confirmed or contradicted.

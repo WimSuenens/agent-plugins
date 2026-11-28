@@ -114,7 +114,7 @@ has pmset-copy-utc-only "$HA" '**Copy only UTC start and end times** of a sleep 
 
 # --- AC-14: marker, header, seven measures in fixed order
 # #57: the record is v4 (contract 57-records-and-overrides section 1); a v3 record is still read, pinned in test_baseline_a3.sh
-ck ac14-marker-first-line '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
+ck ac14-marker-first-line '<!-- factory:hansei v6 -->' "$(printf '%s\n' "$TEMPLATE" | sed -n 1p)"
 ck ac14-marker-regex-matches 1 "$(printf '%s\n' "$TEMPLATE" | sed -n 1p | grep -Ec '^<!-- factory:hansei v([0-9]+) -->$')"
 has ac14-find-hansei-op "$TP" "select(.body | startswith(\"<!-- factory:hansei v\")) | .id"
 for k in '- plugin: factory <semver>' '- standard: <64 hex>' '- tooling: <64 hex>' '- active overrides: <none | <name> (since YYYY-MM-DD; whole item | from <YYYY-MM-DDTHH:MMZ> | until <YYYY-MM-DDTHH:MMZ>); …>' '- stage-log cross-check: largest gap <N>m (<row>: <evidence>)'; do
@@ -128,7 +128,7 @@ EXAMPLE="$(block_after "$HA" '### Worked example')"
 # 2.3.0 (#94): the two derived sub-lines under measure 1 are keyed `   - flow efficiency:` and `   - per stage:` (a key with a space)
 keys() { sed -E 's/^(<!--[^>]*-->|## Hansei:|- [a-z -]+:|[1-7]\. [a-z'"'"' -]+:|   - [a-z -]+:).*/\1/' | grep -vE '^$|^   - <|^   - [A-Z]'; }
 ck ac14-example-matches-template "$(printf '%s\n' "$TEMPLATE" | keys)" "$(printf '%s\n' "$EXAMPLE" | keys)"
-ck ac14-example-marker '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
+ck ac14-example-marker '<!-- factory:hansei v6 -->' "$(printf '%s\n' "$EXAMPLE" | sed -n 1p)"
 ck ac14-no-v1-marker-left 0 "$(grep -c 'factory:hansei v1 -->' "$HA" "$SK" "$TP" | awk -F: '{s+=$2} END {print s+0}')"
 has ac14-v1-v2-not-compared "$HA" 'never compare measure 1 or 2 across v1 and v2'
 
@@ -153,7 +153,7 @@ has ac15-m5-unlogged "$HA" '`<kind>` is then `unlogged`'
 has ac15-m5-exit6-row "$HA" '| 6 | `not captured (transcript truncated by <kind>)`'
 has ac15-m5-require-end-at-close "$HA" 'At close pass `--require-end` for every role transcript (never for the Lead'"'"'s own session, still running).'
 has ac15-m2-na "$HA" '`n/a (did not run)` when the stage was skipped'
-has ac15-m3-overturned "$HA" 'two-way decisions overturned by a `Source: lead` rework task'
+has ac15-m3-overturned "$HA" 'then the number of two-way decisions overturned: the `Overturns:` lines that are not `none`'   # #309
 has ac15-m5-script "$HA" 'bash "<plugin root>/scripts/token-spend.sh" <transcripts>'
 has ac15-m5-lead-included "$HA" '   - lead: spend <tok>; peak context <n>'
 has ac15-m6-touches "$HA" '6. person'"'"'s touches: decision cards <n>; demos <n>; approvals <n>; overturns <n>; other <n>'

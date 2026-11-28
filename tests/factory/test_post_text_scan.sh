@@ -25,6 +25,6 @@ printf 'Summary: x\n' >nostatus.md; bash "$PT" render nostatus.md out-ns.md >/de
 
 # standard text: the closing comment path no longer carries its own scan step
 hasnt closing-comment-no-own-scan-step "$RUN" '(1) **scan** the draft'
-has closing-comment-render-scans "$RUN" '(1) **render** it (`post-text.sh render <draft> <out>`, which scans the draft itself: a hit prints the file and line, writes nothing and exits 1; then post nothing, tell the person, keep the task `Running` and the issue open)'
+has closing-comment-render-scans "$RUN" '(1) **render** it (`post-text.sh render <draft> <out>`, which scans the draft itself: a hit prints the file and line, writes nothing and exits 1; then post nothing, tell the person, keep the task `Running` and the issue open;'   # #310: the exit-3 clause follows
 has scan-rule-names-render "$RUN" '`post-text.sh render` scans its draft itself'
 done_

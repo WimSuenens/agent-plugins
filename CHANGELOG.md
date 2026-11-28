@@ -2,6 +2,24 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.12.0 (#309)
+
+Release: `3.12.0`, a **minor** release: standard text changed (`references/protocol.md`, `references/hansei.md`, `references/baseline.md`, `skills/run/SKILL.md`) and tooling changed (`post-text.sh` changed; `overturns.sh` is new). Both fingerprints change, so the baseline starts a new `3.12` series. No migration: earlier hansei records keep their meaning and are never recomputed. A 3.11.x session that reads a v6 record skips it as an unknown version; settle an item under the release that posted its record.
+
+Closes [#309](https://github.com/WimSuenens/agent-plugins/issues/309) and [#310](https://github.com/WimSuenens/agent-plugins/issues/310), two lessons of the 3.9.1 run. Built as one slice because both change the protocol's templates.
+
+**What changed for the person who runs the factory:**
+
+- **An overturn is counted only when a rework task names it (#309).** The feedback template gains a mandatory line, `Overturns: none` or `Overturns: <role> — <decision>`, one line per overturned decision. Hansei measure 3 counts those lines over every rework task of the slice, whatever the task's `Source`; a lead-routed rework task that overturns nothing adds 0. In 3.9.1 the old rule (every `Source: lead` task) read 3 while no decision was overturned. The new script `overturns.sh` does the count and refuses a body without the line, so a missing line is never read as 0.
+- **Hansei records are v6 (#309).** The change of meaning bumps the record from v5 to v6. Key, order and grammar are unchanged; v5 records keep their old meaning, the baseline reads v3 to v6, and `a3-events.sh` raises the `overturned` event for a v6 record as before.
+- **The `Artifacts:` line has a stated grammar, checked at render (#310).** The result template now says: one line of repository paths separated by `, `, or `none`. `post-text.sh render` refuses any other form with exit 3 and names each bad entry (a note, a parenthesis, a sentence, an absolute or `..` path, a URL, a list continued on a second line), so the lead sends the draft back while the role is still in its task, not after the merge approval. The check runs after the secret scan, and every entry it accepts is read by `close-item.sh` as the same path.
+
+**Tests.** `tests/factory/test_overturns_artifacts_309.sh` (new) covers both issues: the 3.9.1 case (three `Source: lead` tasks with `Overturns: none` read 0), two lines adding 2, a missing line refused, `a3-events.sh` on a v6 record, the baseline reading v6 and skipping v7, and `render` on a valid list, `none`, a prose clause and a parenthetical note, with the valid drafts' output compared byte for byte to 3.11.0's. Pins on the v5 marker and the old measure-3 sentence move to v6 and the new sentence; the fence fixtures `protocol-doors.md` and `protocol-minus-tests.md` follow the protocol. Drafts in `test_role_tasks.sh` that carried bulk text under `Artifacts:` now carry it under `Progress:`. `bash tests/run.sh` prints `ALL PASSED` for this release.
+
+**Unverified.** Nothing ran in a live factory session. Whether roles write a one-line `Artifacts:` first time, and whether the lead writes the `Overturns:` line on every rework task, shows only at the next run.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `e8b86c6f16b132519547929078ada00c6514b4508e72ca3795f20763a9c002da`, tooling `57316882b863f8e676f556d3c09d088063008b49ce0f2e0de335724ddd3b5852`.
+
 ## factory 3.11.0 (#306)
 
 Release: `3.11.0`, a **minor** release: standard text changed (the Output section and the Done list of `agents/architect.md`). The `standard` fingerprint changes, so the baseline starts a new `3.11` series; tooling is unchanged. No migration.

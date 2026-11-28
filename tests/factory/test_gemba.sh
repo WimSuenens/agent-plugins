@@ -299,7 +299,7 @@ has t5-text-sentence-200-no-semicolon "$T/cmp.md" 'one line, at most 200 charact
 fblock() { awk -v h="$2" '/^```/{fence=!fence; if(f&&!fence){exit} if(f&&fence){inb=1} next} !fence&&/^#{2,3} /{f=($0==h)} f&&fence{print}' "$1"; }
 LAY="$(fblock "$HA" '### Layout')"
 printf '%s\n' "$LAY" > "$T/layout.txt"
-ck t6-template-first-line '<!-- factory:hansei v5 -->' "$(sed -n 1p "$T/layout.txt")"
+ck t6-template-first-line '<!-- factory:hansei v6 -->' "$(sed -n 1p "$T/layout.txt")"
 ck t6-exactly-one-gemba-line-in-the-template 1 "$(grep -c '^- gemba: ' "$T/layout.txt")"
 ck t6-gemba-directly-after-cross-check "- stage-log cross-check: largest gap <N>m (<row>: <evidence>)|- gemba: <walk>|" "$(grep -A2 '^- stage-log cross-check:' "$T/layout.txt" | head -3 | paste -sd'|' -)"
 ck t6-gemba-before-measures-heading "- gemba: <walk>||### Measures" "$(grep -B0 -A2 '^- gemba: ' "$T/layout.txt" | paste -sd'|' - | sed 's/|$//')"
@@ -311,10 +311,10 @@ if git -C "$REPO" rev-parse --verify --quiet main >/dev/null 2>&1; then
   nosub() { grep -vE '^   - (flow efficiency|per stage): '; }
   ck t6-measures-block-identical-to-v4 "$(awk '/^### Measures/{f=1} f' "$T/layout-main.txt" | nosub)" "$(awk '/^### Measures/{f=1} f' "$T/layout.txt" | nosub)"
   trim_end() { awk 'NF{last=NR} {l[NR]=$0} END{for(i=1;i<=last;i++)print l[i]}'; }
-  ck t6-layout-block-identical-to-main-v5-but-the-two-sub-lines "$(cat "$T/layout-main.txt" | nosub | trim_end)" "$(cat "$T/layout.txt" | nosub | trim_end)"   # slice 64: main is already v5; 2.0.0 changes no key, order or grammar of the record
+  ck t6-layout-block-identical-to-main-v5-but-the-two-sub-lines "$(sed 1d "$T/layout-main.txt" | nosub | trim_end)" "$(sed 1d "$T/layout.txt" | nosub | trim_end)"   # #309: only the marker line moves to v6   # slice 64: main is already v5; 2.0.0 changes no key, order or grammar of the record
 else skip t6-measures-identical-to-v4 "no main ref in this checkout"; fi
 WEX="$(fblock "$HA" '### Worked example')"
-ck t6-worked-example-first-line '<!-- factory:hansei v5 -->' "$(printf '%s\n' "$WEX" | sed -n 1p)"
+ck t6-worked-example-first-line '<!-- factory:hansei v6 -->' "$(printf '%s\n' "$WEX" | sed -n 1p)"
 ck t6-worked-example-one-gemba-line 1 "$(printf '%s\n' "$WEX" | grep -c '^- gemba: ')"
 ck t6-worked-example-gemba-after-cross-check 1 "$(printf '%s\n' "$WEX" | grep -A1 '^- stage-log cross-check:' | tail -1 | grep -c '^- gemba: ')"
 ck t6-worked-example-line-in-grammar OK "$(python3 -I "$GL" "$(printf '%s\n' "$WEX" | grep '^- gemba: ')" | cut -d: -f1)"

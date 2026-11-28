@@ -175,9 +175,9 @@ ck v5-s-repeated-line-named "- skipped: #132 https://example.invalid/shop/issues
 ck v5-s-skipped-records-in-no-section 0 "$(grep -E '^- items:' "$T/out-S.md" | grep -c '#13[23]')"
 ck v5-s-the-good-record-is-read 1 "$(grep -E '^- items:' "$T/out-S.md" | grep -c '#131')"
 ck v5-v3-and-v4-records-create-no-gemba-entry 0 "$(cat "$T/out-M.md" "$T/out-P.md" | grep -ci 'gemba')"
-ck v5-v6-record-still-skipped-by-version 1 "$(printf '%s' '[{"id":9,"html_url":"u","created_at":"2026-01-01T00:00:00Z","user":{"login":"lead-qa"},"body":"<!-- factory:hansei v6 -->\n## Hansei: #9 later\n"}]' > "$T/v6.json"; jq -c "$filt" "$T/v6.json" > "$T/v6.jsonl"; python3 -I "$PY" body "$T/v6.jsonl" 1.1.0 - /dev/null | grep -c 'skipped: #9 u (schema v6)')"
+ck v5-v7-record-still-skipped-by-version 1 "$(printf '%s' '[{"id":9,"html_url":"u","created_at":"2026-01-01T00:00:00Z","user":{"login":"lead-qa"},"body":"<!-- factory:hansei v7 -->\n## Hansei: #9 later\n"}]' > "$T/v7.json"; jq -c "$filt" "$T/v7.json" > "$T/v7.jsonl"; python3 -I "$PY" body "$T/v7.jsonl" 1.1.0 - /dev/null | grep -c 'skipped: #9 u (schema v7)')"   # #309: v6 is readable now
 # the baseline text: version list, item 7, no field reads the line
-has v5-text-item-2-reads-v3-v4-v5 "$PLUGIN/references/baseline.md" '`v3`, `v4` and `v5` are readable. Any other version is **skipped and named**'
+has v5-text-item-2-reads-v3-v4-v5 "$PLUGIN/references/baseline.md" '`v3`, `v4`, `v5` and `v6` are readable. Any other version is **skipped and named**'
 has v5-text-item-7-presence-only "$PLUGIN/references/baseline.md" 'The check counts those lines and never reads their content: no baseline or A3 field reads, parses or counts what a gemba line says, and no script reads it.'
 has v5-text-item-7-v3-v4-no-entry "$PLUGIN/references/baseline.md" 'A v3 or v4 record has no such line and is read without one; no `not captured` entry is created for it.'
 has v5-text-gemba-line-missing "$PLUGIN/references/baseline.md" '`skipped: #<id> <url> (gemba line missing)`'

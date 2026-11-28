@@ -71,6 +71,6 @@ The checks asked for in round 1:
 
 Residual, informational only: `add-session` still keeps ids already in the line without checking them. The reader now refuses them, so no path or command is built from them. `gaps` still names the transcript basename (field 1) on stderr in its `inside items` and `outside the run` notes. That is stderr only and never reaches the tracker.
 
-Home-shaped path in this file (round 1, the L1 probe on line 31): reworded to describe the probe without the path. `bash tests/factory/test_release64.sh` check `ac45-no-home-path-or-token-in-changed-files`: see the result of task #303.
+Home-shaped path in this file (round 1, the L1 probe on line 31): reworded to describe the probe without the path. `bash tests/factory/test_release64.sh` check `ac45-no-home-path-or-token-in-changed-files`: ok.
 
 Dependency audit, round 2: the fix commits touch two scripts and two references; no manifest changed, no new dependency.

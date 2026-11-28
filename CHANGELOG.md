@@ -2,6 +2,25 @@
 
 One entry per item, newest first. Entries are grouped by plugin. The factory is the only plugin with a version so far: its releases are tagged `factory-v<semver>`, and each tag points at the release commit on `main` (ADR 0012). Other plugins install from their current commit and have no entries here yet.
 
+## factory 3.11.0 (#306)
+
+Release: `3.11.0`, a **minor** release: standard text changed (the Output section and the Done list of `agents/architect.md`). The `standard` fingerprint changes, so the baseline starts a new `3.11` series; tooling is unchanged. No migration.
+
+Closes [#306](https://github.com/WimSuenens/agent-plugins/issues/306), [#307](https://github.com/WimSuenens/agent-plugins/issues/307), [#308](https://github.com/WimSuenens/agent-plugins/issues/308), the three lessons of the 3.9.1 run on the architect's contract. Built as one slice because all three change the same list.
+
+**What changed for the person who runs the factory:**
+
+- **Claims about the whole suite are checked.** A contract claim about every fixture, file or case of the test suite is run against the suite before the architect hands back, or the contract names it unverified so QA tests it first (#306).
+- **The pin table comes from the stale-text table.** Each sentence the architect lists as stale text is also searched over the test suite, and every hit becomes a row of the pin table, so the two tables cannot drift apart (#307).
+- **Whole-content guards are named up front.** For every file of standard work the slice changes, the release contract lists the tests that guard the file's whole content (allow-files, size caps, line caps) beside its pin table. The architect finds them by searching the test suite for the file's path or name, not for a sentence (#308).
+- **The release contract is defined.** The architect's Output section now says what a release contract holds: the version and release class, the stale-text table (the list of stale texts) and the pin table, one pin row per test check that pins a changed sentence.
+
+**Tests.** `tests/factory/test_architect_done_306.sh` (new) pins the three rules in the architect's Done list and the definitions in its Output section. The release pin of `test_slice6_text.sh` moves to `3.11.0`; no text pin moved, because the earlier pins of the search item are substrings of the extended item. No allow-file or cap guards `agents/architect.md` beyond the release-step scan of `test_release_split.sh`, whose allowed hit is unchanged. `bash tests/run.sh` prints `ALL PASSED` for this release.
+
+**Unverified.** Nothing ran in a live factory session. Whether the three rules prevent a second architect round shows only at the next release contract.
+
+Fingerprints for this release, from `scripts/fingerprint.sh` on 2026-11-28: standard `f07e18759e303d904d0674076b4d188c237b6a87ce71b4bda7dea30f33726cd6`, tooling `0ea7c2e5079fc7d2a42b5442ce45da8512d11162695360b0143ace84536a806a`.
+
 ## factory 3.10.0 (#286)
 
 Release: `3.10.0`, a **minor** release: standard text changed (`skills/run/SKILL.md` and the references `a3.md`, `baseline.md`, `hansei.md`, `run-close-run.md`, `run-overrides.md` and `run-route.md`) and tooling changed (`a3-check.sh` and `run-state.sh` changed; `run-timing.sh` is new). Both fingerprints change, so the baseline starts a new `3.10` series. No migration: A3 v1 to v3 comments, earlier records and the baseline marker `v1` stay valid. Restart Claude Code sessions after updating: a session keeps the factory skill text it read when it started.

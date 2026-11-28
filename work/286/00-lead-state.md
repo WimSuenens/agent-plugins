@@ -19,7 +19,9 @@ none yet
 
 ## Interrupted
 
-none
+- #297 qa-engineer a4cb57d80345b169a: limits since 2026-11-28T00:11Z; last commit none of its own; draft work/286/12-result-qa-engineer.md not written yet
+- #298 security-reviewer a200379227a3f66a0: limits since 2026-11-28T00:11Z; last commit 9fa381c; draft work/286/13-result-security-reviewer.md (working)
+- from the limit hit on: no parallel role agents for the rest of this item (QA before security)
 
 ## Label
 

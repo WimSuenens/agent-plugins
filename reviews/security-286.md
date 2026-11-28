@@ -1,8 +1,8 @@
 # Security review — #286 (run-level timing, factory 3.10.0)
 
-Verdict: **pass** (no critical or high finding; two low findings, both defense in depth, recommended for this PR or a follow-up).
+Verdict: **pass** at `c364068` (round 2, task #303): no open finding. L1 and L2 (low) are closed by `964bc25` and `5ad4dac`; I1 stays informational.
 
-Reviewed at `291e787` (branch `item/286`, PR #296), diff against `origin/main`. Reviewer: security-reviewer (task #298).
+Round 1 reviewed `291e787` (branch `item/286`, PR #296), diff against `origin/main`, verdict pass with L1 and L2 open (task #298). Reviewer: security-reviewer.
 
 ## Scope
 
@@ -25,14 +25,14 @@ All 59 changed files (`git -c core.quotePath=false diff --no-renames --name-only
 
 ## Findings
 
-### L1 — `run-timing.sh gaps` passes the markers column through unchecked — low
+### L1 — `run-timing.sh gaps` passes the markers column through unchecked — low — closed in round 2
 
 - Location: `plugins/factory/scripts/run-timing.sh`, the cut-offs block (`fi == nled + 2`): `g[5]` is stored as `gm[ng]` and printed as `found at close: <markers>`; `references/run-close-run.md` step 9.2 c turns each line into `run-state.sh add-run-wait … --what <what>`, posted to the run ticket.
-- Seen: a cut-offs line with markers `$(id) /Users/x/secret @who` comes out as `limits	2026-12-01T14:50Z	2026-12-01T15:00Z	found at close: $(id) /Users/x/secret @who` (exit 0). The kind and times are checked; the markers are not.
+- Seen: a cut-offs line whose markers held a command substitution, an absolute path under a user's home folder and an `@` mention came out with all three unchanged in the `found at close:` field (exit 0). The kind and times are checked; the markers are not.
 - Impact: not exploitable today, because `cut-offs.sh` emits only a fixed vocabulary (hardened in item 39, I4). But the guarantee "no transcript text or path on the tracker" now rests on a different script, and step 9.2 c has the lead write a shell command from this field.
 - Recommended fix: in the cut-offs block, add `g[5] !~ /^[a-z_:-]+(,[a-z_:-]+)*$/` to the format check (a line that fails is the existing `a cut-offs line not in its format` exit 2). Optionally say in step 9.2 c to single-quote `--what`.
 
-### L2 — `run-state.sh lead-sessions` does not validate the ids it prints — low
+### L2 — `run-state.sh lead-sessions` does not validate the ids it prints — low — closed in round 2
 
 - Location: `plugins/factory/scripts/run-state.sh`, the field reader (`lead-sessions` → `key="lead sessions"`); used by `references/run-close-run.md` step 9.2 b to build transcript paths and a `cut-offs.sh` command.
 - Seen: a body with `- lead sessions: ../../x, $(touch pwned), abc` prints that value unchanged (exit 0). `add-session` on that body keeps the bad ids and appends the new one. Nothing was executed in the probe; the risk is in the lead's command built from the output.
@@ -55,5 +55,22 @@ No manifest or lockfile changed (no `package.json`, lockfile, `requirements*.txt
 
 ## Re-verify (after fixes)
 
+The checks asked for in round 1:
+
 - L1: a cut-offs line with a marker outside `[a-z_:-]` makes `gaps` exit 2; the existing fixtures still pass.
 - L2: `lead-sessions` on a body with `../../x` exits 2; on a valid body it prints the ids as before.
+
+## Round 2 — re-verification at `c364068`
+
+| Finding | Status | Evidence |
+|---|---|---|
+| L1 (low) | closed | `run-timing.sh` (`964bc25`, `5ad4dac`) adds `g[5] !~ /^[a-z_:-]+(,[a-z_:-]+)*$/` to the cut-offs format check and names a bad line as `line <k>` only. Probed markers: a command substitution, a `'`, a space, upper case, `\|`, `,` and `a,,b`. Each exits 2 with `a cut-offs line not in its format: line 1`, and the line is not echoed. `cut-mid-stream,api-error:rate_limit` still passes (exit 0). |
+| L1, step 9.2 c quoting | holds | `--what '<what>'` in single quotes. The `what` is `found at close: ` plus the markers grammar `[a-z_:-,]`, so it can hold no `'`, `$`, backtick or backslash, and the single quotes hold for every value the grammar allows. |
+| L2 (low) | closed | `run-state.sh lead-sessions` (`964bc25`) checks each `, `-separated id against `^[A-Za-z0-9-]{1,64}$` and exits 2 with `id <i> of <n>`, never echoing the value. Probed: `../../x` → `id 1 of 1`, exit 2; `$(touch …), abc` → `id 1 of 2`, exit 2, and nothing ran; `abc, ../y` → `id 2 of 2`, exit 2; `abc,def` (no space) → exit 2; `none yet`, `abc, def` and an empty value print as before (exit 0). Step 9.2 b maps exit 2 to `not captured (lead sessions line not in its format)`. |
+| I1 (info) | unchanged | Optional; no merge impact. |
+
+Residual, informational only: `add-session` still keeps ids already in the line without checking them. The reader now refuses them, so no path or command is built from them. `gaps` still names the transcript basename (field 1) on stderr in its `inside items` and `outside the run` notes. That is stderr only and never reaches the tracker.
+
+Home-shaped path in this file (round 1, the L1 probe on line 31): reworded to describe the probe without the path. `bash tests/factory/test_release64.sh` check `ac45-no-home-path-or-token-in-changed-files`: see the result of task #303.
+
+Dependency audit, round 2: the fix commits touch two scripts and two references; no manifest changed, no new dependency.

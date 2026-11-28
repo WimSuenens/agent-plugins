@@ -2,5 +2,5 @@
 Status: working
 Abnormality: none
 Progress:
-  Done: brief checked (WimSuenens, marker developer 2)
-  Next: L1 marker check in run-timing.sh gaps, then L2 id check in run-state.sh lead-sessions
+  Done: brief checked (WimSuenens, marker developer 2); L1 and L2 fixed, both probes red before and exit 2 after; five targeted tests exit 0 (964bc25)
+  Next: full suite `bash tests/run.sh`, then the result

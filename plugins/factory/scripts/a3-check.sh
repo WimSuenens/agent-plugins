@@ -1,9 +1,12 @@
 #!/bin/bash
-# a3-check.sh: the check before Post A3 and before an Edit A3 that rewrites a v2 or v3 A3 (references/a3.md section 9).
+# a3-check.sh: the check before Post A3 and before an Edit A3 that rewrites a v2, v3 or v4 A3 (references/a3.md section 9).
 # Usage: bash a3-check.sh <file | ->
 # Reads the A3 body, decides the version by the marker on the first line, applies that version's checks.
-# Exit 0 prints "ok v1", "ok v2" or "ok v3"; exit 1 prints "refused: <key> (<reason>)" per finding, in template order;
-# exit 2 prints a usage line on stderr; exit 3 prints "skipped: ..." (no marker, or a version not 1, 2 or 3).
+# Exit 0 prints "ok v1", "ok v2", "ok v3" or "ok v4"; exit 1 prints "refused: <key> (<reason>)" per finding, in template order;
+# exit 2 prints a usage line on stderr; exit 3 prints "skipped: ..." (no marker, or a version not 1, 2, 3 or 4).
+# v4 is v3 plus four lines (run timing, discipline, run compared, guardrails) after calibration experiments and before still uncertain.
+# The order is checked in two tracks: the v1 to v3 keys among themselves (a v4 key never moves their position), and the four v4 keys from the
+# position after calibration experiments up to the first line of the first key present after them.
 # Changes no file, reads nothing but its argument, makes no network call.
 
 if [ $# -ne 1 ]; then
@@ -50,9 +53,39 @@ function notcaptured(v,   r) {
   return (length(r) >= 1 && length(r) <= 80)
 }
 function emit(key, why) { out[++nf] = "refused: " key " (" why ")" }
+# slotlen: the length of a <dur> (or, when allownc, a `not captured (<1 to 80 chars, no parentheses>)`) at the start of s; 0 when there is none
+function slotlen(s, allownc) {
+  if (allownc && match(s, /^not captured \([^()]*\)/)) return (RLENGTH >= 16 && RLENGTH <= 95) ? RLENGTH : 0
+  if (match(s, /^[1-9][0-9]*h[0-5][0-9]m/)) return RLENGTH
+  if (match(s, /^[1-5][0-9]m/)) return RLENGTH
+  if (match(s, /^[0-9]m/)) return RLENGTH
+  return 0
+}
+function durmin(d,   h) { if (d ~ /h/) { h = d; sub(/h.*/, "", h); d = substr(d, index(d, "h") + 1) } else h = 0; sub(/m$/, "", d); return h * 60 + d }
+# runtiming: "" when the measured or whole-line form holds and its figures agree, else the refusal reason
+function runtiming(v,   pre, i, n, sl, vals, isnc, anync, sum) {
+  if (v ~ /^not captured/) return notcaptured(v) ? "" : "not in its grammar"
+  split("raw |; adjusted |; blocked: person |, limits |, stalled |, interrupted ", pre, "|")
+  for (i = 1; i <= 6; i++) {
+    if (index(v, pre[i]) != 1) return "not in its grammar"
+    v = substr(v, length(pre[i]) + 1)
+    n = slotlen(v, i > 1); if (n == 0) return "not in its grammar"
+    sl = substr(v, 1, n); v = substr(v, n + 1)
+    vals[i] = sl; isnc[i] = (sl ~ /^not captured/)
+  }
+  if (v != "") return "not in its grammar"
+  anync = (isnc[3] || isnc[4] || isnc[5] || isnc[6])
+  if (anync && !isnc[2]) return "adjusted measured while a blocked kind is not captured"
+  if (!anync && isnc[2]) return "adjusted not captured while every blocked kind is measured"
+  if (anync) return ""
+  sum = durmin(vals[3]) + durmin(vals[4]) + durmin(vals[5]) + durmin(vals[6])
+  if (sum > durmin(vals[1])) return "blocked minutes exceed raw"
+  if (durmin(vals[2]) != durmin(vals[1]) - sum) return "adjusted is not raw less the blocked minutes"
+  return ""
+}
 
 BEGIN {
-  nk = split("run|series and release|problem|evidence|waste|gemba (targeted)|5 whys|CHAIN|process item to change|countermeasure|measure targeted|before|after|change|target|items counted|events|issues filed during the run|not detectable from records|calibration experiments|still uncertain|other problems seen|other overrides|standard changes proposed|baseline|answer", K, "|")
+  nk = split("run|series and release|problem|evidence|waste|gemba (targeted)|5 whys|CHAIN|process item to change|countermeasure|measure targeted|before|after|change|target|items counted|events|issues filed during the run|not detectable from records|calibration experiments|run timing|discipline|run compared|guardrails|still uncertain|other problems seen|other overrides|standard changes proposed|baseline|answer", K, "|")
   split("transport inventory motion waiting overproduction over-processing defects skills", T, " ")
   skip = ""; nf = 0; firstnum = 0; nwl = 0; whysl = 0; cite = 0; nev = 0; evbad = 0; evfa = 0; nexp = 0
 }
@@ -60,7 +93,7 @@ BEGIN {
 NR == 1 {
   if ($0 !~ /^<!-- factory:a3 v[0-9]+ -->$/) { skip = "skipped: no A3 marker on the first line"; exit_code = 3; next }
   ver = $0; sub(/^<!-- factory:a3 v/, "", ver); sub(/ -->$/, "", ver)
-  if (ver != "1" && ver != "2" && ver != "3") { skip = "skipped: A3 marker v" ver " (version not known)"; exit_code = 3; next }
+  if (ver != "1" && ver != "2" && ver != "3" && ver != "4") { skip = "skipped: A3 marker v" ver " (version not known)"; exit_code = 3; next }
   next
 }
 skip != "" { next }
@@ -96,9 +129,15 @@ skip != "" { next }
 END {
   if (NR == 0 && skip == "") skip = "skipped: no A3 marker on the first line"
   if (skip != "") { print skip; exit 3 }
-  v2 = (ver == "2" || ver == "3"); v3 = (ver == "3")
+  v2 = (ver == "2" || ver == "3" || ver == "4"); v3 = (ver == "3" || ver == "4"); v4 = (ver == "4")
   multi = (cnt["5 whys"] > 0 && val["5 whys"] == "")
   prev = 0
+  # the upper bound of the v4 track: the first line of the first key present after the four
+  ub = 0; after = 0
+  for (i = 1; i <= nk; i++) { if (K[i] == "guardrails") { after = 1; continue } if (after && cnt[K[i]] > 0) { ub = first[K[i]]; break } }
+  D = "([0-9]m|[1-5][0-9]m|[1-9][0-9]*h[0-5][0-9]m)"; KN = "[0-9]+ of [0-9]+ runs"
+  DIFF = "(0m|[+-]([1-9]m|[1-5][0-9]m|[1-9][0-9]*h[0-5][0-9]m))"
+  RCM = "^raw " D " \\(" KN "\\), this run " D ", difference " DIFF "; adjusted " D " \\(" KN "\\), this run " D ", difference " DIFF "$"
   for (i = 1; i <= nk; i++) {
     k = K[i]
     isnew = (k == "waste" || k == "gemba (targeted)" || k == "target")
@@ -110,6 +149,41 @@ END {
     isv3 = (k == "events" || k == "issues filed during the run" || k == "not detectable from records" || k == "calibration experiments")
     if (isv3 && !v3) {
       for (j = 0; j < cnt[k]; j++) emit(kname, "not part of v" ver)
+      continue
+    }
+    isv4 = (k == "run timing" || k == "discipline" || k == "run compared" || k == "guardrails")
+    if (isv4 && !v4) {
+      for (j = 0; j < cnt[k]; j++) emit(kname, "not part of v" ver)
+      continue
+    }
+    if (isv4) {
+      if (k == "run timing") prev4 = prev
+      if (cnt[k] == 0) { emit(kname, "missing"); continue }
+      if (cnt[k] > 1) emit(kname, "repeated")
+      if (val[k] == "") emit(kname, "blank")
+      if ((prev4 > 0 && first[k] < prev4) || (ub > 0 && first[k] > ub)) emit(kname, "out of order")
+      prev4 = first[k]
+      if (val[k] == "") continue
+      v = val[k]
+      if (k == "run timing") { r = runtiming(v); if (r != "") emit(kname, r) }
+      else if (k == "discipline") { if (v != "off" && v != "on") emit(kname, "not off or on") }
+      else if (k == "run compared") {
+        if (v ~ /^none \(.*\)$/) {
+          r = nonereason(v)
+          if (r != "run timing not captured" && r !~ /^no run with discipline off in series [0-9]+\.[0-9]+$/) emit(kname, "reason not in the table")
+        } else if (v !~ /^not comparable \(release moved from [0-9]+\.[0-9]+ to [0-9]+\.[0-9]+\)(: .+)?$/ && v !~ RCM) emit(kname, "not in its grammar")
+      } else if (k == "guardrails") {
+        g1 = "(([0-9]+ of [0-9]+ items passed first time(, [1-9][0-9]* not captured)?)|(not captured \\([0-9]+ of [0-9]+ items\\)))"
+        g2 = "(([0-9]+(, [0-9]+)* \\([0-9]+ of [0-9]+ items(, [1-9][0-9]* not captured)?\\))|(not captured \\([0-9]+ of [0-9]+ items\\)))"
+        if (v !~ ("^first-pass yield " g1 "; rework per item " g2 "$")) emit(kname, "not in its grammar")
+        else {
+          rw = v; sub(/^.*; rework per item /, "", rw)
+          if (rw !~ /^not captured/) {
+            lst = rw; sub(/ \(.*$/, "", lst); kk = rw; sub(/^[^(]*\(/, "", kk); sub(/ of .*$/, "", kk)
+            if (split(lst, tmpv, ", ") != kk + 0) emit(kname, "rework list does not match its count")
+          }
+        }
+      }
       continue
     }
     if (k == "CHAIN" && !multi) continue

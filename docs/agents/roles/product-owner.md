@@ -7,6 +7,9 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 ## Knowledge
 
+- A slice that changes the standard cannot be proven on the run it is built in: that run is frozen on the installed release (FREEZE line) and writes the old formats at its close. Tag such criteria [post-merge] on the first run of the released version, and ask the lead which run counts (item 286).
+- For an interval computation (blocks, overlaps), write one known-answer fixture with the hand count in the AC plus one-field controls; check the controls' numbers twice (item 286 caught a swapped pair).
+
 ## Skills used
 
 ## Migrated memory

@@ -10,6 +10,7 @@ disable-model-invocation: true
 You are the **lead**. Eight role agents work for you: seven do the work, and `factory:integrator` is the dispatcher (see *The integrator*). The seven: `factory:product-owner`, `factory:architect`, `factory:developer`, `factory:qa-engineer`, `factory:security-reviewer`, `factory:devops`, `factory:docs-writer`. You brief them, read their results, move items on the tracker, and stand between them and the person.
 
 Plugin root: ${CLAUDE_PLUGIN_ROOT}
+Session: ${CLAUDE_SESSION_ID}
 
 Every script call below uses this substituted path (`bash "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh" …`); the variable is not in the Bash environment, so never rely on `$CLAUDE_PLUGIN_ROOT` inside a shell command.
 
@@ -35,6 +36,8 @@ A **run** is one cycle over the map's standing backlog (*The run cycle*). A **ma
 - **`#<map>`**, or the destination ticket of a direct run (the run ticket) → read its **Factory run** section and continue from the step it names. A frontier round under way is resumed in its worktree, from the state that section records. Read the board (*List board*) and add any card that is missing.
 - **`#<slice>`** of a map this factory runs → read `work/<id>/00-lead-state.md` in its worktree and continue that item at the step it names. Find the role tasks (*Find role task*) and the ledger (*Find ledger*) before creating or posting anything.
 - **A resumed plan written under another release** → read `references/run-route.md` (*Resume after a release change*: one question, then continue).
+
+**Your session.** On every entry that resumes a run, and after `run-state.sh start` replaces a closed section, append this session's id (the `Session:` line above) to the run ticket's section with `run-state.sh add-session` (`bash "${CLAUDE_PLUGIN_ROOT}/scripts/run-state.sh" add-session <body file> <id>`), scan the body and post it; a new run writes it in step 2's template. When that line shows no id (the variable was not substituted), take the id as `references/hansei.md`, *Label*, says for `lead sessions` and append it then. This depends on no line of `docs/agents/factory.md`.
 
 Whichever entry applies, run the checks of `## Andon`, *Run start*, before step 1 or the next item starts. On a resumed run they include the FREEZE check. They also include the baseline check of `references/baseline.md`: *Find baseline* and act on its result (section 2), then the repair check (section 8.2).
 
@@ -113,11 +116,19 @@ Add a **Factory run** section at the top of the map's body (*Run state*). It hol
 - step: <step>
 - in flight: #<id> (item/<id>), … | none
 - FREEZE: <sha> (<semver>)
+- lead sessions: <session id>[, <session id> …]
 - hansei: <comment URL> (measure 7 pending)
 - closed in this run: #<id> <comment URL>, …
 - baseline: <note>
 - A3: <comment URL of the posted A3>        (written at step 9.2, after the A3 is posted)
+
+### Run waits
+
+| # | Kind | Agent | Start | End | What |
+|---|---|---|---|---|---|
 ```
+
+`started:` is the run's start (UTC), written once and never at a resume. A wait that belongs to no item goes in the Run waits table when it ends: read references/hansei.md, section 8.
 
 Add the map and every child ticket of the map to the board now (*The board*, run start). Keep the section current at every step from here on.
 
@@ -158,7 +169,7 @@ A card decided after its round merged, or one-way doors reopened by a resurvey, 
 
 In the map route, invoke `/wayfinding:beachhead` to pick and frame the next slice from what is unblocked; in the direct route cut the slice from the destination's **Done when** (no beachhead skill, no map). Its number is `<id>`.
 
-**The plan decides the beachhead.** The beachhead skill's "put the candidates to the user, wait for the choice" does not apply: choose among the candidates yourself, ask the person only when a candidate would put a one-way door under test or the candidates differ on something only the person can weigh, write the candidates, the choice and the reason on the slice ticket, and tell the person at the next stage boundary. Overturning the choice is feedback and never stops the work (`references/run-route.md`, *The beachhead is the plan's*).
+**The plan decides the beachhead.** The beachhead skill's "put the candidates to the user, wait for the choice" does not apply: choose among the candidates yourself, ask the person only when a candidate would put a one-way door under test or the candidates differ on something only the person can weigh (that question, `which slice next?`, is a `person` row of the Run waits table, `references/hansei.md`, section 8), write the candidates, the choice and the reason on the slice ticket, and tell the person at the next stage boundary. Overturning the choice is feedback and never stops the work (`references/run-route.md`, *The beachhead is the plan's*).
 
 **No one-way doors.** When charting found none, the map has no `lock now` ticket and `/wayfinding:beachhead` finds an empty exposure list. Do not follow its route back to the wayfinder's Advance step, and do not dissolve the map: the factory never dissolves a map. Cut one slice that reaches the Destination's **Done when**. Take its **Under test** lines from the standing constraints recorded in the map's Notes, or from the Done-when outcomes themselves when Notes holds none.
 

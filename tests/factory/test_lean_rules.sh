@@ -155,7 +155,7 @@ ck ac17-step-9-2-runs-the-check-script 1 "$([ "$(printf '%s\n' "$S92" | grep -c 
 ck ac17-step-9-2-posts-v2 1 "$([ "$(printf '%s\n' "$S92" | grep -ci 'v2')" -ge 1 ] && echo 1 || echo 0)"
 has ac17-a3-md-section-9-runs-the-script "$A3" 'a3-check.sh'
 has ac17-v1-found-is-left-as-it-is "$A3" 'left as it is'
-has ac15-baseline-reads-v1-v2-or-v3 "$BA" 'an A3 of marker v1, v2 or v3 is read; any other version is skipped and named'
+has ac15-baseline-reads-v1-to-v4 "$BA" 'an A3 of marker v1, v2, v3 or v4 is read; any other version is skipped and named'
 ck ac15-no-tracker-template-bullet-names-v2 0 "$(grep -c 'a3 v2' "$TP")"
 
 # ---------- AC-19: the release: changelog names the four changes; the fingerprints in its last line are the plugin's ----------
@@ -175,7 +175,9 @@ RB="$REPO/docs/factory/release-runbook.md"
 if grep -q '2\.3\.0' "$RB"; then ck ac19-runbook-note-says-no-migration 1 "$([ "$(grep -i '2\.3\.0' "$RB" | grep -ci 'migrat')" -ge 1 ] && echo 1 || echo 0)"
 else skip ac19-runbook-2.3.0-note "docs/factory/release-runbook.md has no 2.3.0 note yet (docs-writer)"; fi
 ck ac19-tooling-fingerprint-counts-the-new-script 1 "$([ -f "$PLUGIN/scripts/a3-check.sh" ] && echo 1 || echo 0)"
-# README and reference.md state the marker the run posts (docs-writer); checked when they have changed
-if grep -q 'factory:a3 v2' "$REPO/README.md" "$REPO/docs/factory/reference.md" 2>/dev/null; then ck ac17-docs-say-v2 1 1
-else skip ac17-docs-say-v2 "README.md line 158 and docs/factory/reference.md line 84 still state the v1 marker (docs-writer, contract 94-a3-v2 section 0 paths)"; fi
+# README and reference.md state the marker the run posts (docs-writer). Re-pointed in #286 (contract 286-release sections 2 and 3): each file
+# names the posted marker v4; a file that drops it fails, it does not skip.
+for f in README.md docs/factory/reference.md; do
+  ck "ac17-docs-say-v4-$(basename "$f" .md)" 1 "$(grep -q 'factory:a3 v4' "$REPO/$f" 2>/dev/null && echo 1 || echo 0)"
+done
 done_

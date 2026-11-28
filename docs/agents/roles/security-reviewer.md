@@ -7,6 +7,10 @@ It may add rules, checks and knowledge. It never lifts a protocol guard, an owne
 
 ## Knowledge
 
+- Field readers that feed paths or commands (e.g. `run-state.sh lead-sessions`) often skip the validation their writer (`add-session`) applies; probe the reader with a hand-edited body (`../../x`, `$(…)`). Item 286.
+- Pass-through columns: when script B prints a column of script A's output to the tracker, check B validates it too, not only A (item 286, `run-timing.sh gaps` markers).
+- Per-minute loops: probe an absurd `started:` (1970) for CPU cost; rate informational.
+
 ## Skills used
 
 ## Migrated memory

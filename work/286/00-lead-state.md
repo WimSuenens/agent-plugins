@@ -1,7 +1,7 @@
 # Lead state: #286
 
 - board item: PVTI_lAHOBIbaa84BqOBFzhMhYU0
-- next step: 6, read #299 (rework 1); then QA regression tests for L1/L2 and suite rerun; then security re-verify plus rewrite of its verdict line 31 (push scan hit); push; then Documentation
+- next step: 6, read #300; then developer rework 2 (run-close-run 9.2 b/c, hansei section 8 per contract); QA (L1/L2 regression tests, allow-file line, suite); security re-verify + verdict line 31; push; Documentation
 - note for hansei: the #295 Tasks row was added locally and not posted; a later fresh fetch overwrote it; restored at 08:22Z with ledger.sh check (no row lost)
 - open questions: Q2-Q5 of the requirement, with the architect; Q1 answered by the lead (before-reading = first run on the release that ships #286)
 - frozen on: factory 3.9.1 (map FREEZE line says 3.9.0; see A1)
@@ -10,8 +10,8 @@
 
 ## Running agents
 
-- role task #299: developer a1e45ef048f11aceb (rework 1: security L1, L2)
-- done: #298 security-reviewer a200379227a3f66a0 (pass, L1 L2 low); #297 qa-engineer a4cb57d80345b169a (pass); #294 qa-engineer a36614bf99ac4b102; #295 developer aeae65205fd37d8ea; #287 product-owner a2b9b64258dc7f2f1; #290 architect a6d3501c285e72806; #292 qa-engineer aecd70759aed3ab72; #293 architect ad17d6e3f1cc4966c
+- role task #300: architect ad17d6e3f1cc4966c (resumed; contract round 3: lead-sessions exit 2 reason)
+- done: #299 developer a1e45ef048f11aceb (L1, L2 fixed); #298 security-reviewer a200379227a3f66a0 (pass, L1 L2 low); #297 qa-engineer a4cb57d80345b169a (pass); #294 qa-engineer a36614bf99ac4b102; #295 developer aeae65205fd37d8ea; #287 product-owner a2b9b64258dc7f2f1; #290 architect a6d3501c285e72806; #292 qa-engineer aecd70759aed3ab72; #293 architect ad17d6e3f1cc4966c
 
 ## Shared resources
 

@@ -116,7 +116,7 @@ It writes nothing to the tracker: the Lead scans the printed body (*Scan before 
 
 ### 2.4 The field `lead-sessions`
 
-`bash run-state.sh lead-sessions <body file>` prints the line's value as is (`none yet`, or the ids with their `, `), exit 3 when the line is missing; the other exits as for any field.
+`bash run-state.sh lead-sessions <body file>` prints the line's value as is (`none yet`, or the ids with their `, `; an empty value prints an empty line, exit 0), exit 3 when the line is missing; the other exits as for any field. **Each id is checked** (security L2): unless the value is `none yet` or empty, it is split on `, ` and every part must match `^[A-Za-z0-9-]{1,64}$`, the grammar `add-session` writes. The first part that does not gives exit 2, nothing on stdout, and one stderr line naming the id by its place, never echoing it: `run-state: lead sessions: id <i> of <n> not in its format (^[A-Za-z0-9-]{1,64}$)`. Example: `- lead sessions: 0b7c4f1e-2d55-4c1e-9a7e-3f0d8e2a1b6c, ../../x` gives `run-state: lead sessions: id 2 of 2 not in its format (^[A-Za-z0-9-]{1,64}$)`, exit 2. Step 9.2 b then writes the run's `run timing` as `not captured (lead sessions line not in its format)` (§4.4) and reads no transcript.
 
 ### 2.5 Worked example (S2)
 
@@ -159,10 +159,10 @@ The same call on its own output prints it unchanged (exit 0). `--kind andon` exi
 bash run-timing.sh gaps --run-body <body file> --close <UTC> [--ledger <file>]... [--] <cut-offs output file | ->
 ```
 
-- **Input.** The body of the run ticket; the close instant; the ledger comment body of every item of the run (§4.1); the output of `cut-offs.sh` over the Lead's session transcripts (tab-separated `<basename> <kind> <start> <end | open> <markers>`, its documented format).
+- **Input.** The body of the run ticket; the close instant; the ledger comment body of every item of the run (§4.1); the output of `cut-offs.sh` over the Lead's session transcripts (tab-separated `<basename> <kind> <start> <end | open> <markers>`, its documented format). A cut-offs line is in its format when it has exactly these five fields, `<kind>` is `limits`, `stalled` or `interrupted`, the times are times, and **`<markers>` matches `^[a-z_:-]+(,[a-z_:-]+)*$`** (security L1: `cut-offs.sh` writes only its fixed vocabulary, joined by `,`, such as `silent-gap` or `cut-mid-stream,api-error:rate_limit`; the check keeps any other text out of the `What` cell posted to the tracker). A line out of its format is exit 2.
 - **What it does.** For each cut-offs line: Start = the line's start cut to the minute; End = the line's end cut to the minute, or the close instant (cut) when it reads `open`. Clip `[Start, End)` to the run window `[started, close)` (§4.2). Remove every item's in-flight window (§4.2). Each maximal stretch left with at least one minute is one output line. A line that leaves nothing prints one line on stderr, `inside items: <basename> <kind> <start>` or `outside the run: <basename> <kind> <start>`, and nothing on stdout.
 - **Output.** One tab-separated line per stretch, in the order of the input lines, then by start: `<kind>\t<start>\t<end>\tfound at close: <markers>`, times `YYYY-MM-DDTHH:MMZ`. Each line is one `run-state.sh add-run-wait` call (`--kind`, `--start`, `--end`, `--what` the fourth field).
-- **Exits.** 0 printed (zero or more lines); 2 usage, an unreadable file, a time not in the format, close before started, a cut-offs line not in its format (named on stderr), a ledger whose item is not an item of this run; 5 a not-captured case of §4.4 (the same reason on stderr as `not captured (<reason>)`, nothing on stdout); 1 and 4 as `run-state.sh` for the run body.
+- **Exits.** 0 printed (zero or more lines); 2 usage, an unreadable file, a time not in the format, close before started, a cut-offs line not in its format (named on stderr by its line number in the cut-offs input, counting from 1, never echoed: `run-timing: a cut-offs line not in its format: line <k>`), a ledger whose item is not an item of this run; 5 a not-captured case of §4.4 (the same reason on stderr as `not captured (<reason>)`, nothing on stdout); 1 and 4 as `run-state.sh` for the run body.
 
 **Worked example (S3a).** With the run body and ledgers of §4.6 (`started` 10:00, close 14:00, item #41 in flight 10:10–12:00, #42 11:00–13:30) and this cut-offs output (`lead.tsv`; `<sid>` stands for the session id):
 
@@ -224,7 +224,7 @@ The whole line reads `- run timing: not captured (<reason>)` (stdout, exit 5) in
 | `ledger of #<n> not in its grammar` | a ledger's Waits or Person's touches table is missing or has a row whose times are not times |
 | `Run waits row R<k> not in its grammar` | a Run waits row whose kind is not one of the four or whose times are not times or whose End is before its Start |
 
-Two more reasons are written by the Lead without calling `line` (§5.2), because they come from the scan: `lead transcript <basename> unreadable` (cut-offs exit 3) and `jq missing` (cut-offs exit 4); `no lead session recorded` when the `lead sessions` line reads `none yet` or is absent. Each reason is 1 to 80 characters with no parentheses, the A3 check's `not captured` grammar.
+More reasons are written by the Lead without calling `line` (§5.2), because they come from the scan: `lead transcript <basename> unreadable` (cut-offs exit 3) and `jq missing` (cut-offs exit 4); `no lead session recorded` when the `lead sessions` line reads `none yet`, is empty or is absent (`lead-sessions` exit 3); and `lead sessions line not in its format` when `run-state.sh lead-sessions` exits 2 (an id outside `^[A-Za-z0-9-]{1,64}$`, §2.4; its stderr names the id by place). Each reason is 1 to 80 characters with no parentheses, the A3 check's `not captured` grammar.
 
 ### 4.5 `--lite`
 
@@ -304,8 +304,8 @@ Appended after section 7 (no renumbering). It holds, in this order:
 - **9.0**: the `Close the run now?` question is a `person` Run waits row (written when the answer is read, before 9.1).
 - **9.2** gains, before the A3 is written, the run's timing, in this order (AC-B5):
   a. Stamp the close: `date -u +%FT%TZ`.
-  b. The run-close scan: for each id on `run-state.sh lead-sessions`, the transcript `~/.claude/projects/<project>/<id>.jsonl`; run `cut-offs.sh --until <the stamp> [--sleep-log -] -- <those transcripts>` (the pmset filter of `hansei.md` where `pmset` exists) into a scratch file. No `--since`: `cut-offs.sh` keeps a gap only when its start is at or after `--since`, so a gap that began before `started:` and ran into the run would be lost; `gaps` clips every line to the run window instead. Exit 3 or 4, or no session recorded: the A3's line reads `not captured (<reason>)` of §4.4 and c and d are skipped.
-  c. `run-timing.sh gaps --run-body <body> --close <the stamp> --ledger <each item's ledger> -- <scratch file>`; each output line becomes one `run-state.sh add-run-wait`; scan and post the body once.
+  b. The run-close scan: for each id on `run-state.sh lead-sessions`, the transcript `~/.claude/projects/<project>/<id>.jsonl`; run `cut-offs.sh --until <the stamp> [--sleep-log -] -- <those transcripts>` (the pmset filter of `hansei.md` where `pmset` exists) into a scratch file. No `--since`: `cut-offs.sh` keeps a gap only when its start is at or after `--since`, so a gap that began before `started:` and ran into the run would be lost; `gaps` clips every line to the run window instead. Cut-offs exit 3 or 4, `lead-sessions` reading `none yet` or empty or exiting 3 (`no lead session recorded`), or `lead-sessions` exiting 2 (`lead sessions line not in its format`): the A3's line reads `not captured (<reason>)` of §4.4 and c and d are skipped.
+  c. `run-timing.sh gaps --run-body <body> --close <the stamp> --ledger <each item's ledger> -- <scratch file>`; each output line becomes one `run-state.sh add-run-wait … --what '<what>'`, the fourth field in single quotes (it holds spaces, and the markers grammar of §3 admits no `'`); scan and post the body once.
   d. `run-timing.sh line --run-body <body> --close <the stamp> [--lite] --ledger …` (the body as just posted); its line goes into the A3 ([286-a3-v4-and-runs](286-a3-v4-and-runs.md) §2).
   e. After *Post A3*, read the comment's `created_at`, run d again with `--close <created_at>`; when the line differs, *Edit A3* that line (run `a3-check.sh` first). The rows of c are not rewritten.
 - The ledgers are found with *Find ledger* for each item of §4.1; an item without one is the not-captured case.
@@ -341,7 +341,25 @@ The sentence listing the new section's lines adds `lead sessions: none yet` and 
 | B5 | fixture transcript with three gaps outside items → `cut-offs.sh` → `gaps` → `add-run-wait`: three rows, kinds `limits`, `stalled`, `interrupted`, times cut to minutes; a second run of the chain adds none | S3a, S2 |
 | B6 | §4.6 and its controls (a) and (b), byte for byte | S3b |
 | B7 | for any fixture: four blocked counts sum ≤ raw, adjusted ≥ 0 and equal to raw − sum; a minute counted once (QA may compare with an independent replay) | S3b |
+| B5 (L1) | a cut-offs line whose markers are outside `^[a-z_:-]+(,[a-z_:-]+)*$` (for example `$(id) @who`) → `gaps` exit 2, stdout empty, stderr `run-timing: a cut-offs line not in its format: line <k>` without the line's text; the §3 fixtures unchanged | S3a |
+| B4 (L2) | `lead-sessions` on `- lead sessions: <valid id>, ../../x` → exit 2, stdout empty, stderr `run-state: lead sessions: id 2 of 2 not in its format (^[A-Za-z0-9-]{1,64}$)` without the id; `none yet`, valid ids and an empty value as before | S2 |
 | C6 | post-merge: the hand count uses only the section's `started:`, the A3's `created_at`, the ledgers (`started:`, Waits, `approval`) and the Run waits table | §0 Q2, §4 |
+
+### 6.1 Rework 1 (security L1, L2): every other text that states the changed rules
+
+Rules changed: `lead-sessions` checks its ids (exit 2, §2.4); a new not-captured reason `lead sessions line not in its format` (§4.4); the markers grammar of a cut-offs line and its exit 2 named by line number (§3); `--what` in single quotes (§5.2 c). **Search terms** (`grep -rnF` over the repository, `--exclude-dir` `worktrees`, `node_modules`, `.git`, `work`, `.nuxt`, `.output`; contracts of earlier slices and `reviews/` are history): `no lead session recorded`, `jq missing`, `Two more reasons`, `three, written by you`, `reads \`none yet\` or exits 3`, `exits 3, the A3`, `lead sessions line`, `not in its format`, `lead-sessions`, `--what <what>`, `found at close`, `markers`. The partial-statement case (a text naming three scan reasons where there are now four, or `none yet` without the empty value) is covered by `three, written by you`, `no lead session recorded` and `reads \`none yet\``.
+
+| Text | Says now | Changes to | Owner |
+|---|---|---|---|
+| `plugins/factory/references/run-close-run.md:13` (9.2 b) | `On exit 3 or 4, or when \`lead-sessions\` reads \`none yet\` or exits 3, … with \`lead transcript <basename> unreadable\`, \`jq missing\` or \`no lead session recorded\`` | adds `lead-sessions` reading empty (with `no lead session recorded`) and `lead-sessions` exiting 2 with `lead sessions line not in its format` | developer |
+| `plugins/factory/references/run-close-run.md:14` (9.2 c) | `--what <what>` | `--what '<what>'`, with the reason in a few words (the field holds spaces; the markers grammar admits no `'`) | developer |
+| `plugins/factory/references/hansei.md:784` (section 8, *Not captured*) | `The run-close scan adds three, written by you: … and \`no lead session recorded\` (the \`lead sessions\` line reads \`none yet\` or is absent).` | `adds four`, the empty value beside `none yet`, and `lead sessions line not in its format` (`run-state.sh lead-sessions` exit 2) | developer |
+| `plugins/factory/scripts/run-timing.sh:189` | stderr `a cut-offs line not in its format: <the whole line>` (echoes transcript-derived text) | `a cut-offs line not in its format: line <k>` (§3); header comment line 21 as needed | developer |
+| `plugins/factory/scripts/run-state.sh:31`, `:219` | already as §2.4 (rework 1, commit 964bc25) | unchanged | — |
+| `tests/factory/fixtures/split/slice286-added.txt:4`, `:5` | the 9.2 b and 9.2 c lines word for word (the allow-file of `test_run_split.sh`) | the new 9.2 b and 9.2 c lines, after the developer's edit | qa-engineer |
+| `tests/factory/test_run_state_286.sh`, `test_run_timing_286.sh` | no L1 or L2 case | the two rows B5 (L1), B4 (L2) of §6 | qa-engineer |
+
+Not stale: `plugins/factory/references/hansei.md:142`, `:147`, `:533` and `skills/setup-factory-skill/SKILL.md:215` (`found at close: <markers>` in the item ledger; the markers come from `cut-offs.sh`'s fixed vocabulary as before); `tests/factory/test_standard_text.sh:104` (`What` `found at close: <markers>`, unchanged); `CONTEXT.md` (names no reason or exit). No test pins the stderr of `gaps` or the reason list (searched `not in its format`, `jq missing`, `no lead session`, `unreadable\`` over `tests/factory/*.sh`).
 
 ## 7. Not changed
 

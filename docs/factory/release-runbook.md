@@ -359,7 +359,7 @@ git push origin factory-v2.3.0
 1. `claude plugin validate ./plugins/factory` and `claude plugin validate ./plugins/factory/skills` exit 0. The manifest's `domain` warning is not from this release: the field is on `main` too.
 2. `bash scripts/check-bump.sh` prints `pass: minor bump needed, 3.9.1 -> 3.10.0`, exit 0.
 3. `bash plugins/factory/scripts/fingerprint.sh plugins/factory` prints `release: 3.10.0`. The two fingerprints are kept on the last line of the 3.10.0 entry in [CHANGELOG.md](../../CHANGELOG.md), not repeated here. Any change under `plugins/factory/` after that entry is written is a forgotten fingerprint.
-4. `bash tests/run.sh` prints `ALL PASSED` with no named skip.
+4. `bash tests/run.sh` prints `ALL PASSED`. It also prints 21 named skip lines (on 2026-11-28): the retired-row checks of earlier releases, the frozen-install check, and three older rows (`ac25-every-search-hit-is-an-allowed-one`, `ac11-real-draft`, `ac8-no-pr-without-check`). The *Release checks* section above says a tag waits for any named skip, so the Lead asks the person to accept these by name before the tag.
 
 **Tag (the Lead, after the person approved the merge).** Tags on origin run from `factory-v1.0.0` to `factory-v3.9.1` (`git ls-remote --tags origin 'factory-v*'`). `factory-v3.10.0` must not exist before the merge. In the item/286 worktree, with `<pr>` the number of the item/286 pull request:
 
